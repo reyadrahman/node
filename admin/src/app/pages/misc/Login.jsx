@@ -1,7 +1,20 @@
 import React from 'react'
+import Router from 'react-router'
 
 import UiValidate from '../../../components/forms/validation/UiValidate.jsx'
+import AuthActions from '../../../components/auth/actions/AuthActions';
+
 let Login = React.createClass({
+    mixins : [Router.Navigation],
+
+    onClickLogin(e) {
+        e.preventDefault();
+        AuthActions.login({
+            email: this.refs.emailInput.value,
+            password: this.refs.passwordInput.value
+        });
+    },
+
     render: function () {
         return (
             <div id="extr-page" >
@@ -60,25 +73,48 @@ let Login = React.createClass({
                                         <header>
                                             Sign In
                                         </header>
+
                                         <fieldset>
                                             <section>
                                                 <label className="label">E-mail</label>
-                                                <label className="input"> <i className="icon-append fa fa-user"/>
-                                                    <input type="email" name="email" data-smart-validate-input="" data-required="" data-email="" data-message-required="Please enter your email address" data-message-email="Please enter a VALID email address"/>
-                                                    <b className="tooltip tooltip-top-right"><i className="fa fa-user txt-color-teal"/>
-                                                        Please enter email address/username</b></label>
+
+                                                <label className="input">
+                                                    <i className="icon-append fa fa-user"/>
+
+                                                    <input type="email" name="email" ref="emailInput"
+                                                           data-smart-validate-input="" data-required="" data-email=""
+                                                           data-message-required="Please enter your email address"
+                                                           data-message-email="Please enter a VALID email address"/>
+
+                                                    <b className="tooltip tooltip-top-right">
+                                                        <i className="fa fa-user txt-color-teal"/>
+                                                        Please enter email address/username
+                                                    </b>
+                                                </label>
                                             </section>
+
                                             <section>
                                                 <label className="label">Password</label>
-                                                <label className="input"> <i className="icon-append fa fa-lock"/>
-                                                    <input type="password" name="password" data-smart-validate-input="" data-required="" data-minlength="3" data-maxnlength="20" data-message="Please enter your email password"/>
-                                                    <b className="tooltip tooltip-top-right"><i className="fa fa-lock txt-color-teal"/> Enter
-                                                        your password</b> </label>
+
+                                                <label className="input">
+                                                    <i className="icon-append fa fa-lock"/>
+
+                                                    <input type="password" name="password" ref="passwordInput"
+                                                           data-smart-validate-input="" data-required=""
+                                                           data-minlength="3" data-maxnlength="20"
+                                                           data-message="Please enter your email password"/>
+
+                                                    <b className="tooltip tooltip-top-right">
+                                                        <i className="fa fa-lock txt-color-teal"/>
+                                                        Enter your password
+                                                    </b>
+                                                </label>
 
                                                 <div className="note">
                                                     <a ui-sref="forgotPassword">Forgot password?</a>
                                                 </div>
                                             </section>
+
                                             <section>
                                                 <label className="checkbox">
                                                     <input type="checkbox" name="remember" defaultChecked={true}/>
@@ -86,11 +122,12 @@ let Login = React.createClass({
                                             </section>
                                         </fieldset>
                                         <footer>
-                                            <button type="submit" className="btn btn-primary">
+                                            <button type="submit" className="btn btn-primary" onClick={this.onClickLogin}>
                                                 Sign in
                                             </button>
                                         </footer>
-                                    </form></UiValidate>
+                                    </form>
+                                    </UiValidate>
                                 </div>
                                 <h5 className="text-center"> - Or sign in using -</h5>
                                 <ul className="list-inline text-center">
