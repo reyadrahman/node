@@ -77,13 +77,9 @@ function requireAuth(nextState, replaceState) {
 }
 
 function handleOnLogout(nextState, replaceState) {
-    //console.log('hey');
-    //console.log(AuthStore.checkToken());
-    //return;
     if (AuthStore.checkToken()) {
         // Logout
         AuthStore.logout();
-        //replaceState({ nextPathname: nextState.location.pathname }, '/login');
     } else {
         return requireAuth(nextState, replaceState);
     }
