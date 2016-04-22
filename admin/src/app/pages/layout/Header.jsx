@@ -67,7 +67,7 @@ let Header = React.createClass({
                             </li>
                             <li className="divider"/>
                             <li>
-                                <a href="#/login" className="padding-10 padding-top-5 padding-bottom-5"
+                                <a href="#/logout" className="padding-10 padding-top-5 padding-bottom-5"
                                    data-action="userLogout"><i
                                     className="fa fa-sign-out fa-lg"/> <strong><u>L</u>ogout</strong></a>
                             </li>
@@ -77,7 +77,7 @@ let Header = React.createClass({
 
                 {/* logout button */}
                 <div id="logout" className="btn-header transparent pull-right">
-                    <span> <a href="#/login" title="Sign Out"
+                    <span> <a href="#/logout" title="Sign Out"
                               data-logout-msg="You can improve your security further after logging out by closing this opened browser"><i
                         className="fa fa-sign-out"/></a> </span>
                 </div>
