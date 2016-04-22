@@ -1,0 +1,4 @@
+webpackJsonp([12],{320:/*!**********************************!*\
+  !*** ./src/app/routes/Inbox.jsx ***!
+  \**********************************/
+function(e,t,n){"use strict";function u(e){return e&&e.__esModule?e:{"default":e}}Object.defineProperty(t,"__esModule",{value:!0});var o=n(19),l=u(o),a=n(21),f=[l["default"].createElement(a.Route,{path:"folder/:folder",getComponent:function(e,t){n.e(13,function(e){t(null,n(321)["default"])})},key:0}),l["default"].createElement(a.Route,{path:"compose",getComponent:function(e,t){n.e(14,function(e){t(null,n(322)["default"])})},key:1}),l["default"].createElement(a.Route,{path:"detail/:messageId",getComponent:function(e,t){n.e(15,function(e){t(null,n(325)["default"])})},key:2}),l["default"].createElement(a.Route,{path:"replay/:messageId",getComponent:function(e,t){n.e(16,function(e){t(null,n(326)["default"])})},key:3})];t["default"]=f}});

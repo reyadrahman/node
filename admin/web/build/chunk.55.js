@@ -1,0 +1,4 @@
+webpackJsonp([55],{533:/*!**************************************!*\
+  !*** ./src/app/routes/ECommerce.jsx ***!
+  \**************************************/
+function(e,t,n){"use strict";function u(e){return e&&e.__esModule?e:{"default":e}}Object.defineProperty(t,"__esModule",{value:!0});var o=n(19),l=u(o),a=n(21),d=[l["default"].createElement(a.Route,{path:"orders",getComponent:function(e,t){n.e(56,function(e){t(null,n(534)["default"])})},key:0}),l["default"].createElement(a.Route,{path:"products-view.html",getComponent:function(e,t){n.e(10,function(e){t(null,n(316)["default"])})},key:1,subHeader:!1}),l["default"].createElement(a.Route,{path:"products-detail.html",getComponent:function(e,t){n.e(10,function(e){t(null,n(316)["default"])})},key:2,subHeader:!1})];t["default"]=d}});
