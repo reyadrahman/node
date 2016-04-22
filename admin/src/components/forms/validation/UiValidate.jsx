@@ -10,7 +10,7 @@ let UiValidate = React.createClass({
     mixins: [ScriptLoader],
     componentDidMount: function () {
         this.loadScript('/vendor.ui.js').then(function(){
-            let form = $(findDOMNode(this))
+            let form = $(findDOMNode(this));
             let validateCommonOptions =  {
                 rules: {},
                 messages: {},
@@ -32,7 +32,7 @@ let UiValidate = React.createClass({
                         error.insertAfter(element);
                     }
                 }
-            }
+            };
 
             form.find('[data-smart-validate-input], [smart-validate-input]').each(function () {
                 var $input = $(this), fieldName = $input.attr('name');
@@ -69,8 +69,15 @@ let UiValidate = React.createClass({
                 }
             });
 
-            form.validate(_.extend(validateCommonOptions, this.props.options))
+            form.validate(_.extend(validateCommonOptions, this.props.options));
+            this.form = form;
         }.bind(this))
+    },
+    componentWillReceiveProps: function(props) {
+        if (props.errors && (props.errors != this.props.errors)) {
+            let validator = $(this.form).validate();
+            validator.showErrors(props.errors);
+        }
     },
     render: function () {
         return (

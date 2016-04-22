@@ -1,61 +1,28 @@
-import React from 'react'
+import React from 'react';
 
-import UiValidate from '../../../components/forms/validation/UiValidate.jsx'
-import LoadHtml from '../../../components/utils/LoadHtml.jsx'
+import UiValidate from '../../../components/forms/validation/UiValidate.jsx';
+import LoadHtml from '../../../components/utils/LoadHtml.jsx';
+import About from './About.jsx';
+import Header from './Header.jsx';
+import SocialGroup from './SocialGroup.jsx';
 
 let Register = React.createClass({
     render: function () {
         return (
             <div id="extr-page" >
-                <header id="header" className="animated fadeInDown">
-
-                    <div id="logo-group">
-                        <span id="logo"> <img src="styles/img/logo.png" alt="SmartAdmin"/> </span>
-                    </div>
-
-    <span id="extr-page-header-space">
-        <span className="hidden-mobile hiddex-xs">Already registered?</span>&nbsp;<a href="#login" className="btn btn-danger">Sign In</a> </span>
-
-                </header>
+                <Header>
+                    <span id="extr-page-header-space">
+                        <span className="hidden-mobile hiddex-xs">Already registered?</span>&nbsp;
+                        <a href="#login" className="btn btn-danger">Sign In</a>
+                    </span>
+                </Header>
                 <div id="main" role="main" className="animated fadeInDown">
 
                     {/* MAIN CONTENT */}
                     <div id="content" className="container">
 
                         <div className="row">
-                            <div className="col-xs-12 col-sm-12 col-md-7 col-lg-7 hidden-xs hidden-sm">
-                                <h1 className="txt-color-red login-header-big">SmartAdmin</h1>
-                                <div className="hero">
-
-                                    <div className="pull-left login-desc-box-l">
-                                        <h4 className="paragraph-header">It's Okay to be Smart. Experience the simplicity of SmartAdmin, everywhere you go!</h4>
-                                        <div className="login-app-icons">
-                                            <a href="#/dashboard" className="btn btn-danger btn-sm">Frontend Template</a>
-                                            <span> </span>
-                                            <a href="#/smartadmin/different-versions.html" className="btn btn-danger btn-sm">Find out more</a>
-                                        </div>
-                                    </div>
-
-                                    <img src="styles/img/demo/iphoneview.png" alt="" className="pull-right display-image" style={{width:'210px'}}/>
-
-                                </div>
-
-                                <div className="row">
-                                    <div className="col-xs-12 col-sm-12 col-md-6 col-lg-6">
-                                        <h5 className="about-heading">About SmartAdmin - Are you up to date?</h5>
-                                        <p>
-                                            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa.
-                                        </p>
-                                    </div>
-                                    <div className="col-xs-12 col-sm-12 col-md-6 col-lg-6">
-                                        <h5 className="about-heading">Not just your average template!</h5>
-                                        <p>
-                                            Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi voluptatem accusantium!
-                                        </p>
-                                    </div>
-                                </div>
-
-                            </div>
+                            <About className="col-xs-12 col-sm-12 col-md-7 col-lg-7 hidden-xs hidden-sm" />
                             <div className="col-xs-12 col-sm-12 col-md-5 col-lg-5">
                                 <div className="well no-padding">
 
@@ -146,18 +113,7 @@ let Register = React.createClass({
 
                                 </div>
                                 <p className="note text-center">*FREE Registration ends on October 2015.</p>
-                                <h5 className="text-center">- Or sign in using -</h5>
-                                <ul className="list-inline text-center">
-                                    <li>
-                                        <a href-void="" className="btn btn-primary btn-circle"><i className="fa fa-facebook"/></a>
-                                    </li>
-                                    <li>
-                                        <a href-void="" className="btn btn-info btn-circle"><i className="fa fa-twitter"/></a>
-                                    </li>
-                                    <li>
-                                        <a href-void="" className="btn btn-warning btn-circle"><i className="fa fa-linkedin"/></a>
-                                    </li>
-                                </ul>
+                                <SocialGroup />
                             </div>
                         </div>
                     </div>
@@ -172,7 +128,7 @@ let Register = React.createClass({
                                 <button type="button" className="close" data-dismiss="modal" aria-hidden="true">
                                     &times;
                                 </button>
-                                <h4 className="modal-title" id="myModalLabel">Terms & Conditions</h4>
+                                <h4 className="modal-title" id="myModalLabel">Terms {'&'} Conditions</h4>
                             </div>
                             <div className="modal-body custom-scroll terms-body">
 

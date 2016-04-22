@@ -7,6 +7,8 @@ var scripts = {
         "react-dom": "/node_modules/react-dom/dist/react-dom.min.js",
         "react-bootstrap": "/node_modules/react-bootstrap/dist/react-bootstrap.min.js",
         "react-router": "/node_modules/react-router/umd/ReactRouter.min.js",
+        "react-cookie": "/node_modules/react-cookie",
+        "aws-sdk": "/bower_components/aws-sdk/dist/aws-sdk.min.js",
         "history/lib": "/node_modules/history/umd/History.min.js",
 
         //"lodash": "/bower_components/lodash/dist/lodash.js",
@@ -40,7 +42,7 @@ var scripts = {
         "flot-time": "/bower_components/Flot/jquery.flot.time.js",
         "flot-tooltip": "/bower_components/flot.tooltip/js/jquery.flot.tooltip.min.js",
 
-        "raphael": "/bower_components/raphael/raphael-min.js",
+        "raphael": "/bower_components/raphael/raphael.min.js",
         "morris": "/bower_components/morris.js/morris.min.js",
         "dygraphs": "/bower_components/dygraphs/dygraph-combined.js",
         "chartjs": "/bower_components/Chart.js/Chart.min.js",
@@ -79,7 +81,7 @@ var scripts = {
         "bootstrap-timepicker": "/bower_components/bootstrap3-fontawesome-timepicker/js/bootstrap-timepicker.min.js",
         "bootstrap-slider": "/bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js",
         "clockpicker": "/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js",
-        "bootstrap-colorpicker": "/bower_components/bootstrap-colorpicker/js/bootstrap-colorpicker.js",
+        "bootstrap-colorpicker": "/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js",
         "bootstrap-tagsinput": "/bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js",
 
         "jquery-knob": "/bower_components/jquery-knob/dist/jquery.knob.min.js",
@@ -115,6 +117,8 @@ var scripts = {
             'react-dom',
             'react-bootstrap',
             'react-router',
+            'react-cookie',
+            'aws-sdk',
             "jquery",
             "jquery-ui",
             "moment",
