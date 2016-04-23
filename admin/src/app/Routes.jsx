@@ -50,6 +50,9 @@ import MapView from './pages/maps/MapView.jsx'
 import Widgets from './pages/widgets/Widgets.jsx'
 import StaticPageLoader from './pages/layout/tools/StaticPageLoader.jsx'
 
+import AuthStore from '../components/auth/stores/AuthStore';
+import AuthActions from '../components/auth/actions/AuthActions';
+
 import Page404 from './pages/misc/Page404.jsx'
 import Page500 from './pages/misc/Page500.jsx'
 import BlankPage from './pages/misc/BlankPage.jsx'
@@ -61,9 +64,30 @@ import CKEditorDemo from './pages/misc/CKEditorDemo.jsx'
 
 import Orders from './pages/e-commerce/Orders.jsx'
 
+function requireQuest(nextState, replaceState) {
+    if (AuthStore.checkToken()) {
+        replaceState({ nextPathname: nextState.location.pathname }, '/');
+    }
+}
+
+function requireAuth(nextState, replaceState) {
+    if (!AuthStore.checkToken()) {
+        replaceState({ nextPathname: nextState.location.pathname }, '/login');
+    }
+}
+
+function handleOnLogout(nextState, replaceState) {
+    if (AuthStore.checkToken()) {
+        // Logout
+        AuthStore.logout();
+    } else {
+        return requireAuth(nextState, replaceState);
+    }
+}
+
 const Routes = (
     <Route>
-        <Route path="/" component={Layout}>
+        <Route path="/" component={Layout} onEnter={requireAuth}>
             <IndexRoute component={Gallery}/>
             <Route path="dashboard" component={Dashboard}/>
             <Route path="dashboard/social-wall.html" component={StaticPageLoader} subHeader={false}/>
@@ -167,16 +191,17 @@ const Routes = (
                 <Route path="orders" component={Orders}/>
                 <Route path="products-view.html" component={StaticPageLoader} subHeader={false}/>
                 <Route path="products-detail.html" component={StaticPageLoader} subHeader={false}/>
-
-
             </Route>
+
             <Route path="smartadmin/app-layouts.html" component={StaticPageLoader} subHeader={false} />
             <Route path="smartadmin/skins.html" component={StaticPageLoader} subHeader={false} />
         </Route>
+
         <Route path="lock" component={LockedScreen} />
-        <Route path="login" component={Login}/>
-        <Route path="forgot" component={Forgot}/>
-        <Route path="register" component={Register}/>
+        <Route path="login" component={Login} onEnter={requireQuest}/>
+        <Route path="logout" onEnter={handleOnLogout}/>
+        <Route path="forgot" component={Forgot} onEnter={requireQuest}/>
+        <Route path="register" component={Register}onEnter={requireQuest}/>
     </Route>);
 
 
