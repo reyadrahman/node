@@ -40,7 +40,7 @@ var scripts = {
         "flot-time": "/bower_components/Flot/jquery.flot.time.js",
         "flot-tooltip": "/bower_components/flot.tooltip/js/jquery.flot.tooltip.min.js",
 
-        "raphael": "/bower_components/raphael/raphael-min.js",
+        "raphael": "/bower_components/raphael/raphael.min.js",
         "morris": "/bower_components/morris.js/morris.min.js",
         "dygraphs": "/bower_components/dygraphs/dygraph-combined.js",
         "chartjs": "/bower_components/Chart.js/Chart.min.js",
@@ -79,7 +79,7 @@ var scripts = {
         "bootstrap-timepicker": "/bower_components/bootstrap3-fontawesome-timepicker/js/bootstrap-timepicker.min.js",
         "bootstrap-slider": "/bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js",
         "clockpicker": "/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js",
-        "bootstrap-colorpicker": "/bower_components/bootstrap-colorpicker/js/bootstrap-colorpicker.js",
+        "bootstrap-colorpicker": "/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js",
         "bootstrap-tagsinput": "/bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js",
 
         "jquery-knob": "/bower_components/jquery-knob/dist/jquery.knob.min.js",
@@ -91,6 +91,8 @@ var scripts = {
         "dropzone": "/bower_components/dropzone/downloads/dropzone.min.js",
 
         "jcrop": "/bower_components/Jcrop/js/Jcrop.min.js",
+        
+        "amazon": "/bower_components/amazon/index.js",
 
 
         "bootstrap-progressbar": "/bower_components/bootstrap-progressbar/bootstrap-progressbar.min.js",
