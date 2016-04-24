@@ -58,6 +58,7 @@ import Page500 from './pages/misc/Page500.jsx'
 import BlankPage from './pages/misc/BlankPage.jsx'
 import LockedScreen from './pages/misc/LockedScreen.jsx'
 import Login from './pages/misc/Login.jsx'
+import Signup from './pages/misc/Signup.jsx'
 import Forgot from './pages/misc/Forgot.jsx'
 import Register from './pages/misc/Register.jsx'
 import CKEditorDemo from './pages/misc/CKEditorDemo.jsx'
@@ -199,6 +200,7 @@ const Routes = (
 
         <Route path="lock" component={LockedScreen} />
         <Route path="login" component={Login} onEnter={requireQuest}/>
+        <Route path="signup" component={Signup} onEnter={requireQuest}/>
         <Route path="logout" onEnter={handleOnLogout}/>
         <Route path="forgot" component={Forgot} onEnter={requireQuest}/>
         <Route path="register" component={Register}onEnter={requireQuest}/>

@@ -15,6 +15,11 @@ let Login = React.createClass({
         });
     },
 
+    onClickSignup(e) {
+        e.preventDefault();
+        window.location.href = '#/signup';
+    },
+
     render: function () {
         return (
             <div id="extr-page" >
@@ -124,6 +129,9 @@ let Login = React.createClass({
                                         <footer>
                                             <button type="submit" className="btn btn-primary" onClick={this.onClickLogin}>
                                                 Sign in
+                                            </button>
+                                            <button type="submit" className="btn btn-primary" onClick={this.onClickSignup}>
+                                                Sign up
                                             </button>
                                         </footer>
                                     </form>

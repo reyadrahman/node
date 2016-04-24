@@ -12,6 +12,35 @@ let AuthStore = Reflux.createStore({
         this.error = null;
     },
 
+    onSignup: function(credentials) {
+        console.log('onSignup: ', credentials);
+
+        AWS.config.region = 'eu-west-1';
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: 'eu-west-1:53c6d014-5e9c-4795-9fdc-9c80ef75471c'
+        });
+        let lambda = new AWS.Lambda();
+
+        lambda.invoke({
+            FunctionName: 'LambdAuthCreateUser',
+            Payload: JSON.stringify(credentials)
+        }, function(err, data) {
+            if (err) {
+                console.log('ERROR: ', err, err.stack);
+                window.location.href = '#/signup';
+            }
+            else {
+                var output = JSON.parse(data.Payload);
+                console.log(output.created ? 'created user' : 'could not create user', output);
+                if (output.created) {
+                    window.location.href = '#/login';
+                } else {
+                    window.location.href = '#/signup';
+                }
+            }
+        });
+    },
+
     /**
      * Login handler
      * @param credentials
