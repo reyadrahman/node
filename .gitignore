@@ -6,3 +6,5 @@ admin/bower_components/*
 admin/npm-debug.log
 
 npm-debug.log
+
+.DS_Store

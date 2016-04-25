@@ -1,9 +1,13 @@
 import React from 'react'
 
+import styles from './style.scss';
+
+//console.log(styles);
+
 let Home = React.createClass({
-    render: function(){
+    render() {
         return (
-            <div>Hi there!!</div>
+            <div className={styles.title}>Hi there!!</div>
         )
     }
 });
