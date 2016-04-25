@@ -4,3 +4,5 @@ admin/node_modules/*
 admin/bower_components/*
 
 admin/npm-debug.log
+
+npm-debug.log
