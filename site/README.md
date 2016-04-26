@@ -3,12 +3,17 @@ First install modules
 npm install
 ```
 
-then build dist/bundle.js
+then build dist/bundle.js and start the server
+```
+npm run build-client
+npm start
+```
+
+Alternatively, for development you could build dist/bundle.js with the following command which will block waiting for changes and then rebuilds
 ```
 npm run build-client-watch
 ```
-
-then start the server in a separate shell,
+if you use the above command you have to start the server in a separate shell using the following command
 ```
 npm start
 ```
