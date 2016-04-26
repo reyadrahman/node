@@ -1,4 +1,5 @@
-import React from 'react'
+import React from 'react';
+import { Link } from 'react-router';
 
 import styles from './footer.scss';
 
@@ -45,11 +46,9 @@ const LinkBox = React.createClass({
                     {this.props.title}
                 </div>
                 {
-                    this.props.links.map(l => {
+                    this.props.links.map((l,i) => {
                         return (
-                            <div className={styles.linkBoxItem}>
-                                {l.label}
-                            </div>
+                            <Link key={i} to={l.link} className={styles.linkBoxItem}>{l.label}</Link>
                         )
                     })
                 }
