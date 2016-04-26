@@ -1,6 +1,7 @@
 import React from 'react'
 import HomeIntro from '../../components/home-intro/HomeIntro.jsx';
 import HomeImageSamples from '../../components/home-image-samples/HomeImageSamples.jsx';
+import Footer from '../../components/footer/Footer.jsx';
 
 import styles from './home.scss';
 
@@ -10,13 +11,7 @@ let Home = React.createClass({
             <div>
                 <HomeIntro />
                 <HomeImageSamples />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
+                <Footer />
             </div>
         );
     }

@@ -1,0 +1,33 @@
+$letterSpacing: 6px;
+
+.root {
+    padding: 10px 0 100px 0;
+    background: rgb(168, 168, 173);
+}
+.logo {
+    height: 100px;
+    background: url(../../public/logo.png) center /60px no-repeat;
+}
+.linkBoxesContainer {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+.linkBox {
+    width: 300px;
+    border: 1px solid white;
+    border-radius: 2px;
+    margin: 0px 30px 20px 30px;
+    padding: 30px 50px 10px 50px;
+    color: rgb(240, 240, 240);
+    font-size: 14px;
+}
+.linkBoxTitle {
+    margin: 0 0 90px 0;
+    letter-spacing: $letterSpacing;
+}
+.linkBoxItem {
+    margin: 20px 0;
+    letter-spacing: $letterSpacing;
+}
