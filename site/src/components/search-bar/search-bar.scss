@@ -1,0 +1,46 @@
+.root {
+    width: 700px;
+    height: 50px;
+    display: flex;
+}
+
+.typeAndSearch {
+    background: white;
+    flex: 1 0 0;
+    display: flex;
+    height: 100%;
+}
+
+.separator1 {
+    width: 2px;
+    margin: 8px 0;
+    background: rgb(150, 150, 150);
+}
+
+.searchInput {
+    flex: 1 0 0;
+    padding: 0 20px;
+    outline: none;
+    border: none;
+    font-size: 13px;
+    text-align: center;
+    &:focus, &:focus {
+         outline: none;
+         border: none;
+    }
+}
+
+.searchButton {
+    margin: 0 0 0 10px;
+    width: 50px;
+    background: url(../../public/search-icon.png) center /40px no-repeat;
+    //background-color: rgb(230, 230, 230);
+    background-color: rgb(255, 255, 255);
+    cursor: pointer;
+
+    &:hover {
+        transform: translate3D(3px, 0, 0);
+        background-color: #f2f9fc;
+    }
+    transition: all 0.2s ease-in-out;
+}

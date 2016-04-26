@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router';
 
 import styles from './header.scss';
 
@@ -7,16 +8,16 @@ let Header = React.createClass({
         return (
             <div className={styles.root}>
                 <div className={styles.leftMenu}>
-                    <div>PHOTOS</div>
-                    <div>VIDEOS</div>
-                    <div>STORIES</div>
+                    <Link className={styles.menuItem} to="">PHOTOS</Link>
+                    <Link className={styles.menuItem} to="">VIDEOS</Link>
+                    <Link className={styles.menuItem} to="">STORIES</Link>
                 </div>
                 <div className={styles.logo}>
                 </div>
                 <div className={styles.rightMenu}>
-                    <div>LIGHTBOX</div>
-                    <div>PANIER</div>
-                    <div>CONNEXION</div>
+                    <Link className={styles.menuItem} to="">LIGHTBOX</Link>
+                    <Link className={styles.menuItem} to="">PANIER</Link>
+                    <Link className={styles.menuItem} to="">CONNEXION</Link>
                 </div>
             </div>
         )

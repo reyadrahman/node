@@ -3,8 +3,11 @@
     /* margin: 20px 0 0 0; */
     display: flex;
     align-items: center;
-    padding: 0 100px;
     color: white;
+    padding: 0 100px;
+    @media(max-width: 1300px) {
+        padding: 0 20px;
+    }
 }
 
 .leftMenu {
@@ -12,9 +15,6 @@
 
     display: flex;
     justify-content: flex-start;
-}
-.leftMenu > div {
-    margin: 0 10px;
 }
 
 .logo {
@@ -30,6 +30,33 @@
     justify-content: flex-end;
 }
 
-.rightMenu > div {
-    margin: 0 10px;
+.menuItem {
+    &:link, &:visited {
+        text-decoration: none;
+    }
+    &:hover {
+        transform: translate3D(0, -2px, 0);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        color: rgb(255, 255, 255);
+    }
+
+    font-size: 16px;
+    color: rgb(240, 240, 240);
+    font-weight: 100;
+    border-bottom: 1px solid rgba(255, 255, 255, 0);
+    display: block;
+    height: 25px;
+    margin: 0 14px;
+    padding: 0 0 5px 0;
+    letter-spacing: 6px;
+    transition: all .2s ease-in-out;
+
+    @media(max-width: 1100px) {
+        font-size: 14px;
+        letter-spacing: 4px;
+    }
+    @media(max-width: 900px) {
+        font-size: 12px;
+        letter-spacing: 3px;
+    }
 }

@@ -11,7 +11,8 @@
     left: 0;
     height: 40px;
     top: 55vh;
-    background: url(./search-placeholder.png) center / contain no-repeat;
+    display: flex;
+    justify-content: center;
 }
 
 .scrollDownContainer {
