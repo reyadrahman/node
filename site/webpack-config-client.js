@@ -75,12 +75,8 @@ config = {
                 ])
             },
             {
-                test: /\.jpg$/,
-                loader: "file-loader"
-            },
-            {
-                test: /\.png/,
-                loader: "file-loader"
+                test: /\.(png|jpg|mp4)$/,
+                loader: "url-loader?limit=1024"
             }
         ]
     }

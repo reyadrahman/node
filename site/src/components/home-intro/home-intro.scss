@@ -1,8 +1,29 @@
 .root {
     height: 100vh;
-    background: url(./background-2.jpg) bottom /cover no-repeat;
+//    background: url(./background-2.jpg) bottom /cover no-repeat;
     padding: 20px;
     position: relative;
+}
+
+.background {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    z-index: -100;
+    overflow: hidden;
+
+    .backgroundVideo {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: auto;
+        height: auto;
+        min-width: 100%;
+        min-height: 100%;
+        transform: translate(-50%, -50%);
+    }
 }
 
 .searchContainer {

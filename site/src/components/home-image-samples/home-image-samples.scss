@@ -2,11 +2,12 @@ $rowHeight: 300px;
 $bigRowHeight: 450px;
 
 .title {
-    margin: 20px;
+    padding: 20px;
     color: rgb(80,80,80);
     font-size: 20px;
     text-align: center;
     letter-spacing: 5px;
+    background: white;
 }
 
 .imageSamplesContainer {
