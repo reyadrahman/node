@@ -10,7 +10,7 @@ const GLOBALS = {
     'process.env.WEBSITE_HOSTNAME': `"${process.env.WEBSITE_HOSTNAME || ''}"`,
 };
 
-var extractSCSS = new ExtractTextPlugin('style.css');
+var extractCSS = new ExtractTextPlugin('style.css');
 
 config = {
     // or devtool: 'eval' to debug issues with compiled output:
@@ -29,7 +29,7 @@ config = {
         publicPath: '/dist/'
     },
     plugins: [
-        extractSCSS,
+        extractCSS,
         new webpack.DefinePlugin(GLOBALS),
         //new webpack.HotModuleReplacementPlugin(),
         //new webpack.NoErrorsPlugin()
@@ -58,12 +58,29 @@ config = {
             },
 
             {
+                // NOTE scss files use modules but css files don't
                 test: /\.scss$/,
-                loader: extractSCSS.extract([
+                loader: extractCSS.extract([
                     'css?modules&importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
                     'resolve-url',
                     'sass?sourceMap'
                 ])
+            },
+            {
+                // NOTE scss files use modules but css files don't
+                test: /\.css$/,
+                loader: extractCSS.extract([
+                    'css?importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
+                    'resolve-url',
+                ])
+            },
+            {
+                test: /\.jpg$/,
+                loader: "file-loader"
+            },
+            {
+                test: /\.png/,
+                loader: "file-loader"
             }
         ]
     }

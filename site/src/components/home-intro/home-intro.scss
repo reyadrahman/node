@@ -1,0 +1,33 @@
+.root {
+    height: 100vh;
+    background: url(./background-2.jpg) bottom /cover no-repeat;
+    padding: 20px;
+    position: relative;
+}
+
+.searchContainer {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    height: 40px;
+    top: 55vh;
+    background: url(./search-placeholder.png) center / contain no-repeat;
+}
+
+.scrollDownContainer {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    bottom: 20px;
+}
+.scrollDownLabel {
+    font-size: 30px;
+    text-align: center;
+    letter-spacing: 3px;
+    color: white;
+}
+.scrollDownArrow {
+    margin: 20px 0 0 0;
+    height: 30px;
+    background: url(./arrow-down.png) center /contain no-repeat;
+}

@@ -8,7 +8,8 @@ const Routes = (
         <Route path="/" component={Layout} >
             <IndexRoute component={Home}/>
         </Route>
-    </Route>);
+    </Route>
+);
 
 
 export default Routes

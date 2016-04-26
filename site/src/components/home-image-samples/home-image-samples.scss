@@ -1,0 +1,64 @@
+$rowHeight: 300px;
+$bigRowHeight: 450px;
+
+.title {
+    margin: 20px;
+    color: rgb(80,80,80);
+    font-size: 20px;
+    text-align: center;
+    letter-spacing: 5px;
+}
+
+.imageSamplesContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    
+    & > div {
+        flex: 1 0 auto;
+        min-height: $rowHeight;
+        background-position: center;
+        background-size: cover;
+        align-items: stretch;
+    }
+    & > div:last-child {
+        flex: 0 0 auto;
+    }
+
+    & .sample1 {
+        width: $rowHeight * 1.667;
+        background-image: url(./sample-image-1.jpg);
+    }
+    & .sample2 {
+        width: $rowHeight * 1.495;
+        background-image: url(./sample-image-2.jpg);
+    }
+    & .sample3 {
+        width: $rowHeight * 1.496;
+        background-image: url(./sample-image-3.jpg);
+    }
+    & .sample4 {
+        width: $rowHeight * 1.348;
+        background-image: url(./sample-image-4.jpg);
+    }
+    & .sample5 {
+        width: $rowHeight * 0.708;
+        background-image: url(./sample-image-5.jpg);
+    }
+    & .sample6 {
+        width: $bigRowHeight * 1.407;
+        min-height: $bigRowHeight;
+        background-image: url(./sample-image-6.jpg);
+    }
+    & .sample7 {
+        width: $bigRowHeight * 1.342;
+        min-height: $bigRowHeight;
+        background-image: url(./sample-image-7.jpg);
+    }
+    & .sample8 {
+        width: $bigRowHeight * 0.868;
+        min-height: $bigRowHeight;
+        background-image: url(./sample-image-8.jpg);
+    }
+}
+

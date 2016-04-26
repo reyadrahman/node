@@ -1,0 +1,35 @@
+
+.root {
+    /* margin: 20px 0 0 0; */
+    display: flex;
+    align-items: center;
+    padding: 0 100px;
+    color: white;
+}
+
+.leftMenu {
+    flex: 1 0 0;
+
+    display: flex;
+    justify-content: flex-start;
+}
+.leftMenu > div {
+    margin: 0 10px;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
+    background: url(./logo.png) center /60px no-repeat;
+}
+
+.rightMenu {
+    flex: 1 0 0;
+
+    display: flex;
+    justify-content: flex-end;
+}
+
+.rightMenu > div {
+    margin: 0 10px;
+}
