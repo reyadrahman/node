@@ -5,10 +5,14 @@ import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import http from 'http';
+import compression from 'compression';
 import {port} from './config';
 var debug = require('debug')('app:server');
 
 var app = express();
+
+// TODO don't do compression in node.js. Let a reverse proxy take care of compression
+app.use(compression());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
