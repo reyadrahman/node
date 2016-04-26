@@ -8,6 +8,7 @@ then build dist/bundle.js and start the server
 npm run build-client
 npm start
 ```
+Now server will be running at http://localhost:3000/
 
 Alternatively, for development you could build dist/bundle.js with the following command which will block waiting for changes and then rebuilds
 ```
