@@ -1,16 +1,20 @@
 import React from 'react'
 import {render} from 'react-dom'
-import {Router} from 'react-router'
+import {Router, hashHistory} from 'react-router'
+import { Provider } from 'react-redux'
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import * as reducers from './reducers/reducers.js';
 
-import {hashHistory} from 'react-router'
-
+const store = createStore(combineReducers(reducers));
 
 import Routes from './Routes.jsx';
 
 var rootInstance = render((
-    <Router history={hashHistory}>
-        {Routes}
-    </Router>
+    <Provider store={store}>
+        <Router history={hashHistory}>
+            {Routes}
+        </Router>
+    </Provider>
 ), document.getElementById('reactUI'));
 
 if (module.hot) {

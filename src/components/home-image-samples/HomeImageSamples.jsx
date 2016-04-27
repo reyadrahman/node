@@ -17,10 +17,11 @@ const images = [
 
 let HomeImageSamples = React.createClass({
     render() {
+        let {i18n: {strings}} = this.props;
         return (
             <div>
                 <div className={styles.title}>
-                    PREMIUM IMAGES & FOOTAGE LIBRES DE DROITS
+                    {strings.home.imageSamplesTitle}
                 </div>
                 <div className={styles.imageSamplesContainer}>
                     { /*

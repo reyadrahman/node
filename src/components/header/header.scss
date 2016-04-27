@@ -1,3 +1,43 @@
+$itemColor: rgb(240, 240, 240);
+$itemLetterSpacing: 6px;
+$itemFontSize: 13px;
+
+
+@media(max-width: 1300px) {
+    .root {
+        padding: 0 20px;
+    }
+}
+
+@media(max-width: 1300px) {
+    .menuItem {
+        font-size: 11px;
+        letter-spacing: 4px;
+    }
+
+    :global {
+        .Header-LangDropdown {
+            &-placeholder {
+                font-size: 11px;
+                letter-spacing: 4px;
+            }
+        }
+    }
+}
+@media(max-width: 900px) {
+    .menuItem {
+        font-size: 9px;
+        letter-spacing: 2px;
+    }
+    :global {
+        .Header-LangDropdown {
+            &-placeholder {
+                font-size: 9px;
+                letter-spacing: 2px;
+            }
+        }
+    }
+}
 
 .root {
     /* margin: 20px 0 0 0; */
@@ -5,9 +45,6 @@
     align-items: center;
     color: white;
     padding: 0 100px;
-    @media(max-width: 1300px) {
-        padding: 0 20px;
-    }
 }
 
 .leftMenu {
@@ -18,6 +55,7 @@
 }
 
 .logo {
+    flex: 0 0 auto;
     width: 100px;
     height: 100px;
     background: url(../../public/logo.png) center /60px no-repeat;
@@ -40,23 +78,136 @@
         color: rgb(255, 255, 255);
     }
 
-    font-size: 16px;
-    color: rgb(240, 240, 240);
+    font-size: $itemFontSize;
+    color: $itemColor;
     font-weight: 100;
     border-bottom: 1px solid rgba(255, 255, 255, 0);
     display: block;
     height: 25px;
     margin: 0 14px;
     padding: 0 0 5px 0;
-    letter-spacing: 6px;
+    letter-spacing: $itemLetterSpacing;
     transition: all .2s ease-in-out;
 
-    @media(max-width: 1100px) {
-        font-size: 14px;
-        letter-spacing: 4px;
-    }
-    @media(max-width: 900px) {
-        font-size: 12px;
-        letter-spacing: 3px;
+}
+
+
+
+:global {
+    .Header-LangDropdown {
+
+        &-root {
+            position: relative;
+            margin: 0 14px;
+        }
+
+        &-control {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            //background-color: white;
+            //border: 1px solid #ccc;
+            //border-radius: 2px;
+            box-sizing: border-box;
+            cursor: default;
+            outline: none;
+            padding: 0px 35px 0px 10px;
+            transition: all 200ms ease;
+        }
+
+        /*
+        &-control:hover {
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+        }
+       */
+
+        &-placeholder {
+            height: 25px;
+            letter-spacing: $itemLetterSpacing;
+            color: $itemColor;
+            font-size: $itemFontSize;
+            font-weight: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0);
+            transition: all .2s ease-in-out;
+            padding: 0 0 5px 0;
+            &:hover {
+                transform: translate3D(0, -2px, 0);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+                color: rgb(255, 255, 255);
+            }
+        }
+
+        &-arrow {
+            position: absolute;
+            height: 15px;
+            right: 0;
+            top: 0;
+            width: 20px;
+            display: block;
+            background: url(../../public/arrow-down-white.png) center /20px 10px no-repeat;
+        }
+
+        .is-open &-arrow {
+            /*
+            border-color: transparent transparent #999;
+            border-width: 0 5px 5px;
+           */
+        }
+
+        &-menu {
+            background-color: white;
+            //border: 1px solid #ccc;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+            box-sizing: border-box;
+            margin-top: -1px;
+            max-height: 200px;
+            overflow-y: auto;
+            position: absolute;
+            top: 100%;
+            width: 100%;
+            z-index: 1000;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        &-menu &-group &-title {
+            padding: 8px 10px;
+            color: rgba(51, 51, 51, 1);
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        &-option {
+            box-sizing: border-box;
+            color: rgba(51, 51, 51, 0.8);
+            cursor: pointer;
+            display: block;
+            padding: 8px 10px;
+            padding-left: 10px;
+        }
+
+        &-option:last-child {
+            border-bottom-right-radius: 2px;
+            border-bottom-left-radius: 2px;
+        }
+
+        &-option:hover {
+            background-color: #f2f9fc;
+            color: #333;
+        }
+
+        &-option.is-selected {
+            background-color: #f2f9fc;
+            color: #333;
+        }
+
+        &-noresults {
+            box-sizing: border-box;
+            color: #ccc;
+            cursor: default;
+            display: block;
+            padding: 8px 10px;
+        }
     }
 }
