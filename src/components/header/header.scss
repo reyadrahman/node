@@ -115,6 +115,13 @@ $itemFontSize: 13px;
             outline: none;
             padding: 0px 35px 0px 10px;
             transition: all 200ms ease;
+
+            border-bottom: 1px solid rgba(255, 255, 255, 0);
+            &:hover {
+                transform: translate3D(0, -2px, 0);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+                color: rgb(255, 255, 255);
+            }
         }
 
         /*
@@ -129,14 +136,8 @@ $itemFontSize: 13px;
             color: $itemColor;
             font-size: $itemFontSize;
             font-weight: 100;
-            border-bottom: 1px solid rgba(255, 255, 255, 0);
             transition: all .2s ease-in-out;
             padding: 0 0 5px 0;
-            &:hover {
-                transform: translate3D(0, -2px, 0);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-                color: rgb(255, 255, 255);
-            }
         }
 
         &-arrow {
@@ -147,13 +148,11 @@ $itemFontSize: 13px;
             width: 20px;
             display: block;
             background: url(../../public/arrow-down-white.png) center /20px 10px no-repeat;
+            transition: transform 0.2s ease-in-out;
         }
 
-        .is-open &-arrow {
-            /*
-            border-color: transparent transparent #999;
-            border-width: 0 5px 5px;
-           */
+        &-root.is-open &-arrow {
+            transform: translate3D(0, 3px, 0);
         }
 
         &-menu {
