@@ -26,7 +26,9 @@ let HomeIntro = React.createClass({
                     <div className={styles.scrollDownLabel}>
                         {strings.home.introMessage}
                     </div>
-                    <div className={styles.scrollDownArrow} />
+                    <div
+                        onClick={this.props.scrollDown}
+                        className={styles.scrollDownArrow} />
                 </div>
             </div>
         )

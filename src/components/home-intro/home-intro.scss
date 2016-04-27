@@ -51,5 +51,11 @@
 .scrollDownArrow {
     margin: 20px 0 0 0;
     height: 30px;
-    background: url(../../public/arrow-down-white.png) center /contain no-repeat;
+    background: url(../../public/arrow-down-white.png) center /60px 30px no-repeat;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    &:hover {
+        background-size: 70px 30px;
+        transform: translate3D(0, 5px, 0);
+    }
 }
