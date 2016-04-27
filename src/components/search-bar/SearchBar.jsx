@@ -6,12 +6,13 @@ import styles from './search-bar.scss';
 
 const SearchBar = React.createClass({
     render() {
+        let {i18n} = this.props;
         return (
             <div className={styles.root}>
                 <div className={styles.typeAndSearch}>
-                    <TypeDropdown />
+                    <TypeDropdown i18n={i18n} />
                     <div className={styles.separator1} />
-                    <SearchInput />
+                    <SearchInput i18n={i18n} />
                 </div>
                 <SearchButton />
             </div>
@@ -21,9 +22,11 @@ const SearchBar = React.createClass({
 
 const TypeDropdown = React.createClass({
     render() {
+        let {i18n: {strings}} = this.props;
+
         const options = [
-            { value: 'footage', label: 'Footage' },
-            { value: 'image', label: 'Image' }
+            { value: 'image', label: strings.search.image },
+            { value: 'footage', label: strings.search.footage },
         ];
         return (
             <Dropdown

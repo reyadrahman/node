@@ -3,35 +3,37 @@ import { Link } from 'react-router';
 
 import styles from './footer.scss';
 
-const supportLinks = [
-    {label: 'LICENCE', link: ''},
-    {label: 'FAQs', link: ''},
-    {label: 'PRICING', link: ''},
-];
-
-const companyLinks = [
-    {label: 'ABOUT US', link: ''},
-    {label: 'PRESS', link: ''},
-    {label: 'CONTACT', link: ''},
-    {label: 'CONTRIBUTORS', link: ''},
-];
-
-const communitiesLinks = [
-    {label: 'TWITTER', link: ''},
-    {label: 'YOUTUBE', link: ''},
-    {label: 'VIMEO', link: ''},
-    {label: 'LINKED IN', link: ''},
-];
-
 const Footer = React.createClass({
     render() {
+        let {i18n: {strings: {footer: ss}}} = this.props;
+
+        const supportLinks = [
+            {label: ss.licence, link: ''},
+            {label: ss.faqs, link: ''},
+            {label: ss.pricing, link: ''},
+        ];
+
+        const companyLinks = [
+            {label: ss.aboutUs, link: ''},
+            {label: ss.press, link: ''},
+            {label: ss.contact, link: ''},
+            {label: ss.contributors, link: ''},
+        ];
+
+        const communitiesLinks = [
+            {label: ss.twitter, link: ''},
+            {label: ss.youtube, link: ''},
+            {label: ss.vimeo, link: ''},
+            {label: ss.linkedIn, link: ''},
+        ];
+
         return (
             <div className={styles.root}>
                 <div className={styles.logo} />
                 <div className={styles.linkBoxesContainer}>
-                    <LinkBox title="SUPPORT" links={supportLinks} />
-                    <LinkBox title="THE COMPANY" links={companyLinks} />
-                    <LinkBox title="COMMUNITIES" links={communitiesLinks} />
+                    <LinkBox title={ss.support} links={supportLinks} />
+                    <LinkBox title={ss.theCompany} links={companyLinks} />
+                    <LinkBox title={ss.communities} links={communitiesLinks} />
                 </div>
             </div>
         );

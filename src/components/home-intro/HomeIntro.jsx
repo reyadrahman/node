@@ -9,6 +9,8 @@ import backgroundVideo from './background-video.mp4';
 
 let HomeIntro = React.createClass({
     render() {
+        console.log('HomeIntro render');
+        let {i18n, i18n: {strings}} = this.props;
         return (
             <div className={styles.root}>
                 <div className={styles.background}>
@@ -16,13 +18,13 @@ let HomeIntro = React.createClass({
                             <source src={backgroundVideo} type="video/mp4" />
                     </video>
                 </div>
-                <Header />
+                <Header i18n={i18n} />
                 <div className={styles.searchContainer}>
-                    <SearchBar />
+                    <SearchBar i18n={i18n} />
                 </div>
                 <div className={styles.scrollDownContainer}>
                     <div className={styles.scrollDownLabel}>
-                        RACONTE MOI UNE HISTOIRE
+                        {strings.home.introMessage}
                     </div>
                     <div className={styles.scrollDownArrow} />
                 </div>
