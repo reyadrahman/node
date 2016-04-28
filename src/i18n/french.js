@@ -30,5 +30,6 @@ export default {
         youtube: 'FRYOUTUBE',
         vimeo: 'FRVIMEO',
         linkedIn: 'FRLINKED IN',
+        languages: 'FRLANGUAGES',
     }
 };

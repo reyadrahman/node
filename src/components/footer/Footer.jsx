@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { connect } from 'react-redux';
+import {changeLang} from '../../actions/actions.js';
 
 import styles from './footer.scss';
 
-const Footer = React.createClass({
+let Footer = React.createClass({
     render() {
         let {i18n: {strings: {footer: ss}}} = this.props;
 
@@ -27,6 +29,11 @@ const Footer = React.createClass({
             {label: ss.linkedIn, link: ''},
         ];
 
+        const languagesLinks = [
+            {label: 'ENGLISH', link: '', value: 'english'},
+            {label: 'FRANÇAIS', link: '', value: 'french'},
+        ];
+
         return (
             <div className={styles.root}>
                 <div className={styles.logo} />
@@ -34,9 +41,16 @@ const Footer = React.createClass({
                     <LinkBox title={ss.support} links={supportLinks} />
                     <LinkBox title={ss.theCompany} links={companyLinks} />
                     <LinkBox title={ss.communities} links={communitiesLinks} />
+                    <LinkBox title={ss.languages} links={languagesLinks}
+                        onSelect={this.languageChanged}
+                    />
                 </div>
             </div>
         );
+    },
+
+    languageChanged(item) {
+        this.props.changeLang(item.value);
     }
 });
 
@@ -49,8 +63,16 @@ const LinkBox = React.createClass({
                 </div>
                 {
                     this.props.links.map((l,i) => {
+                        let onClick = this.props.onSelect ?
+                                      () => this.props.onSelect(l) :
+                                      null;
                         return (
-                            <Link key={i} to={l.link} className={styles.linkBoxItem}>{l.label}</Link>
+                            <Link
+                                key={i} to={l.link} className={styles.linkBoxItem}
+                                onClick={onClick}
+                            >
+                                {l.label}
+                            </Link>
                         )
                     })
                 }
@@ -58,5 +80,12 @@ const LinkBox = React.createClass({
         );
     }
 });
+
+Footer = connect(
+    null,
+    dispatch => ({
+        changeLang: (lang) => dispatch(changeLang(lang)),
+    })
+)(Footer);
 
 export default Footer;

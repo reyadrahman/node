@@ -30,5 +30,6 @@ export default {
         youtube: 'YOUTUBE',
         vimeo: 'VIMEO',
         linkedIn: 'LINKED IN',
+        languages: 'LANGUAGES',
     }
 };
