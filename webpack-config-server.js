@@ -1,7 +1,16 @@
 var path = require('path');
 var webpack = require('webpack');
-
+var fs = require('fs');
 var base = require('./webpack-config-base.js');
+
+var nodeModules = {};
+fs.readdirSync('node_modules')
+  .filter(function(x) {
+    return ['.bin', 'normalize.css'].indexOf(x) === -1;
+  })
+  .forEach(function(mod) {
+    nodeModules[mod] = 'commonjs ' + mod;
+  });
 
 var config = Object.assign({}, base.config, {
     entry: [
@@ -10,13 +19,19 @@ var config = Object.assign({}, base.config, {
         // listen to code updates emitted by hot middleware:
         //'webpack-hot-middleware/client',
         // your code:
-        './src/client/client.js'
+        './src/server/server.js'
     ],
     output: {
-        path: path.join(__dirname, 'dist-client'),
+        path: path.join(__dirname, 'dist-server'),
         filename: 'bundle.js',
         publicPath: '/dist/'
     },
+    externals: nodeModules,
+    target: 'node',
+    node: {
+        __dirname: false,
+        __filename: false,
+    }
 });
 
 

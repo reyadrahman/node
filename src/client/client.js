@@ -1,7 +1,7 @@
 import 'babel-polyfill';
 
 function main() {
-    require('./Router.jsx');
+    require('../client/Router.jsx');
 }
 
 window.onload = main;

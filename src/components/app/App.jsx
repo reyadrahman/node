@@ -6,7 +6,7 @@ import 'normalize.css';
 
 import styles from './app.scss';
 
-let App = React.createClass({
+export const App_ = React.createClass({
     /*
     getChildContext() {
         console.log('App getChildContext: ', this.props.lang);
@@ -34,10 +34,12 @@ let App = React.createClass({
     },
 });
 
-App = connect(
+
+const App = connect(
     state => ({
         lang: state.lang,
     })
-)(App);
+)(App_);
+
 
 export default App;

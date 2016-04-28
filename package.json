@@ -3,12 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "NODE_ENV=production webpack --config webpack-config-client.js && NODE_ENV=production node ./src/start-server.js",
-    "start-server": "node ./src/start-server.js",
+    "start": "export NODE_ENV=production; npm run build-client && npm run build-server && npm run start-server",
+    "start-server": "node ./dist-server/bundle.js",
     "build-client-watch": "webpack --config webpack-config-client.js --color --progress --watch",
-    "build-client": "webpack --config webpack-config-client.js --color --progress"
+    "build-client": "webpack --config webpack-config-client.js --color --progress",
+    "build-server": "webpack --config webpack-config-server.js --color --progress",
+    "build-server-watch": "webpack --config webpack-config-server.js --color --progress --watch"
   },
   "dependencies": {
+    "accept-language": "^2.0.16",
     "babel-cli": "^6.6.5",
     "babel-core": "^6.7.4",
     "babel-loader": "^6.2.4",
@@ -26,6 +29,7 @@
     "express": "~4.13.1",
     "extract-text-webpack-plugin": "^1.0.1",
     "file-loader": "^0.8.5",
+    "fs": "0.0.2",
     "jade": "~1.11.0",
     "js-csp": "^0.5.0",
     "json-loader": "^0.5.4",
@@ -43,8 +47,10 @@
     "resolve-url-loader": "^1.4.3",
     "sass-loader": "^3.2.0",
     "serve-favicon": "~2.3.0",
+    "source-map-support": "^0.4.0",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
+    "validator": "^5.2.0",
     "webpack": "^1.12.14"
   }
 }

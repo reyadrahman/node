@@ -1,17 +1,19 @@
 import React from 'react'
 import {render} from 'react-dom'
-import {Router, hashHistory} from 'react-router'
+import {Router, browserHistory} from 'react-router'
 import { Provider } from 'react-redux'
 import { createStore, combineReducers, applyMiddleware } from 'redux';
-import * as reducers from './reducers/reducers.js';
+import * as reducers from '../reducers/reducers.js';
 
-const store = createStore(combineReducers(reducers));
+let initAppState = JSON.parse(document.getElementById('initAppState').innerHTML);
 
-import Routes from './Routes.jsx';
+const store = createStore(combineReducers(reducers), initAppState);
+
+import Routes from '../Routes.jsx';
 
 var rootInstance = render((
     <Provider store={store}>
-        <Router history={hashHistory}>
+        <Router history={browserHistory}>
             {Routes}
         </Router>
     </Provider>

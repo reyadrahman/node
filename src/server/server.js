@@ -1,3 +1,11 @@
+require('babel-polyfill');
+
+console.log('server.js top');
+if (process.env.NODE_ENV !== 'production') {
+    console.log('registering source-map-support');
+    require('source-map-support').install();
+}
+
 import express from 'express';
 import path from 'path';
 import favicon from 'serve-favicon';
@@ -6,8 +14,12 @@ import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import http from 'http';
 import compression from 'compression';
-import {port} from './config';
+import {port} from '../config';
+import routes from './routes';
 var debug = require('debug')('app:server');
+
+//debug('__dirname', __dirname);
+var ROOT_DIR = path.join(__dirname, '../');
 
 
 debug(`running server in ${process.env.NODE_ENV === 'production' ? 'production' : 'development'} mode`);
@@ -18,7 +30,8 @@ var app = express();
 app.use(compression());
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
+debug('views directory: ', path.join(ROOT_DIR, 'src/views'));
+app.set('views', path.join(ROOT_DIR, 'src/views'));
 app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
@@ -28,11 +41,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
-app.use('/dist', express.static(path.join(__dirname, '../dist')));
+app.use('/dist', express.static(path.join(ROOT_DIR, 'dist-client')));
 
-app.use('/', (req, res, next) => {
-  res.render('index');
-});
+app.use('/', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -48,6 +59,7 @@ app.use(function(req, res, next) {
 if (process.env.NODE_ENV !== 'production') {
   app.use(function(err, req, res, next) {
     res.status(err.status || 500);
+    debug('ERROR: ', err.message);
     res.render('error', {
       message: err.message,
       error: err
