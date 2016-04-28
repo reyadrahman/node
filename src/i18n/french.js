@@ -5,7 +5,7 @@ export default {
         stories: 'STORIESFR',
         lightBox: 'LIGHTBOXFR',
         basket: 'BASKETFR',
-        connections: 'CONNECTIONSFR',
+        connections: 'CONNECTIOn',
     },
     home: {
         introMessage: 'RACONTE MOI UNE HISTOIRE',

@@ -5,7 +5,7 @@ export default {
         stories: 'STORIES',
         lightBox: 'LIGHTBOX',
         basket: 'BASKET',
-        connections: 'CONNECTIONS',
+        connections: 'CONNECTION',
     },
     home: {
         introMessage: 'TELL ME A STORY',
