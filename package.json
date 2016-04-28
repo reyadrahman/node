@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "NODE_ENV=production webpack --config webpack-config-client.js; NODE_ENV=production node ./src/start-server.js",
+    "start": "NODE_ENV=production webpack --config webpack-config-client.js && NODE_ENV=production node ./src/start-server.js",
+    "start-server": "node ./src/start-server.js",
     "build-client-watch": "webpack --config webpack-config-client.js --color --progress --watch",
     "build-client": "webpack --config webpack-config-client.js --color --progress"
   },

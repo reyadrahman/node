@@ -9,6 +9,9 @@ import compression from 'compression';
 import {port} from './config';
 var debug = require('debug')('app:server');
 
+
+debug(`running server in ${process.env.NODE_ENV === 'production' ? 'production' : 'development'} mode`);
+
 var app = express();
 
 // TODO don't do compression in node.js. Let a reverse proxy take care of compression
@@ -42,8 +45,7 @@ app.use(function(req, res, next) {
 
 // development error handler
 // will print stacktrace
-// TODO app.get('env') ?
-if (app.get('env') !== 'production') {
+if (process.env.NODE_ENV !== 'production') {
   app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error', {
