@@ -22,17 +22,15 @@ const Routes = [
 ];
 
 const RoutesWithLang = (
-    <Route path="/">
+    <Route path="/" component={App}>
         {
             languages.map(lang => (
-                <Route path={lang} component={App}>
+                <Route path={lang}>
                     {Routes}
                 </Route>
             ))
         }
-        <Route path="/" component={App}>
-            {Routes}
-        </Route>
+        {Routes}
     </Route>
 );
 
