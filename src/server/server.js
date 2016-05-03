@@ -15,7 +15,7 @@ import bodyParser from 'body-parser';
 import http from 'http';
 import compression from 'compression';
 import {port} from '../config';
-import routes from './routes';
+import router from './server-router.js';
 var debug = require('debug')('app:server');
 
 //debug('__dirname', __dirname);
@@ -43,7 +43,7 @@ app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
 app.use('/dist', express.static(path.join(ROOT_DIR, 'dist-client')));
 
-app.use('/', routes);
+app.use('/', router);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -1,28 +1,20 @@
 import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
 import translations from '../../i18n/translations.js';
+import * as actions from '../../actions/actions.js';
+import {splitLangUrl} from '../../misc/url.js';
 
 import 'normalize.css';
 
 import styles from './app.scss';
 
 export const App_ = React.createClass({
-    /*
-    getChildContext() {
-        console.log('App getChildContext: ', this.props.lang);
-        return {
-            lang: this.props.lang,
-            i18n: translations[this.props.lang],
-        };
-    },
-    */
-
     render() {
-        console.log('App render');
+        console.log('App render, lang', this.state.lang);
         let cs = React.cloneElement(this.props.children, {
             i18n: {
-                lang: this.props.lang,
-                strings: translations[this.props.lang],
+                lang: this.state.lang,
+                strings: translations[this.state.lang],
             }
         });
 
@@ -32,12 +24,41 @@ export const App_ = React.createClass({
             </div>
         )
     },
+
+    getInitialState() {
+        return {
+            // will set it in componentWillMount
+            // and componentWillReceiveProps
+            lang: '',
+        };
+    },
+
+    componentWillMount() {
+        this.updateStore(this.props);
+    },
+
+    componentWillReceiveProps(newProps) {
+        this.updateStore(newProps);
+    },
+
+    updateStore(props) {
+        let pathname = props.location.pathname;
+        props.dispatch(actions.changeLocation({pathname}));
+
+        let urlSplit = splitLangUrl(pathname);
+        let lang = urlSplit ? urlSplit.lang : props.systemLang;
+        props.dispatch(actions.changeLang(lang));
+        props.dispatch(actions.changeIsLangInUrl(Boolean(urlSplit)));
+
+        this.setState({lang});
+    }
+
 });
 
 
 const App = connect(
     state => ({
-        lang: state.lang,
+        systemLang: state.systemLang,
     })
 )(App_);
 

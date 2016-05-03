@@ -45,7 +45,7 @@ let HomeImageSamples = React.createClass({
                 </div>
             </div>
         );
-    }
+    },
 });
 
 export default HomeImageSamples;

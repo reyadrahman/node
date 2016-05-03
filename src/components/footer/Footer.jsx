@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import Link from '../link/Link.jsx';
 import { connect } from 'react-redux';
 import {changeLang} from '../../actions/actions.js';
 
@@ -25,13 +25,13 @@ let Footer = React.createClass({
         const communitiesLinks = [
             {label: ss.twitter, link: ''},
             {label: ss.youtube, link: ''},
-            {label: ss.vimeo, link: ''},
-            {label: ss.linkedIn, link: ''},
+            {label: ss.vimeo, link: 'hh'},
+            {label: ss.linkedIn, link: '!ff', value: 'gg'},
         ];
 
         const languagesLinks = [
-            {label: 'ENGLISH', link: '', value: 'english'},
-            {label: 'FRANÇAIS', link: '', value: 'french'},
+            {label: 'ENGLISH', link: '!en', value: 'en'},
+            {label: 'FRANÇAIS', link: '!fr', value: 'fr'},
         ];
 
         return (
@@ -51,7 +51,7 @@ let Footer = React.createClass({
 
     languageChanged(item) {
         this.props.changeLang(item.value);
-    }
+    },
 });
 
 const LinkBox = React.createClass({

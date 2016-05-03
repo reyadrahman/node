@@ -8,15 +8,27 @@ import * as reducers from '../reducers/reducers.js';
 import Routes from '../Routes.jsx';
 import App from '../components/app/App.jsx';
 import Home from '../components/home/Home.jsx';
+import {languages} from '../i18n/translations.js';
+import {splitLangUrl, urlWithLang} from '../misc/url.js';
 import acceptLanguage from 'accept-language';
 
-acceptLanguage.languages(['en', 'fr']);
+acceptLanguage.languages(languages);
 
 export default function render(req, res, next) {
-    //console.log(req);
-    let langCode = acceptLanguage.get(req.headers['accept-language']);
-    let lang = langCode === 'fr' ? 'french' : 'english';
-    const store = createStore(combineReducers(reducers), {lang});
+    console.log('req.url: ', req.url);
+    let systemLang = acceptLanguage.get(req.headers['accept-language']);
+
+    let urlSplit = splitLangUrl(req.url);
+    //let isLangInUrl = urlSplit && languages.includes(urlSplit.lang);
+    let lang = urlSplit ? urlSplit.lang : systemLang;
+
+    console.log('urlSplit', urlSplit, ', lang: ', lang);
+
+    const store = createStore(combineReducers(reducers), {
+        lang,
+        systemLang,
+        isLangInUrl: Boolean(urlSplit),
+    });
 
     match({ routes: Routes, location: req.url }, (error, redirectLocation, renderProps) => {
         if (redirectLocation) {

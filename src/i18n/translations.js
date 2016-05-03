@@ -1,9 +1,11 @@
-import english from './english.js';
-import french from './french.js';
+import en from './english.js';
+import fr from './french.js';
 
-const translations = {
-    english,
-    french,
+export const translations = {
+    en,
+    fr,
 };
+
+export const languages = ['en', 'fr'];
 
 export default translations;

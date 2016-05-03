@@ -63,7 +63,10 @@ config = {
                 test: /\.(png|jpg|mp4)$/,
                 loader: "url-loader?limit=1024"
             }
-        ]
+        ],
+        noParse: [
+            /aws\-sdk/,
+        ],
     }
 };
 

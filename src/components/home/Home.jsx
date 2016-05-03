@@ -9,7 +9,7 @@ import styles from './home.scss';
 
 let Home = React.createClass({
     render() {
-        console.log('Home render');
+        console.log('Home render, this.props:', this.props);
         let {i18n} = this.props;
         return (
             <div>
@@ -27,7 +27,7 @@ let Home = React.createClass({
         let dom = ReactDOM.findDOMNode(this.secondPageElem);
         if (!dom) return;
         smoothScroll(dom, 500);
-    }
+    },
 });
 
 export default Home
