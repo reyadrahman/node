@@ -3,9 +3,8 @@
 
 .DS_Store
 .swp
-dist
-dist-client
-dist-server
+/dist-client
+/dist-server
 node_modules
 
 # Elastic Beanstalk Files
