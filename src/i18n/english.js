@@ -31,5 +31,13 @@ export default {
         vimeo: 'VIMEO',
         linkedIn: 'LINKED IN',
         languages: 'LANGUAGES',
+    },
+    signup: {
+        title: 'Sign Up',
+        firstName: 'First name',
+        lastName: 'Last name',
+        email: 'Email address',
+        password: 'Password',
+        signup: 'Sign up',
     }
 };

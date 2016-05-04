@@ -1,28 +1,8 @@
 import 'babel-polyfill';
 
-/*
-var BigInteger = require("exports?BigInteger!jsbn.js");
-window.BigInteger = BigInteger;
-require("jsbn2.js");
-console.log('BigInteger', BigInteger);
-
-import sjcl from 'sjcl';
-window.sjcl = sjcl;
-
-import moment from 'moment';
-window.moment = moment;
-
-import 'aws-sdk/dist/aws-sdk';
-const AWS = window.AWS;
-
-import 'amazon-cognito-identity-js/dist/aws-cognito-sdk.min.js';
-import 'amazon-cognito-identity-js/dist/amazon-cognito-identity.min.js';
-*/
-
-
+console.log('!!!! PLATFORM', PLATFORM);
 
 function main() {
-    //TODO
     require('../client/client-router.jsx');
 
     /*

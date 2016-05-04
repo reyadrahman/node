@@ -1,6 +1,9 @@
 require('babel-polyfill');
 
-console.log('server.js top');
+console.log('!!!! PLATFORM', PLATFORM);
+console.log('!!!! process.env.NODE_ENV: ', process.env.NODE_ENV);
+
+
 if (process.env.NODE_ENV !== 'production') {
     console.log('registering source-map-support');
     require('source-map-support').install();

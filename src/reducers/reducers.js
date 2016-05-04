@@ -39,6 +39,21 @@ export function locationRedux(state = {pathname: '/'}, action) {
             return state;
     }
 }
+export function signup(state =
+    {
+        isOpen: false,
+        errorMessage: '',
+        successMessage: '',
+    }, action)
+{
+    console.log('signup reducer: ', state, action);
+    switch (action.type) {
+        case 'SIGNUP':
+            return Object.assign({}, state, action.signup);
+        default:
+            return state;
+    }
+}
 
 /*
 export default function app(state = initialStore, action) {

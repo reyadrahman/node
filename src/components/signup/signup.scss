@@ -1,0 +1,115 @@
+.modalOverlay {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    background-color: rgba(255, 255, 255, 0.5); 
+}
+
+.modalContent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 700px;
+    height: 400px;
+    transform: translate3D(-50%, -50%, 0);
+    background-color: rgb(88, 89, 91);
+
+    overflow: auto;
+    outline: none;
+    padding: 10px 40px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modalContent {
+    color: white;
+}
+
+.closeButton {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    width: 30px;
+    height: 30px;
+
+    background: url(../../public/cross-white.png) center /contain no-repeat;
+    transition: transform 0.2s ease-in-out;
+    cursor: pointer;
+
+    &:hover {
+        transform: scale3D(1.1, 1.1, 1);
+    }
+}
+
+.title {
+    letter-spacing: 4px;
+    font-weight: 100;
+}
+
+.input {
+    outline: none;
+    &:focus {
+         outline: none;
+    }
+}
+
+.fieldAndButton {
+    width: 45%; 
+    padding: 10px;
+    /*
+    $inputAndButtonPadding: 10px;
+    $inputAndButtonMargin: 10px 0;
+   */
+
+}
+
+.field {
+    @extend .fieldAndButton;
+    margin: 10px 0;
+    border: 1px solid white;
+    background: none;
+    color: white;
+    flex: 0 0 auto;
+    transition: all 0.2s ease-in-out;
+    &:focus {
+        background: rgba(255, 255, 255, 0.2);
+    }
+}
+
+.inputsRow1 {
+    display: flex;
+    justify-content: space-between;
+}
+
+.inputsRow2 {
+    display: flex;
+    justify-content: space-between;
+}
+
+.signupButton {
+    @extend .fieldAndButton;
+    border: none;
+    outline: none;
+    margin: 50px 0;
+    background: rgb(210, 210, 210);;
+    color: black;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    &:hover {
+        background: rgb(230, 230, 230);
+        transform: translate3D(0, -3px, 0);
+    }
+    &:focus {
+        background: rgb(250, 250, 250);
+    }
+}
+
+.error {
+    color: rgb(255, 124, 124);
+    text-align: center;
+}
+.success {
+    color: rgb(124, 255, 124);
+    text-align: center;
+}

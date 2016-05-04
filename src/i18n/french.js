@@ -31,5 +31,13 @@ export default {
         vimeo: 'FRVIMEO',
         linkedIn: 'FRLINKED IN',
         languages: 'FRLANGUAGES',
+    },
+    signup: {
+        title: 'French Sign Up',
+        firstName: 'French first name',
+        lastName: 'French last name',
+        email: 'French email address',
+        password: 'French password',
+        signup: 'French sign up',
     }
 };

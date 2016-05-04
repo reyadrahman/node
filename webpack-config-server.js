@@ -12,7 +12,14 @@ fs.readdirSync('node_modules')
     nodeModules[mod] = 'commonjs ' + mod;
   });
 
+const GLOBALS = {
+    PLATFORM: '"node"',
+}
+
 var config = Object.assign({}, base.config, {
+    resolve: Object.assign({}, base.config.resolve, {
+        extensions: ['', '.js', '.jsx']
+    }),
     entry: [
         // necessary for hot reloading with IE:
         //'eventsource-polyfill',
@@ -31,7 +38,10 @@ var config = Object.assign({}, base.config, {
     node: {
         __dirname: false,
         __filename: false,
-    }
+    },
+    plugins: base.config.plugins.concat([
+        new webpack.DefinePlugin(GLOBALS),
+    ]),
 });
 
 

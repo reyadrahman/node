@@ -1,14 +1,21 @@
 import React from 'react'
 import {render} from 'react-dom'
 import {Router, browserHistory} from 'react-router'
-import { Provider } from 'react-redux'
-import { createStore, combineReducers, applyMiddleware } from 'redux';
+import {Provider} from 'react-redux'
+import {createStore, combineReducers, applyMiddleware} from 'redux';
+import thunkMiddleware from 'redux-thunk'
+import createLogger from 'redux-logger'
 import * as reducers from '../reducers/reducers.js';
 import * as actions from '../actions/actions.js';
 
-let initAppState = JSON.parse(document.getElementById('initAppState').innerHTML);
+const initAppState = JSON.parse(document.getElementById('initAppState').innerHTML);
 
-const store = createStore(combineReducers(reducers), initAppState);
+const loggerMiddleware = createLogger();
+
+const store = createStore(combineReducers(reducers), initAppState,
+                          applyMiddleware(
+                              thunkMiddleware,
+                              loggerMiddleware));
 
 import Routes from '../Routes.jsx';
 

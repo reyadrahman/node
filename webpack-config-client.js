@@ -3,7 +3,14 @@ var webpack = require('webpack');
 
 var base = require('./webpack-config-base.js');
 
+const GLOBALS = {
+    PLATFORM: '"browser"',
+}
+
 var config = Object.assign({}, base.config, {
+    resolve: Object.assign({}, base.config.resolve, {
+        extensions: ['', '.web.js', '.js', '.jsx']
+    }),
     entry: [
         // necessary for hot reloading with IE:
         //'eventsource-polyfill',
@@ -17,6 +24,9 @@ var config = Object.assign({}, base.config, {
         filename: 'bundle.js',
         publicPath: '/dist/'
     },
+    plugins: base.config.plugins.concat([
+        new webpack.DefinePlugin(GLOBALS),
+    ])
 });
 
 

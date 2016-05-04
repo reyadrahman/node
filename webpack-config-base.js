@@ -15,6 +15,9 @@ var extractCSS = new ExtractTextPlugin('style.css');
 config = {
     // or devtool: 'eval' to debug issues with compiled output:
     devtool: DEV ? 'cheap-module-eval-source-map' : false,
+    resolve: {
+        modulesDirectories: ['node_modules', 'external_modules'],
+    },
     plugins: [
         extractCSS,
         new webpack.DefinePlugin(GLOBALS),
@@ -64,9 +67,11 @@ config = {
                 loader: "url-loader?limit=1024"
             }
         ],
+        /*
         noParse: [
-            /aws\-sdk/,
+            path.join(__dirname, "external_modules") + '.*',
         ],
+        */
     }
 };
 

@@ -1,5 +1,7 @@
 import React, {PropTypes} from 'react';
 import Link from '../link/Link.jsx';
+import {connect} from 'react-redux';
+import * as actions from '../../actions/actions.js';
 
 import styles from './header.scss';
 
@@ -19,11 +21,26 @@ let Header = React.createClass({
                 <div className={styles.rightMenu}>
                     <Link className={styles.menuItem} to="/light-box">{hs.lightBox}</Link>
                     <Link className={styles.menuItem} to="/basket">{hs.basket}</Link>
-                    <Link className={styles.menuItem} to="/connections">{hs.connections}</Link>
+                    <Link
+                        className={styles.menuItem}
+                        to="."
+                        onClick={this.props.openSignup}
+                    >
+                        {hs.connections}
+                    </Link>
                 </div>
             </div>
         )
-    }
+    },
+
 });
+
+Header = connect(
+    null,
+    {
+        openSignup: actions.openSignup,
+        closeSignup: actions.closeSignup,
+    }
+)(Header);
 
 export default Header;

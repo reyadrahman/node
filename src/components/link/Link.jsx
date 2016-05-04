@@ -8,15 +8,17 @@ let Link = React.createClass({
     render() {
         console.log('Link render');
         let {to, lang, isLangInUrl, locationRedux, ...otherProps} = this.props;
-        let toWithLang = to;
-        if (to.startsWith('!')) {
-            toWithLang = url.insertLangIntoUrl(locationRedux.pathname, to.substr(1));
+        let finalTo = to;
+        if (to === '.') {
+            finalTo = locationRedux.pathname;
+        } else if (to.startsWith('!')) {
+            finalTo = url.insertLangIntoUrl(locationRedux.pathname, to.substr(1));
         } else if (isLangInUrl) {
-            toWithLang = url.insertLangIntoUrl(to, lang);
+            finalTo = url.insertLangIntoUrl(to, lang);
         }
 
         return (
-            <RLink {...otherProps} to={toWithLang} />
+            <RLink {...otherProps} to={finalTo} />
         );
     },
 
