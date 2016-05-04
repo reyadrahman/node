@@ -15,14 +15,6 @@ export function lang(state = 'en', action) {
             return state;
     }
 }
-export function isLangInUrl(state = false, action) {
-    switch (action.type) {
-        case 'IS_LANG_IN_URL':
-            return action.isLangInUrl;
-        default:
-            return state;
-    }
-}
 export function systemLang(state = '', action) {
     switch (action.type) {
         case 'CHANGE_SYSTEM_LANG':

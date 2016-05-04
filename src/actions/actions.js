@@ -1,22 +1,10 @@
 import * as aws from '../aws/aws.js';
-
-export function changeLang(lang) {
-    return {
-        type: 'CHANGE_LANG',
-        lang,
-    };
-}
+import Cookies from 'js-cookie';
 
 export function test(v) {
     return {
         type: 'TEST',
         test: v,
-    };
-}
-export function changeIsLangInUrl(isLangInUrl) {
-    return {
-        type: 'IS_LANG_IN_URL',
-        isLangInUrl,
     };
 }
 export function changeLocation(location) {
@@ -56,17 +44,39 @@ export function signupFailed(message) {
     }
 }
 
+// ==================================================
+// Thunks
+// ==================================================
 
+export function changeLang(lang) {
+    return dispatch => {
+        dispatch({
+            type: 'CHANGE_LANG',
+            lang,
+        });
+
+        // TODO if logged in, if in browser etc.
+
+        if (PLATFORM === 'browser') {
+            Cookies.set('language', lang,
+                        {expires: 1000, path: '/'});
+            console.log('cookies: ', document.cookie);
+        }
+        return Promise.resolve();
+    }
+}
 export function signup(data) {
     return dispatch => {
-        aws.signup(data)
-           .then(res => {
-               console.log('signupThunk SUCCESS. res: ', res);
-               dispatch(signupSucceeded('Thanks for signing up'));
-           })
-           .catch(err => {
-               console.log('signupThunk FAIL. err: ', err.message);
-               dispatch(signupFailed(err.message));
-           });
+        return (
+            aws.signup(data)
+               .then(res => {
+                   console.log('signupThunk SUCCESS. res: ', res);
+                   dispatch(signupSucceeded('Thanks for signing up'));
+               })
+               .catch(err => {
+                   console.log('signupThunk FAIL. err: ', err.message);
+                   dispatch(signupFailed(err.message));
+               })
+        );
     };
 }

@@ -1,5 +1,5 @@
 import React, {PropTypes} from 'react';
-import Link from '../link/Link.jsx';
+import {Link} from 'react-router'
 import {connect} from 'react-redux';
 import * as actions from '../../actions/actions.js';
 
@@ -39,7 +39,6 @@ Header = connect(
     null,
     {
         openSignup: actions.openSignup,
-        closeSignup: actions.closeSignup,
     }
 )(Header);
 

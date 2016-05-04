@@ -2,7 +2,6 @@ import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
 import translations from '../../i18n/translations.js';
 import * as actions from '../../actions/actions.js';
-import {splitLangUrl} from '../../misc/url.js';
 import connectRouterRedux from '../react-router-redux/connectReactRouterRedux.jsx';
 import Signup from '../signup/Signup.jsx';
 
