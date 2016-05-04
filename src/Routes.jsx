@@ -3,8 +3,6 @@ import {Route, Redirect, IndexRoute} from 'react-router'
 import App from './components/app/App.jsx';
 import Home from './components/home/Home.jsx';
 
-import {languages} from './i18n/translations.js';
-
 const PassThrough = React.createClass({
     render() {
         <div>
@@ -13,39 +11,15 @@ const PassThrough = React.createClass({
     }
 });
 
-const Routes = [
-    <IndexRoute component={Home}/>,
-    <Route path="a" component={Home}>
-    </Route>,
-    <Route path="b" component={Home}>
-    </Route>,
-];
-
-const RoutesWithLang = (
+const Routes = (
     <Route path="/" component={App}>
-        {
-            languages.map(lang => (
-                <Route path={lang}>
-                    {Routes}
-                </Route>
-            ))
-        }
-        {Routes}
+        <IndexRoute component={Home}/>
+        <Route path="a" component={Home}>
+        </Route>
+        <Route path="b" component={Home}>
+        </Route>
     </Route>
 );
 
-/*
-const RoutesWithLang = (
-    <Route path="/" component={App}>
-        <Route path="abc" component={Home}/>
-        { [
-        <Route path="bbb" component={Home}/>,
-        <Route path="ccc" component={Home}/>
-            ]
-        }
-    </Route>
-);
-*/
 
-
-export default RoutesWithLang;
+export default Routes;
