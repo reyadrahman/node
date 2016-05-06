@@ -39,5 +39,16 @@ export default {
         email: 'Email address',
         password: 'Password',
         signup: 'Sign up',
-    }
+    },
+    verifyRegistration: {
+        title: 'Verify Registration',
+        verify: 'Verify',
+        inputPlaceholder: 'Please enter the verification code',
+    },
+    signin: {
+        title: 'Sign In',
+        email: 'Email address',
+        password: 'Password',
+        signin: 'Sign in',
+    },
 };

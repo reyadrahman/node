@@ -1,27 +1,23 @@
-console.log('======== AWS CLIENT');
+console.log('======== AWS CLIENT...');
 
-var BigInteger = require("exports?BigInteger!jsbn.js");
-window.BigInteger = BigInteger;
+import "script!jsbn.js";
+//window.BigInteger = BigInteger;
 
-require("jsbn2.js");
+import "script!jsbn2.js";
 console.log('BigInteger', BigInteger);
 
 
-import sjcl from 'sjcl';
-window.sjcl = sjcl;
+import 'script!sjcl.js';
+//window.sjcl = sjcl;
 
-import moment from 'moment';
-window.moment = moment;
+import 'script!moment.min.js';
+//window.moment = moment;
 
-console.log('AAA');
-import 'aws-sdk/dist/aws-sdk';
-const AWS = window.AWS;
+import 'script!aws-sdk/dist/aws-sdk';
+//const AWS = window.AWS;
 
-console.log('BBB');
-import 'amazon-cognito-identity-js/dist/aws-cognito-sdk.min.js';
-window.AWSCognito = AWSCognito;
-console.log('CCC');
-import 'amazon-cognito-identity-js/dist/amazon-cognito-identity.min.js';
+import 'script!amazon-cognito-identity-js/dist/aws-cognito-sdk.min.js';
+import 'script!amazon-cognito-identity-js/dist/amazon-cognito-identity.min.js';
 
 
 const IdentityPoolId = 'us-east-1:bd245beb-b15b-4a45-87a1-1f955f0cc1f7';
@@ -80,3 +76,37 @@ export function signup(data) {
     });
 }
 
+export function verifyRegistration(username, code) {
+    return new Promise((resolve, reject) => {
+        let userData = {
+            Username : username,
+            Pool : userPool
+        };
+
+        var cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+        cognitoUser.confirmRegistration(code, true, (err, result) => {
+            err ? reject(err) : resolve(result);
+        });
+    });
+}
+
+export function signin({email, password}) {
+    return new Promise((resolve, reject) => {
+        let authenticationData = {
+            Username: email,
+            Password: password,
+        };
+        let authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider.AuthenticationDetails(authenticationData);
+
+        let userData = {
+            Username : email,
+            Pool : userPool
+        };
+        let cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+
+        cognitoUser.authenticateUser(authenticationDetails, {
+            onSuccess: resolve,
+            onFailure: reject,
+        });
+    });
+}

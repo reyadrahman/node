@@ -39,5 +39,16 @@ export default {
         email: 'French email address',
         password: 'French password',
         signup: 'French sign up',
-    }
+    },
+    verifyRegistration: {
+        title: 'French Verify Registration',
+        verify: 'French Verify',
+        inputPlaceholder: 'Please enter the French verification code',
+    },
+    signin: {
+        title: 'French sign In',
+        email: 'French email address',
+        password: 'French password',
+        signin: 'French sign in',
+    },
 };

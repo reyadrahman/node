@@ -38,7 +38,6 @@ export function signup(state =
         successMessage: '',
     }, action)
 {
-    console.log('signup reducer: ', state, action);
     switch (action.type) {
         case 'SIGNUP':
             return Object.assign({}, state, action.signup);
@@ -46,17 +45,33 @@ export function signup(state =
             return state;
     }
 }
-
-/*
-export default function app(state = initialStore, action) {
+export function verifyRegistration(state =
+    {
+        isOpen: false,
+        username: '',
+        errorMessage: '',
+        successMessage: '',
+    }, action)
+{
     switch (action.type) {
-        case 'TEST':
-            return {
-                test: true,
-            }
+        case 'VERIFY_REGISTRATION':
+            return Object.assign({}, state, action.state);
         default:
-            console.log('reducer: action: ', action);
             return state;
     }
 }
-*/
+
+export function signin(state =
+    {
+        isOpen: true,
+        errorMessage: '',
+        successMessage: '',
+    }, action)
+{
+    switch (action.type) {
+        case 'SIGNIN':
+            return Object.assign({}, state, action.state);
+        default:
+            return state;
+    }
+}

@@ -44,6 +44,73 @@ export function signupFailed(message) {
     }
 }
 
+
+export function openVerifyRegistration(username) {
+    return {
+        type: 'VERIFY_REGISTRATION',
+        state: {
+            isOpen: true,
+            username
+        },
+    };
+}
+export function closeVerifyRegistration() {
+    return {
+        type: 'VERIFY_REGISTRATION',
+        state: {isOpen: false},
+    };
+}
+export function verifyRegistrationSucceeded(message) {
+    return {
+        type: 'VERIFY_REGISTRATION',
+        state: {
+            errorMessage: '',
+            successMessage: message,
+        }
+    }
+}
+export function verifyRegistrationFailed(message) {
+    return {
+        type: 'VERIFY_REGISTRATION',
+        state: {
+            errorMessage: '',
+            successMessage: message,
+        }
+    }
+}
+
+export function openSignin() {
+    return {
+        type: 'SIGNIN',
+        state: {isOpen: true},
+    };
+}
+export function closeSignin() {
+    return {
+        type: 'SIGNIN',
+        state: {isOpen: false},
+    };
+}
+export function signinSucceeded(message) {
+    return {
+        type: 'SIGNIN',
+        state: {
+            errorMessage: '',
+            successMessage: message,
+        }
+    }
+}
+export function signinFailed(message) {
+    return {
+        type: 'SIGNIN',
+        state: {
+            errorMessage: message,
+            successMessage: '',
+        }
+    }
+}
+
+
 // ==================================================
 // Thunks
 // ==================================================
@@ -71,11 +138,45 @@ export function signup(data) {
             aws.signup(data)
                .then(res => {
                    console.log('signupThunk SUCCESS. res: ', res);
-                   dispatch(signupSucceeded('Thanks for signing up'));
+                   dispatch(signupSucceeded(''));
+                   if (!data.userConfirmed) {
+                       dispatch(closeSignup());
+                       dispatch(openVerifyRegistration(res.user.username));
+                   }
                })
                .catch(err => {
                    console.log('signupThunk FAIL. err: ', err.message);
                    dispatch(signupFailed(err.message));
+               })
+        );
+    };
+}
+
+export function verifyRegistration(code) {
+    return (dispatch, getState) => {
+        return (
+            aws.verifyRegistration(getState().verifyRegistration.username, code)
+               .then(res => {
+                   console.log('verifyRegistration SUCCESS. res: ', res);
+               })
+               .catch(err => {
+                   console.log('verifyRegistration FAILED. err: ', err);
+               })
+        );
+    };
+}
+
+export function signin(data) {
+    return dispatch => {
+        return (
+            aws.signin(data)
+               .then(res => {
+                   console.log('signinThunk SUCCESS. res: ', res,
+                               ', res.getAccessToken(): ', res.getAccessToken(),
+                               ', res.getIdToken(): ', res.getIdToken());
+               })
+               .catch(err => {
+                   console.log('signinThunk FAIL. err: ', err.message);
                })
         );
     };

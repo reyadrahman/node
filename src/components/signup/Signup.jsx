@@ -1,30 +1,23 @@
 import React from 'react';
 import {connect} from 'react-redux';
-import Modal from 'react-modal';
+import {ModalBox, Input, Button} from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../actions/actions.js';
 
 import styles from './signup.scss';
-console.log('============== ', styles);
 
 let Signup = React.createClass({
     render() {
         let {isOpen, i18n: {strings: {signup: strings}},
-             errorMessage, successMessage} = this.props;
+             errorMessage, successMessage, closeSignup} = this.props;
         let {state} = this;
         return (
-            <Modal
+            <ModalBox
                 isOpen={isOpen}
-                onAfterOpen={this.afterOpen}
-                onRequestClose={this.props.closeSignup}
-                className={styles.modalContent}
-                overlayClassName={styles.modalOverlay}
+                onRequestClose={closeSignup}
+                title={strings.title}
+                successMessage={successMessage}
+                errorMessage={errorMessage}
             >
-
-                <div
-                    className={styles.closeButton}
-                    onClick={this.props.closeSignup}
-                />
-                <h2 className={styles.title}>{strings.title}</h2>
                 <form onSubmit={this.signup}>
                     <div className={styles.inputsRow1}>
                         <Input
@@ -55,20 +48,13 @@ let Signup = React.createClass({
                             onChange={this.passwordChanged}
                         />
                     </div>
-                    <button
+                    <Button
                         type="submit"
                         className={styles.signupButton}
-                    >
-                        {strings.signup}
-                    </button>
+                        label={strings.signup}
+                    />
                 </form>
-                <div className={styles.error}>
-                    {errorMessage}
-                </div>
-                <div className={styles.success}>
-                    {successMessage}
-                </div>
-            </Modal>
+            </ModalBox>
         );
     },
 
@@ -102,22 +88,9 @@ let Signup = React.createClass({
 
 });
 
-const Input = React.createClass({
-    render() {
-        let {placeholder, type, className, onChange} = this.props;
-        return (
-            <input
-                type={type || 'text'}
-                placeholder={placeholder}
-                className={`${styles.input} ${this.props.className || ''}`}
-                onChange={onChange}
-            />
-        );
-    }
-});
-
 Signup = connect(
     state => ({
+        isOpen: state.signup.isOpen,
         errorMessage: state.signup.errorMessage,
         successMessage: state.signup.successMessage,
     }),

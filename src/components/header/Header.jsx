@@ -23,8 +23,8 @@ let Header = React.createClass({
                     <Link className={styles.menuItem} to="/basket">{hs.basket}</Link>
                     <Link
                         className={styles.menuItem}
-                        to="."
-                        onClick={this.props.openSignup}
+                        to="javascript:void(0)"
+                        onClick={this.openSignup}
                     >
                         {hs.connections}
                     </Link>
@@ -32,6 +32,11 @@ let Header = React.createClass({
             </div>
         )
     },
+
+    openSignup(e) {
+        e.preventDefault();
+        this.props.openSignup();
+    }
 
 });
 

@@ -9,17 +9,12 @@
     flex: 0 0 auto;
 }
 
-.inputsRow1 {
+.inputsRow {
     display: flex;
     justify-content: space-between;
 }
 
-.inputsRow2 {
-    display: flex;
-    justify-content: space-between;
-}
-
-.signupButton {
+.signinButton {
     @extend .fieldAndButton;
     margin: 50px 0 0 0;
 }
