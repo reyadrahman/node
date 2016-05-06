@@ -157,7 +157,7 @@ export function changeLang(lang) {
     }
 }
 export function signup(data_) {
-    let data = {...data_};
+    let data = {...data_, sdf: 'asdf'};
     return dispatch => {
         return (
             aws.signup(data)
@@ -208,12 +208,15 @@ export function signin(data) {
                    console.log('signinThunk SUCCESS. res: ', res,
                                ', res.getAccessToken(): ', res.getAccessToken(),
                                ', res.getIdToken(): ', res.getIdToken());
-                   return aws.getUserAttributes();
+                   return aws.getCurrentUserAttributes();
                })
                .then(attrs => {
                    console.log('user attributes: ', attrs);
                    dispatch(closeSignin());
                    dispatch(setCurrentUserAttributes(attrs));
+
+                   Cookies.set('loggedIn', 'yes',
+                               {expires: 1000, path: '/'});
                })
                .catch(err => {
                    console.log('signinThunk FAIL. err: ', err.message);
@@ -230,6 +233,10 @@ export function signout() {
                .then(() => {
                    dispatch(clearCurrentUserAttributes());
                    // TODO navigate out of private pages
+
+
+                   Cookies.set('loggedIn', '',
+                               {expires: 1000, path: '/'});
                })
         );
     };

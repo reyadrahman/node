@@ -7,7 +7,7 @@ export function test(state = false, action) {
             return state;
     }
 }
-export function lang(state = 'en', action) {
+export function lang(state = '', action) {
     switch (action.type) {
         case 'CHANGE_LANG':
             return action.lang;
@@ -63,7 +63,7 @@ export function verifyRegistration(state =
 
 export function signin(state =
     {
-        isOpen: true,
+        isOpen: false,
         errorMessage: '',
         successMessage: '',
     }, action)

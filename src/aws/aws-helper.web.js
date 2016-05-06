@@ -55,14 +55,27 @@ var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poo
 export function signup(data) {
     return new Promise((resolve, reject) => {
         let attributeList = [];
-
         let dataEmail = {
             Name : 'email',
             Value : data.email,
         };
         let attributeEmail = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataEmail);
-
         attributeList.push(attributeEmail);
+
+        let dataGivenName = {
+            Name : 'given_name',
+            Value : data.firstName,
+        };
+        let attributeGivenName = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataGivenName);
+        attributeList.push(attributeGivenName);
+
+
+        let dataFamilyName = {
+            Name : 'family_name',
+            Value : data.lastName,
+        };
+        let attributeFamilyName = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataFamilyName);
+        attributeList.push(attributeFamilyName);
 
         let responseHandler = (err, res) => {
             if (err) {
@@ -114,7 +127,9 @@ export function signin({email, password}) {
 }
 
 export function getCurrentUser() {
+    console.log('X 1');
     return new Promise((resolve, reject) => {
+        console.log('X 2');
         let cognitoUser = userPool.getCurrentUser();
         if (cognitoUser != null) {
             cognitoUser.getSession(function(err, session) {
@@ -124,20 +139,26 @@ export function getCurrentUser() {
                     resolve(cognitoUser);
                 }
             });
+        } else {
+            reject('no current user');
         }
     });
 }
 
-export function getUserAttributes() {
+export function getCurrentUserAttributes() {
+    console.log('1');
     return getCurrentUser().then(cognitoUser => {
+        console.log('2');
         return new Promise((resolve, reject) => {
+            console.log('3');
             cognitoUser.getUserAttributes(function(err, res) {
+                console.log('4');
                 if (err) {
                     return reject(err);
                 }
-                console.log('getUserAttributes: ', res);
-                console.log('getUserAttributes map: ', res.map(x => [x.getName(), x.getValue()]));
-                console.log('getUserAttributes fromPairs: ', fromPairs(res.map(x => [x.getName(), x.getValue()])));
+                console.log('getCurrentUserAttributes: ', res);
+                console.log('getCurrentUserAttributes map: ', res.map(x => [x.getName(), x.getValue()]));
+                console.log('getCurrentUserAttributes fromPairs: ', fromPairs(res.map(x => [x.getName(), x.getValue()])));
                 resolve(fromPairs(res.map(x => [x.getName(), x.getValue()])));
             });
         });
@@ -148,4 +169,11 @@ export function signout() {
     return getCurrentUser().then(cognitoUser => {
         cognitoUser.signOut();
     });
+}
+
+export function getUserFromCache() {
+    // TODO
+    let username = 'shahab.sh.70@gmail.com';
+
+
 }

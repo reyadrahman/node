@@ -20,7 +20,7 @@ let Header = React.createClass({
             connection.push(
                 {value: 'signout', label: hs.signout}
             );
-            connectionPlaceholder = currentUser.email;
+            connectionPlaceholder = currentUser.given_name.toUpperCase();
         } else {
             connection.push(
                 {value: 'signin', label: hs.signin},

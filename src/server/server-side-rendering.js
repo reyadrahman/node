@@ -13,16 +13,10 @@ import acceptLanguage from 'accept-language';
 
 acceptLanguage.languages(languages);
 
-export default function render(req, res, next) {
-    console.log('req.url: ', req.url, 'req.cookies: ', req.cookies);
-    let systemLang = acceptLanguage.get(req.headers['accept-language']);
-    let lang = req.cookies.language || systemLang;
+// cache by systemLang
+const templateCache = {};
 
-    const store = createStore(combineReducers(reducers), {
-        lang,
-        systemLang,
-    });
-
+export default function render(full, req, res, next) {
     match({ routes: Routes, location: req.url }, (error, redirectLocation, renderProps) => {
         if (redirectLocation) {
             res.redirect(301, redirectLocation.pathname + redirectLocation.search)
@@ -31,20 +25,64 @@ export default function render(req, res, next) {
         } else if (renderProps == null) {
             next();
         } else {
-            let body = ReactDOM.renderToString(
-                <Provider store={store}>
-                    <RouterContext {...renderProps} />
-                </Provider>
-            );
-            let html = ReactDOM.renderToStaticMarkup(
-                <Html
-                    body={body}
-                    initAppState={store.getState()}
-                />
-            );
-            let doc = '<!doctype html>\n' + html;
-
-            res.status(200).send(doc);
+            if (full) {
+                renderFull(req, res, next, renderProps);
+            } else {
+                renderTemplate(req, res, next);
+            }
         }
     });
+
+}
+
+function renderTemplate(req, res, next) {
+    let systemLang = acceptLanguage.get(req.headers['accept-language']);
+
+    if (templateCache[systemLang]) {
+        console.log('serving template from cache');
+        res.status(200).send(templateCache[systemLang]);
+
+    } else {
+        console.log('rendering template');
+        const store = createStore(combineReducers(reducers), {
+            systemLang,
+        });
+
+        let html = ReactDOM.renderToStaticMarkup(
+            <Html
+                body=""
+                initAppState={store.getState()}
+            />
+        );
+        let doc = '<!doctype html>\n' + html;
+        templateCache[systemLang] = doc;
+        res.status(200).send(doc);
+    }
+}
+
+function renderFull(req, res, next, renderProps) {
+    console.log('renderFull. req.url: ', req.url, 'req.cookies: ', req.cookies);
+    let systemLang = acceptLanguage.get(req.headers['accept-language']);
+    let lang = req.cookies.language || systemLang;
+
+    const store = createStore(combineReducers(reducers), {
+        lang,
+        systemLang,
+    });
+
+
+    let body = ReactDOM.renderToString(
+        <Provider store={store}>
+            <RouterContext {...renderProps} />
+        </Provider>
+    );
+    let html = ReactDOM.renderToStaticMarkup(
+        <Html
+            body={body}
+            initAppState={store.getState()}
+        />
+    );
+    let doc = '<!doctype html>\n' + html;
+
+    res.status(200).send(doc);
 }

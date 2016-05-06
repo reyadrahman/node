@@ -7,49 +7,49 @@ import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'
 import * as reducers from '../reducers/reducers.js';
 import * as actions from '../actions/actions.js';
+import * as aws from '../aws/aws.js';
+import Routes from '../Routes.jsx';
 
 const initAppState = JSON.parse(document.getElementById('initAppState').innerHTML);
 
 const loggerMiddleware = createLogger();
 
-const store = createStore(combineReducers(reducers), initAppState,
-                          applyMiddleware(
-                              thunkMiddleware,
-                              loggerMiddleware));
 
-import Routes from '../Routes.jsx';
-
-/*
-// TODO take this out of here
-const languages = ['en', 'fr'];
-
-browserHistory.listen(location => {
-    console.log('location: ', location);
-
-    let state = store.getState();
-    let langInUrlMatch = location.pathname.match(/^\/?(\w+)($|\/|\?|#)/);
-    if (!state.isLangInUrl && !langInUrlMatch) return;
-
-    let validLangInUrl = langInUrlMatch && languages.includes(langInUrlMatch[1]);
-    if (langInUrlMatch && validLangInUrl) {
-        store.dispatch(actions.changeLang(langInUrlMatch[1]));
-        store.dispatch(actions.changeIsLangInUrl(true));
-    } else {
-        store.dispatch(actions.changeLang(state.systemLang));
-        store.dispatch(actions.changeIsLangInUrl(false));
+let initAndRender = currentUser => {
+    if (!initAppState.lang) {
+        initAppState.lang = initAppState.systemLang;
     }
 
-});
-*/
+    const store = createStore(combineReducers(reducers), initAppState,
+                              applyMiddleware(
+                                  thunkMiddleware,
+                                  loggerMiddleware));
 
-var rootInstance = render((
-    <Provider store={store}>
-        <Router history={browserHistory}>
-            {Routes}
-        </Router>
-    </Provider>
-), document.getElementById('reactUI'));
+    if (currentUser) {
+        store.dispatch(actions.setCurrentUserAttributes(currentUser));
+    }
 
+    render((
+        <Provider store={store}>
+            <Router history={browserHistory}>
+                {Routes}
+            </Router>
+        </Provider>
+    ), document.getElementById('reactUI'));
+}
+
+aws.getCurrentUserAttributes()
+   .then(attrs => {
+       console.log('client-router: gotAttributes: ', attrs);
+       initAndRender(attrs);
+   })
+   .catch(err => {
+       console.log('client-router: ERROR: ', err);
+       initAndRender();
+   });
+
+
+/*
 if (module.hot) {
     require('react-hot-loader/Injection').RootInstanceProvider.injectProvider({
         getRootInstances: function () {
@@ -58,3 +58,4 @@ if (module.hot) {
         }
     });
 }
+*/
