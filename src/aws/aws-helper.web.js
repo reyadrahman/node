@@ -1,5 +1,7 @@
 console.log('======== AWS CLIENT...');
 
+import fromPairs from 'lodash/fromPairs';
+
 import "script!jsbn.js";
 //window.BigInteger = BigInteger;
 
@@ -62,11 +64,11 @@ export function signup(data) {
 
         attributeList.push(attributeEmail);
 
-        let responseHandler = (err, result) => {
+        let responseHandler = (err, res) => {
             if (err) {
                 reject(err);
             } else {
-                resolve(result);
+                resolve(res);
             }
         };
 
@@ -84,8 +86,8 @@ export function verifyRegistration(username, code) {
         };
 
         var cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
-        cognitoUser.confirmRegistration(code, true, (err, result) => {
-            err ? reject(err) : resolve(result);
+        cognitoUser.confirmRegistration(code, true, (err, res) => {
+            err ? reject(err) : resolve(res);
         });
     });
 }
@@ -108,5 +110,42 @@ export function signin({email, password}) {
             onSuccess: resolve,
             onFailure: reject,
         });
+    });
+}
+
+export function getCurrentUser() {
+    return new Promise((resolve, reject) => {
+        let cognitoUser = userPool.getCurrentUser();
+        if (cognitoUser != null) {
+            cognitoUser.getSession(function(err, session) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(cognitoUser);
+                }
+            });
+        }
+    });
+}
+
+export function getUserAttributes() {
+    return getCurrentUser().then(cognitoUser => {
+        return new Promise((resolve, reject) => {
+            cognitoUser.getUserAttributes(function(err, res) {
+                if (err) {
+                    return reject(err);
+                }
+                console.log('getUserAttributes: ', res);
+                console.log('getUserAttributes map: ', res.map(x => [x.getName(), x.getValue()]));
+                console.log('getUserAttributes fromPairs: ', fromPairs(res.map(x => [x.getName(), x.getValue()])));
+                resolve(fromPairs(res.map(x => [x.getName(), x.getValue()])));
+            });
+        });
+    });
+}
+
+export function signout() {
+    return getCurrentUser().then(cognitoUser => {
+        cognitoUser.signOut();
     });
 }

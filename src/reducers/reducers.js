@@ -75,3 +75,10 @@ export function signin(state =
             return state;
     }
 }
+
+export function currentUser(state = null, action) {
+    if (action.type === 'CURRENT_USER') {
+        return !action.state ? null : Object.assign({}, state, action.state);
+    }
+    return state;
+}

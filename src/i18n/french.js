@@ -5,7 +5,11 @@ export default {
         stories: 'STORIESFR',
         lightBox: 'LIGHTBOXFR',
         basket: 'BASKETFR',
-        connections: 'CONNECTIOn',
+        connection: 'CONNECTIOn',
+        signin: 'FR SIGN IN',
+        signup: 'FR SIGN UP',
+        signout: 'FR SIGN OUT',
+        verifyRegistration: 'FR VERIFY REGISTRATION',
     },
     home: {
         introMessage: 'RACONTE MOI UNE HISTOIRE',

@@ -5,7 +5,11 @@ export default {
         stories: 'STORIES',
         lightBox: 'LIGHTBOX',
         basket: 'BASKET',
-        connections: 'CONNECTION',
+        connection: 'CONNECTION',
+        signin: 'SIGN IN',
+        signup: 'SIGN UP',
+        signout: 'SIGN OUT',
+        verifyRegistration: 'VERIFY REGISTRATION',
     },
     home: {
         introMessage: 'TELL ME A STORY',
@@ -43,7 +47,8 @@ export default {
     verifyRegistration: {
         title: 'Verify Registration',
         verify: 'Verify',
-        inputPlaceholder: 'Please enter the verification code',
+        email: 'Email',
+        code: 'Verification code',
     },
     signin: {
         title: 'Sign In',

@@ -20,12 +20,20 @@ let VerifyRegistration = React.createClass({
                 errorMessage={errorMessage}
             >
                 <form onSubmit={this.verify}>
-                    <Input
-                        className={styles.verificationCodeInput}
-                        placeholder={strings.inputPlaceholder}
-                        value={state.verificationCode}
-                        onChange={this.verificationCodeChanged}
-                    />
+                    <div className={styles.inputsRow}>
+                        <Input
+                            className={styles.field}
+                            placeholder={strings.email}
+                            value={state.email}
+                            onChange={this.emailChanged}
+                        />
+                        <Input
+                            className={styles.field}
+                            placeholder={strings.code}
+                            value={state.code}
+                            onChange={this.verificationCodeChanged}
+                        />
+                    </div>
                     <Button
                         type="submit"
                         className={styles.verifyButton}
@@ -37,19 +45,34 @@ let VerifyRegistration = React.createClass({
     },
 
     getInitialState() {
+        console.log('getInitialState', this.props);
         return {
-            verificationCode: '',
+            code: '',
+            email: this.props.initialEmail || '',
         };
     },
 
     verify(e) {
+        let {email, code} = this.state;
         e.preventDefault();
         console.log('verify: ', this.state);
-        this.props.verifyRegistration(this.state.verificationCode);
+        this.props.verifyRegistration({email, code});
+    },
+
+    emailChanged(e) {
+        this.setState({email: e.target.value});
     },
 
     verificationCodeChanged(e) {
-        this.setState({verificationCode: e.target.value});
+        this.setState({code: e.target.value});
+    },
+
+    componentWillReceiveProps(newProps) {
+        console.log('componentWillReceiveProps', this.props, newProps);
+        if (newProps.initialEmail !== this.props.initialEmail) {
+            console.log('!!!');
+            this.setState({email: newProps.initialEmail});
+        }
     }
 
 });
@@ -59,6 +82,7 @@ VerifyRegistration = connect(
         isOpen: state.verifyRegistration.isOpen,
         errorMessage: state.verifyRegistration.errorMessage,
         successMessage: state.verifyRegistration.successMessage,
+        initialEmail: state.verifyRegistration.initialEmail,
     }),
     {
         closeVerifyRegistration: actions.closeVerifyRegistration,

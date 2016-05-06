@@ -16,7 +16,11 @@ export function changeLocation(location) {
 export function openSignup() {
     return {
         type: 'SIGNUP',
-        signup: {isOpen: true},
+        signup: {
+            isOpen: true,
+            errorMessage: '',
+            successMessage: '',
+        },
     };
 }
 export function closeSignup() {
@@ -45,19 +49,22 @@ export function signupFailed(message) {
 }
 
 
-export function openVerifyRegistration(username) {
+export function openVerifyRegistration(data = {}) {
     return {
         type: 'VERIFY_REGISTRATION',
         state: {
             isOpen: true,
-            username
+            initialEmail: data.email || '',
+            password: data.password || '',
+            errorMessage: '',
+            successMessage: '',
         },
     };
 }
 export function closeVerifyRegistration() {
     return {
         type: 'VERIFY_REGISTRATION',
-        state: {isOpen: false},
+        state: {isOpen: false, password: ''},
     };
 }
 export function verifyRegistrationSucceeded(message) {
@@ -73,8 +80,8 @@ export function verifyRegistrationFailed(message) {
     return {
         type: 'VERIFY_REGISTRATION',
         state: {
-            errorMessage: '',
-            successMessage: message,
+            errorMessage: message,
+            successMessage: '',
         }
     }
 }
@@ -82,7 +89,11 @@ export function verifyRegistrationFailed(message) {
 export function openSignin() {
     return {
         type: 'SIGNIN',
-        state: {isOpen: true},
+        state: {
+            isOpen: true,
+            errorMessage: '',
+            successMessage: '',
+        },
     };
 }
 export function closeSignin() {
@@ -109,6 +120,19 @@ export function signinFailed(message) {
         }
     }
 }
+export function setCurrentUserAttributes(attributes) {
+    return {
+        type: 'CURRENT_USER',
+        state: attributes,
+    }
+}
+export function clearCurrentUserAttributes() {
+    return {
+        type: 'CURRENT_USER',
+        state: null,
+    }
+}
+
 
 
 // ==================================================
@@ -132,7 +156,8 @@ export function changeLang(lang) {
         return Promise.resolve();
     }
 }
-export function signup(data) {
+export function signup(data_) {
+    let data = {...data_};
     return dispatch => {
         return (
             aws.signup(data)
@@ -141,7 +166,7 @@ export function signup(data) {
                    dispatch(signupSucceeded(''));
                    if (!data.userConfirmed) {
                        dispatch(closeSignup());
-                       dispatch(openVerifyRegistration(res.user.username));
+                       dispatch(openVerifyRegistration(data));
                    }
                })
                .catch(err => {
@@ -152,15 +177,24 @@ export function signup(data) {
     };
 }
 
-export function verifyRegistration(code) {
+export function verifyRegistration(data) {
     return (dispatch, getState) => {
         return (
-            aws.verifyRegistration(getState().verifyRegistration.username, code)
+            aws.verifyRegistration(data.email, data.code)
                .then(res => {
                    console.log('verifyRegistration SUCCESS. res: ', res);
+                   let password = getState().verifyRegistration.password;
+                   if (password) {
+                       dispatch(signin({email: data.email, password})).then(() => {
+                           dispatch(closeVerifyRegistration());
+                       });
+                   } else {
+                       dispatch(closeVerifyRegistration());
+                   }
                })
                .catch(err => {
                    console.log('verifyRegistration FAILED. err: ', err);
+                   dispatch(verifyRegistrationFailed(err.message));
                })
         );
     };
@@ -174,9 +208,28 @@ export function signin(data) {
                    console.log('signinThunk SUCCESS. res: ', res,
                                ', res.getAccessToken(): ', res.getAccessToken(),
                                ', res.getIdToken(): ', res.getIdToken());
+                   return aws.getUserAttributes();
+               })
+               .then(attrs => {
+                   console.log('user attributes: ', attrs);
+                   dispatch(closeSignin());
+                   dispatch(setCurrentUserAttributes(attrs));
                })
                .catch(err => {
                    console.log('signinThunk FAIL. err: ', err.message);
+                   dispatch(signinFailed(err.message));
+               })
+        );
+    };
+}
+
+export function signout() {
+    return dispatch => {
+        return (
+            aws.signout()
+               .then(() => {
+                   dispatch(clearCurrentUserAttributes());
+                   // TODO navigate out of private pages
                })
         );
     };

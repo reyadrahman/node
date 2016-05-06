@@ -2,13 +2,34 @@ import React, {PropTypes} from 'react';
 import {Link} from 'react-router'
 import {connect} from 'react-redux';
 import * as actions from '../../actions/actions.js';
+import Dropdown from '../dropdown/Dropdown.jsx';
 
 import styles from './header.scss';
 
 let Header = React.createClass({
     render() {
         console.log('Header render');
-        let {i18n: {strings: {header: hs}}} = this.props;
+        let {i18n: {strings: {header: hs}}, currentUser} = this.props;
+
+        let connection = [];
+        let connectionPlaceholder;
+        if (currentUser) {
+            if (!currentUser.email_verified) {
+                connection.push({value: 'verify', label: hs.verifyRegistration});
+            }
+            connection.push(
+                {value: 'signout', label: hs.signout}
+            );
+            connectionPlaceholder = currentUser.email;
+        } else {
+            connection.push(
+                {value: 'signin', label: hs.signin},
+                {value: 'signup', label: hs.signup},
+                {value: 'verify', label: hs.verifyRegistration}
+            );
+            connectionPlaceholder = hs.connection;
+        }
+
         return (
             <div className={styles.root}>
                 <div className={styles.leftMenu}>
@@ -21,29 +42,42 @@ let Header = React.createClass({
                 <div className={styles.rightMenu}>
                     <Link className={styles.menuItem} to="/light-box">{hs.lightBox}</Link>
                     <Link className={styles.menuItem} to="/basket">{hs.basket}</Link>
-                    <Link
-                        className={styles.menuItem}
-                        to="javascript:void(0)"
-                        onClick={this.openSignup}
-                    >
-                        {hs.connections}
-                    </Link>
+                    <Dropdown
+                        baseClassName="Header-Connection"
+                        value={''}
+                        options={connection}
+                        onChange={this.onConnectionSelect}
+                        placeholder={connectionPlaceholder}
+                    />
                 </div>
             </div>
         )
     },
 
-    openSignup(e) {
-        e.preventDefault();
-        this.props.openSignup();
-    }
+    onConnectionSelect(selection) {
+        console.log('connection select: ', selection);
+        if (selection.value === 'signin') {
+            this.props.openSignin();
+        } else if (selection.value === 'signup') {
+            this.props.openSignup();
+        } else if (selection.value === 'signout') {
+            this.props.signout();
+        } else if (selection.value === 'verify') {
+            this.props.openVerifyRegistration();
+        }
+    },
 
 });
 
 Header = connect(
-    null,
+    state => ({
+        currentUser: state.currentUser,
+    }),
     {
         openSignup: actions.openSignup,
+        openSignin: actions.openSignin,
+        openVerifyRegistration: actions.openVerifyRegistration,
+        signout: actions.signout,
     }
 )(Header);
 

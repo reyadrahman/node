@@ -9,11 +9,11 @@
 
 .modalContent {
     position: absolute;
-    top: 50%;
+    top: 15%;
     left: 50%;
     width: 700px;
     height: 400px;
-    transform: translate3D(-50%, -50%, 0);
+    transform: translate3D(-50%, 0, 0);
     background-color: rgb(88, 89, 91);
 
     overflow: auto;

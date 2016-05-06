@@ -32,12 +32,11 @@ export const ModalBox = React.createClass({
     },
 });
 
-export const Input = ({placeholder, type, className, onChange}) => (
+export const Input = ({type, className, ...others}) => (
     <input
         type={type || 'text'}
-        placeholder={placeholder}
         className={`${styles.input} ${className || ''}`}
-        onChange={onChange}
+        {...others}
     />
 );
 

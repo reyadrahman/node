@@ -1,11 +1,21 @@
-.verificationCodeInput {
-    width: 70%;
-    margin: 80px auto;
-    display: block;
+.fieldAndButton {
+    width: 45%; 
+}
+
+.field {
+    @extend .fieldAndButton;
+    margin: 10px 0;
+    flex: 0 0 auto;
+}
+
+.inputsRow {
+    display: flex;
+    justify-content: space-between;
 }
 
 .verifyButton {
-    width: 45%;
-    margin: 100px auto 0 auto;
-    display: block;
+    @extend .fieldAndButton;
+    margin: 120px 0 0 0;
 }
+
+

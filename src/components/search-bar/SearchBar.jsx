@@ -1,4 +1,6 @@
 import React from 'react';
+
+// TODO use the local dropdown and remove react-dropdown
 import Dropdown from 'react-dropdown';
 
 import './react-dropdown.scss';
