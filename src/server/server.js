@@ -1,6 +1,6 @@
 require('babel-polyfill');
 
-console.log('!!!! PLATFORM', PLATFORM);
+console.log('!!!! PLATFORM: ', process.env.PLATFORM);
 console.log('!!!! process.env.NODE_ENV: ', process.env.NODE_ENV);
 
 
@@ -17,7 +17,6 @@ import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import http from 'http';
 import compression from 'compression';
-import {port} from '../config';
 import router from './server-router.js';
 var debug = require('debug')('app:server');
 
@@ -26,6 +25,8 @@ var ROOT_DIR = path.join(__dirname, '../');
 
 
 debug(`running server in ${process.env.NODE_ENV === 'production' ? 'production' : 'development'} mode`);
+debug(`PUBLIC_PATH: `, JSON.stringify(process.env.PUBLIC_PATH));
+debug(`PUBLIC_URL: `, JSON.stringify(process.env.PUBLIC_URL));
 
 var app = express();
 
@@ -44,7 +45,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
-app.use('/dist', express.static(path.join(ROOT_DIR, 'dist-client')));
+app.use(`/${process.env.PUBLIC_PATH}`, express.static(path.join(ROOT_DIR, 'dist-client'), {
+    maxage: '1d'
+}));
 
 app.use('/', router);
 
@@ -86,8 +89,7 @@ app.use(function(err, req, res, next) {
  * Get port from environment and store in Express.
  */
 
-//var port = (process.env.PORT || '3000');
-app.set('port', port);
+app.set('port', process.env.SERVER_PORT);
 
 /**
  * Create HTTP server.
@@ -99,7 +101,7 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+server.listen(process.env.SERVER_PORT);
 server.on('error', onError);
 server.on('listening', onListening);
 

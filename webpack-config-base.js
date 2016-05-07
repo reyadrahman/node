@@ -2,13 +2,21 @@ var path = require('path');
 var webpack = require('webpack');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-const DEV = process.env.NODE_ENV !== 'production';
-const VERBOSE = process.env.VERBOSE;
+var GLOBALS = {};
+var configArgIndex = process.argv.indexOf('--env');
+if (configArgIndex === -1 || configArgIndex+1 >= process.argv.length) {
+    console.error('ERROR: Please provide a config file using the --env parameter');
+    process.exit(1)
+}
 
-const GLOBALS = {
-    'process.env.NODE_ENV': DEV ? '"development"' : '"production"',
-    'process.env.WEBSITE_HOSTNAME': `"${process.env.WEBSITE_HOSTNAME || ''}"`,
-};
+var GLOBALS = require('./' + process.argv[configArgIndex+1]);
+
+const PROCESS_ENV_GLOBALS = {};
+Object.keys(GLOBALS.common).forEach(k => {
+    PROCESS_ENV_GLOBALS['process.env.' + k] = JSON.stringify(GLOBALS.common[k]);
+});
+
+const DEV = GLOBALS.NODE_ENV === 'development';
 
 var extractCSS = new ExtractTextPlugin('style.css');
 
@@ -20,7 +28,7 @@ config = {
     },
     plugins: [
         extractCSS,
-        new webpack.DefinePlugin(GLOBALS),
+        new webpack.DefinePlugin(PROCESS_ENV_GLOBALS),
         //new webpack.HotModuleReplacementPlugin(),
         //new webpack.NoErrorsPlugin()
     ].concat(!DEV ? [
@@ -28,7 +36,7 @@ config = {
         new webpack.optimize.UglifyJsPlugin({
             compress: {
                 screw_ie8: true,
-                warnings: VERBOSE,
+                warnings: GLOBALS.common.VERBOSE,
             },
         }),
         new webpack.optimize.AggressiveMergingPlugin(),
@@ -75,4 +83,7 @@ config = {
     }
 };
 
-module.exports = {DEV, VERBOSE, config};
+module.exports = {
+    config,
+    GLOBALS,
+};

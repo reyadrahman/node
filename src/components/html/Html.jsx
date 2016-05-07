@@ -16,19 +16,21 @@ const Html = React.createClass({
     },
 
     render() {
+        let styleURL = `${process.env.PUBLIC_URL}/style.css`;
+        let scriptURL = `${process.env.PUBLIC_URL}/bundle.js`;
         return (
             <html>
                 <head>
                     <meta charSet="utf-8" />
                     <title>{this.props.title}</title>
                     <meta name="description" content={this.props.description} />
-                    <link rel="stylesheet" type="text/css" href="/dist/style.css" />
+                    <link rel="stylesheet" type="text/css" href={styleURL} />
                 </head>
                 <body>
                     <div id="reactUI" dangerouslySetInnerHTML={{ __html: this.props.body }} />
                     <script type="application/json" id="initAppState"
                         dangerouslySetInnerHTML={{__html: this.getInitAppState()}} />
-                    <script src='/dist/bundle.js' />
+                    <script src={scriptURL} />
                 </body>
             </html>
         );

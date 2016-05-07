@@ -12,9 +12,10 @@ fs.readdirSync('node_modules')
     nodeModules[mod] = 'commonjs ' + mod;
   });
 
-const GLOBALS = {
-    PLATFORM: '"node"',
-}
+const PROCESS_ENV_GLOBALS = {};
+Object.keys(base.GLOBALS.server).forEach(k => {
+    PROCESS_ENV_GLOBALS['process.env.' + k] = JSON.stringify(base.GLOBALS.server[k]);
+});
 
 var config = Object.assign({}, base.config, {
     resolve: Object.assign({}, base.config.resolve, {
@@ -31,7 +32,7 @@ var config = Object.assign({}, base.config, {
     output: {
         path: path.join(__dirname, 'dist-server'),
         filename: 'bundle.js',
-        publicPath: '/dist/'
+        publicPath: `/${base.GLOBALS.common.PUBLIC_URL}/`,
     },
     externals: nodeModules,
     target: 'node',
@@ -40,7 +41,7 @@ var config = Object.assign({}, base.config, {
         __filename: false,
     },
     plugins: base.config.plugins.concat([
-        new webpack.DefinePlugin(GLOBALS),
+        new webpack.DefinePlugin(PROCESS_ENV_GLOBALS),
     ]),
 });
 

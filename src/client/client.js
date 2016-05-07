@@ -1,6 +1,6 @@
 import 'babel-polyfill';
 
-console.log('!!!! PLATFORM', PLATFORM);
+console.log('!!!! PLATFORM', process.env.PLATFORM);
 
 function main() {
     require('../client/client-router.jsx');

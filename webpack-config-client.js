@@ -3,9 +3,10 @@ var webpack = require('webpack');
 
 var base = require('./webpack-config-base.js');
 
-const GLOBALS = {
-    PLATFORM: '"browser"',
-}
+const PROCESS_ENV_GLOBALS = {};
+Object.keys(base.GLOBALS.client).forEach(k => {
+    PROCESS_ENV_GLOBALS['process.env.' + k] = JSON.stringify(base.GLOBALS.client[k]);
+});
 
 var config = Object.assign({}, base.config, {
     resolve: Object.assign({}, base.config.resolve, {
@@ -22,10 +23,10 @@ var config = Object.assign({}, base.config, {
     output: {
         path: path.join(__dirname, 'dist-client'),
         filename: 'bundle.js',
-        publicPath: '/dist/'
+        publicPath: `/${base.GLOBALS.common.PUBLIC_URL}/`,
     },
     plugins: base.config.plugins.concat([
-        new webpack.DefinePlugin(GLOBALS),
+        new webpack.DefinePlugin(PROCESS_ENV_GLOBALS),
     ])
 });
 

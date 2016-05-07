@@ -148,7 +148,7 @@ export function changeLang(lang) {
 
         // TODO if logged in, if in browser etc.
 
-        if (PLATFORM === 'browser') {
+        if (process.env.PLATFORM === 'browser') {
             Cookies.set('language', lang,
                         {expires: 1000, path: '/'});
             console.log('cookies: ', document.cookie);
