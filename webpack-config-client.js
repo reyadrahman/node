@@ -8,6 +8,8 @@ Object.keys(base.GLOBALS.client).forEach(k => {
     PROCESS_ENV_GLOBALS['process.env.' + k] = JSON.stringify(base.GLOBALS.client[k]);
 });
 
+const PUBLIC_URL = base.GLOBALS.common.PUBLIC_URL;
+
 var config = Object.assign({}, base.config, {
     resolve: Object.assign({}, base.config.resolve, {
         extensions: ['', '.web.js', '.js', '.jsx']
@@ -23,7 +25,8 @@ var config = Object.assign({}, base.config, {
     output: {
         path: path.join(__dirname, 'dist-client'),
         filename: 'bundle.js',
-        publicPath: `/${base.GLOBALS.common.PUBLIC_URL}/`,
+        publicPath: PUBLIC_URL.match(/^https?:\/\//)
+            ? `${PUBLIC_URL}/` : `/${PUBLIC_URL}/`,
     },
     plugins: base.config.plugins.concat([
         new webpack.DefinePlugin(PROCESS_ENV_GLOBALS),

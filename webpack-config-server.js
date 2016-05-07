@@ -17,6 +17,9 @@ Object.keys(base.GLOBALS.server).forEach(k => {
     PROCESS_ENV_GLOBALS['process.env.' + k] = JSON.stringify(base.GLOBALS.server[k]);
 });
 
+
+const PUBLIC_URL = base.GLOBALS.common.PUBLIC_URL;
+
 var config = Object.assign({}, base.config, {
     resolve: Object.assign({}, base.config.resolve, {
         extensions: ['', '.js', '.jsx']
@@ -32,7 +35,8 @@ var config = Object.assign({}, base.config, {
     output: {
         path: path.join(__dirname, 'dist-server'),
         filename: 'bundle.js',
-        publicPath: `/${base.GLOBALS.common.PUBLIC_URL}/`,
+        publicPath: PUBLIC_URL.match(/^https?:\/\//)
+            ? `${PUBLIC_URL}/` : `/${PUBLIC_URL}/`,
     },
     externals: nodeModules,
     target: 'node',
