@@ -1,7 +1,25 @@
 .root {
-    width: 700px;
     height: 50px;
     display: flex;
+
+    &.small {
+        height: 40px;
+
+        :global {
+            .SearchBar-TypeDropdown {
+
+                &-root {
+                    font-size: 11px;
+                }
+            }
+        }
+        .searchInput {
+            //font-size: 12px;
+        }
+    }
+
+
+
 }
 
 .typeAndSearch {
@@ -44,4 +62,119 @@
         background-color: #f2f9fc;
     }
     transition: all 0.2s ease-in-out;
+
+    &.small {
+        width: 40px;
+        background-size: 30px;
+    }
+
+}
+
+
+:global {
+    .SearchBar-TypeDropdown-root.small {
+        width: 150px;
+    }
+    .SearchBar-TypeDropdown {
+
+        &-root {
+            position: relative;
+            height: 100%;
+            width: 200px;
+        }
+
+        &-control {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            //background-color: white;
+            //border: 1px solid #ccc;
+            //border-radius: 2px;
+            box-sizing: border-box;
+            color: #333;
+            cursor: default;
+            outline: none;
+            padding: 8px 52px 8px 40px;
+            transition: all 200ms ease;
+        }
+
+        &-control:hover {
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+        }
+        &-placeholder {
+            flex: 1 0 0;
+        }
+
+        &-arrow {
+            flex: 0 0 auto;
+            margin-left: 10px;
+            height: 15px;
+            right: 0;
+            top: 0;
+            width: 20px;
+            display: block;
+            background: url(../../public/arrow-down-black.png) center /20px 10px no-repeat;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        &-root.is-open &-arrow {
+            transform: translate3D(0, 3px, 0);
+        }
+
+        &-menu {
+            background-color: white;
+            //border: 1px solid #ccc;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+            box-sizing: border-box;
+            margin-top: -1px;
+            max-height: 200px;
+            overflow-y: auto;
+            position: absolute;
+            top: 100%;
+            width: 100%;
+            z-index: 1000;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        &-menu &-group &-title {
+            padding: 8px 10px;
+            color: rgba(51, 51, 51, 1);
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        &-option {
+            box-sizing: border-box;
+            color: rgba(51, 51, 51, 0.8);
+            cursor: pointer;
+            display: block;
+            padding: 8px 10px;
+            padding-left: 40px;
+        }
+
+        &-option:last-child {
+            border-bottom-right-radius: 2px;
+            border-bottom-left-radius: 2px;
+        }
+
+        &-option:hover {
+            background-color: #f2f9fc;
+            color: #333;
+        }
+
+        &-option.is-selected {
+            background-color: #f2f9fc;
+            color: #333;
+        }
+
+        &-noresults {
+            box-sizing: border-box;
+            color: #ccc;
+            cursor: default;
+            display: block;
+            padding: 8px 10px;
+        }
+    }
 }

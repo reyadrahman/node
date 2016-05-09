@@ -18,7 +18,7 @@ let HomeIntro = React.createClass({
                             <source src={backgroundVideo} type="video/mp4" />
                     </video>
                 </div>
-                <Header i18n={i18n} />
+                <Header i18n={i18n} isHome />
                 <div className={styles.searchContainer}>
                     <SearchBar i18n={i18n} />
                 </div>

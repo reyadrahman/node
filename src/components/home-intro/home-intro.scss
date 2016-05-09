@@ -1,7 +1,5 @@
 .root {
     height: 100vh;
-//    background: url(./background-2.jpg) bottom /cover no-repeat;
-    padding: 20px;
     position: relative;
 }
 
@@ -34,6 +32,9 @@
     top: 55vh;
     display: flex;
     justify-content: center;
+}
+.searchContainer > div {
+    width: 700px;
 }
 
 .scrollDownContainer {
