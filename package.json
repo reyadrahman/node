@@ -59,5 +59,16 @@
     "url-loader": "^0.5.7",
     "validator": "^5.2.0",
     "webpack": "^1.12.14"
+  },
+  "devDependencies": {
+    "eslint": "^2.9.0",
+    "eslint-config-airbnb": "^9.0.0",
+    "eslint-plugin-import": "^1.7.0",
+    "eslint-plugin-jsx-a11y": "^1.2.0",
+    "eslint-plugin-react": "^5.0.1",
+    "tern-lint": "^0.6.0",
+    "tern-node-extension": "^0.5.0",
+    "tern-react": "^0.1.0",
+    "tern-requirejs-extension": "^0.1.0"
   }
 }
