@@ -45,7 +45,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
-app.use(`/${process.env.PUBLIC_PATH}`, express.static(path.join(ROOT_DIR, 'dist-client'), {
+app.use(`${process.env.PUBLIC_PATH}`, express.static(path.join(ROOT_DIR, 'dist-client'), {
     maxage: '1d'
 }));
 

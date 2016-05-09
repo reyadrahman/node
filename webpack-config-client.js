@@ -25,8 +25,7 @@ var config = Object.assign({}, base.config, {
     output: {
         path: path.join(__dirname, 'dist-client'),
         filename: 'bundle.js',
-        publicPath: PUBLIC_URL.match(/^https?:\/\//)
-            ? `${PUBLIC_URL}/` : `/${PUBLIC_URL}/`,
+        publicPath: `${PUBLIC_URL}/`
     },
     plugins: base.config.plugins.concat([
         new webpack.DefinePlugin(PROCESS_ENV_GLOBALS),

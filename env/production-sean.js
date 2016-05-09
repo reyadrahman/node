@@ -7,7 +7,7 @@ module.exports = {
         DEBUG: 'app:*',
 
         PUBLIC_DOMAIN: 'http://d2lwos3jzc4ewy.cloudfront.net',
-        PUBLIC_PATH: 'dist_' + PUBLIC_PATH_SUFFIX,
+        PUBLIC_PATH: '/dist_' + PUBLIC_PATH_SUFFIX,
         PUBLIC_URL: 'http://d2lwos3jzc4ewy.cloudfront.net/dist_' + PUBLIC_PATH_SUFFIX,
 
         /*

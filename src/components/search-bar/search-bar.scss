@@ -56,6 +56,12 @@
     //background-color: rgb(230, 230, 230);
     background-color: rgb(255, 255, 255);
     cursor: pointer;
+    outline: none;
+    border: none;
+
+    &:hover, &:focus {
+        outline: none;
+    }
 
     &:hover {
         transform: translate3D(3px, 0, 0);

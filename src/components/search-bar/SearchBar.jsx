@@ -9,6 +9,7 @@ const SearchBar = React.createClass({
     getInitialState() {
         return {
             type: 'image',
+            searchPhrase: '',
         };
     },
 
@@ -16,20 +17,38 @@ const SearchBar = React.createClass({
         this.setState({ type: selection.value });
     },
 
+    searchPhraseChanged(e) {
+        this.setState({ searchPhrase: e.target.value });
+    },
+
+    submitted(e) {
+        e.preventDefault();
+        if (this.props.onSubmit && this.state.type && this.state.searchPhrase) {
+            this.props.onSubmit(this.state.type, this.state.searchPhrase);
+        }
+    },
+
     render() {
         let { i18n, className, small } = this.props;
-        let { type } = this.state;
+        let { type, searchPhrase } = this.state;
         return (
-            <div className={[styles.root, small ? styles.small : '', className || ''].join(' ')}>
+            <form
+                className={[styles.root, small ? styles.small
+                    : '', className || ''].join(' ')}
+                onSubmit={this.props.submitted}
+            >
                 <div className={styles.typeAndSearch}>
                     <TypeDropdown
                         i18n={i18n} small={small} onChange={this.typeChanged} value={type}
                     />
                     <div className={styles.separator1} />
-                    <SearchInput i18n={i18n} />
+                    <SearchInput
+                        value={searchPhrase} i18n={i18n}
+                        onChange={this.searchPhraseChanged}
+                    />
                 </div>
-                <SearchButton className={styles.small || ''} />
-            </div>
+                <SearchButton className={styles.small || ''} onClick={this.submitted} />
+            </form>
         );
     },
 });
@@ -60,6 +79,8 @@ const SearchInput = React.createClass({
             <input
                 placeholder="Recherche rapide d'images de haute qualite"
                 type="text"
+                value={this.props.value}
+                onChange={this.props.onChange}
                 className={styles.searchInput}
         />
         );
@@ -69,7 +90,11 @@ const SearchInput = React.createClass({
 const SearchButton = React.createClass({
     render() {
         return (
-            <div className={[styles.searchButton, this.props.className || ''].join(' ')} />
+            <button
+                className={[styles.searchButton,
+                    this.props.className || ''].join(' ')}
+                onClick={this.props.onClick}
+            />
         );
     },
 });

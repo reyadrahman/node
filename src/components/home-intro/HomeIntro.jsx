@@ -1,4 +1,5 @@
 import React from 'react'
+import { withRouter } from 'react-router';
 import Header from '../../components/header/Header.jsx';
 import SearchBar from '../../components/search-bar/SearchBar.jsx';
 
@@ -8,6 +9,11 @@ import backgroundPoster from './background-poster.jpg';
 import backgroundVideo from './background-video.mp4';
 
 let HomeIntro = React.createClass({
+    searchSubmitted(searchType, searchPhrase) {
+        console.log('HomeIntro searchSubmitted', searchType, searchPhrase);
+        this.props.router.push(`/search/${searchType}/${encodeURIComponent(searchPhrase)}`);
+    },
+
     render() {
         console.log('HomeIntro render');
         let {i18n, i18n: {strings}} = this.props;
@@ -20,7 +26,7 @@ let HomeIntro = React.createClass({
                 </div>
                 <Header i18n={i18n} isHome />
                 <div className={styles.searchContainer}>
-                    <SearchBar i18n={i18n} />
+                    <SearchBar i18n={i18n} onSubmit={this.searchSubmitted} />
                 </div>
                 <div className={styles.scrollDownContainer}>
                     <div className={styles.scrollDownLabel}>
@@ -34,5 +40,7 @@ let HomeIntro = React.createClass({
         )
     }
 });
+
+HomeIntro = withRouter(HomeIntro);
 
 export default HomeIntro;

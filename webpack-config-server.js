@@ -35,8 +35,7 @@ var config = Object.assign({}, base.config, {
     output: {
         path: path.join(__dirname, 'dist-server'),
         filename: 'bundle.js',
-        publicPath: PUBLIC_URL.match(/^https?:\/\//)
-            ? `${PUBLIC_URL}/` : `/${PUBLIC_URL}/`,
+        publicPath: `${PUBLIC_URL}/`
     },
     externals: nodeModules,
     target: 'node',

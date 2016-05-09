@@ -20,10 +20,10 @@ $itemFontSize: 13px;
     justify-content: flex-start;
 }
 
-.leftSectionMenu > div {
+.leftSectionMenu > * {
     flex: 1 0 0;
 }
-.leftSectionSearchBar > div {
+.leftSectionSearchBar > * {
     flex: 1 1 0;
     width: 100%;
     max-width: 500px;
