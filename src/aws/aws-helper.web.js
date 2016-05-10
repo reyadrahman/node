@@ -22,17 +22,6 @@ import 'script!amazon-cognito-identity-js/dist/aws-cognito-sdk.min.js';
 import 'script!amazon-cognito-identity-js/dist/amazon-cognito-identity.min.js';
 
 
-import 'script!apiGateway-js-sdk/lib/axios/dist/axios.standalone.js'
-import 'script!apiGateway-js-sdk/lib/CryptoJS/rollups/hmac-sha256.js'
-import 'script!apiGateway-js-sdk/lib/CryptoJS/rollups/sha256.js'
-import 'script!apiGateway-js-sdk/lib/CryptoJS/components/hmac.js'
-import 'script!apiGateway-js-sdk/lib/CryptoJS/components/enc-base64.js'
-import 'script!apiGateway-js-sdk/lib/url-template/url-template.js'
-import 'script!apiGateway-js-sdk/lib/apiGatewayCore/sigV4Client.js'
-import 'script!apiGateway-js-sdk/lib/apiGatewayCore/apiGatewayClient.js'
-import 'script!apiGateway-js-sdk/lib/apiGatewayCore/simpleHttpClient.js'
-import 'script!apiGateway-js-sdk/lib/apiGatewayCore/utils.js'
-import 'script!apiGateway-js-sdk/apigClient.js'
 
 
 
@@ -76,10 +65,6 @@ var poolData = {
     ClientId,
 };
 var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
-
-
-var apigClient = apigClientFactory.newClient();
-
 
 
 
@@ -209,30 +194,3 @@ export function getUserFromCache() {
     let username = 'shahab.sh.70@gmail.com';
 }
 */
-
-export function search(query) {
-    return new Promise((resolve, reject) => {
-        const params = {
-            q: query.searchPhrase,
-            size: 20,
-        };
-        var additionalParams = {
-            //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
-            headers: { },
-            queryParams: { }
-        };
-
-        apigClient.searchGet(params, {}, additionalParams)
-                  .then(result => {
-                      if (!result.data.hits) {
-                          if (result.data.__type && result.data.message) {
-                              return reject(`${result.data.message} (${result.data.__type})`);
-                          }
-                          return reject('Search Failed');
-                      }
-                      return resolve(result.data);
-                  }).catch(err => {
-                      return reject(err);
-                  });
-    });
-}

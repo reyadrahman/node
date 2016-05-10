@@ -7,36 +7,38 @@ import isEqual from 'lodash/isEqual';
 
 import styles from './search-page.scss';
 
+function createQuery(params) {
+    const splat = params.splat;
+    if (!splat) return null;
+    const split = splat.split('/').filter(x => x);
+    if (split.length < 2) return null;
+    return { type: split[0], searchPhrase: decodeURIComponent(split[1]) };
+}
+
+
 let SearchPage = React.createClass({
     getInitialState() {
         return {
-            query: { searchPhrase: '', type: '' },
+            //query: createQuery(this.props.routeParams),
         };
     },
 
-    getQuery(props) {
-        const splat = props.routeParams.splat;
-        if (!splat) return null;
-        const split = splat.split('/').filter(x => x);
-        if (split.length < 2) return null;
-        return { type: split[0], searchPhrase: decodeURIComponent(split[1]) };
-    },
 
     startSearch(query) {
         this.props.search(query);
-        this.setState({ query });
+        //this.setState({ query });
     },
 
     componentDidMount() {
-        const q = this.getQuery(this.props);
-        if (q) {
+        const q = createQuery(this.props.routeParams);
+        if (q && !isEqual(q, this.props.searchState.query)) {
             this.startSearch(q);
         }
     },
 
     componentWillReceiveProps(newProps) {
-        const oldQ = this.getQuery(this.props);
-        const newQ = this.getQuery(newProps);
+        const oldQ = createQuery(this.props.routeParams);
+        const newQ = createQuery(newProps.routeParams);
         if (!isEqual(oldQ, newQ)) {
             this.startSearch(newQ);
         }
@@ -44,7 +46,7 @@ let SearchPage = React.createClass({
 
     render() {
         const { i18n, searchState } = this.props;
-        const { query } = this.state;
+        //const { query } = this.state;
         console.log('SearchPage: ', this.props);
 
         const hasImages = searchState.hits && searchState.hits.hit.length > 0;
@@ -68,7 +70,7 @@ let SearchPage = React.createClass({
 
         return (
             <div>
-                <Header i18n={i18n} initialSearchQuery={query} />
+                <Header i18n={i18n} initialSearchQuery={searchState.query} />
                 <div className={styles.imagesAndControlContainer}>
                     <div className={styles.title}>SOLITUDE GLACIER FROID BLEU CIEL GRIS</div>
                     <SearchStatusAndControl hitCount={hitCount} />
@@ -89,6 +91,11 @@ SearchPage = connect(
         search: actions.search,
     }
 )(SearchPage);
+
+SearchPage.fetchData = function({ params, store }) {
+    let q = createQuery(params);
+    return store.dispatch(actions.search(q));
+};
 
 
 const Image = ({ data: { fields } }) => {

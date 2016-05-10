@@ -7,9 +7,9 @@ import styles from './search-bar.scss';
 
 const SearchBar = React.createClass({
     getInitialState() {
-        return {
-            type: 'image',
+        return this.props.initialQuery || {
             searchPhrase: '',
+            type: 'image',
         };
     },
 
