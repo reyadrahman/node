@@ -75,7 +75,7 @@ let SearchPage = React.createClass({
                     <div className={styles.title}>SOLITUDE GLACIER FROID BLEU CIEL GRIS</div>
                     <SearchStatusAndControl hitCount={hitCount} />
                     {
-                        images || searchingIndicator || noResults
+                        searchingIndicator || images || noResults
                     }
                 </div>
                 <Footer i18n={i18n} />
