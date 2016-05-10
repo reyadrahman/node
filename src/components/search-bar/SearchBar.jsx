@@ -28,6 +28,14 @@ const SearchBar = React.createClass({
         }
     },
 
+    componentWillReceiveProps(newProps) {
+        if (newProps.initialQuery &&
+            newProps.initialQuery !== this.props.initialQuery)
+        {
+            this.setState({ ...newProps.initialQuery });
+        }
+    },
+
     render() {
         let { i18n, className, small } = this.props;
         let { type, searchPhrase } = this.state;

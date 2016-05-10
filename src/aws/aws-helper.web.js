@@ -15,11 +15,25 @@ import 'script!sjcl.js';
 import 'script!moment.min.js';
 //window.moment = moment;
 
-import 'script!aws-sdk/dist/aws-sdk';
+import 'script!aws-sdk.js';
 //const AWS = window.AWS;
 
 import 'script!amazon-cognito-identity-js/dist/aws-cognito-sdk.min.js';
 import 'script!amazon-cognito-identity-js/dist/amazon-cognito-identity.min.js';
+
+
+import 'script!apiGateway-js-sdk/lib/axios/dist/axios.standalone.js'
+import 'script!apiGateway-js-sdk/lib/CryptoJS/rollups/hmac-sha256.js'
+import 'script!apiGateway-js-sdk/lib/CryptoJS/rollups/sha256.js'
+import 'script!apiGateway-js-sdk/lib/CryptoJS/components/hmac.js'
+import 'script!apiGateway-js-sdk/lib/CryptoJS/components/enc-base64.js'
+import 'script!apiGateway-js-sdk/lib/url-template/url-template.js'
+import 'script!apiGateway-js-sdk/lib/apiGatewayCore/sigV4Client.js'
+import 'script!apiGateway-js-sdk/lib/apiGatewayCore/apiGatewayClient.js'
+import 'script!apiGateway-js-sdk/lib/apiGatewayCore/simpleHttpClient.js'
+import 'script!apiGateway-js-sdk/lib/apiGatewayCore/utils.js'
+import 'script!apiGateway-js-sdk/apigClient.js'
+
 
 
 // Sean's AWS account:
@@ -39,6 +53,7 @@ const AccountId = '517510819783';
 const UserPoolId = 'us-east-1_HucYipUfN';
 const ClientId = '3l7t9s8f8rjaf8674f6kch4t76';
 const Region = 'us-east-1';
+//const CloudSearchEndPoint = 'http://search-deepiks-mg6dg6gwke3gtpsagxzwynbuqe.us-east-1.cloudsearch.amazonaws.com';
 
 
 
@@ -61,6 +76,12 @@ var poolData = {
     ClientId,
 };
 var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+
+
+var apigClient = apigClientFactory.newClient();
+
+
+
 
 
 export function signup(data) {
@@ -182,9 +203,36 @@ export function signout() {
     });
 }
 
+/*
 export function getUserFromCache() {
     // TODO
     let username = 'shahab.sh.70@gmail.com';
+}
+*/
 
+export function search(query) {
+    return new Promise((resolve, reject) => {
+        const params = {
+            q: query.searchPhrase,
+            size: 20,
+        };
+        var additionalParams = {
+            //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
+            headers: { },
+            queryParams: { }
+        };
 
+        apigClient.searchGet(params, {}, additionalParams)
+                  .then(result => {
+                      if (!result.data.hits) {
+                          if (result.data.__type && result.data.message) {
+                              return reject(`${result.data.message} (${result.data.__type})`);
+                          }
+                          return reject('Search Failed');
+                      }
+                      return resolve(result.data);
+                  }).catch(err => {
+                      return reject(err);
+                  });
+    });
 }

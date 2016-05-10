@@ -82,3 +82,16 @@ export function currentUser(state = null, action) {
     }
     return state;
 }
+
+export function search(state =
+    {
+        query: null,
+        hits: null,
+        isSearching: false,
+    }, action)
+{
+    if (action.type === 'SEARCH') {
+        return Object.assign({}, state, action.state);
+    }
+    return state;
+}

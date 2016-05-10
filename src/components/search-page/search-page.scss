@@ -1,0 +1,62 @@
+
+.imagesAndControlContainer {
+    min-height: 800px;
+    padding: 80px 50px 30px 50px;
+
+    & .title {
+        font-size: 20px;
+        color: rgb(70, 70, 70);
+        letter-spacing: 5px
+    }
+
+    & .statusAndControlContainer {
+        padding: 30px 20px;
+
+        & .hitCount {
+
+        }
+    }
+
+    & .noResults {
+        font-size: 45px;
+        text-align: center;
+        margin: 100px 0;
+        color: rgb(100, 100, 100);
+    }
+
+    & .searchingIndicator {
+        font-size: 45px;
+        text-align: center;
+        margin: 100px 0;
+        color: rgb(150, 150, 150);
+    }
+
+    & .imagesContainer {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 20px;
+
+        & .imageContainer {
+            margin: 5px;
+            width: 300px;
+            max-width: 400px;
+            height: 300px;
+            flex: 1 0 auto;
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+
+            &:hover {
+                transform: translate3D(0, -5px, 0);
+            }
+
+            &:last-child {
+                flex: 0 0 auto;
+            }
+        }
+    }
+
+
+}

@@ -4,13 +4,33 @@ import { connect } from 'react-redux';
 import * as actions from '../../actions/actions.js';
 import Dropdown from '../dropdown/Dropdown.jsx';
 import SearchBar from '../search-bar/SearchBar.jsx';
+import { withRouter } from 'react-router';
 
 import styles from './header.scss';
 
 let Header = React.createClass({
+    onSearchSubmit(searchType, searchPhrase) {
+        console.log('HomeIntro searchSubmitted', searchType, searchPhrase);
+        this.props.router.push(`/search/${searchType}/${encodeURIComponent(searchPhrase)}`);
+    },
+
+    onConnectionSelect(selection) {
+        console.log('connection select: ', selection);
+        if (selection.value === 'signin') {
+            this.props.openSignin();
+        } else if (selection.value === 'signup') {
+            this.props.openSignup();
+        } else if (selection.value === 'signout') {
+            this.props.signout();
+        } else if (selection.value === 'verify') {
+            this.props.openVerifyRegistration();
+        }
+    },
+
     render() {
         console.log('Header render');
-        let { i18n, i18n: { strings: { header: hs } }, currentUser, isHome } = this.props;
+        let { i18n, i18n: { strings: { header: hs } }, currentUser,
+              isHome, initialSearchQuery } = this.props;
 
         let connection = [];
         let connectionPlaceholder;
@@ -39,7 +59,11 @@ let Header = React.createClass({
             </div>
         ) : (
             <div className={styles.leftSectionSearchBar}>
-                <SearchBar i18n={i18n} small />
+                <SearchBar
+                    i18n={i18n}
+                    initialQuery={initialSearchQuery}
+                    onSubmit={this.onSearchSubmit}
+                    small />
             </div>
         );
 
@@ -63,19 +87,6 @@ let Header = React.createClass({
         );
     },
 
-    onConnectionSelect(selection) {
-        console.log('connection select: ', selection);
-        if (selection.value === 'signin') {
-            this.props.openSignin();
-        } else if (selection.value === 'signup') {
-            this.props.openSignup();
-        } else if (selection.value === 'signout') {
-            this.props.signout();
-        } else if (selection.value === 'verify') {
-            this.props.openVerifyRegistration();
-        }
-    },
-
 });
 
 Header = connect(
@@ -89,5 +100,7 @@ Header = connect(
         signout: actions.signout,
     }
 )(Header);
+
+Header = withRouter(Header);
 
 export default Header;

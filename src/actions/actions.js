@@ -133,6 +133,25 @@ export function clearCurrentUserAttributes() {
     }
 }
 
+export function replaceSearchResults(query, hits) {
+    return {
+        type: 'SEARCH',
+        state: {
+            query,
+            hits,
+        },
+    };
+}
+
+export function setIsSearching(isSearching) {
+    return {
+        type: 'SEARCH',
+        state: {
+            isSearching,
+        },
+    };
+}
+
 
 
 // ==================================================
@@ -237,6 +256,25 @@ export function signout() {
 
                    Cookies.set('loggedIn', '',
                                {expires: 1000, path: '/'});
+               })
+        );
+    };
+}
+
+
+export function search(query) {
+    return dispatch => {
+        dispatch(setIsSearching(true));
+        return (
+            aws.search(query)
+               .then(results => {
+                   console.log('search SUCCEEDED: ', results);
+                   dispatch(replaceSearchResults(query, results.hits));
+                   dispatch(setIsSearching(false));
+               })
+               .catch(err => {
+                   console.log('search FAILED: ', err);
+                   dispatch(setIsSearching(false));
                })
         );
     };
