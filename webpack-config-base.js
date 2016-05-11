@@ -32,8 +32,8 @@ console.log('envFileContent', envFileContent);
 console.log('providedEnvVars', providedEnvVars);
 
 const envVars = Object.assign({}, DEFAULT_ENV_VARS, envFileContent, providedEnvVars);
+envVars.VERBOSE = !envVars.VERBOSE ? false : Boolean(JSON.parse(envVars.VERBOSE));
 
-// const ValidInputEnvVars = ['NODE_ENV', 'VERBOSE', 'SERVER_PORT']
 if (envVars.CDN && !envVars.TIMESTAMP) {
     console.error('Please use the scripts/build-all.sh to build when using CDN.');
     process.exit(-1);

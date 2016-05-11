@@ -6,6 +6,7 @@ const base = require('./webpack-config-base.js');
 const envVars = Object.assign({}, base.envVars, { PLATFORM: 'browser' });
 const envVarDefs = base.createEnvVarDefs(envVars);
 
+console.log('envVars: ', envVars);
 console.log('envVarDefs: ', envVarDefs);
 
 const config = Object.assign({}, base.config, {

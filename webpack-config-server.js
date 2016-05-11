@@ -17,6 +17,7 @@ fs.readdirSync('node_modules')
 const envVars = Object.assign({}, base.envVars, { PLATFORM: 'node' });
 const envVarDefs = base.createEnvVarDefs(envVars);
 
+console.log('envVars: ', envVars);
 console.log('envVarDefs: ', envVarDefs);
 
 const config = Object.assign({}, base.config, {
