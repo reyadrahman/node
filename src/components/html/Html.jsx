@@ -16,8 +16,8 @@ const Html = React.createClass({
     },
 
     render() {
-        let styleURL = `${process.env.PUBLIC_URL}/style.css`;
-        let scriptURL = `${process.env.PUBLIC_URL}/bundle.js`;
+        let styleURL = `${process.env.PUBLIC_URL}style.css`;
+        let scriptURL = `${process.env.PUBLIC_URL}bundle.js`;
         return (
             <html>
                 <head>

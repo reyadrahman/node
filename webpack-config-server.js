@@ -1,9 +1,10 @@
-var path = require('path');
-var webpack = require('webpack');
-var fs = require('fs');
-var base = require('./webpack-config-base.js');
+const path = require('path');
+const webpack = require('webpack');
+const fs = require('fs');
+const mapKeys = require('lodash/mapKeys');
+const base = require('./webpack-config-base.js');
 
-var nodeModules = {};
+const nodeModules = {};
 fs.readdirSync('node_modules')
   .filter(function(x) {
     return ['.bin', 'normalize.css'].indexOf(x) === -1;
@@ -12,15 +13,13 @@ fs.readdirSync('node_modules')
     nodeModules[mod] = 'commonjs ' + mod;
   });
 
-const PROCESS_ENV_GLOBALS = {};
-Object.keys(base.GLOBALS.server).forEach(k => {
-    PROCESS_ENV_GLOBALS['process.env.' + k] = JSON.stringify(base.GLOBALS.server[k]);
-});
 
+const envVars = Object.assign({}, base.envVars, { PLATFORM: 'node' });
+const envVarDefs = base.createEnvVarDefs(envVars);
 
-const PUBLIC_URL = base.GLOBALS.common.PUBLIC_URL;
+console.log('envVarDefs: ', envVarDefs);
 
-var config = Object.assign({}, base.config, {
+const config = Object.assign({}, base.config, {
     resolve: Object.assign({}, base.config.resolve, {
         extensions: ['', '.js', '.jsx']
     }),
@@ -35,7 +34,7 @@ var config = Object.assign({}, base.config, {
     output: {
         path: path.join(__dirname, 'dist-server'),
         filename: 'bundle.js',
-        publicPath: `${PUBLIC_URL}/`
+        publicPath: envVars.PUBLIC_URL,
     },
     externals: nodeModules,
     target: 'node',
@@ -43,9 +42,9 @@ var config = Object.assign({}, base.config, {
         __dirname: false,
         __filename: false,
     },
-    plugins: base.config.plugins.concat([
-        new webpack.DefinePlugin(PROCESS_ENV_GLOBALS),
-    ]),
+    plugins: [
+        new webpack.DefinePlugin(envVarDefs),
+    ].concat(base.config.plugins),
 });
 
 

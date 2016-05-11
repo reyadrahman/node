@@ -1,34 +1,75 @@
-var path = require('path');
-var webpack = require('webpack');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
+const path = require('path');
+const webpack = require('webpack');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const pick = require('lodash/pick');
+const map = require('lodash/map');
+const fromPairs = require('lodash/fromPairs');
 
-var GLOBALS = {};
-var configArgIndex = process.argv.indexOf('--env');
-if (configArgIndex === -1 || configArgIndex+1 >= process.argv.length) {
-    console.error('ERROR: Please provide a config file using the --env parameter');
-    process.exit(1)
+function createEnvVarDefs(envVars) {
+    return fromPairs(map(envVars, (v, k) =>
+        [`process.env.${k}`, JSON.stringify(v)]));
 }
 
-var GLOBALS = require('./' + process.argv[configArgIndex+1]);
+const DEFAULT_ENV_VARS = {
+    NODE_ENV: 'development',
+    VERBOSE: false,
+    SERVER_PORT: 3000,
+    CDN: '',
+    DEBUG: 'app:*',
+    TIMESTAMP: '',
+};
 
-const PROCESS_ENV_GLOBALS = {};
-Object.keys(GLOBALS.common).forEach(k => {
-    PROCESS_ENV_GLOBALS['process.env.' + k] = JSON.stringify(GLOBALS.common[k]);
-});
+const envArgIndex = process.argv.indexOf('--env');
+const envFileProvided = envArgIndex !== -1 && envArgIndex+1 < process.argv.length;
+const envFileContent = envFileProvided
+    ? require(`./${process.argv[envArgIndex + 1]}`)
+    : {};
 
-const DEV = GLOBALS.NODE_ENV === 'development';
+const providedEnvVars = pick(process.env, Object.keys(DEFAULT_ENV_VARS));
 
-var extractCSS = new ExtractTextPlugin('style.css');
+console.log('DEFAULT_ENV_VARS: ', DEFAULT_ENV_VARS);
+console.log('envFileContent', envFileContent);
+console.log('providedEnvVars', providedEnvVars);
 
-config = {
+const envVars = Object.assign({}, DEFAULT_ENV_VARS, envFileContent, providedEnvVars);
+
+// const ValidInputEnvVars = ['NODE_ENV', 'VERBOSE', 'SERVER_PORT']
+if (envVars.CDN && !envVars.TIMESTAMP) {
+    console.error('Please use the scripts/build-all.sh to build when using CDN.');
+    process.exit(-1);
+}
+
+if (envVars.CDN) {
+    envVars.PUBLIC_PATH = `/dist_${envVars.TIMESTAMP}/`;
+    envVars.PUBLIC_URL = `${envVars.CDN}/dist_${envVars.TIMESTAMP}/`;
+} else {
+    envVars.PUBLIC_PATH = '/dist/';
+    envVars.PUBLIC_URL = '/dist/';
+}
+
+    //     PUBLIC_DOMAIN: 'http://d2lwos3jzc4ewy.cloudfront.net',
+    //     PUBLIC_PATH: 'dist_' + PUBLIC_PATH_SUFFIX + '/',
+    //     PUBLIC_URL: 'http://d2lwos3jzc4ewy.cloudfront.net/dist_' + PUBLIC_PATH_SUFFIX + '/',
+    //     */
+    //     PUBLIC_DOMAIN: '',
+    //     PUBLIC_PATH: '/dist',
+    //     PUBLIC_URL: '/dist',
+
+
+
+const DEV = envVars.NODE_ENV === 'development';
+
+const extractCSS = new ExtractTextPlugin('style.css');
+
+const config = {
     // or devtool: 'eval' to debug issues with compiled output:
     devtool: DEV ? 'cheap-module-eval-source-map' : false,
     resolve: {
         modulesDirectories: ['node_modules', 'external_modules'],
     },
     plugins: [
+        //new webpack.DefinePlugin(envVarDefs),
         extractCSS,
-        new webpack.DefinePlugin(PROCESS_ENV_GLOBALS),
         //new webpack.HotModuleReplacementPlugin(),
         //new webpack.NoErrorsPlugin()
     ].concat(!DEV ? [
@@ -36,7 +77,7 @@ config = {
         new webpack.optimize.UglifyJsPlugin({
             compress: {
                 screw_ie8: true,
-                warnings: GLOBALS.common.VERBOSE,
+                warnings: envVars.VERBOSE,
             },
         }),
         new webpack.optimize.AggressiveMergingPlugin(),
@@ -85,5 +126,6 @@ config = {
 
 module.exports = {
     config,
-    GLOBALS,
+    envVars,
+    createEnvVarDefs,
 };

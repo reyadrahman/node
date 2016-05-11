@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "bash ./scripts/build-all.sh --env ./env/production-emmanuel.js && npm run start-server",
-    "start-server": "node ./dist-server/bundle.js",
+    "start": "bash ./scripts/build-all.sh && npm run start-server",
+    "build-all": "bash ./scripts/build-all.sh",
     "build-client": "webpack --config webpack-config-client.js --color --progress",
-    "build-server": "webpack --config webpack-config-server.js --color --progress"
+    "build-server": "webpack --config webpack-config-server.js --color --progress",
+    "start-server": "node ./dist-server/bundle.js"
   },
   "dependencies": {
     "accept-language": "^2.0.16",
