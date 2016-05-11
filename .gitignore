@@ -5,6 +5,7 @@
 .swp
 /dist-client
 /dist-server
+/env
 node_modules
 
 # Elastic Beanstalk Files

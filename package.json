@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "bash ./scripts/build-all.sh && npm run start-server",
+    "start": "bash ./scripts/build-and-start.sh",
     "build-all": "bash ./scripts/build-all.sh",
     "build-client": "webpack --config webpack-config-client.js --color --progress",
     "build-server": "webpack --config webpack-config-server.js --color --progress",
