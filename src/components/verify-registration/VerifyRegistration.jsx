@@ -1,49 +1,9 @@
 import React from 'react';
-import {connect} from 'react-redux';
-import {ModalBox, Input, Button} from '../modal-box-1/ModalBox1.jsx';
+import { connect } from 'react-redux';
+import { ModalBox, Input, Button } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../actions/actions.js';
 
-import styles from './verify-registration.scss';
-
 let VerifyRegistration = React.createClass({
-    render() {
-        let {isOpen, i18n: {strings: {verifyRegistration: strings}},
-             errorMessage, successMessage,
-             closeVerifyRegistration} = this.props;
-        let {state} = this;
-        return (
-            <ModalBox
-                isOpen={isOpen}
-                onRequestClose={closeVerifyRegistration}
-                title={strings.title}
-                successMessage={successMessage}
-                errorMessage={errorMessage}
-            >
-                <form onSubmit={this.verify}>
-                    <div className={styles.inputsRow}>
-                        <Input
-                            className={styles.field}
-                            placeholder={strings.email}
-                            value={state.email}
-                            onChange={this.emailChanged}
-                        />
-                        <Input
-                            className={styles.field}
-                            placeholder={strings.code}
-                            value={state.code}
-                            onChange={this.verificationCodeChanged}
-                        />
-                    </div>
-                    <Button
-                        type="submit"
-                        className={styles.verifyButton}
-                        label={strings.verify}
-                    />
-                </form>
-            </ModalBox>
-        );
-    },
-
     getInitialState() {
         console.log('getInitialState', this.props);
         return {
@@ -53,27 +13,69 @@ let VerifyRegistration = React.createClass({
     },
 
     verify(e) {
-        let {email, code} = this.state;
+        let { email, code } = this.state;
         e.preventDefault();
         console.log('verify: ', this.state);
-        this.props.verifyRegistration({email, code});
+        this.props.verifyRegistration({ email, code });
     },
 
     emailChanged(e) {
-        this.setState({email: e.target.value});
+        this.setState({ email: e.target.value });
     },
 
     verificationCodeChanged(e) {
-        this.setState({code: e.target.value});
+        this.setState({ code: e.target.value });
     },
 
     componentWillReceiveProps(newProps) {
         console.log('componentWillReceiveProps', this.props, newProps);
         if (newProps.initialEmail !== this.props.initialEmail) {
             console.log('!!!');
-            this.setState({email: newProps.initialEmail});
+            this.setState({ email: newProps.initialEmail });
         }
-    }
+    },
+
+    render() {
+        let { isOpen, i18n: { strings: { verifyRegistration: strings } },
+             styles, styles: { verifyRegistration: ss },
+             errorMessage, successMessage,
+             closeVerifyRegistration } = this.props;
+        let { state } = this;
+
+        return (
+            <ModalBox
+                isOpen={isOpen}
+                onRequestClose={closeVerifyRegistration}
+                title={strings.title}
+                successMessage={successMessage}
+                errorMessage={errorMessage}
+                styles={styles}
+            >
+                <form onSubmit={this.verify}>
+                    <div className={ss.inputsRow}>
+                        <Input
+                            className={ss.field}
+                            placeholder={strings.email}
+                            value={state.email}
+                            onChange={this.emailChanged}
+                        />
+                        <Input
+                            className={ss.field}
+                            placeholder={strings.code}
+                            value={state.code}
+                            onChange={this.verificationCodeChanged}
+                        />
+                    </div>
+                    <Button
+                        type="submit"
+                        className={ss.verifyButton}
+                        label={strings.verify}
+                        styles={styles}
+                    />
+                </form>
+            </ModalBox>
+        );
+    },
 
 });
 

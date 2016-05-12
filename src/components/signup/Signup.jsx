@@ -1,63 +1,9 @@
 import React from 'react';
-import {connect} from 'react-redux';
-import {ModalBox, Input, Button} from '../modal-box-1/ModalBox1.jsx';
+import { connect } from 'react-redux';
+import { ModalBox, Input, Button } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../actions/actions.js';
 
-import styles from './signup.scss';
-
 let Signup = React.createClass({
-    render() {
-        let {isOpen, i18n: {strings: {signup: strings}},
-             errorMessage, successMessage, closeSignup} = this.props;
-        let {state} = this;
-        return (
-            <ModalBox
-                isOpen={isOpen}
-                onRequestClose={closeSignup}
-                title={strings.title}
-                successMessage={successMessage}
-                errorMessage={errorMessage}
-            >
-                <form onSubmit={this.signup}>
-                    <div className={styles.inputsRow1}>
-                        <Input
-                            className={styles.field}
-                            placeholder={strings.firstName}
-                            value={state.firstName}
-                            onChange={this.firstNameChanged}
-                        />
-                        <Input
-                            className={styles.field}
-                            placeholder={strings.lastName}
-                            value={state.lastName}
-                            onChange={this.lastNameChanged}
-                        />
-                    </div>
-                    <div className={styles.inputsRow2}>
-                        <Input
-                            className={styles.field}
-                            placeholder={strings.email}
-                            value={state.email}
-                            onChange={this.emailChanged}
-                        />
-                        <Input
-                            className={styles.field}
-                            placeholder={strings.password}
-                            type="password"
-                            value={state.password}
-                            onChange={this.passwordChanged}
-                        />
-                    </div>
-                    <Button
-                        type="submit"
-                        className={styles.signupButton}
-                        label={strings.signup}
-                    />
-                </form>
-            </ModalBox>
-        );
-    },
-
     getInitialState() {
         return {
             firstName: '',
@@ -74,18 +20,71 @@ let Signup = React.createClass({
     },
 
     firstNameChanged(e) {
-        this.setState({firstName: e.target.value});
+        this.setState({ firstName: e.target.value });
     },
     lastNameChanged(e) {
-        this.setState({lastName: e.target.value});
+        this.setState({ lastName: e.target.value });
     },
     emailChanged(e) {
-        this.setState({email: e.target.value});
+        this.setState({ email: e.target.value });
     },
     passwordChanged(e) {
-        this.setState({password: e.target.value});
-    }
+        this.setState({ password: e.target.value });
+    },
 
+    render() {
+        let { isOpen, i18n: { strings: { signup: strings } },
+              styles, styles: { signup: ss },
+              errorMessage, successMessage, closeSignup } = this.props;
+        let { state } = this;
+        return (
+            <ModalBox
+                isOpen={isOpen}
+                onRequestClose={closeSignup}
+                title={strings.title}
+                successMessage={successMessage}
+                errorMessage={errorMessage}
+                styles={styles}
+            >
+                <form onSubmit={this.signup}>
+                    <div className={ss.inputsRow1}>
+                        <Input
+                            className={ss.field}
+                            placeholder={strings.firstName}
+                            value={state.firstName}
+                            onChange={this.firstNameChanged}
+                        />
+                        <Input
+                            className={ss.field}
+                            placeholder={strings.lastName}
+                            value={state.lastName}
+                            onChange={this.lastNameChanged}
+                        />
+                    </div>
+                    <div className={ss.inputsRow2}>
+                        <Input
+                            className={ss.field}
+                            placeholder={strings.email}
+                            value={state.email}
+                            onChange={this.emailChanged}
+                        />
+                        <Input
+                            className={ss.field}
+                            placeholder={strings.password}
+                            type="password"
+                            value={state.password}
+                            onChange={this.passwordChanged}
+                        />
+                    </div>
+                    <Button
+                        type="submit"
+                        className={ss.signupButton}
+                        label={strings.signup}
+                    />
+                </form>
+            </ModalBox>
+        );
+    },
 });
 
 Signup = connect(

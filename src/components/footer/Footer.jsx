@@ -1,85 +1,100 @@
 import React from 'react';
-import {Link} from 'react-router'
+import { Link } from 'react-router';
 import { connect } from 'react-redux';
-import {changeLang} from '../../actions/actions.js';
-
-import styles from './footer.scss';
+import { changeLang } from '../../actions/actions.js';
 
 let Footer = React.createClass({
+    languageChanged(e, item) {
+        e.preventDefault();
+        this.props.changeLang(item.value);
+    },
+
     render() {
-        let {i18n: {strings: {footer: ss}}} = this.props;
+        let { styles, styles: { footer: ss },
+              i18n: { strings: { footer: strings } } } = this.props;
 
         const supportLinks = [
-            {label: ss.licence, link: ''},
-            {label: ss.faqs, link: ''},
-            {label: ss.pricing, link: ''},
+            { label: strings.licence, link: '' },
+            { label: strings.faqs, link: '' },
+            { label: strings.pricing, link: '' },
         ];
 
         const companyLinks = [
-            {label: ss.aboutUs, link: ''},
-            {label: ss.press, link: ''},
-            {label: ss.contact, link: ''},
-            {label: ss.contributors, link: ''},
+            { label: strings.aboutUs, link: '' },
+            { label: strings.press, link: '' },
+            { label: strings.contact, link: '' },
+            { label: strings.contributors, link: '' },
         ];
 
         const communitiesLinks = [
-            {label: ss.twitter, link: ''},
-            {label: ss.youtube, link: ''},
-            {label: ss.vimeo, link: ''},
-            {label: ss.linkedIn, link: ''},
+            { label: strings.twitter, link: '' },
+            { label: strings.youtube, link: '' },
+            { label: strings.vimeo, link: '' },
+            { label: strings.linkedIn, link: '' },
         ];
 
         const languagesLinks = [
-            {label: 'ENGLISH', link: '', value: 'en'},
-            {label: 'FRANÇAIS', link: '', value: 'fr'},
+            { label: 'ENGLISH', link: '', value: 'en' },
+            { label: 'FRANÇAIS', link: '', value: 'fr' },
         ];
 
         return (
-            <div className={styles.root}>
-                <div className={styles.logo} />
-                <div className={styles.linkBoxesContainer}>
-                    <LinkBox title={ss.support} links={supportLinks} />
-                    <LinkBox title={ss.theCompany} links={companyLinks} />
-                    <LinkBox title={ss.communities} links={communitiesLinks} />
-                    <LinkBox title={ss.languages} links={languagesLinks}
+            <div className={ss.root}>
+                <div className={ss.logo} />
+                <div className={ss.linkBoxesContainer}>
+                    <LinkBox
+                        title={ss.support}
+                        links={supportLinks}
+                        styles={styles}
+                    />
+                    <LinkBox
+                        title={ss.theCompany}
+                        links={companyLinks}
+                        styles={styles}
+                    />
+                    <LinkBox
+                        title={ss.communities}
+                        links={communitiesLinks}
+                        styles={styles}
+                    />
+                    <LinkBox
+                        title={ss.languages}
+                        links={languagesLinks}
                         onSelect={this.languageChanged}
+                        styles={styles}
                     />
                 </div>
             </div>
         );
     },
-
-    languageChanged(e, item) {
-        e.preventDefault();
-        this.props.changeLang(item.value);
-    },
 });
 
 const LinkBox = React.createClass({
     render() {
+        const { title, links, styles: { footer: ss }, onSelect } = this.props;
         return (
-            <div className={styles.linkBox}>
-                <div className={styles.linkBoxTitle}>
-                    {this.props.title}
+            <div className={ss.linkBox}>
+                <div className={ss.linkBoxTitle}>
+                    {title}
                 </div>
                 {
-                    this.props.links.map((l,i) => {
-                        let onClick = this.props.onSelect ?
-                                      (e) => this.props.onSelect(e, l) :
+                    links.map((l, i) => {
+                        let onClick = onSelect ?
+                                      (e) => onSelect(e, l) :
                                       null;
                         return (
                             <Link
-                                key={i} to={l.link} className={styles.linkBoxItem}
+                                key={i} to={l.link} className={ss.linkBoxItem}
                                 onClick={onClick}
                             >
                                 {l.label}
                             </Link>
-                        )
+                        );
                     })
                 }
             </div>
         );
-    }
+    },
 });
 
 Footer = connect(

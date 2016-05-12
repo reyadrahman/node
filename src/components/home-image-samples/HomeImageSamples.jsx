@@ -1,29 +1,14 @@
-import React from 'react'
-
-import styles from './home-image-samples.scss';
-
-/*
-const images = [
-    'sample-image-1.jpg',
-    'sample-image-2.jpg',
-    'sample-image-3.jpg',
-    'sample-image-4.jpg',
-    'sample-image-5.jpg',
-    'sample-image-6.jpg',
-    'sample-image-7.jpg',
-    'sample-image-8.jpg',
-];
-*/
+import React from 'react';
 
 let HomeImageSamples = React.createClass({
     render() {
-        let {i18n: {strings}} = this.props;
+        const { styles, styles: { homeImageSamples: ss }, i18n: { strings } } = this.props;
         return (
             <div>
-                <div className={styles.title}>
+                <div className={ss.title}>
                     {strings.home.imageSamplesTitle}
                 </div>
-                <div className={styles.imageSamplesContainer}>
+                <div className={ss.imageSamplesContainer}>
                     { /*
                         images.map(image => {
                             let style = {
@@ -34,14 +19,14 @@ let HomeImageSamples = React.createClass({
                             );
                         })
                    */ }
-                    <div className={styles.sample1} />
-                    <div className={styles.sample2} />
-                    <div className={styles.sample3} />
-                    <div className={styles.sample4} />
-                    <div className={styles.sample5} />
-                    <div className={styles.sample6} />
-                    <div className={styles.sample7} />
-                    <div className={styles.sample8} />
+                    <div className={ss.sample1} />
+                    <div className={ss.sample2} />
+                    <div className={ss.sample3} />
+                    <div className={ss.sample4} />
+                    <div className={ss.sample5} />
+                    <div className={ss.sample6} />
+                    <div className={ss.sample7} />
+                    <div className={ss.sample8} />
                 </div>
             </div>
         );

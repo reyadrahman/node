@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react';
+import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import translations from '../../i18n/translations.js';
 import * as actions from '../../actions/actions.js';
@@ -9,26 +9,31 @@ import Signin from '../signin/Signin.jsx';
 
 import 'normalize.css';
 
-import styles from './app.scss';
+import allStyles from '../../styles/styles.js';
 
 export const App_ = React.createClass({
     render() {
-        let {children, lang} = this.props;
+        const { children, lang } = this.props;
         console.log('App render, lang', lang);
-        let i18n = {
-            lang: lang,
+        const i18n = {
+            lang,
             strings: translations[lang],
         };
-        let cs = React.cloneElement(children, {i18n});
+        // TODO get style name from redux
+        const styles = allStyles.style1;
+        const ss = styles.app;
+
+        const cs = React.cloneElement(children, { i18n, styles });
+
 
         return (
-            <div className={styles.root}>
+            <div className={ss.root}>
                 {cs}
-                <Signup i18n={i18n} />
-                <VerifyRegistration i18n={i18n} />
-                <Signin i18n={i18n} />
+                <Signup i18n={i18n} styles={styles} />
+                <VerifyRegistration i18n={i18n} styles={styles} />
+                <Signin i18n={i18n} styles={styles} />
             </div>
-        )
+        );
     },
 
 });

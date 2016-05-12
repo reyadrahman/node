@@ -1,9 +1,5 @@
 import React from 'react';
-
-// TODO use the local dropdown and remove react-dropdown
 import Dropdown from '../dropdown/Dropdown.jsx';
-
-import styles from './search-bar.scss';
 
 const SearchBar = React.createClass({
     getInitialState() {
@@ -37,25 +33,29 @@ const SearchBar = React.createClass({
     },
 
     render() {
-        let { i18n, className, small } = this.props;
+        let { i18n, className, small, styles, styles: { searchBar: ss } } = this.props;
         let { type, searchPhrase } = this.state;
         return (
             <form
-                className={[styles.root, small ? styles.small
+                className={[ss.root, small ? ss.small
                     : '', className || ''].join(' ')}
                 onSubmit={this.props.submitted}
             >
-                <div className={styles.typeAndSearch}>
+                <div className={ss.typeAndSearch}>
                     <TypeDropdown
-                        i18n={i18n} small={small} onChange={this.typeChanged} value={type}
+                        i18n={i18n} styles={styles} small={small}
+                        onChange={this.typeChanged} value={type}
                     />
-                    <div className={styles.separator1} />
+                    <div className={ss.separator1} />
                     <SearchInput
                         value={searchPhrase} i18n={i18n}
-                        onChange={this.searchPhraseChanged}
+                        styles={styles} onChange={this.searchPhraseChanged}
                     />
                 </div>
-                <SearchButton className={styles.small || ''} onClick={this.submitted} />
+                <SearchButton
+                    styles={styles} className={ss.small || ''}
+                    onClick={this.submitted}
+                />
             </form>
         );
     },
@@ -63,7 +63,8 @@ const SearchBar = React.createClass({
 
 const TypeDropdown = React.createClass({
     render() {
-        let { i18n: { strings }, small, value } = this.props;
+        let { i18n: { strings }, styles: { searchBar: ss }, small, value,
+              onChange } = this.props;
 
         const options = [
             { value: 'image', label: strings.search.image },
@@ -75,7 +76,7 @@ const TypeDropdown = React.createClass({
                 value={options.find(x => x.value === value)}
                 options={options}
                 small={small}
-                onChange={this.props.onChange}
+                onChange={onChange}
             />
         );
     },
@@ -83,13 +84,14 @@ const TypeDropdown = React.createClass({
 
 const SearchInput = React.createClass({
     render() {
+        const { styles: { searchBar: ss }, value, onChange } = this.props;
         return (
             <input
                 placeholder="Recherche rapide d'images de haute qualite"
                 type="text"
-                value={this.props.value}
-                onChange={this.props.onChange}
-                className={styles.searchInput}
+                value={value}
+                onChange={onChange}
+                className={ss.searchInput}
         />
         );
     },
@@ -97,11 +99,11 @@ const SearchInput = React.createClass({
 
 const SearchButton = React.createClass({
     render() {
+        const { styles: { searchBar: ss }, onClick, className } = this.props;
         return (
             <button
-                className={[styles.searchButton,
-                    this.props.className || ''].join(' ')}
-                onClick={this.props.onClick}
+                className={[ss.searchButton, className || ''].join(' ')}
+                onClick={onClick}
             />
         );
     },

@@ -1,30 +1,29 @@
 import React from 'react';
 import Modal from 'react-modal';
 
-import styles from './modal-box-1.scss';
-
 export const ModalBox = React.createClass({
     render() {
-        let {isOpen, errorMessage, successMessage, children,
-             title, className, overlayClassName, onRequestClose} = this.props;
+        const { isOpen, errorMessage, successMessage, children, styles,
+                styles: { modalBox1: ss }, title, className, overlayClassName,
+                onRequestClose } = this.props;
         return (
             <Modal
                 isOpen={isOpen}
                 onRequestClose={onRequestClose}
-                className={`${styles.modalContent} ${className || ''}`}
-                overlayClassName={`${styles.modalOverlay} ${overlayClassName || ''}`}
+                className={`${ss.modalContent} ${className || ''}`}
+                overlayClassName={`${ss.modalOverlay} ${overlayClassName || ''}`}
             >
 
                 <div
-                    className={styles.closeButton}
+                    className={ss.closeButton}
                     onClick={onRequestClose}
                 />
-                <h2 className={styles.title}>{title}</h2>
+                <h2 className={ss.title}>{title}</h2>
                 {children}
-                <div className={styles.error}>
+                <div className={ss.error}>
                     {errorMessage}
                 </div>
-                <div className={styles.success}>
+                <div className={ss.success}>
                     {successMessage}
                 </div>
             </Modal>
@@ -32,18 +31,18 @@ export const ModalBox = React.createClass({
     },
 });
 
-export const Input = ({type, className, ...others}) => (
+export const Input = ({ type, className, styles: { modalBox1: ss }, ...others }) => (
     <input
         type={type || 'text'}
-        className={`${styles.input} ${className || ''}`}
+        className={`${ss.modalBox1.input} ${className || ''}`}
         {...others}
     />
 );
 
-export const Button = ({label, className, type}) => (
+export const Button = ({ label, className, type, styles: { modalBox1: ss } }) => (
     <button
         type={type}
-        className={`${styles.button} ${className || ''}`}
+        className={`${ss.button} ${className || ''}`}
     >
         {label}
     </button>

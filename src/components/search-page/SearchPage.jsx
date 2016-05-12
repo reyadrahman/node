@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 import * as actions from '../../actions/actions.js';
 import isEqual from 'lodash/isEqual';
 
-import styles from './search-page.scss';
 
 function createQuery(params) {
     const splat = params.splat;
@@ -17,16 +16,10 @@ function createQuery(params) {
 
 
 let SearchPage = React.createClass({
-    getInitialState() {
-        return {
-            //query: createQuery(this.props.routeParams),
-        };
-    },
-
 
     startSearch(query) {
         this.props.search(query);
-        //this.setState({ query });
+        // this.setState({ query });
     },
 
     componentDidMount() {
@@ -45,40 +38,39 @@ let SearchPage = React.createClass({
     },
 
     render() {
-        const { i18n, searchState } = this.props;
-        //const { query } = this.state;
+        const { i18n, searchState, styles, styles: { searchPage: ss } } = this.props;
         console.log('SearchPage: ', this.props);
 
         const hasImages = searchState.hits && searchState.hits.hit.length > 0;
         const images = hasImages && (
-            <div className={styles.imagesContainer}>
+            <div className={ss.imagesContainer}>
                 {
-                    searchState.hits.hit.map(hit => <Image data={hit} />)
+                    searchState.hits.hit.map(hit => <Image data={hit} styles={styles} />)
                 }
             </div>
         );
 
         const noResults = !hasImages && !searchState.isSearching && (
-            <div className={styles.noResults}>NO RESULTS</div>
+            <div className={ss.noResults}>NO RESULTS</div>
         );
 
         const searchingIndicator = searchState.isSearching && (
-            <div className={styles.searchingIndicator}>SEARCHING...</div>
+            <div className={ss.searchingIndicator}>SEARCHING...</div>
         );
 
         const hitCount = hasImages ? searchState.hits.found : 0;
 
         return (
             <div>
-                <Header i18n={i18n} initialSearchQuery={searchState.query} />
-                <div className={styles.imagesAndControlContainer}>
-                    <div className={styles.title}>SOLITUDE GLACIER FROID BLEU CIEL GRIS</div>
-                    <SearchStatusAndControl hitCount={hitCount} />
+                <Header i18n={i18n} styles={styles} initialSearchQuery={searchState.query} />
+                <div className={ss.imagesAndControlContainer}>
+                    <div className={ss.title}>SOLITUDE GLACIER FROID BLEU CIEL GRIS</div>
+                    <SearchStatusAndControl styles={styles} hitCount={hitCount} />
                     {
                         searchingIndicator || images || noResults
                     }
                 </div>
-                <Footer i18n={i18n} />
+                <Footer i18n={i18n} styles={styles} />
             </div>
         );
     },
@@ -92,36 +84,36 @@ SearchPage = connect(
     }
 )(SearchPage);
 
-SearchPage.fetchData = function({ params, store }) {
+SearchPage.fetchData = function ({ params, store }) {
     let q = createQuery(params);
     return store.dispatch(actions.search(q));
 };
 
 
-const Image = ({ data: { fields } }) => {
+const Image = ({ data: { fields }, styles: { searchPage: ss } }) => {
     console.log(fields);
     const style = {
-        backgroundImage: `url(http://cdn.deepiks.io/thumbnails/${fields.deepikscode}.jpg)`
+        backgroundImage: `url(http://cdn.deepiks.io/thumbnails/${fields.deepikscode}.jpg)`,
     };
     return (
-        <div className={styles.imageContainer} style={style} />
+        <div className={ss.imageContainer} style={style} />
     );
 };
 
 const SearchStatusAndControl = React.createClass({
     render() {
-        let { hitCount } = this.props;
+        let { hitCount, styles: { searchPage: ss } } = this.props;
         return (
-            <div className={styles.statusAndControlContainer}>
+            <div className={ss.statusAndControlContainer}>
                 {
                     hitCount > 0 &&
-                    <div className={styles.hitCount}>
+                    <div className={ss.hitCount}>
                         {`${hitCount} IMAGES`}
                     </div>
                 }
             </div>
         );
-    }
+    },
 });
 
 export default SearchPage;

@@ -1,48 +1,9 @@
 import React from 'react';
-import {connect} from 'react-redux';
-import {ModalBox, Input, Button} from '../modal-box-1/ModalBox1.jsx';
+import { connect } from 'react-redux';
+import { ModalBox, Input, Button } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../actions/actions.js';
 
-import styles from './signin.scss';
-
 let Signin = React.createClass({
-    render() {
-        let {isOpen, i18n: {strings: {signin: strings}},
-             errorMessage, successMessage, closeSignin} = this.props;
-        let {state} = this;
-        return (
-            <ModalBox
-                isOpen={isOpen}
-                onRequestClose={closeSignin}
-                title={strings.title}
-                successMessage={successMessage}
-                errorMessage={errorMessage}
-            >
-                <form onSubmit={this.signin}>
-                    <div className={styles.inputsRow}>
-                        <Input
-                            className={styles.field}
-                            placeholder={strings.email}
-                            value={state.email}
-                            onChange={this.emailChanged}
-                        />
-                        <Input
-                            className={styles.field}
-                            placeholder={strings.password}
-                            value={state.password}
-                            onChange={this.passwordChanged}
-                            type="password"
-                        />
-                    </div>
-                    <Button
-                        type="submit"
-                        className={styles.signinButton}
-                        label={strings.signin}
-                    />
-                </form>
-            </ModalBox>
-        );
-    },
 
     getInitialState() {
         return {
@@ -58,12 +19,52 @@ let Signin = React.createClass({
     },
 
     emailChanged(e) {
-        this.setState({email: e.target.value});
+        this.setState({ email: e.target.value });
     },
     passwordChanged(e) {
-        this.setState({password: e.target.value});
-    }
+        this.setState({ password: e.target.value });
+    },
 
+    render() {
+        let { isOpen, i18n: { strings: { signin: strings } },
+              styles, styles: { signin: ss },
+              errorMessage, successMessage, closeSignin } = this.props;
+        let { state } = this;
+        return (
+            <ModalBox
+                isOpen={isOpen}
+                onRequestClose={closeSignin}
+                title={strings.title}
+                successMessage={successMessage}
+                errorMessage={errorMessage}
+                styles={styles}
+            >
+                <form onSubmit={this.signin}>
+                    <div className={ss.inputsRow}>
+                        <Input
+                            className={ss.field}
+                            placeholder={strings.email}
+                            value={state.email}
+                            onChange={this.emailChanged}
+                        />
+                        <Input
+                            className={ss.field}
+                            placeholder={strings.password}
+                            value={state.password}
+                            onChange={this.passwordChanged}
+                            type="password"
+                        />
+                    </div>
+                    <Button
+                        type="submit"
+                        className={ss.signinButton}
+                        label={strings.signin}
+                        styles={styles}
+                    />
+                </form>
+            </ModalBox>
+        );
+    },
 });
 
 Signin = connect(

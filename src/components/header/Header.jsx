@@ -6,8 +6,6 @@ import Dropdown from '../dropdown/Dropdown.jsx';
 import SearchBar from '../search-bar/SearchBar.jsx';
 import { withRouter } from 'react-router';
 
-import styles from './header.scss';
-
 let Header = React.createClass({
     onSearchSubmit(searchType, searchPhrase) {
         console.log('HomeIntro searchSubmitted', searchType, searchPhrase);
@@ -29,8 +27,9 @@ let Header = React.createClass({
 
     render() {
         console.log('Header render');
-        let { i18n, i18n: { strings: { header: hs } }, currentUser,
-              isHome, initialSearchQuery } = this.props;
+        const { styles, styles: { header: ss },
+                i18n, i18n: { strings: { header: hs } }, currentUser,
+                isHome, initialSearchQuery } = this.props;
 
         let connection = [];
         let connectionPlaceholder;
@@ -52,36 +51,38 @@ let Header = React.createClass({
         }
 
         let leftSection = isHome ? (
-            <div className={styles.leftSectionMenu}>
-                <Link className={styles.menuItem} to="/a">{hs.photos}</Link>
-                <Link className={styles.menuItem} to="/b">{hs.videos}</Link>
-                <Link className={styles.menuItem} to="/stories">{hs.stories}</Link>
+            <div className={ss.leftSectionMenu}>
+                <Link className={ss.menuItem} to="/a">{hs.photos}</Link>
+                <Link className={ss.menuItem} to="/b">{hs.videos}</Link>
+                <Link className={ss.menuItem} to="/stories">{hs.stories}</Link>
             </div>
         ) : (
-            <div className={styles.leftSectionSearchBar}>
+            <div className={ss.leftSectionSearchBar}>
                 <SearchBar
                     i18n={i18n}
+                    styles={styles}
                     initialQuery={initialSearchQuery}
                     onSubmit={this.onSearchSubmit}
-                    small />
+                    small
+                />
             </div>
         );
 
         return (
-            <div className={[styles.root, isHome ? styles.isHome : ''].join(' ')}>
-                { leftSection }
-                <div className={styles.logo}>
+            <div className={[ss.root, isHome ? ss.isHome : ''].join(' ')}>
+                {leftSection}
+                <div className={ss.logo}>
                 </div>
-                <div className={styles.rightMenu}>
-                    <Link className={styles.menuItem} to="/light-box">{hs.lightBox}</Link>
-                    <Link className={styles.menuItem} to="/basket">{hs.basket}</Link>
+                <div className={ss.rightMenu}>
+                    <Link className={ss.menuItem} to="/light-box">{hs.lightBox}</Link>
+                    <Link className={ss.menuItem} to="/basket">{hs.basket}</Link>
                     <Dropdown
                         baseClassName="Header-Connection"
                         value={''}
                         options={connection}
                         onChange={this.onConnectionSelect}
                         placeholder={connectionPlaceholder}
-                        />
+                    />
                 </div>
             </div>
         );
