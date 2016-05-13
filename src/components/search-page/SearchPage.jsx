@@ -4,6 +4,7 @@ import Footer from '../footer/Footer.jsx';
 import { connect } from 'react-redux';
 import * as actions from '../../actions/actions.js';
 import isEqual from 'lodash/isEqual';
+import sumBy from 'lodash/sumBy';
 
 
 function createQuery(params) {
@@ -41,11 +42,13 @@ let SearchPage = React.createClass({
         const { i18n, searchState, styles, styles: { searchPage: ss } } = this.props;
         console.log('SearchPage: ', this.props);
 
-        const hasImages = searchState.hits && searchState.hits.hit.length > 0;
+        const hasImages = searchState.hits && searchState.hits.length > 0;
         const images = hasImages && (
             <div className={ss.imagesContainer}>
                 {
-                    searchState.hits.hit.map(hit => <Image data={hit} styles={styles} />)
+                    searchState.hits.map(hit =>
+                        <Image hit={hit.hits.hit[0]} hitCount={hit.hits.found} styles={styles} />
+                    )
                 }
             </div>
         );
@@ -58,14 +61,18 @@ let SearchPage = React.createClass({
             <div className={ss.searchingIndicator}>SEARCHING...</div>
         );
 
-        const hitCount = hasImages ? searchState.hits.found : 0;
+        const hitCount = hasImages ? sumBy(searchState.hits, h => h.hits.found) : 0;
+        const photographerCount = hasImages ? searchState.hits.length : 0;
 
         return (
             <div>
                 <Header i18n={i18n} styles={styles} initialSearchQuery={searchState.query} />
                 <div className={ss.imagesAndControlContainer}>
                     <div className={ss.title}>SOLITUDE GLACIER FROID BLEU CIEL GRIS</div>
-                    <SearchStatusAndControl styles={styles} hitCount={hitCount} />
+                    <SearchStatusAndControl
+                        styles={styles} hitCount={hitCount}
+                        photographerCount={photographerCount}
+                    />
                     {
                         searchingIndicator || images || noResults
                     }
@@ -90,26 +97,37 @@ SearchPage.fetchData = function ({ params, store }) {
 };
 
 
-const Image = ({ data: { fields }, styles: { searchPage: ss } }) => {
+const Image = ({ hit: { fields }, hitCount, styles: { searchPage: ss } }) => {
     console.log(fields);
     const style = {
         backgroundImage: `url(http://cdn.deepiks.io/thumbnails/${fields.deepikscode}.jpg)`,
     };
     return (
-        <div className={ss.imageContainer} style={style} />
+        <div className={ss.imageContainer} style={style} >
+            <div className={ss.imageInfo}>
+                {fields.credit}
+                <span className={ss.imageCount}>
+                    {`(${hitCount})`}
+                </span>
+            </div>
+        </div>
     );
 };
 
 const SearchStatusAndControl = React.createClass({
     render() {
-        let { hitCount, styles: { searchPage: ss } } = this.props;
+        let { hitCount, photographerCount, styles: { searchPage: ss } } = this.props;
         return (
             <div className={ss.statusAndControlContainer}>
                 {
-                    hitCount > 0 &&
-                    <div className={ss.hitCount}>
-                        {`${hitCount} IMAGES`}
-                    </div>
+                    hitCount > 0 && [
+                        <span className={ss.hitCount}>
+                            {`${hitCount} images`}
+                        </span>,
+                        <span className={ss.photographerCount}>
+                            {`from ${photographerCount} photographers`}
+                        </span>
+                    ]
                 }
             </div>
         );

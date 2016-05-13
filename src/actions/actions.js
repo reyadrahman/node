@@ -269,7 +269,7 @@ export function search(query) {
             aws.search(query)
                .then(results => {
                    console.log('search SUCCEEDED: ', results);
-                   dispatch(replaceSearchResults(query, results.hits));
+                   dispatch(replaceSearchResults(query, results));
                    dispatch(setIsSearching(false));
                })
                .catch(err => {

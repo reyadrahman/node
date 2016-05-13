@@ -53,7 +53,7 @@ apigClientFactory.newClient = function (config) {
 
     
     // extract endpoint and path from url
-    var invokeUrl = 'https://gnae8idzxi.execute-api.us-east-1.amazonaws.com/mydepstage';
+    var invokeUrl = 'https://9tslzcny55.execute-api.us-east-1.amazonaws.com/lambdaprod';
     var endpoint = /(^https?:\/\/[^\/]+)/g.exec(invokeUrl)[1];
     var pathComponent = invokeUrl.substring(endpoint.length);
 
@@ -83,57 +83,39 @@ apigClientFactory.newClient = function (config) {
     
     
     
-    apigClient.searchGet = function (params, body, additionalParams) {
-        if(additionalParams === undefined) { additionalParams = {}; }
-        
-        apiGateway.core.utils.assertParametersDefined(params, ['q', 'size'], ['body']);
-        
-        var searchGetRequest = {
-            verb: 'get'.toUpperCase(),
-            path: pathComponent + uritemplate('/search').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
-            headers: apiGateway.core.utils.parseParametersToObject(params, []),
-            queryParams: apiGateway.core.utils.parseParametersToObject(params, ['q', 'size']),
-            body: body
-        };
-        
-        
-        return apiGatewayClient.makeRequest(searchGetRequest, authType, additionalParams, config.apiKey);
-    };
-    
-    
-    apigClient.searchOptions = function (params, body, additionalParams) {
+    apigClient.mytestlambda1Get = function (params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
         
         apiGateway.core.utils.assertParametersDefined(params, [], ['body']);
         
-        var searchOptionsRequest = {
-            verb: 'options'.toUpperCase(),
-            path: pathComponent + uritemplate('/search').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+        var mytestlambda1GetRequest = {
+            verb: 'get'.toUpperCase(),
+            path: pathComponent + uritemplate('/mytestlambda1').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
             headers: apiGateway.core.utils.parseParametersToObject(params, []),
             queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
             body: body
         };
         
         
-        return apiGatewayClient.makeRequest(searchOptionsRequest, authType, additionalParams, config.apiKey);
+        return apiGatewayClient.makeRequest(mytestlambda1GetRequest, authType, additionalParams, config.apiKey);
     };
     
     
-    apigClient.testGet = function (params, body, additionalParams) {
+    apigClient.mytestlambda1Options = function (params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
         
-        apiGateway.core.utils.assertParametersDefined(params, ['type', 'page'], ['body']);
+        apiGateway.core.utils.assertParametersDefined(params, [], ['body']);
         
-        var testGetRequest = {
-            verb: 'get'.toUpperCase(),
-            path: pathComponent + uritemplate('/test').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+        var mytestlambda1OptionsRequest = {
+            verb: 'options'.toUpperCase(),
+            path: pathComponent + uritemplate('/mytestlambda1').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
             headers: apiGateway.core.utils.parseParametersToObject(params, []),
-            queryParams: apiGateway.core.utils.parseParametersToObject(params, ['type', 'page']),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
             body: body
         };
         
         
-        return apiGatewayClient.makeRequest(testGetRequest, authType, additionalParams, config.apiKey);
+        return apiGatewayClient.makeRequest(mytestlambda1OptionsRequest, authType, additionalParams, config.apiKey);
     };
     
 

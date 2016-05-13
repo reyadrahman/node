@@ -15,6 +15,10 @@
         & .hitCount {
 
         }
+
+        & .photographerCount {
+            margin-left: 5px;
+        }
     }
 
     & .noResults {
@@ -37,6 +41,7 @@
         padding: 20px;
 
         & .imageContainer {
+            position: relative;
             margin: 5px;
             width: 300px;
             max-width: 400px;
@@ -54,6 +59,27 @@
 
             &:last-child {
                 flex: 0 0 auto;
+            }
+
+            & .imageInfo {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 80px;
+                background: rgba(0, 0, 0, 0.3);
+                color: white;
+                font-size: 20px;
+                text-align: center;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                & .imageCount {
+                    font-size: 0.8em;
+                    color: rgb(220, 220, 220);
+                    margin-left: 10px;
+                }
             }
         }
     }

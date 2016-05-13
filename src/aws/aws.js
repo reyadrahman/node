@@ -25,18 +25,24 @@ var apigClient = apigClientFactory.newClient();
 export function search(query) {
     return new Promise((resolve, reject) => {
         const params = {
-            q: query.searchPhrase,
-            size: 20,
         };
         const additionalParams = {
             // If there are any unmodeled query parameters or headers that need
             // to be sent with the request you can add them here
             headers: { },
-            queryParams: { }
+            queryParams: {
+                q: query.searchPhrase,
+                size: 1,
+            },
         };
 
-        apigClient.searchGet(params, {}, additionalParams)
+        apigClient.mytestlambda1Get(params, {}, additionalParams)
                   .then(result => {
+                      if(!result.data || !Array.isArray(result.data)) {
+                          return reject(result);
+                      }
+                      return resolve(result.data);
+                      /*
                       if (!result.data.hits) {
                           if (result.data.__type && result.data.message) {
                               return reject(`${result.data.message} (${result.data.__type})`);
@@ -44,6 +50,7 @@ export function search(query) {
                           return reject('Search Failed');
                       }
                       return resolve(result.data);
+                      */
                   }).catch(err => {
                       return reject(err);
                   });
