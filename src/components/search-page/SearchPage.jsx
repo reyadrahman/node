@@ -43,11 +43,14 @@ let SearchPage = React.createClass({
         console.log('SearchPage: ', this.props);
 
         const hasImages = searchState.hits && searchState.hits.length > 0;
+        const hits = hasImages && searchState.hits.filter(hit =>
+            hit.hits.hit && hit.hits.hit.length > 0
+        );
         const images = hasImages && (
             <div className={ss.imagesContainer}>
                 {
-                    searchState.hits.map(hit =>
-                        <Image hit={hit.hits.hit[0]} hitCount={hit.hits.found} styles={styles} />
+                    hits.map(hit =>
+                        <Image key={hit.hits.hit[0].id} hit={hit.hits.hit[0]} hitCount={hit.hits.found} styles={styles} />
                     )
                 }
             </div>
@@ -61,8 +64,8 @@ let SearchPage = React.createClass({
             <div className={ss.searchingIndicator}>SEARCHING...</div>
         );
 
-        const hitCount = hasImages ? sumBy(searchState.hits, h => h.hits.found) : 0;
-        const photographerCount = hasImages ? searchState.hits.length : 0;
+        const hitCount = hasImages ? sumBy(hits, h => h.hits.found) : 0;
+        const photographerCount = hasImages ? hits.length : 0;
 
         return (
             <div>
@@ -117,18 +120,14 @@ const Image = ({ hit: { fields }, hitCount, styles: { searchPage: ss } }) => {
 const SearchStatusAndControl = React.createClass({
     render() {
         let { hitCount, photographerCount, styles: { searchPage: ss } } = this.props;
-        return (
+        return hitCount > 0 && (
             <div className={ss.statusAndControlContainer}>
-                {
-                    hitCount > 0 && [
-                        <span className={ss.hitCount}>
-                            {`${hitCount} images`}
-                        </span>,
-                        <span className={ss.photographerCount}>
-                            {`from ${photographerCount} photographers`}
-                        </span>
-                    ]
-                }
+                <span className={ss.hitCount}>
+                    {`${hitCount} images`}
+                </span>
+                <span className={ss.photographerCount}>
+                    {`from ${photographerCount} photographers`}
+                </span>
             </div>
         );
     },
