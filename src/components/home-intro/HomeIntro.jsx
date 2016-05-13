@@ -18,6 +18,7 @@ let HomeIntro = React.createClass({
                 i18n, i18n: { strings } } = this.props;
         return (
             <div className={ss.root}>
+                <div className={ss.logoAndTitle} />
                 <div className={ss.background}>
                     <video
                         loop muted autoPlay poster={backgroundPoster}
@@ -26,10 +27,13 @@ let HomeIntro = React.createClass({
                         <source src={backgroundVideo} type="video/mp4" />
                     </video>
                 </div>
+                {/*
                 <Header i18n={i18n} styles={styles} isHome />
+                */}
                 <div className={ss.searchContainer}>
                     <SearchBar i18n={i18n} styles={styles} onSubmit={this.searchSubmitted} />
                 </div>
+                {/*
                 <div className={ss.scrollDownContainer}>
                     <div className={ss.scrollDownLabel}>
                         {strings.home.introMessage}
@@ -39,6 +43,7 @@ let HomeIntro = React.createClass({
                         className={ss.scrollDownArrow}
                     />
                 </div>
+                */}
             </div>
         );
     },
