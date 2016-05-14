@@ -17,8 +17,8 @@ export const Grid = React.createClass({
 
 });
 
-export const Cell = ({ styles: { grid: ss }, children, className, style }) => (
-    <div className={`${ss.cell} ${className || ''}`} style={style}>
+export const Cell = ({ styles: { grid: ss }, onClick, children, className, style }) => (
+    <div className={`${ss.cell} ${className || ''}`} onClick={onClick} style={style}>
         {children}
     </div>
 );

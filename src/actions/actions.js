@@ -133,12 +133,12 @@ export function clearCurrentUserAttributes() {
     }
 }
 
-export function replaceSearchResults(query, hits) {
+export function replaceSearchResults(query, results) {
     return {
         type: 'SEARCH',
         state: {
             query,
-            hits,
+            results,
         },
     };
 }
@@ -265,6 +265,7 @@ export function signout() {
 export function search(query) {
     return dispatch => {
         dispatch(setIsSearching(true));
+        dispatch(replaceSearchResults(query, {}));
         return (
             aws.search(query)
                .then(results => {

@@ -21,24 +21,25 @@ import 'script!apiGateway-js-sdk/apigClient.js'
 
 var apigClient = apigClientFactory.newClient();
 
-
-export function search(query) {
+function searchNonFaceted(query) {
     return new Promise((resolve, reject) => {
         const params = {
+            q: query.searchPhrase,
+            size: 30,
+            fq: `credit:'${query.filterPhotographer}'`,
+            'q.parser': 'simple',
         };
         const additionalParams = {
             // If there are any unmodeled query parameters or headers that need
             // to be sent with the request you can add them here
             headers: { },
             queryParams: {
-                q: query.searchPhrase,
-                size: 1,
             },
         };
 
-        apigClient.mytestlambda1Get(params, {}, additionalParams)
+        apigClient.searchGet(params, {}, additionalParams)
                   .then(result => {
-                      if(!result.data || !Array.isArray(result.data)) {
+                      if (!result.data || !result.data.hits) {
                           return reject(result);
                       }
                       return resolve(result.data);
@@ -55,4 +56,52 @@ export function search(query) {
                       return reject(err);
                   });
     });
+}
+
+function searchFaceted(query) {
+    return new Promise((resolve, reject) => {
+        const params = {
+        };
+        const additionalParams = {
+            // If there are any unmodeled query parameters or headers that need
+            // to be sent with the request you can add them here
+            headers: { },
+            queryParams: {
+                q: query.searchPhrase,
+                size: 1,
+            },
+        };
+
+        apigClient.mytestlambda1Get(params, {}, additionalParams)
+                  .then(result => {
+                      if (!result.data || !result.data.facets || !result.data.hits) {
+                          return reject(result);
+                      }
+                      return resolve(result.data);
+                      /*
+                      if (!result.data.hits) {
+                          if (result.data.__type && result.data.message) {
+                              return reject(`${result.data.message} (${result.data.__type})`);
+                          }
+                          return reject('Search Failed');
+                      }
+                      return resolve(result.data);
+                      */
+                  }).catch(err => {
+                      return reject(err);
+                  });
+    });
+}
+
+export function search(query) {
+    console.log('!!!AA');
+    if (query.filterPhotographer) {
+        console.log('!!!BB');
+        return searchNonFaceted(query);
+        console.log('!!!CC');
+    } else {
+        console.log('!!!DD');
+        return searchFaceted(query);
+        console.log('!!!EE');
+    }
 }

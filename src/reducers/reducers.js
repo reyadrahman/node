@@ -85,8 +85,12 @@ export function currentUser(state = null, action) {
 
 export function search(state =
     {
-        query: { searchPhrase: '', type: 'image' },
-        hits: null,
+        query: {
+            searchPhrase: '',
+            type: 'image',
+            filterPhotographer: '',
+        },
+        results: null,
         isSearching: false,
     }, action)
 {

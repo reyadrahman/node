@@ -10,6 +10,7 @@
     }
 
     & .statusAndControlContainer {
+        position: relative;
         padding: 30px 20px;
 
         & .hitCount {
@@ -18,6 +19,28 @@
 
         & .photographerCount {
             margin-left: 5px;
+        }
+
+        & .filters {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translate3d(0, -50%, 0);
+
+            & .filterPhotographer {
+                position: relative;
+                margin: 0 20px;
+                padding: 5px;
+            }
+            & .removeFilter {
+                position: absolute;
+                right: 30px;
+                top: 5px;
+                bottom: 5px;
+                width: 15px;
+                background: url(../../public/cross-black.png) center /contain no-repeat;
+                cursor: pointer;
+            }
         }
     }
 
@@ -36,10 +59,14 @@
     }
 
     & .imageCell {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
         background-position: center;
         background-size: cover;
         background-repeat: no-repeat;
-
     }
 
 

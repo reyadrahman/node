@@ -4,12 +4,16 @@ import { connect } from 'react-redux';
 import * as actions from '../../actions/actions.js';
 import Dropdown from '../dropdown/Dropdown.jsx';
 import SearchBar from '../search-bar/SearchBar.jsx';
+import { searchQueryToPath, pathToSearchQuery } from '../../misc/utils.js';
 import { withRouter } from 'react-router';
 
 let Header = React.createClass({
     onSearchSubmit(searchType, searchPhrase) {
         console.log('HomeIntro searchSubmitted', searchType, searchPhrase);
-        this.props.router.push(`/search/${searchType}/${encodeURIComponent(searchPhrase)}`);
+        this.props.router.push(searchQueryToPath({
+            type: searchType,
+            searchPhrase,
+        }));
     },
 
     onConnectionSelect(selection) {

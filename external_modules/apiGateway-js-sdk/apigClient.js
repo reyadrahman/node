@@ -118,6 +118,42 @@ apigClientFactory.newClient = function (config) {
         return apiGatewayClient.makeRequest(mytestlambda1OptionsRequest, authType, additionalParams, config.apiKey);
     };
     
+    
+    apigClient.searchGet = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, ['fq', 'q', 'size', 'q.parser'], ['body']);
+        
+        var searchGetRequest = {
+            verb: 'get'.toUpperCase(),
+            path: pathComponent + uritemplate('/search').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, ['fq', 'q', 'size', 'q.parser']),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(searchGetRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
+    apigClient.searchOptions = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, [], ['body']);
+        
+        var searchOptionsRequest = {
+            verb: 'options'.toUpperCase(),
+            path: pathComponent + uritemplate('/search').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(searchOptionsRequest, authType, additionalParams, config.apiKey);
+    };
+    
 
     return apigClient;
 };

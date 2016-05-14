@@ -6,7 +6,7 @@
 
     & .cell {
         position: relative;
-        margin: 5px;
+        margin: 10px 5px;
         width: 300px;
         max-width: 400px;
         height: 300px;
@@ -14,12 +14,42 @@
         cursor: pointer;
         transition: all 0.3s ease-in-out;
 
-        &:hover {
-            transform: translate3D(0, -5px, 0);
-        }
-
         &:last-child {
             flex: 0 0 auto;
+        }
+
+        // & > :not(.cellOverlay) {
+        //     transition: all 0.3s ease-in-out;
+        //
+        // }
+        //
+        // &:hover > :not(.cellOverlay) {
+        //     transform: translate3D(0, -3px, 0);
+        // }
+        &:hover {
+            transform: translate3D(0, -3px, 0);
+        }
+
+        &:hover .cellOverlay {
+            background: rgba(50, 50, 50, 0.3);
+        }
+
+
+        &::before {
+            content: ' ';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            box-shadow: rgba(0, 0, 0, 0.15) 3px 3px 15px;
+            opacity: 0;
+            transition: all 0.2s ease-in-out;
+            z-index: -1;
+        }
+
+        &:hover::before {
+            opacity: 1;
         }
 
         & .cellOverlay {
@@ -35,6 +65,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: all 0.2s ease-in-out;
         }
     }
 }
