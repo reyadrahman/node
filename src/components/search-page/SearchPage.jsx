@@ -1,8 +1,9 @@
-import React from 'react';
 import Header from '../header/Header.jsx';
 import Footer from '../footer/Footer.jsx';
-import { connect } from 'react-redux';
 import * as actions from '../../actions/actions.js';
+import React from 'react';
+import { Grid, Cell, CellOverlay } from '../grid/Grid.jsx';
+import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
 import sumBy from 'lodash/sumBy';
 
@@ -47,13 +48,13 @@ let SearchPage = React.createClass({
             hit.hits.hit && hit.hits.hit.length > 0
         );
         const images = hasImages && (
-            <div className={ss.imagesContainer}>
+            <Grid styles={styles}>
                 {
-                    hits.map(hit =>
-                        <Image key={hit.hits.hit[0].id} hit={hit.hits.hit[0]} hitCount={hit.hits.found} styles={styles} />
-                    )
+                    hits.map(hit => (
+                        <FacetedImage key={hit.hits.hit[0].id} hit={hit} styles={styles} />
+                    ))
                 }
-            </div>
+            </Grid>
         );
 
         const noResults = !hasImages && !searchState.isSearching && (
@@ -100,22 +101,30 @@ SearchPage.fetchData = function ({ params, store }) {
 };
 
 
-const Image = ({ hit: { fields }, hitCount, styles: { searchPage: ss } }) => {
-    console.log(fields);
+const Image = ({ hit: { fields }, styles, styles: { searchPage: ss }, children }) => {
     const style = {
         backgroundImage: `url(http://cdn.deepiks.io/thumbnails/${fields.deepikscode}.jpg)`,
     };
     return (
-        <div className={ss.imageContainer} style={style} >
-            <div className={ss.imageInfo}>
-                {fields.credit}
-                <span className={ss.imageCount}>
-                    {`(${hitCount})`}
-                </span>
-            </div>
-        </div>
+        <Cell className={ss.imageCell} style={style} styles={styles}>
+            {children}
+        </Cell>
     );
 };
+
+const FacetedImage = ({ hit, styles, styles: { searchPage: ss} }) => {
+    const { fields } = hit.hits.hit[0];
+    return (
+        <Image key={hit.hits.hit[0].id} hit={hit.hits.hit[0]} styles={styles}>
+            <CellOverlay styles={styles}>
+                {fields.credit}
+                <span className={ss.imageCountOverlay}>
+                    {`(${hit.hits.found})`}
+                </span>
+            </CellOverlay>
+        </Image>
+    );
+}
 
 const SearchStatusAndControl = React.createClass({
     render() {

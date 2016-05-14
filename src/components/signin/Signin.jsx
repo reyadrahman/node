@@ -46,6 +46,7 @@ let Signin = React.createClass({
                             placeholder={strings.email}
                             value={state.email}
                             onChange={this.emailChanged}
+                            styles={styles}
                         />
                         <Input
                             className={ss.field}
@@ -53,6 +54,7 @@ let Signin = React.createClass({
                             value={state.password}
                             onChange={this.passwordChanged}
                             type="password"
+                            styles={styles}
                         />
                     </div>
                     <Button

@@ -34,7 +34,7 @@ export const ModalBox = React.createClass({
 export const Input = ({ type, className, styles: { modalBox1: ss }, ...others }) => (
     <input
         type={type || 'text'}
-        className={`${ss.modalBox1.input} ${className || ''}`}
+        className={`${ss.input} ${className || ''}`}
         {...others}
     />
 );

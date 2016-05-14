@@ -58,12 +58,14 @@ let VerifyRegistration = React.createClass({
                             placeholder={strings.email}
                             value={state.email}
                             onChange={this.emailChanged}
+                            styles={styles}
                         />
                         <Input
                             className={ss.field}
                             placeholder={strings.code}
                             value={state.code}
                             onChange={this.verificationCodeChanged}
+                            styles={styles}
                         />
                     </div>
                     <Button

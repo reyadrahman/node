@@ -53,12 +53,14 @@ let Signup = React.createClass({
                             placeholder={strings.firstName}
                             value={state.firstName}
                             onChange={this.firstNameChanged}
+                            styles={styles}
                         />
                         <Input
                             className={ss.field}
                             placeholder={strings.lastName}
                             value={state.lastName}
                             onChange={this.lastNameChanged}
+                            styles={styles}
                         />
                     </div>
                     <div className={ss.inputsRow2}>
@@ -67,6 +69,7 @@ let Signup = React.createClass({
                             placeholder={strings.email}
                             value={state.email}
                             onChange={this.emailChanged}
+                            styles={styles}
                         />
                         <Input
                             className={ss.field}
@@ -74,12 +77,14 @@ let Signup = React.createClass({
                             type="password"
                             value={state.password}
                             onChange={this.passwordChanged}
+                            styles={styles}
                         />
                     </div>
                     <Button
                         type="submit"
                         className={ss.signupButton}
                         label={strings.signup}
+                        styles={styles}
                     />
                 </form>
             </ModalBox>

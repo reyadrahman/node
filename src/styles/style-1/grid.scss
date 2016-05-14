@@ -1,0 +1,40 @@
+.gridRoot {
+
+    display: flex;
+    flex-wrap: wrap;
+    padding: 20px;
+
+    & .cell {
+        position: relative;
+        margin: 5px;
+        width: 300px;
+        max-width: 400px;
+        height: 300px;
+        flex: 1 0 auto;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+
+        &:hover {
+            transform: translate3D(0, -5px, 0);
+        }
+
+        &:last-child {
+            flex: 0 0 auto;
+        }
+
+        & .cellOverlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+}
