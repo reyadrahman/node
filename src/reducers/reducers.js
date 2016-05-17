@@ -87,7 +87,6 @@ export function search(state =
     {
         query: {
             searchPhrase: '',
-            type: 'image',
             filterPhotographer: '',
         },
         results: null,
@@ -95,6 +94,17 @@ export function search(state =
     }, action)
 {
     if (action.type === 'SEARCH') {
+        return Object.assign({}, state, action.state);
+    }
+    return state;
+}
+
+export function ui(state =
+    {
+        fullscreen: false
+    }, action)
+{
+    if (action.type === 'UI') {
         return Object.assign({}, state, action.state);
     }
     return state;

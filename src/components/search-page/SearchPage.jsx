@@ -110,7 +110,7 @@ let SearchPage = React.createClass({
 
         return (
             <div>
-                <Header i18n={i18n} styles={styles} initialSearchQuery={searchState.query} />
+                <Header i18n={i18n} styles={styles} initialSearchPhrase={searchState.query} />
                 <div className={ss.imagesAndControlContainer}>
                     <div className={ss.title}>SOLITUDE GLACIER FROID BLEU CIEL GRIS</div>
                     <SearchStatusAndControl

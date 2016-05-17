@@ -1,5 +1,6 @@
 import * as aws from '../aws/aws.js';
 import Cookies from 'js-cookie';
+import * as utils from '../misc/utils.js';
 
 export function test(v) {
     return {
@@ -152,6 +153,15 @@ export function setIsSearching(isSearching) {
     };
 }
 
+export function setFullscreen(value) {
+    return {
+        type: 'UI',
+        state: {
+            fullscreen: value,
+        },
+    };
+}
+
 
 
 // ==================================================
@@ -278,5 +288,15 @@ export function search(query) {
                    dispatch(setIsSearching(false));
                })
         );
+    };
+}
+
+export function toggleFullscreen() {
+    return dispatch => {
+        if (utils.isFullscreen()) {
+            utils.exitFullscreen();
+        } else {
+            utils.requestFullscreen();
+        }
     };
 }

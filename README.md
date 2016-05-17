@@ -57,3 +57,7 @@ or you can store the configurations in a JSON file anywhere on your system and p
 // now in your console
 npm start -- --env path/to/config/my-config.json
 ```
+
+# Notes
+Customize icons using Fontello to include only the used icons.
+Customize flag icons using www.flag-sprites.com

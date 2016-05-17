@@ -1,0 +1,73 @@
+.root {
+    padding: 3px 10px;
+    position: relative;
+
+    &:focus {
+        outline: none;
+        border: none;
+    }
+}
+
+.activeItem {
+    position: relative;
+    cursor: pointer;
+    padding-right: 20px;
+
+    .arrowDown {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+    }
+}
+
+.menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    font-size: 13px;
+    text-align: left;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 2px;
+    box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    animation-name: flipInX;
+    animation-duration: .4s;
+    animation-fill-mode: both;
+}
+
+.menuItem {
+    padding: 5px 10px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #3276b1;
+        color: #fff;
+    }
+
+    &.active {
+        background-color: #3276b1;
+        color: #fff;
+    }
+}
+
+@keyframes flipInX{
+    0% {
+        transform:perspective(400px) rotateX(90deg);
+        opacity:0;
+    }
+    40% {
+        transform:perspective(400px) rotateX(-10deg);
+    }
+    70% {
+        transform:perspective(400px) rotateX(10deg);
+    }
+    100% {
+        transform:perspective(400px) rotateX(0deg);
+        opacity:1;
+    }
+}

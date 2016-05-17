@@ -13,6 +13,7 @@ const styles = {
         signup: require('./style-1/signup.scss'),
         verifyRegistration: require('./style-1/verify-registration.scss'),
         grid: require('./style-1/grid.scss'),
+        dropdown: require('./style-1/dropdown.scss'),
     },
 }
 

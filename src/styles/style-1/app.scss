@@ -16,3 +16,20 @@ html {
   box-sizing: inherit;
   letter-spacing: 2px;
 }
+
+:global {
+
+    [class^="icon-"]:before, [class*=" icon-"]:before {
+        letter-spacing: 0;
+    }
+
+    .flag {
+    	width: 16px;
+    	height: 11px;
+        display: inline-block;
+    	background:url(../../public/flags.png) no-repeat
+    }
+
+    .flag.flag-fr {background-position: -16px 0}
+    .flag.flag-us {background-position: 0 -11px}
+}

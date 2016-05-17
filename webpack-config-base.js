@@ -112,7 +112,7 @@ const config = {
                 ])
             },
             {
-                test: /\.(png|jpg|mp4)$/,
+                test: /\.(png|jpg|mp4|eot|woff|woff2|ttf|svg)/,
                 loader: "url-loader?limit=1024"
             }
         ],
