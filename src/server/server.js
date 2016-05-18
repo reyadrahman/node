@@ -30,6 +30,12 @@ debug(`PUBLIC_URL: `, JSON.stringify(process.env.PUBLIC_URL));
 
 var app = express();
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 // TODO don't do compression in node.js. Let a reverse proxy take care of compression
 app.use(compression());
 
