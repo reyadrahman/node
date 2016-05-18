@@ -39,26 +39,30 @@ const Dropdown = React.createClass({
     },
 
     renderActiveItem(item) {
-        return item.label;
+        return item && item.label || this.props.placeholder;
     },
 
     render() {
         const { styles: { dropdown: ss }, value, options,
                 activeItemRenderer = this.renderActiveItem,
-                className, menuClassName } = this.props;
+                className, menuClassName, renderArrow } = this.props;
         const { isOpen } = this.state;
 
         return (
             <div
                 tabIndex="1"
-                onBlur={this.lostFocus}
                 className={`${ss.root} ${className || ''}`}
             >
-                <div className={ss.activeItem} onClick={this.toggleMenu}>
+                <div
+                    className={`${ss.activeItem} ${renderArrow ? ss.withArrow : ''}`}
+                    onClick={this.toggleMenu}
+                >
                     {
                         activeItemRenderer(options.find(x => x.value === value))
                     }
-                    <div className={`${ss.arrowDown} icon-angle-down`} />
+                    {
+                        renderArrow && <div className={`${ss.arrowDown} icon-angle-down`} />
+                    }
                 </div>
                 {
                     isOpen &&

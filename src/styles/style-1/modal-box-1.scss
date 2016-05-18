@@ -4,7 +4,8 @@
     left: 0px;
     right: 0px;
     bottom: 0px;
-    background-color: rgba(255, 255, 255, 0.5); 
+    background-color: rgba(255, 255, 255, 0.5);
+    z-index: 3000;
 }
 
 .modalContent {
@@ -20,9 +21,7 @@
     outline: none;
     padding: 10px 40px;
     -webkit-overflow-scrolling: touch;
-}
-
-.modalContent {
+    z-index: 4000;
     color: white;
 }
 

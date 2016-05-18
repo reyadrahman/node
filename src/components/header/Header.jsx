@@ -27,16 +27,14 @@ let Header = React.createClass({
     },
 
     onConnectionSelect(selection) {
-        // console.log('connection select: ', selection);
-        // if (selection.value === 'signin') {
-        //     this.props.openSignin();
-        // } else if (selection.value === 'signup') {
-        //     this.props.openSignup();
-        // } else if (selection.value === 'signout') {
-        //     this.props.signout();
-        // } else if (selection.value === 'verify') {
-        //     this.props.openVerifyRegistration();
-        // }
+        console.log('connection select: ', selection);
+        if (selection === 'signin') {
+            this.props.openSignin();
+        } else if (selection === 'signup') {
+            this.props.openSignup();
+        } else if (selection === 'verify') {
+            this.props.openVerifyRegistration();
+        }
     },
 
     makeFlag(item) {
@@ -58,6 +56,12 @@ let Header = React.createClass({
             { label: 'Français', value: 'fr' },
         ];
 
+        const signInUpVerifyOptions = [
+            { label: 'Sign in', value: 'signin' },
+            { label: 'Sign up', value: 'signup' },
+            { label: 'Verify registration', value: 'verify' },
+        ];
+
         const buttonClass = transparent ? `${ss.button} ${ss.transparent}` : ss.button;
 
         return (
@@ -75,6 +79,7 @@ let Header = React.createClass({
                 <div className={ss.rightSection}>
                     <Dropdown
                         options={ddOptions} value={i18n.lang} styles={styles}
+                        renderArrow
                         activeItemRenderer={
                             x => (
                                 <div className={ss.language}>
@@ -105,6 +110,24 @@ let Header = React.createClass({
                                 i18n={i18n} styles={styles}
                                 onSubmit={this.searchSubmitted}
                             />
+                    }
+                    {
+                        currentUser ?
+                            <button
+                                onClick={this.props.signout}
+                                className={`${buttonClass} icon-logout`}
+                            /> :
+                            <Dropdown
+                                options={signInUpVerifyOptions}
+                                styles={styles}
+                                activeItemRenderer={() => (
+                                    <button
+                                        className={`${buttonClass} icon-login`}
+                                    />
+                                )}
+                                onChange={this.onConnectionSelect}
+                            />
+
                     }
                 </div>
             </div>
