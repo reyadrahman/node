@@ -1,5 +1,3 @@
-import Header from '../header/Header.jsx';
-import Footer from '../footer/Footer.jsx';
 import * as actions from '../../actions/actions.js';
 import React from 'react';
 import { withRouter } from 'react-router';
@@ -49,7 +47,7 @@ let SearchPage = React.createClass({
     },
 
     render() {
-        const { i18n, searchState, styles, styles: { searchPage: ss } } = this.props;
+        const { className, i18n, searchState, styles, styles: { searchPage: ss } } = this.props;
         console.log('SearchPage: ', this.props);
 
         const searchingIndicator = searchState.isSearching && (
@@ -104,28 +102,30 @@ let SearchPage = React.createClass({
             );
         }
 
-        const noResults = !hasImages && !searchState.isSearching && (
-            <div className={ss.noResults}>NO RESULTS</div>
-        );
+        const noResults = !hasImages && !searchState.isSearching &&
+            searchState.query.searchPhrase && (
+                <div className={ss.noResults}>NO RESULTS</div>
+            );
+
+        const searchMessage = !hasImages && !searchState.isSearching &&
+            !searchState.query.searchPhrase && (
+                <div className={ss.searchMessage}>SEARCH</div>
+            );
 
         return (
-            <div>
-                <Header i18n={i18n} styles={styles} initialSearchPhrase={searchState.query} />
-                <div className={ss.imagesAndControlContainer}>
-                    <div className={ss.title}>SOLITUDE GLACIER FROID BLEU CIEL GRIS</div>
-                    <SearchStatusAndControl
-                        styles={styles}
-                        hitCount={imageCount}
-                        photographerCount={photographerCount}
-                        query={searchState.query}
-                        onFilterChange={this.filterChanged}
-                        onRemoveFilterClick={this.removeFilterClicked}
-                    />
-                    {
-                        searchingIndicator || grid || noResults
-                    }
-                </div>
-                <Footer i18n={i18n} styles={styles} />
+            <div className={`${ss.root} ${className || ''}`}>
+                <div className={ss.title}>SOLITUDE GLACIER FROID BLEU CIEL GRIS</div>
+                <SearchStatusAndControl
+                    styles={styles}
+                    hitCount={imageCount}
+                    photographerCount={photographerCount}
+                    query={searchState.query}
+                    onFilterChange={this.filterChanged}
+                    onRemoveFilterClick={this.removeFilterClicked}
+                />
+                {
+                    searchingIndicator || grid || noResults || searchMessage
+                }
             </div>
         );
     },

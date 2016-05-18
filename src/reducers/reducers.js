@@ -101,11 +101,14 @@ export function search(state =
 
 export function ui(state =
     {
-        fullscreen: false
+        fullscreen: false,
+        sideMenu: false,
     }, action)
 {
     if (action.type === 'UI') {
         return Object.assign({}, state, action.state);
+    } else if (action.type === 'UI/TOGGLE_SIDE_MENU') {
+        return Object.assign({}, state, { sideMenu: !state.sideMenu });
     }
     return state;
 }

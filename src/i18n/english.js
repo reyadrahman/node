@@ -11,6 +11,13 @@ export default {
         signout: 'SIGN OUT',
         verifyRegistration: 'VERIFY REGISTRATION',
     },
+    sideMenu: {
+        search: 'Search',
+        quickSearch: 'Quick Search',
+        smartSearch: 'Smart Search',
+        lightboxes: 'Lightboxes',
+        contacts: 'Contacts',
+    },
     home: {
         introMessage: 'TELL ME A STORY',
         imageSamplesTitle: 'PREMIUM IMAGES & FOOTAGE LIBRES DE DROITS',

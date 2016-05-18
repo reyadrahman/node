@@ -1,23 +1,27 @@
-body, html {
-    padding: 0;
-    margin: 0;
-}
-
-body {
-    background: white;
-    min-height: 100vh;
-}
-
-html {
-  box-sizing: border-box;
-}
-
-*, *:before, *:after {
-  box-sizing: inherit;
-  letter-spacing: 2px;
-}
-
 :global {
+
+    body, html {
+        padding: 0;
+        margin: 0;
+    }
+
+    body {
+        background: #eee;
+        min-height: 100vh;
+    }
+
+    html {
+        box-sizing: border-box;
+    }
+
+    *, *:before, *:after {
+        box-sizing: inherit;
+        letter-spacing: 2px;
+    }
+
+    #reactUI {
+        min-height: 100vh;
+    }
 
     [class^="icon-"]:before, [class*=" icon-"]:before {
         letter-spacing: 0;
@@ -32,4 +36,53 @@ html {
 
     .flag.flag-fr {background-position: -16px 0}
     .flag.flag-us {background-position: 0 -11px}
+}
+
+.root {
+    position: relative;
+    min-height: 100vh;
+
+    .header {
+        height: 50px;
+
+        &.home {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+    }
+
+    .sideMenu {
+        margin-top: 50px;
+        width: 220px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transition: transform 250ms cubic-bezier(0.1,.57,.1,1);
+        z-index: 1000;
+
+        &.hide {
+            transform: translate3d(-210px, 0, 0);
+            &:hover {
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+    }
+    .content {
+        margin-left: 10px;
+
+        &.sideMenuOpen {
+            margin-left: 220px;
+        }
+
+        &.home {
+            margin-left: 0;
+            &.sideMenuOpen {
+                margin-left: 0;
+            }
+        }
+    }
 }

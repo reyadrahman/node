@@ -8,6 +8,7 @@ import SearchPage from './components/search-page/SearchPage.jsx';
 const Routes = (
     <Route path="/" component={App}>
         <IndexRoute component={Home} />
+        <Route path="search" component={SearchPage} />
         <Route path="search/*" component={SearchPage} />
         <Route path="b" component={Home} />
     </Route>

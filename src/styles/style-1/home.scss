@@ -1,0 +1,111 @@
+.root {
+    height: 100vh;
+    position: relative;
+}
+
+.background {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    overflow: hidden;
+
+    .backgroundVideo {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: auto;
+        height: auto;
+        min-width: 100%;
+        min-height: 100%;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.logoAndTitle {
+    position: absolute;
+    width: 100%;
+    height: 200px;
+    left: 0;
+    top: calc(45vh - 250px);
+    background: url(../../public/logo-and-title.png) center no-repeat;
+    z-index: 1;
+}
+
+.searchContainer {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    //height: 50px;
+    top: 45vh;
+    display: flex;
+    justify-content: center;
+
+    .searchForm {
+        position: relative;
+
+        .searchInput {
+            width: 100%;
+            height: 50px;
+            padding: 0 50px 0 50px;
+            outline: 0;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: 0;
+            border-color: #bfbfbf;
+            background: #fff;
+            color: #404040;
+            text-align: center;
+        }
+
+        .searchButton {
+            position: absolute;
+            right: 5px;
+            margin: 0;
+            padding: 0;
+            height: 50px;
+            color: #6D6A69;
+            background: 0 0;
+            font-size: 30px;
+            line-height: 50px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            &:focus {
+                border: none;
+                outline: none;
+            }
+        }
+    }
+}
+
+
+
+.searchContainer > * {
+    width: 700px;
+}
+
+.scrollDownContainer {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    bottom: 20px;
+}
+.scrollDownLabel {
+    font-size: 30px;
+    text-align: center;
+    letter-spacing: 3px;
+    color: white;
+}
+.scrollDownArrow {
+    margin: 20px 0 0 0;
+    height: 30px;
+    background: url(../../public/arrow-down-white.png) center /60px 30px no-repeat;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    &:hover {
+        background-size: 70px 30px;
+        transform: translate3D(0, 5px, 0);
+    }
+}

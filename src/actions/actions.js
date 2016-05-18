@@ -162,6 +162,12 @@ export function setFullscreen(value) {
     };
 }
 
+export function toggleSideMenu() {
+    return {
+        type: 'UI/TOGGLE_SIDE_MENU',
+    };
+}
+
 
 
 // ==================================================
@@ -274,8 +280,13 @@ export function signout() {
 
 export function search(query) {
     return dispatch => {
-        dispatch(setIsSearching(true));
+        if (!query) {
+            dispatch(replaceSearchResults({ searchPhrase: '' }, {}));
+            dispatch(setIsSearching(false));
+            return Promise.resolve();
+        }
         dispatch(replaceSearchResults(query, {}));
+        dispatch(setIsSearching(true));
         return (
             aws.search(query)
                .then(results => {

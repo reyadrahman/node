@@ -18,7 +18,12 @@ let Header = React.createClass({
     },
 
     languageChanged(value) {
+        console.log('Header: languageChanged', value);
         this.props.changeLang(value);
+    },
+
+    toggleSideMenu() {
+        this.props.toggleSideMenu();
     },
 
     onConnectionSelect(selection) {
@@ -43,21 +48,28 @@ let Header = React.createClass({
 
     render() {
         console.log('Header render');
-        const { styles, styles: { header: ss },
+        const { className, styles, styles: { header: ss },
                 i18n, i18n: { strings: { header: hs } }, currentUser,
-                isHome, initialSearchPhrase,
-                ui: { fullscreen }} = this.props;
+                isHome, searchState, transparent, hideLogo, hideSearchBar,
+                ui: { fullscreen, sideMenu }} = this.props;
 
         const ddOptions = [
             { label: 'English', value: 'en' },
             { label: 'Français', value: 'fr' },
         ];
 
+        const buttonClass = transparent ? `${ss.button} ${ss.transparent}` : ss.button;
+
         return (
-            <div className={ss.root}>
+            <div className={`${ss.root} ${className || ''} ${transparent ? ss.transparent : ''}`}>
                 <div className={ss.leftSection}>
-                    <button className={`${ss.button} icon-menu`} />
-                    <div className={ss.logo} />
+                    <button
+                        className={`${buttonClass} ${sideMenu ? ss.active : ''} icon-menu`}
+                        onClick={this.toggleSideMenu}
+                    />
+                    {
+                        !hideLogo && <Link to="/" className={ss.logo} />
+                    }
                 </div>
                 <div className={ss.middleSection} />
                 <div className={ss.rightSection}>
@@ -83,14 +95,17 @@ let Header = React.createClass({
                     />
                     <button
                         onClick={this.props.toggleFullscreen}
-                        className={`${ss.button} ${fullscreen ? ss.active : ''} ` +
+                        className={`${buttonClass} ${fullscreen ? ss.active : ''} ` +
                                    `icon-resize-full-alt`}
                     />
-                    <SearchBar
-                        initialSearchPhrase={initialSearchPhrase}
-                        i18n={i18n} styles={styles}
-                        onSubmit={this.searchSubmitted}
-                    />
+                    {
+                        !hideSearchBar &&
+                            <SearchBar
+                                initialSearchPhrase={searchState.query.searchPhrase}
+                                i18n={i18n} styles={styles}
+                                onSubmit={this.searchSubmitted}
+                            />
+                    }
                 </div>
             </div>
         );
@@ -111,6 +126,7 @@ Header = connect(
         signout: actions.signout,
         changeLang: actions.changeLang,
         toggleFullscreen: actions.toggleFullscreen,
+        toggleSideMenu: actions.toggleSideMenu,
     }
 )(Header);
 
@@ -137,20 +153,21 @@ const SearchBar = React.createClass({
     },
 
     componentWillReceiveProps(newProps) {
-        if (newProps.initialSearchPhrase &&
-            newProps.initialSearchPhrase !== this.props.initialSearchPhrase)
+        if (newProps.initialSearchPhrase !== this.props.initialSearchPhrase)
         {
-            this.setState({ searchPhrase: newProps.initialSearchPhrase });
+            this.setState({ searchPhrase: newProps.initialSearchPhrase || '' });
         }
     },
 
     render() {
-        let { i18n, className, small, styles, styles: { header: ss } } = this.props;
+        let { i18n, className, styles, styles: { header: ss } } = this.props;
         let { searchPhrase } = this.state;
         return (
             <form className={ss.searchForm} onSubmit={this.submitted}>
                 <input
-                    placeholder={'Search'} className={ss.searchInput}
+                    className={ss.searchInput}
+                    value={searchPhrase}
+                    placeholder={'Search'}
                     onChange={this.searchPhraseChanged}
                 />
                 <button

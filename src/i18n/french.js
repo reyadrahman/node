@@ -11,6 +11,13 @@ export default {
         signout: 'FR SIGN OUT',
         verifyRegistration: 'FR VERIFY REGISTRATION',
     },
+    sideMenu: {
+        search: 'Search FR',
+        quickSearch: 'Quick Search FR',
+        smartSearch: 'Smart Search FR',
+        lightboxes: 'Lightboxes FR',
+        contacts: 'Contacts FR',
+    },
     home: {
         introMessage: 'RACONTE MOI UNE HISTOIRE',
         imageSamplesTitle: 'FRENCH PREMIUM IMAGES & FOOTAGE LIBRES DE DROITS',

@@ -1,6 +1,7 @@
 const styles = {
     style1: {
         app: require('./style-1/app.scss'),
+        sideMenu: require('./style-1/sideMenu.scss'),
         footer: require('./style-1/footer.scss'),
         header: require('./style-1/header.scss'),
         homeImageSamples: require('./style-1/home-image-samples.scss'),

@@ -38,6 +38,7 @@
     animation-name: flipInX;
     animation-duration: .4s;
     animation-fill-mode: both;
+    z-index: 1000;
 }
 
 .menuItem {

@@ -6,7 +6,9 @@ import connectRouterRedux from '../react-router-redux/connectReactRouterRedux.js
 import Signup from '../signup/Signup.jsx';
 import VerifyRegistration from '../verify-registration/VerifyRegistration.jsx';
 import Signin from '../signin/Signin.jsx';
+import SideMenu from '../side-menu/SideMenu.jsx';
 import * as utils from '../../misc/utils.js';
+import Header from '../header/Header.jsx';
 
 import 'normalize.css';
 import '../../public/fonts/css/fontello.css';
@@ -26,8 +28,8 @@ export const App_ = React.createClass({
     },
 
     render() {
-        const { children, lang, ui } = this.props;
-        console.log('App render, lang', lang);
+        const { children, lang, ui, location } = this.props;
+        console.log('App render, lang', lang, ', props: ', this.props);
         const i18n = {
             lang,
             strings: translations[lang],
@@ -36,11 +38,59 @@ export const App_ = React.createClass({
         const styles = allStyles.style1;
         const ss = styles.app;
 
-        const cs = React.cloneElement(children, { i18n, styles });
+        const sideMenuStrings = translations[lang].sideMenu;
 
+        const menu = [
+            {
+                label: sideMenuStrings.search,
+                icon: 'icon-search',
+                children: [
+                    {
+                        label: sideMenuStrings.quickSearch,
+                        link: '/search',
+                    },
+                    {
+                        label: sideMenuStrings.smartSearch,
+                        link: '/search',
+                        value: 'search',
+                    },
+                ],
+            },
+            {
+                label: sideMenuStrings.lightboxes,
+                link: '/lightboxes',
+                icon: 'icon-th-large',
+                value: 'lightboxes',
+            },
+            {
+                label: sideMenuStrings.contacts,
+                link: '/contacts',
+                icon: 'icon-mail-alt',
+                value: 'contacts',
+            }
+        ];
+
+
+        const isHome = location.pathname === '/';
+        const cs = React.cloneElement(children, {
+            i18n, styles,
+            className: `${ss.content} ${isHome ? ss.home : ''} ${ui.sideMenu ? ss.sideMenuOpen : ''}`,
+        });
 
         return (
             <div className={ss.root}>
+                <Header
+                    className={`${ss.header} ${isHome ? ss.home : ''}`}
+                    i18n={i18n} styles={styles}
+                    transparent={isHome} hideLogo={isHome} hideSearchBar={isHome}
+                />
+                <SideMenu
+                    className={`${ss.sideMenu} ${isHome ? ss.home : ''} ${ui.sideMenu ? '' : ss.hide}`}
+                    i18n={i18n} styles={styles}
+                    menu={menu}
+                    value={location.pathname.split('/')[1] || ''}
+                    transparent={isHome}
+                />
                 {cs}
                 <Signup i18n={i18n} styles={styles} />
                 <VerifyRegistration i18n={i18n} styles={styles} />

@@ -1,5 +1,5 @@
 
-.imagesAndControlContainer {
+.root {
     min-height: 800px;
     padding: 80px 50px 30px 50px;
 
@@ -47,14 +47,21 @@
     & .noResults {
         font-size: 45px;
         text-align: center;
-        margin: 100px 0;
-        color: rgb(100, 100, 100);
+        margin: 150px 0;
+        color: rgb(150, 150, 150);
+    }
+
+    & .searchMessage {
+        font-size: 45px;
+        text-align: center;
+        margin: 150px 0;
+        color: rgb(150, 150, 150);
     }
 
     & .searchingIndicator {
         font-size: 45px;
         text-align: center;
-        margin: 100px 0;
+        margin: 150px 0;
         color: rgb(150, 150, 150);
     }
 
