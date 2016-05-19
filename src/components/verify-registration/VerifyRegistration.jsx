@@ -36,11 +36,14 @@ let VerifyRegistration = React.createClass({
     },
 
     render() {
-        let { isOpen, i18n: { strings: { verifyRegistration: strings } },
-             styles, styles: { verifyRegistration: ss },
-             errorMessage, successMessage,
-             closeVerifyRegistration } = this.props;
-        let { state } = this;
+        const { isOpen, i18n: { strings: { verifyRegistration: strings } },
+                styles, styles: { verifyRegistration: ss },
+                errorMessage, successMessage,
+                closeVerifyRegistration } = this.props;
+        const { state } = this;
+        const buttons = [
+            { label: strings.verify, type: 'submit' },
+        ];
 
         return (
             <ModalBox
@@ -50,31 +53,27 @@ let VerifyRegistration = React.createClass({
                 successMessage={successMessage}
                 errorMessage={errorMessage}
                 styles={styles}
+                onSubmit={this.verify}
+                buttons={buttons}
             >
-                <form onSubmit={this.verify}>
-                    <div className={ss.inputsRow}>
-                        <Input
-                            className={ss.field}
-                            placeholder={strings.email}
-                            value={state.email}
-                            onChange={this.emailChanged}
-                            styles={styles}
-                        />
-                        <Input
-                            className={ss.field}
-                            placeholder={strings.code}
-                            value={state.code}
-                            onChange={this.verificationCodeChanged}
-                            styles={styles}
-                        />
-                    </div>
-                    <Button
-                        type="submit"
-                        className={ss.verifyButton}
-                        label={strings.verify}
+                <div className={ss.inputsRow}>
+                    <label>{strings.email}</label>
+                    <Input
+                        className={ss.field}
+                        value={state.email}
+                        onChange={this.emailChanged}
                         styles={styles}
                     />
-                </form>
+                </div>
+                <div className={ss.inputsRow}>
+                    <label>{strings.code}</label>
+                    <Input
+                        className={ss.field}
+                        value={state.code}
+                        onChange={this.verificationCodeChanged}
+                        styles={styles}
+                    />
+                </div>
             </ModalBox>
         );
     },

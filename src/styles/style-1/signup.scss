@@ -1,25 +1,17 @@
-
-.fieldAndButton {
-    width: 45%; 
-}
-
-.field {
-    @extend .fieldAndButton;
+.inputsRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin: 10px 0;
-    flex: 0 0 auto;
-}
+    padding: 0 50px;
 
-.inputsRow1 {
-    display: flex;
-    justify-content: space-between;
-}
-
-.inputsRow2 {
-    display: flex;
-    justify-content: space-between;
-}
-
-.signupButton {
-    @extend .fieldAndButton;
-    margin: 50px 0 0 0;
+    label {
+        flex: 0 0 auto;
+        width: 200px;
+        font-size: 14px;
+        color: rgb(60, 60, 60);
+    }
+    .field {
+        flex: 1 0 auto;
+    }
 }

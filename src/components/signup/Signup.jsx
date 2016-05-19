@@ -33,10 +33,15 @@ let Signup = React.createClass({
     },
 
     render() {
-        let { isOpen, i18n: { strings: { signup: strings } },
-              styles, styles: { signup: ss },
-              errorMessage, successMessage, closeSignup } = this.props;
-        let { state } = this;
+        const { isOpen, i18n: { strings: { signup: strings } },
+                styles, styles: { signup: ss },
+                errorMessage, successMessage, closeSignup } = this.props;
+        const { state } = this;
+        const buttons = [
+            { label: strings.signup, type: 'submit' },
+        ];
+
+
         return (
             <ModalBox
                 isOpen={isOpen}
@@ -45,48 +50,46 @@ let Signup = React.createClass({
                 successMessage={successMessage}
                 errorMessage={errorMessage}
                 styles={styles}
+                onSubmit={this.signup}
+                buttons={buttons}
             >
-                <form onSubmit={this.signup}>
-                    <div className={ss.inputsRow1}>
-                        <Input
-                            className={ss.field}
-                            placeholder={strings.firstName}
-                            value={state.firstName}
-                            onChange={this.firstNameChanged}
-                            styles={styles}
-                        />
-                        <Input
-                            className={ss.field}
-                            placeholder={strings.lastName}
-                            value={state.lastName}
-                            onChange={this.lastNameChanged}
-                            styles={styles}
-                        />
-                    </div>
-                    <div className={ss.inputsRow2}>
-                        <Input
-                            className={ss.field}
-                            placeholder={strings.email}
-                            value={state.email}
-                            onChange={this.emailChanged}
-                            styles={styles}
-                        />
-                        <Input
-                            className={ss.field}
-                            placeholder={strings.password}
-                            type="password"
-                            value={state.password}
-                            onChange={this.passwordChanged}
-                            styles={styles}
-                        />
-                    </div>
-                    <Button
-                        type="submit"
-                        className={ss.signupButton}
-                        label={strings.signup}
+                <div className={ss.inputsRow}>
+                    <label>{strings.firstName}</label>
+                    <Input
+                        className={ss.field}
+                        value={state.firstName}
+                        onChange={this.firstNameChanged}
                         styles={styles}
                     />
-                </form>
+                </div>
+                <div className={ss.inputsRow}>
+                    <label>{strings.lastName}</label>
+                    <Input
+                        className={ss.field}
+                        value={state.lastName}
+                        onChange={this.lastNameChanged}
+                        styles={styles}
+                    />
+                </div>
+                <div className={ss.inputsRow}>
+                    <label>{strings.email}</label>
+                    <Input
+                        className={ss.field}
+                        value={state.email}
+                        onChange={this.emailChanged}
+                        styles={styles}
+                    />
+                </div>
+                <div className={ss.inputsRow}>
+                    <label>{strings.password}</label>
+                    <Input
+                        className={ss.field}
+                        type="password"
+                        value={state.password}
+                        onChange={this.passwordChanged}
+                        styles={styles}
+                    />
+                </div>
             </ModalBox>
         );
     },
