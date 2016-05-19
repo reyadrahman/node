@@ -26,23 +26,6 @@ export default {
         image: 'ImageFR',
         footage: 'FootageFR',
     },
-    footer: {
-        support: 'FRSUPPORT',
-        theCompany: 'FRTHE COMPANY',
-        communities: 'FRCOMMUNITIES',
-        licence: 'FRLICENCE',
-        faqs: 'FRFAQs',
-        pricing: 'FRPRICING',
-        aboutUs: 'FRABOUT US',
-        press: 'FRPRESS',
-        contact: 'FRCONTACT',
-        contributors: 'FRCONTRIBUTORS',
-        twitter: 'FRTWITTER',
-        youtube: 'FRYOUTUBE',
-        vimeo: 'FRVIMEO',
-        linkedIn: 'FRLINKED IN',
-        languages: 'FRLANGUAGES',
-    },
     signup: {
         title: 'French Sign Up',
         firstName: 'French first name',
@@ -62,4 +45,13 @@ export default {
         password: 'French password',
         signin: 'French sign in',
     },
+    contacts: {
+        title: 'Contact Us',
+        send: 'Send fr',
+        firstName: 'First name fr',
+        lastName: 'Last name fr',
+        email: 'Email address fr',
+        subject: 'Subject fr',
+        message: 'Your fr message...',
+    }
 };

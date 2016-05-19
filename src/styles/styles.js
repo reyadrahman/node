@@ -15,6 +15,8 @@ const styles = {
         verifyRegistration: require('./style-1/verify-registration.scss'),
         grid: require('./style-1/grid.scss'),
         dropdown: require('./style-1/dropdown.scss'),
+        contactsPage: require('./style-1/contacts-page.scss'),
+        form: require('./style-1/form.scss'),
     },
 }
 

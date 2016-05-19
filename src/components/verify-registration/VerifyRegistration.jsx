@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { ModalBox, Input, Button } from '../modal-box-1/ModalBox1.jsx';
+import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
+import { Form, Input } from '../form/Form.jsx';
 import * as actions from '../../actions/actions.js';
 
 let VerifyRegistration = React.createClass({
@@ -50,30 +51,34 @@ let VerifyRegistration = React.createClass({
                 isOpen={isOpen}
                 onRequestClose={closeVerifyRegistration}
                 title={strings.title}
-                successMessage={successMessage}
-                errorMessage={errorMessage}
                 styles={styles}
-                onSubmit={this.verify}
-                buttons={buttons}
             >
-                <div className={ss.inputsRow}>
-                    <label>{strings.email}</label>
-                    <Input
-                        className={ss.field}
-                        value={state.email}
-                        onChange={this.emailChanged}
-                        styles={styles}
-                    />
-                </div>
-                <div className={ss.inputsRow}>
-                    <label>{strings.code}</label>
-                    <Input
-                        className={ss.field}
-                        value={state.code}
-                        onChange={this.verificationCodeChanged}
-                        styles={styles}
-                    />
-                </div>
+                <Form
+                    successMessage={successMessage}
+                    errorMessage={errorMessage}
+                    onSubmit={this.verify}
+                    buttons={buttons}
+                    styles={styles}
+                >
+                    <div className={ss.inputsRow}>
+                        <label>{strings.email}</label>
+                        <Input
+                            className={ss.field}
+                            value={state.email}
+                            onChange={this.emailChanged}
+                            styles={styles}
+                        />
+                    </div>
+                    <div className={ss.inputsRow}>
+                        <label>{strings.code}</label>
+                        <Input
+                            className={ss.field}
+                            value={state.code}
+                            onChange={this.verificationCodeChanged}
+                            styles={styles}
+                        />
+                    </div>
+                </Form>
             </ModalBox>
         );
     },

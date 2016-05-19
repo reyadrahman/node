@@ -1,25 +1,15 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
-import { Form, Input } from '../form/Form.jsx';
-import * as actions from '../../actions/actions.js';
+import { Form, Input, Button, TextArea } from '../form/Form.jsx';
 
-let Signup = React.createClass({
+const ContactsPage = React.createClass({
     getInitialState() {
         return {
             firstName: '',
             lastName: '',
             email: '',
-            password: '',
+            subject: '',
         };
     },
-
-    signup(e) {
-        e.preventDefault();
-        console.log('signup: ', this.state);
-        this.props.signup(this.state);
-    },
-
     firstNameChanged(e) {
         this.setState({ firstName: e.target.value });
     },
@@ -29,32 +19,26 @@ let Signup = React.createClass({
     emailChanged(e) {
         this.setState({ email: e.target.value });
     },
-    passwordChanged(e) {
-        this.setState({ password: e.target.value });
+    subjectChanged(e) {
+        this.setState({ subject: e.target.value });
     },
-
     render() {
-        const { isOpen, i18n: { strings: { signup: strings } },
-                styles, styles: { signup: ss },
-                errorMessage, successMessage, closeSignup } = this.props;
+        const { className, styles, styles: { contactsPage: ss },
+                i18n: { strings: { contacts: strings } },
+                successMessage, errorMessage } = this.props;
         const { state } = this;
-        const buttons = [
-            { label: strings.signup, type: 'submit' },
-        ];
-
+        // const buttons = [
+        //     { label: strings.send, type: 'submit' },
+        // ];
 
         return (
-            <ModalBox
-                isOpen={isOpen}
-                onRequestClose={closeSignup}
-                title={strings.title}
-                styles={styles}
-            >
+            <div className={`${ss.root} ${className || ''}`}>
+                <h2 className={ss.title}>{strings.title}</h2>
                 <Form
+                    className={ss.form}
                     successMessage={successMessage}
                     errorMessage={errorMessage}
                     onSubmit={this.signup}
-                    buttons={buttons}
                     styles={styles}
                 >
                     <div className={ss.inputsRow}>
@@ -85,31 +69,35 @@ let Signup = React.createClass({
                         />
                     </div>
                     <div className={ss.inputsRow}>
-                        <label>{strings.password}</label>
+                        <label>{strings.subject}</label>
                         <Input
                             className={ss.field}
-                            type="password"
-                            value={state.password}
-                            onChange={this.passwordChanged}
+                            value={state.subject}
+                            onChange={this.subjectChanged}
+                            styles={styles}
+                        />
+                    </div>
+                    <div className={ss.inputsRow}>
+                        <TextArea
+                            className={ss.field}
+                            placeholder={strings.message}
+                            value={state.message}
+                            onChange={this.messageChanged}
+                            styles={styles}
+                        />
+                    </div>
+                    <div className={ss.buttonArea}>
+                        <Button
+                            className={ss.sendButton}
+                            label={strings.send}
+                            type="submit"
                             styles={styles}
                         />
                     </div>
                 </Form>
-            </ModalBox>
+            </div>
         );
-    },
+    }
 });
 
-Signup = connect(
-    state => ({
-        isOpen: state.signup.isOpen,
-        errorMessage: state.signup.errorMessage,
-        successMessage: state.signup.successMessage,
-    }),
-    {
-        closeSignup: actions.closeSignup,
-        signup: actions.signup,
-    }
-)(Signup);
-
-export default Signup;
+export default ContactsPage;

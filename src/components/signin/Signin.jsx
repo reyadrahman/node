@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { ModalBox, Input, Button, ButtonArea } from '../modal-box-1/ModalBox1.jsx';
+import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
+import { Form, Input } from '../form/Form.jsx';
 import * as actions from '../../actions/actions.js';
 
 let Signin = React.createClass({
@@ -34,40 +35,42 @@ let Signin = React.createClass({
             { label: strings.signin, type: 'submit' },
         ];
 
-
-
         return (
             <ModalBox
                 isOpen={isOpen}
                 onRequestClose={closeSignin}
                 title={strings.title}
-                successMessage={successMessage}
-                errorMessage={errorMessage}
                 styles={styles}
-                onSubmit={this.signin}
-                buttons={buttons}
             >
-                <div className={ss.inputsRow}>
-                    <label>{strings.email}</label>
-                    <Input
-                        className={ss.field}
-                        value={state.email}
-                        onChange={this.emailChanged}
-                        styles={styles}
-                        icon="icon-user"
-                    />
-                </div>
-                <div className={ss.inputsRow}>
-                    <label>{strings.password}</label>
-                    <Input
-                        className={ss.field}
-                        value={state.password}
-                        onChange={this.passwordChanged}
-                        type="password"
-                        styles={styles}
-                        icon="icon-lock"
-                    />
-                </div>
+                <Form
+                    successMessage={successMessage}
+                    errorMessage={errorMessage}
+                    onSubmit={this.signin}
+                    buttons={buttons}
+                    styles={styles}
+                >
+                    <div className={ss.inputsRow}>
+                        <label>{strings.email}</label>
+                        <Input
+                            className={ss.field}
+                            value={state.email}
+                            onChange={this.emailChanged}
+                            styles={styles}
+                            icon="icon-user"
+                        />
+                    </div>
+                    <div className={ss.inputsRow}>
+                        <label>{strings.password}</label>
+                        <Input
+                            className={ss.field}
+                            value={state.password}
+                            onChange={this.passwordChanged}
+                            type="password"
+                            styles={styles}
+                            icon="icon-lock"
+                        />
+                    </div>
+                </Form>
             </ModalBox>
         );
     },
