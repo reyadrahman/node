@@ -51,6 +51,7 @@ const Dropdown = React.createClass({
         return (
             <div
                 tabIndex="1"
+                onBlur={this.lostFocus}
                 className={`${ss.root} ${className || ''}`}
             >
                 <div
