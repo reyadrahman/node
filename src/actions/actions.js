@@ -121,6 +121,33 @@ export function signinFailed(message) {
         }
     }
 }
+export function clearContactsMessages(message) {
+    return {
+        type: 'CONTACTS',
+        state: {
+            errorMessage: '',
+            successMessage: '',
+        }
+    }
+}
+export function sendEmailSucceeded(message) {
+    return {
+        type: 'CONTACTS',
+        state: {
+            errorMessage: '',
+            successMessage: message,
+        }
+    }
+}
+export function sendEmailFailed(message) {
+    return {
+        type: 'CONTACTS',
+        state: {
+            errorMessage: message,
+            successMessage: '',
+        }
+    }
+}
 export function setCurrentUserAttributes(attributes) {
     return {
         type: 'CURRENT_USER',
@@ -310,4 +337,20 @@ export function toggleFullscreen() {
             utils.requestFullscreen();
         }
     };
+}
+
+export function sendEmail(data) {
+    return dispatch => {
+        return (
+            aws.sendEmail(data)
+               .then(res => {
+                   console.log('sendEmail, SUCCESS', res);
+                   dispatch(sendEmailSucceeded(res));
+               })
+               .catch(err => {
+                   console.log('sendEmail, FAILURE', err);
+                   dispatch(sendEmailFailed(typeof err === 'string' ? err : 'Failed'));
+               })
+        );
+    }
 }

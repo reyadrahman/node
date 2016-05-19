@@ -2,8 +2,8 @@ import React from 'react';
 
 export const Form = React.createClass({
     render() {
-        const { errorMessage, successMessage, children, styles,
-                styles: { form: ss }, className, onSubmit, buttons } = this.props;
+        const { children, styles, styles: { form: ss }, className,
+                onSubmit, buttons } = this.props;
 
         return (
             <form
@@ -11,12 +11,6 @@ export const Form = React.createClass({
                 onSubmit={onSubmit}
             >
                 {children}
-                <div className={ss.error}>
-                    {errorMessage}
-                </div>
-                <div className={ss.success}>
-                    {successMessage}
-                </div>
                 {
                     buttons &&
                         <ButtonArea styles={styles}>
@@ -74,5 +68,20 @@ export const ButtonArea = ({ className, children, styles: { form: ss } }) => (
     </div>
 );
 
+export const ErrorMessage = ({ className, message, styles: { form: ss} }) => (
+    <div
+        className={`${ss.error} ${className || ''}`}
+    >
+        {message}
+    </div>
+);
+
+export const SuccessMessage = ({ className, message, styles: { form: ss} }) => (
+    <div
+        className={`${ss.success} ${className || ''}`}
+    >
+        {message}
+    </div>
+);
 
 export default Form;

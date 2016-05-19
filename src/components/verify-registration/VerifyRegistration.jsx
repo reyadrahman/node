@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
-import { Form, Input } from '../form/Form.jsx';
+import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import * as actions from '../../actions/actions.js';
 
 let VerifyRegistration = React.createClass({
@@ -54,8 +54,6 @@ let VerifyRegistration = React.createClass({
                 styles={styles}
             >
                 <Form
-                    successMessage={successMessage}
-                    errorMessage={errorMessage}
                     onSubmit={this.verify}
                     buttons={buttons}
                     styles={styles}
@@ -78,6 +76,8 @@ let VerifyRegistration = React.createClass({
                             styles={styles}
                         />
                     </div>
+                    <ErrorMessage message={errorMessage} styles={styles} />
+                    <SuccessMessage message={successMessage} styles={styles} />
                 </Form>
             </ModalBox>
         );

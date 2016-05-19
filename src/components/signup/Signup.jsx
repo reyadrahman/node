@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
-import { Form, Input } from '../form/Form.jsx';
+import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import * as actions from '../../actions/actions.js';
 
 let Signup = React.createClass({
@@ -51,8 +51,6 @@ let Signup = React.createClass({
                 styles={styles}
             >
                 <Form
-                    successMessage={successMessage}
-                    errorMessage={errorMessage}
                     onSubmit={this.signup}
                     buttons={buttons}
                     styles={styles}
@@ -94,6 +92,8 @@ let Signup = React.createClass({
                             styles={styles}
                         />
                     </div>
+                    <ErrorMessage message={errorMessage} styles={styles} />
+                    <SuccessMessage message={successMessage} styles={styles} />
                 </Form>
             </ModalBox>
         );

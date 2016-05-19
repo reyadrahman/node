@@ -48,8 +48,7 @@ export default {
     contacts: {
         title: 'Contact Us',
         send: 'Send fr',
-        firstName: 'First name fr',
-        lastName: 'Last name fr',
+        name: 'Name',
         email: 'Email address fr',
         subject: 'Subject fr',
         message: 'Your fr message...',

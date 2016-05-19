@@ -83,6 +83,24 @@ apigClientFactory.newClient = function (config) {
     
     
     
+    apigClient.emailPost = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, [], ['body']);
+        
+        var emailPostRequest = {
+            verb: 'post'.toUpperCase(),
+            path: pathComponent + uritemplate('/email').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(emailPostRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
     apigClient.mytestlambda1Get = function (params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
         

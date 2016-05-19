@@ -112,3 +112,15 @@ export function ui(state =
     }
     return state;
 }
+
+export function contacts(state =
+    {
+        errorMessage: '',
+        successMessage: '',
+    }, action)
+{
+    if (action.type === 'CONTACTS') {
+        return Object.assign({}, state, action.state);
+    }
+    return state;
+}

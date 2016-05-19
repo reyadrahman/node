@@ -35,10 +35,16 @@
 
         .buttonArea {
             text-align: right;
-            padding: 50px;
+            padding: 0px 50px 50px 50px;
 
             .sendButton {
                 width: 180px;
+            }
+        }
+        .messages {
+            margin: 50px 0 0 0;
+            .success {
+                color: rgb(39, 197, 39);
             }
         }
     }

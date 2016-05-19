@@ -1,20 +1,32 @@
 import React from 'react';
-import { Form, Input, Button, TextArea } from '../form/Form.jsx';
+import { Form, Input, Button, TextArea, SuccessMessage,
+         ErrorMessage } from '../form/Form.jsx';
+import * as actions from '../../actions/actions.js';
+import { connect } from 'react-redux';
 
-const ContactsPage = React.createClass({
+let ContactsPage = React.createClass({
     getInitialState() {
         return {
-            firstName: '',
-            lastName: '',
+            name: '',
             email: '',
             subject: '',
+            message: '',
         };
     },
-    firstNameChanged(e) {
-        this.setState({ firstName: e.target.value });
+    send(e) {
+        e.preventDefault();
+        const { name, email, subject, message } = this.state;
+        console.log('send: ', this.state);
+        // if (!name || !lastName || !email || !subject || !message) {
+        //     console.log('some field is empty');
+        //     return;
+        // }
+
+
+        this.props.sendEmail({ name, email, subject, message });
     },
-    lastNameChanged(e) {
-        this.setState({ lastName: e.target.value });
+    nameChanged(e) {
+        this.setState({ name: e.target.value });
     },
     emailChanged(e) {
         this.setState({ email: e.target.value });
@@ -22,40 +34,39 @@ const ContactsPage = React.createClass({
     subjectChanged(e) {
         this.setState({ subject: e.target.value });
     },
+    messageChanged(e) {
+        this.setState({ message: e.target.value });
+    },
+
+    componentWillMount() {
+        if (this.props.errorMessage || this.props.successMessage) {
+            this.props.clearContactsMessages();
+        }
+    },
+
+
     render() {
         const { className, styles, styles: { contactsPage: ss },
                 i18n: { strings: { contacts: strings } },
                 successMessage, errorMessage } = this.props;
         const { state } = this;
-        // const buttons = [
-        //     { label: strings.send, type: 'submit' },
-        // ];
+
+        console.log('ContactsPage: ', successMessage, errorMessage);
 
         return (
             <div className={`${ss.root} ${className || ''}`}>
                 <h2 className={ss.title}>{strings.title}</h2>
                 <Form
                     className={ss.form}
-                    successMessage={successMessage}
-                    errorMessage={errorMessage}
-                    onSubmit={this.signup}
+                    onSubmit={this.send}
                     styles={styles}
                 >
                     <div className={ss.inputsRow}>
-                        <label>{strings.firstName}</label>
+                        <label>{strings.name}</label>
                         <Input
                             className={ss.field}
-                            value={state.firstName}
-                            onChange={this.firstNameChanged}
-                            styles={styles}
-                        />
-                    </div>
-                    <div className={ss.inputsRow}>
-                        <label>{strings.lastName}</label>
-                        <Input
-                            className={ss.field}
-                            value={state.lastName}
-                            onChange={this.lastNameChanged}
+                            value={state.name}
+                            onChange={this.nameChanged}
                             styles={styles}
                         />
                     </div>
@@ -86,6 +97,10 @@ const ContactsPage = React.createClass({
                             styles={styles}
                         />
                     </div>
+                    <div className={ss.messages}>
+                        <ErrorMessage message={errorMessage} styles={styles} />
+                        <SuccessMessage className={ss.success} message={successMessage} styles={styles} />
+                    </div>
                     <div className={ss.buttonArea}>
                         <Button
                             className={ss.sendButton}
@@ -99,5 +114,16 @@ const ContactsPage = React.createClass({
         );
     }
 });
+
+ContactsPage = connect(
+    state => ({
+        errorMessage: state.contacts.errorMessage,
+        successMessage: state.contacts.successMessage,
+    }),
+    {
+        sendEmail: actions.sendEmail,
+        clearContactsMessages: actions.clearContactsMessages,
+    }
+)(ContactsPage);
 
 export default ContactsPage;
