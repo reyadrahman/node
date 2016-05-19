@@ -8,17 +8,23 @@ const Dropdown = React.createClass({
     },
 
     toggleMenu() {
+        if (this.state.isOpen) {
+            this.rootElem.blur();
+        }
         this.setState({ isOpen: !this.state.isOpen });
     },
 
     selected(value) {
         this.props.onChange && this.props.onChange(value);
         this.setState({ isOpen: false });
+        this.rootElem.blur();
     },
 
-    lostFocus() {
-        console.log('language lost focus');
-        this.setState({ isOpen: false });
+    lostFocus(e) {
+        console.log('dropdown lost focus, ', e.target === this.rootElem, e.target);
+        setTimeout(() => {
+            this.setState({ isOpen: false });
+        }, 300);
     },
 
     makeMenuItem(item, isSelected) {
@@ -53,6 +59,7 @@ const Dropdown = React.createClass({
                 tabIndex="1"
                 onBlur={this.lostFocus}
                 className={`${ss.root} ${className || ''}`}
+                ref={e => { this.rootElem = e; }}
             >
                 <div
                     className={`${ss.activeItem} ${renderArrow ? ss.withArrow : ''}`}
