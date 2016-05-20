@@ -32,7 +32,7 @@ export const Form = React.createClass({
 });
 
 export const Input = ({
-    type, className, icon, placeholder,
+    type, className, value, icon, placeholder,
     styles: { form: ss }, ...others
 }) => (
     <div className={`${ss.inputContainer} ${className || ''}`} {...others}>
@@ -40,6 +40,7 @@ export const Input = ({
             type={type || 'text'}
             className={ss.input}
             placeholder={placeholder}
+            value={value}
         />
         {icon && <div className={`${ss.verSeparator}`} />}
         {icon && <div className={`${icon} ${ss.icon}`} />}

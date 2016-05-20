@@ -6,9 +6,11 @@ import { connect } from 'react-redux';
 
 let ContactsPage = React.createClass({
     getInitialState() {
+        const { currentUser } = this.props;
+        console.log('ContactsPage: ', currentUser);
         return {
-            name: '',
-            email: '',
+            name: currentUser && `${currentUser.given_name} ${currentUser.family_name}`.trim() || '',
+            email: currentUser && currentUser.email || '',
             subject: '',
             message: '',
         };
@@ -51,7 +53,7 @@ let ContactsPage = React.createClass({
                 successMessage, errorMessage } = this.props;
         const { state } = this;
 
-        console.log('ContactsPage: ', successMessage, errorMessage);
+        console.log('ContactsPage: ', state.name, state.email);
 
         return (
             <div className={`${ss.root} ${className || ''}`}>
@@ -119,6 +121,7 @@ ContactsPage = connect(
     state => ({
         errorMessage: state.contacts.errorMessage,
         successMessage: state.contacts.successMessage,
+        currentUser: state.currentUser,
     }),
     {
         sendEmail: actions.sendEmail,

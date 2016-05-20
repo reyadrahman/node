@@ -47,7 +47,7 @@ let Header = React.createClass({
     render() {
         console.log('Header render');
         const { className, styles, styles: { header: ss },
-                i18n, i18n: { strings: { header: hs } }, currentUser,
+                i18n, i18n: { strings: { header: strings } }, currentUser,
                 isHome, searchState, transparent, hideLogo, hideSearchBar,
                 ui: { fullscreen, sideMenu }} = this.props;
 
@@ -116,6 +116,7 @@ let Header = React.createClass({
                             <button
                                 onClick={this.props.signout}
                                 className={`${buttonClass} icon-logout`}
+                                title={strings.signout}
                             /> :
                             <Dropdown
                                 options={signInUpVerifyOptions}
@@ -123,6 +124,7 @@ let Header = React.createClass({
                                 activeItemRenderer={() => (
                                     <button
                                         className={`${buttonClass} icon-login`}
+                                        title={strings.signin}
                                     />
                                 )}
                                 onChange={this.onConnectionSelect}

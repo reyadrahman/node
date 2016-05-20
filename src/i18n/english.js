@@ -6,9 +6,9 @@ export default {
         lightBox: 'LIGHTBOX',
         basket: 'BASKET',
         connection: 'CONNECTION',
-        signin: 'SIGN IN',
-        signup: 'SIGN UP',
-        signout: 'SIGN OUT',
+        signin: 'Sign in',
+        signup: 'Sign up',
+        signout: 'Sign out',
         verifyRegistration: 'VERIFY REGISTRATION',
     },
     sideMenu: {
