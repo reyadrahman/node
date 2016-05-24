@@ -1,15 +1,9 @@
 export default {
     header: {
-        photos: 'PHOTOS',
-        videos: 'VIDEOS',
-        stories: 'STORIES',
-        lightBox: 'LIGHTBOX',
-        basket: 'BASKET',
-        connection: 'CONNECTION',
         signin: 'Sign in',
         signup: 'Sign up',
         signout: 'Sign out',
-        verifyRegistration: 'VERIFY REGISTRATION',
+        verifyRegistration: 'Verify registration',
     },
     sideMenu: {
         search: 'Search',
@@ -19,8 +13,6 @@ export default {
         contacts: 'Contacts',
     },
     home: {
-        introMessage: 'TELL ME A STORY',
-        imageSamplesTitle: 'PREMIUM IMAGES & FOOTAGE LIBRES DE DROITS',
     },
     search: {
         image: 'Image',

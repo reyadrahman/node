@@ -37,6 +37,12 @@ let Header = React.createClass({
         }
     },
 
+    onSignOutSelect(selection) {
+        if (selection === 'signout') {
+            this.props.signout();
+        }
+    },
+
     makeFlag(item) {
         const { styles: { header: ss } } = this.props;
         let flag = item.value;
@@ -57,9 +63,12 @@ let Header = React.createClass({
         ];
 
         const signInUpVerifyOptions = [
-            { label: 'Sign in', value: 'signin' },
-            { label: 'Sign up', value: 'signup' },
-            { label: 'Verify registration', value: 'verify' },
+            { label: strings.signin, value: 'signin' },
+            { label: strings.signup, value: 'signup' },
+            { label: strings.verifyRegistration, value: 'verify' },
+        ];
+        const signOutOptions = [
+            { label: strings.signout, value: 'signout' },
         ];
 
         const buttonClass = transparent ? `${ss.button} ${ss.transparent}` : ss.button;
@@ -68,12 +77,27 @@ let Header = React.createClass({
         if (currentUser) {
             console.log('Header render: have currentUser: ', currentUser);
             signInOutElem = (
+                <Dropdown
+                    options={signOutOptions}
+                    styles={styles}
+                    activeItemRenderer={() => (
+                        <button
+                            className={`${buttonClass} icon-logout`}
+                            title={strings.signout}
+                        />
+                    )}
+                    onChange={this.onSignOutSelect}
+                />
+            );
+            /*
+            signInOutElem = (
                 <button
                     onClick={this.props.signout}
                     className={`${buttonClass} icon-logout`}
                     title={strings.signout}
                 />
             );
+            */
         } else {
             console.log('Header render: don\'t have currentUser');
             signInOutElem = (

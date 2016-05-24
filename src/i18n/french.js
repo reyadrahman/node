@@ -1,15 +1,9 @@
 export default {
     header: {
-        photos: 'PHOTOSFR',
-        videos: 'VIDEOSFR',
-        stories: 'STORIESFR',
-        lightBox: 'LIGHTBOXFR',
-        basket: 'BASKETFR',
-        connection: 'CONNECTIOn',
-        signin: 'FR SIGN IN',
-        signup: 'FR SIGN UP',
-        signout: 'FR SIGN OUT',
-        verifyRegistration: 'FR VERIFY REGISTRATION',
+        signin: 'FR Sign in',
+        signup: 'FR Sign up',
+        signout: 'FR Sign out',
+        verifyRegistration: 'FR Verify registration',
     },
     sideMenu: {
         search: 'Search FR',
@@ -19,8 +13,6 @@ export default {
         contacts: 'Contacts FR',
     },
     home: {
-        introMessage: 'RACONTE MOI UNE HISTOIRE',
-        imageSamplesTitle: 'FRENCH PREMIUM IMAGES & FOOTAGE LIBRES DE DROITS',
     },
     search: {
         image: 'ImageFR',
