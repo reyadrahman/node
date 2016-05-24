@@ -4,6 +4,7 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const pick = require('lodash/pick');
 const map = require('lodash/map');
 const fromPairs = require('lodash/fromPairs');
+const autoprefixer = require('autoprefixer');
 
 function createEnvVarDefs(envVars) {
     return fromPairs(map(envVars, (v, k) =>
@@ -99,6 +100,7 @@ const config = {
                 test: /\.scss$/,
                 loader: extractCSS.extract([
                     'css?modules&importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
+                    'postcss',
                     'resolve-url',
                     'sass?sourceMap'
                 ])
@@ -121,6 +123,11 @@ const config = {
             path.join(__dirname, "external_modules") + '.*',
         ],
         */
+    },
+    postcss: function() {
+        return [autoprefixer({
+            browsers: ['last 3 version'],
+        })];
     }
 };
 
