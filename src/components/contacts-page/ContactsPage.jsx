@@ -46,6 +46,13 @@ let ContactsPage = React.createClass({
         }
     },
 
+    componentWillReceiveProps(newProps) {
+        const { currentUser } = newProps;
+        this.setState({
+            name: this.state.name || currentUser && `${currentUser.given_name} ${currentUser.family_name}`.trim() || '',
+            email: this.state.email || currentUser && currentUser.email || '',
+        });
+    },
 
     render() {
         const { className, styles, styles: { contactsPage: ss },

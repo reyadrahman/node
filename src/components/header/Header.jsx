@@ -64,6 +64,33 @@ let Header = React.createClass({
 
         const buttonClass = transparent ? `${ss.button} ${ss.transparent}` : ss.button;
 
+        let signInOutElem = null;
+        if (currentUser) {
+            console.log('Header render: have currentUser: ', currentUser);
+            signInOutElem = (
+                <button
+                    onClick={this.props.signout}
+                    className={`${buttonClass} icon-logout`}
+                    title={strings.signout}
+                />
+            );
+        } else {
+            console.log('Header render: don\'t have currentUser');
+            signInOutElem = (
+                <Dropdown
+                    options={signInUpVerifyOptions}
+                    styles={styles}
+                    activeItemRenderer={() => (
+                        <button
+                            className={`${buttonClass} icon-login`}
+                            title={strings.signin}
+                        />
+                    )}
+                    onChange={this.onConnectionSelect}
+                />
+            );
+        }
+
         return (
             <div className={`${ss.root} ${className || ''} ${transparent ? ss.transparent : ''}`}>
                 <div className={ss.leftSection}>
@@ -111,26 +138,7 @@ let Header = React.createClass({
                                 onSubmit={this.searchSubmitted}
                             />
                     }
-                    {
-                        currentUser ?
-                            <button
-                                onClick={this.props.signout}
-                                className={`${buttonClass} icon-logout`}
-                                title={strings.signout}
-                            /> :
-                            <Dropdown
-                                options={signInUpVerifyOptions}
-                                styles={styles}
-                                activeItemRenderer={() => (
-                                    <button
-                                        className={`${buttonClass} icon-login`}
-                                        title={strings.signin}
-                                    />
-                                )}
-                                onChange={this.onConnectionSelect}
-                            />
-
-                    }
+                    {signInOutElem}
                 </div>
             </div>
         );
