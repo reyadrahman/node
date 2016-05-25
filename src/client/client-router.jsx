@@ -9,6 +9,7 @@ import * as reducers from '../reducers/reducers.js';
 import * as actions from '../actions/actions.js';
 import * as aws from '../aws/aws.js';
 import Routes from '../Routes.jsx';
+import Cookies from 'js-cookie';
 
 const initAppState = JSON.parse(document.getElementById('initAppState').innerHTML);
 
@@ -17,7 +18,7 @@ const loggerMiddleware = createLogger();
 
 let initAndRender = currentUser => {
     if (!initAppState.lang) {
-        initAppState.lang = initAppState.systemLang;
+        initAppState.lang = Cookies.get('language') || initAppState.systemLang;
     }
 
     const store = createStore(combineReducers(reducers), initAppState,
