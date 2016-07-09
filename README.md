@@ -1,3 +1,11 @@
+# Concepts and vocabulary
+In this project, we use the following terms
+- `publisher` represents the owner of a bot. A `publisher`can have several bots.
+- `person`is someone represented by one or several e-mail adresses 
+- `user`represents someone talking with a bot owned by a publisher. It is important to note that we need to segregate the data between `publishers`. So, basically, a `user`of a given bot is always different from a `user`of another bot, even if it is the same `person`.
+- `platform`represents the different types of bots we intend to implement, for example Messenger, Skype, Spark ...
+- `environment` represents the environment from where the admin site is accessed. Examples of existing or upcoming `environments`are Browser, Wordpress Plugin, iOS App, Android App ...    
+
 # Install and run
 Install, build and run in production mode:
 ```
@@ -16,7 +24,7 @@ If you want to deploy to Elastic Beanstalk, run:
 eb deploy
 ```
 
-# Configurations
+## Configurations
 
 Configurations are set using environment variables. The following configurations are available (shown with their default values):
 
@@ -58,6 +66,6 @@ or you can store the configurations in a JSON file anywhere on your system and p
 npm start -- --env path/to/config/my-config.json
 ```
 
-# Notes
+## Notes
 Customize icons using Fontello to include only the used icons.
 Customize flag icons using www.flag-sprites.com
