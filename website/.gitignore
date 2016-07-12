@@ -13,4 +13,3 @@ node_modules
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 npm-debug.log
->>>>>>> origin/master
