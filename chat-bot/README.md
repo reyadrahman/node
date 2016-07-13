@@ -14,6 +14,8 @@ MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
 CISCOSPARK_ACCESS_TOKEN=
 CISCOSPARK_BOT_EMAIL=
 MESSENGER_PAGE_ACCESS_TOKEN=
+MICROSOFT_APP_ID=
+MICROSOFT_APP_PASSWORD=
 ```
 
 ### .ebextensions
@@ -23,6 +25,24 @@ Environment variables defined in these config files will overwrite those in `.en
 
 ## Chat Bot's DynamoDB Database
 The table must have the primary key `roomId` of type `String` and sort key `timestamp` of type `Number`.
+
+## S3 Bucket
+Add the following policy to your bucket (replace `XXXXX` with your bucket's name):
+```
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AddPerm",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::XXXXX/*"
+		}
+	]
+}
+```
+Make sure the bucket has "View Permissions" for "Everyone" so that it can be accessed by external services for image keyword detection and find similar images.
 
 ## Build and Deploy
 You should have awsebcli installed and configured. See [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) and [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html?shortFooter=true).
@@ -49,9 +69,6 @@ npm run build
 eb deploy
 ```
 
-## Development
-During development, instead of `npm run build`, you can use `npm run build -- --watch` to tell webpack to automatically rebuild when something changes.
-
 ## Setting Up Webhooks
 ### Spark
 The webhook target url is https://SOME_DOMAIN/webhooks/spark
@@ -68,3 +85,11 @@ One thing that wasn't mentioned in the link above is that in order to change the
 Before your facebook app is published, only developers and testers can use it. You must go to your App's dashboard -> Roles -> Add developers.
 
 Unfortunately facebook does not support adding bots to group chats.
+
+### Microsoft Bot Framework
+The webhook target url is https://SOME_DOMAIN/webhooks/ms
+Must be using the new Bot Framework V3.
+
+
+## Development
+During development, instead of `npm run build`, you can use `npm run build -- --watch` to tell webpack to automatically rebuild when something changes.

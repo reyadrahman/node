@@ -1,4 +1,3 @@
-import request_ from 'request';
 import { request } from '../lib/util.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 
@@ -84,7 +83,6 @@ async function respondFn(roomId, to, message) {
         });
 
     } else if (typeof message === 'object') {
-        const toBeSent = [];
         if (message.text) {
             await sendMessage({
                 recipient: {

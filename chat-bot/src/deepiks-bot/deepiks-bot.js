@@ -41,7 +41,7 @@ async function logMessage(messageOrMessages) {
                         personId: x.personId,
                         personEmail: x.personEmail,
                         source: x.sourceBot,
-                        text: x.text,
+                        text: x.text || null,
                         files: x.files,
                     },
                 }
@@ -67,27 +67,29 @@ async function uploadToS3(key, buffer) {
 async function _fileRoute(message, respondFn) {
     respondFn('Detecting keywords, one moment please...');
     console.log('fileRoute');
-    let originalUrls = message.files.map(x => URL.parse(x));
-    let downloads = await Promise.all(originalUrls.map(url =>
-        request({
-            url,
-            headers: {
-                Authorization: message.filesDownloadAuth || '',
-            },
-            encoding: null,
-        })
-    ));
 
-    const s3LocationsP = Promise.all(downloads.map((d, i) => {
-        const path = originalUrls[i].pathname.split('/');
-        const key = path[path.length-1];
-        const buffer = d.body;
-        const location = `${message.roomId}/${key}`;
+    let downloads;
+    if (message.files) {
+        const rawDownloads = await Promise.all(message.files.map(
+            file => request({
+                url: URL.parse(file),
+                // TODO use message.filesGetFn instead
+                headers: {
+                    Authorization: message.filesDownloadAuth || '',
+                },
+                encoding: null,
+            })
+        ));
+        downloads = rawDownloads.map(x => x.body);
+    } else { // message.filesGetFn
+        downloads = await Promise.all(message.filesGetFn.map(f => f()));
+    }
 
-        return uploadToS3(`${message.roomId}/${key}`, buffer)
+    const s3LocationsP = Promise.all(downloads.map((buffer, i) => {
+        return uploadToS3(`${message.roomId}/${message.id}_${i}`, buffer)
     }));
 
-    const labelSrcData = downloads[downloads.length-1].body;
+    const labelSrcData = downloads[downloads.length-1];
 
     const gmStream = gm(labelSrcData).resize(1000, 1000, '>');
     const smallImage = await callbackToPromise(gmStream.toBuffer, gmStream)('jpg');
@@ -198,7 +200,9 @@ async function _textMessageRoute(message, respondFn) {
 
 async function _route(message, respondFn) {
     console.log('route');
-    if (message.files && message.files.length > 0) {
+    if (message.files && message.files.length > 0 ||
+        message.filesGetFn && message.filesGetFn.length > 0)
+    {
         return await _fileRoute(message, respondFn);
     }
 
