@@ -63,6 +63,8 @@ Messenger requires a HTTPS webhook.
 
 See the first 4 steps in [this page](https://developers.facebook.com/docs/messenger-platform/quickstart). In step 2 when setting up the webhook, select messages. Use the url above for the `Callback URL` and use `boohoo` for `Verify token`.
 
+One thing that wasn't mentioned in the link above is that in order to change the webhook url or delete it, you must first use the menu on the right to select "Add Product" and add "Webhooks". That will create "Webhooks" item in the right menu which you can use to manage your webhooks.
+
 Before your facebook app is published, only developers and testers can use it. You must go to your App's dashboard -> Roles -> Add developers.
 
 Unfortunately facebook does not support adding bots to group chats.
