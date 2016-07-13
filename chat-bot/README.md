@@ -51,3 +51,18 @@ eb deploy
 
 ## Development
 During development, instead of `npm run build`, you can use `npm run build -- --watch` to tell webpack to automatically rebuild when something changes.
+
+## Setting Up Webhooks
+### Spark
+The webhook target url is https://SOME_DOMAIN/webhooks/spark
+Use SparkWebHookManager to set up webhooks.
+
+### Messenger
+The webhook target url is https://SOME_DOMAIN/webhooks/messenger
+Messenger requires a HTTPS webhook.
+
+See the first 4 steps in [this page](https://developers.facebook.com/docs/messenger-platform/quickstart). In step 2 when setting up the webhook, select messages. Use the url above for the `Callback URL` and use `boohoo` for `Verify token`.
+
+Before your facebook app is published, only developers and testers can use it. You must go to your App's dashboard -> Roles -> Add developers.
+
+Unfortunately facebook does not support adding bots to group chats.
