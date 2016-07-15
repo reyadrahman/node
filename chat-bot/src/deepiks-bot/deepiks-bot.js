@@ -4,6 +4,7 @@ import { callbackToPromise, request } from '../lib/util.js';
 import URL from 'url';
 // const gm = require('gm').subClass({imageMagick: true});
 import gm from 'gm';
+import findSimilarImages from './similar-image-search.js';
 
 const { DB_TABLE_NAME, S3_BUCKET_NAME } = process.env;
 
@@ -119,7 +120,7 @@ export async function _findSimilarRoute(message, respondFn) {
     respondFn('Finding similar images, one moment please...');
     await logMessage(message);
 
-    const timestamp = new Date(message.created).getTime();
+    let timestamp = new Date(message.created).getTime();
     console.log('timestamp: ', timestamp);
 
     const qres = await aws.dynamoQuery({
@@ -128,7 +129,7 @@ export async function _findSimilarRoute(message, respondFn) {
         KeyConditionExpression: 'roomId = :roomId and #t < :t',
         ExpressionAttributeValues: {
             ':roomId': message.roomId,
-            ':t': timestamp,
+            ':t': timestamp++,
         },
         ExpressionAttributeNames: {
             '#t': 'timestamp',
@@ -143,7 +144,7 @@ export async function _findSimilarRoute(message, respondFn) {
         const responseText = 'No image was posted recently';
         await logMessage({
             roomId: message.roomId,
-            created: timestamp + 1, // must be unique
+            created: timestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
@@ -151,30 +152,26 @@ export async function _findSimilarRoute(message, respondFn) {
 
     const fileUrl = lastMessageWithFile.files[lastMessageWithFile.files.length-1];
 
-    let similarImagesRes;
-    try {
-        similarImagesRes = await request({
-            url: URL.parse(`http://52.205.71.12:9000/s3files?img=${fileUrl}`)
-        });
-    } catch (err) {
-        console.error(err);
-    }
-    if (!similarImagesRes || similarImagesRes.statusCode !== 200) {
+    let similarImagesResponse = await findSimilarImages(fileUrl);
+    if (!similarImagesResponse.successful) {
         const responseText = 'Unfortunately there was an error while trying to find similar images.';
         await logMessage({
             roomId: message.roomId,
-            created: timestamp + 1, // must be unique
+            created: timestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
     }
+    if (similarImagesResponse.fake) {
+        respondFn('(these results are fake, just for development purposes)');
+    }
 
-    const similarImages = JSON.parse(similarImagesRes.body).results;
+    const similarImages = similarImagesResponse.results;
     if (similarImages.length === 0) {
         const responseText = 'Did not find any similar images';
         await logMessage({
             roomId: message.roomId,
-            created: timestamp + 1, // must be unique
+            created: timestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
@@ -183,8 +180,7 @@ export async function _findSimilarRoute(message, respondFn) {
 
     await logMessage({
         roomId: message.roomId,
-        created: timestamp + 1, // must be unique
-        // text: '',
+        created: timestamp++, // must be unique
         files: similarImages,
     });
 

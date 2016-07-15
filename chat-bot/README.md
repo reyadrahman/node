@@ -1,7 +1,6 @@
 # Chat Bot
 ## Config
 ### .env file
-For example:
 ```
 NODE_ENV=production
 AWS_REGION=us-east-1
@@ -16,7 +15,10 @@ CISCOSPARK_BOT_EMAIL=
 MESSENGER_PAGE_ACCESS_TOKEN=
 MICROSOFT_APP_ID=
 MICROSOFT_APP_PASSWORD=
+FAKE_SIMILAR_IMAGES=
 ```
+
+Setting `FAKE_SIMILAR_IMAGES` to `1`, is useful for development. It avoids connecting to 'find similar images' server and returns fake images instead.
 
 ### .ebextensions
 Leave `.ebextensions/00.config` as is. Add your configs in separate files (e.g. `.ebextensions/01.config`). Everything in `.ebextensions/` is git-ignored except `00.config`.
