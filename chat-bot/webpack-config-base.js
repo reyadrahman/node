@@ -1,7 +1,7 @@
-require('./dotenv.js')();
+const envDefs = require('./dotenv.js')();
 const DEV = process.env.NODE_ENV === 'development';
 if (!DEV) {
-    process.env.NODE_ENV = 'production';
+    process.env.NODE_ENV = envDefs.NODE_ENV = 'production';
 }
 
 const path = require('path');
@@ -9,9 +9,8 @@ const webpack = require('webpack');
 const nodeExternals = require('webpack-node-externals');
 const _ = require('lodash');
 
-
 const config = {
-    entry: ['babel-polyfill', './index.js'],
+    entry: ['./src/preamble.js', 'babel-polyfill', './src/server.js'],
 
     output: {
         path: 'dist',
@@ -28,6 +27,8 @@ const config = {
 
     // devtool: DEV ? 'source-map' : false,
     plugins: [
+        // at runtime, read __dotEnvObj__ and update process.env
+        new webpack.DefinePlugin({ '__dotEnvObj__': JSON.stringify(envDefs) })
 
     ].concat(!DEV ? [
         // new webpack.optimize.DedupePlugin(),

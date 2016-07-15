@@ -13,8 +13,8 @@ module.exports = function dotenv(content) {
 
         return parsedObj
     } catch (e) {
-        console.error(e)
-        return false
+        //console.error(e)
+        return {};
     }
 }
 

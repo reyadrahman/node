@@ -7,11 +7,7 @@ import http from 'http';
 import routes from './server-routes.js';
 
 const PORT = process.env.PORT || 3000;
-
 const DEV = process.env.NODE_ENV === 'development';
-if (!DEV) {
-    process.env.NODE_ENV = 'production';
-}
 
 var app = express();
 
