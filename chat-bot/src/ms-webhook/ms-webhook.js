@@ -57,10 +57,12 @@ async function processMessage(session) {
     console.log('ms-webhook: got message: ', message);
     console.log('ms-webhook: attachments: ', atts);
 
+    const responses = [];
     await deepiksBot(message, m => {
-        respondFn(session, m);
+        responses.push(respondFn(session, m));
     });
 
+    await Promise.all(responses);
 };
 
 async function getBinary(requestFn, url) {
@@ -90,6 +92,37 @@ async function respondFn(session, message) {
         // }
 
         if (message.files) {
+
+            // const cards = message.files.map(url => {
+            //     return new builder.HeroCard(session)
+            //         .title("some title")
+            //         .text("some text")
+            //         .images([
+            //             builder.CardImage.create(session, url),
+            //         ]);
+            // });
+            // var msg = new builder.Message(session).attachments(cards);
+            // session.send(msg);
+
+            // const card = new builder.HeroCard(session)
+            //     .title("some title")
+            //     .text("some text")
+            //     .images(message.files.map(url => builder.CardImage.create(session, url)));
+            // var msg = new builder.Message(session).attachments(card);
+            // session.send(msg);
+
+            // const msg = new builder.Message(session)
+            //     .attachments([
+            //         new builder.ThumbnailCard(session)
+            //             .title("title")
+            //             .subtitle("subtitle")
+            //             .text("text")
+            //             .images(message.files.map(url => builder.CardImage.create(session, url)))
+            //     ]);
+            // session.send(msg);
+
+
+
             const m = new builder.Message(session)
                 .text(message.text)
                 .attachments(message.files.map(url => ({
