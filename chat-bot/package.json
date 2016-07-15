@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
-    "build": "npm run clean && webpack --config webpack-config-base.js --color --progress"
+    "build": "npm run clean && webpack --config webpack-config-base.js --color --progress",
+    "redeploy": "npm install && npm run build && eb deploy"
   },
   "author": "Sean Shirazi <sean@plumcake.engineer>",
   "dependencies": {
@@ -22,6 +23,7 @@
     "lodash": "^4.13.1",
     "morgan": "^1.7.0",
     "node-cloud-vision-api": "^0.2.0",
+    "node-wit": "^4.0.0",
     "request": "^2.72.0"
   },
   "devDependencies": {

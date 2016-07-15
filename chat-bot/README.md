@@ -54,7 +54,7 @@ npm run build
 eb init
 ```
 
-The last command (`eb init`) will let you create a new app or choose an old one.
+The last command (`eb init`) will let you create a new app or choose an old one (but it won't deploy)
 
 If you are creating a new app then you also need to create a new environment which will automatically deploy it as well:
 ```
@@ -71,11 +71,9 @@ This will open the url in your browser:
 eb open
 ```
 
-*NOTE: If you change anything and want to redeploy, don't forget to rebuild first:*
-
+After changing the source (or `git pull`) run the following to re-deploy:
 ```
-npm run build
-eb deploy
+npm run redeploy
 ```
 
 ## Setting Up Webhooks
@@ -106,4 +104,4 @@ Then go to [my bots](https://dev.botframework.com/bots?id=botframework) and unde
 Currently Skype and Slack are supported.
 
 ## Development
-During development, instead of `npm run build`, you can use `npm run build -- --watch` to tell webpack to automatically rebuild when something changes.
+During development, instead of `npm run build` or `npm run redeploy`, you can use `npm run build -- --watch` to tell webpack to automatically re-build when something changes. Then after each re-build, you can run `eb deploy` in another terminal to re-deploy.
