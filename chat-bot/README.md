@@ -54,9 +54,16 @@ npm run build
 eb init
 ```
 
-The last command (`eb init`) will let you create a new app or choose an old one. If you are creating a new app then you also need to create a new environment which will automatically deploy it as well:
+The last command (`eb init`) will let you create a new app or choose an old one.
+
+If you are creating a new app then you also need to create a new environment which will automatically deploy it as well:
 ```
 eb create
+```
+
+If you already have a default environment and just want to deploy, then run:
+```
+eb deploy
 ```
 
 This will open the url in your browser:
