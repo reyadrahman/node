@@ -1,6 +1,6 @@
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import builder from 'botbuilder';
-import { callbackToPromise, memoize0 } from '../lib/util.js';
+import { callbackToPromise, memoize0, request } from '../lib/util.js';
 
 const { MICROSOFT_APP_ID, MICROSOFT_APP_PASSWORD } = process.env;
 
@@ -29,21 +29,16 @@ async function processMessage(session) {
         atts.filter(a => a.contentType && a.contentType.startsWith('image')).map(
             a => memoize0(async function () {
                 console.log('ms-webhook: attachment download requested');
-                try {
-                    const r = await authRequest({
-                        url: a.contentUrl,
-                        encoding: null,
-                    });
-                    if (r.statusCode !== 200 || !r.body) {
-                        console.error('ms-webhook: attachment download failed with error: ', r.statusCode, r.statusMessage);
-                        return null;
-                    }
-                    console.log('ms-webhook: successfully downloaded attachment');
-                    return r.body;
-                } catch(err) {
-                    return null
-                    console.error('ms-webhook: attachment download failed: ', err);
+                let buffer;
+                // some services such as slack do not accept Authenticated requests
+                // for downloading attachments. But some services require it.
+                if (m.address.channelId === 'slack') {
+                    buffer = await getBinaryUnauth(a.contentUrl);
+                } else {
+                    buffer = await getBinaryAuth(a.contentUrl);
                 }
+                console.log('ms-webhook: successfully downloaded attachment');
+                return buffer;
             })
         );
 
@@ -67,6 +62,22 @@ async function processMessage(session) {
     });
 
 };
+
+async function getBinary(requestFn, url) {
+    const r = await requestFn({
+        url,
+        encoding: null,
+    });
+    if (r.statusCode !== 200 || !r.body) {
+//        console.error('ms-webhook: attachment download failed with error: ', r.statusCode, r.statusMessage);
+        throw new Error('ms-webhook: attachment download failed with error: ',
+                        r.statusCode, r.statusMessage, '\n\turl was: ', url)
+    }
+    return r.body;
+}
+
+const getBinaryAuth = url => getBinary(authRequest, url);
+const getBinaryUnauth = url => getBinary(request, url);
 
 async function respondFn(session, message) {
     console.log('respondFn: ', message);

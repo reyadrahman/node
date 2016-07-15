@@ -1,6 +1,6 @@
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import URL from 'url';
-import ciscospark from 'ciscospark/dist';
+import ciscospark from 'ciscospark';
 
 const { CISCOSPARK_BOT_EMAIL, CISCOSPARK_ACCESS_TOKEN } = process.env;
 
