@@ -1,6 +1,6 @@
 # Chat Bot
 ## Config
-### .env file
+### .env file or Environment variables in console
 ```
 NODE_ENV=production
 AWS_REGION=us-east-1
@@ -15,6 +15,7 @@ CISCOSPARK_BOT_EMAIL=
 MESSENGER_PAGE_ACCESS_TOKEN=
 MICROSOFT_APP_ID=
 MICROSOFT_APP_PASSWORD=
+MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
 FAKE_SIMILAR_IMAGES=
 ```
 
