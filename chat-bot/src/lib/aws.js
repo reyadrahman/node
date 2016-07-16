@@ -18,6 +18,7 @@ const dynamoDoc = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
 
 export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
+export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
 export const dynamoQuery = callbackToPromise(dynamoDoc.query, dynamoDoc);
 export const s3PutObject = callbackToPromise(s3.putObject, s3);
 export const s3Upload = callbackToPromise(s3.upload, s3);

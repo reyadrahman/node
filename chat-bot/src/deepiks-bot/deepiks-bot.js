@@ -1,17 +1,17 @@
 import detectImageLabels from './image-label-detection.js';
 import * as aws from '../lib/aws.js';
 import { callbackToPromise, request } from '../lib/util.js';
-import URL from 'url';
-// const gm = require('gm').subClass({imageMagick: true});
-import gm from 'gm';
 import findSimilarImages from './similar-image-search.js';
+import ai from './ai.js';
+import URL from 'url';
+import gm from 'gm';
 
-const { DB_TABLE_NAME, S3_BUCKET_NAME } = process.env;
+const { DB_LOG_TABLE_NAME, S3_BUCKET_NAME } = process.env;
 
 
 async function isMessageInDB(message) {
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_NAME,
+        TableName: DB_LOG_TABLE_NAME,
         // IndexName: 'Index',
         KeyConditionExpression: 'roomId = :roomId and #t = :t',
         ExpressionAttributeValues: {
@@ -33,7 +33,7 @@ async function logMessage(messageOrMessages) {
 
     await aws.dynamoBatchWrite({
         RequestItems: {
-            [DB_TABLE_NAME]: messages.map(x => ({
+            [DB_LOG_TABLE_NAME]: messages.map(x => ({
                 PutRequest: {
                     Item: {
                         roomId: x.roomId,
@@ -120,16 +120,16 @@ export async function _findSimilarRoute(message, respondFn) {
     respondFn('Finding similar images, one moment please...');
     await logMessage(message);
 
-    let timestamp = new Date(message.created).getTime();
-    console.log('timestamp: ', timestamp);
+    let nextTimestamp = new Date(message.created).getTime() + 1; //must be unique
+    console.log('nextTimestamp: ', nextTimestamp);
 
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_NAME,
+        TableName: DB_LOG_TABLE_NAME,
         // IndexName: 'Index',
         KeyConditionExpression: 'roomId = :roomId and #t < :t',
         ExpressionAttributeValues: {
             ':roomId': message.roomId,
-            ':t': timestamp++,
+            ':t': nextTimestamp++,
         },
         ExpressionAttributeNames: {
             '#t': 'timestamp',
@@ -144,7 +144,7 @@ export async function _findSimilarRoute(message, respondFn) {
         const responseText = 'No image was posted recently';
         await logMessage({
             roomId: message.roomId,
-            created: timestamp++, // must be unique
+            created: nextTimestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
@@ -157,7 +157,7 @@ export async function _findSimilarRoute(message, respondFn) {
         const responseText = 'Unfortunately there was an error while trying to find similar images.';
         await logMessage({
             roomId: message.roomId,
-            created: timestamp++, // must be unique
+            created: nextTimestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
@@ -171,7 +171,7 @@ export async function _findSimilarRoute(message, respondFn) {
         const responseText = 'Did not find any similar images';
         await logMessage({
             roomId: message.roomId,
-            created: timestamp++, // must be unique
+            created: nextTimestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
@@ -180,7 +180,7 @@ export async function _findSimilarRoute(message, respondFn) {
 
     await logMessage({
         roomId: message.roomId,
-        created: timestamp++, // must be unique
+        created: nextTimestamp++, // must be unique
         files: similarImages,
     });
 
@@ -190,24 +190,52 @@ export async function _findSimilarRoute(message, respondFn) {
     });
 }
 
+async function _aiRoute(message, respondFn) {
+    console.log('_aiRoute...');
+    await logMessage(message);
+    let nextTimestamp = new Date(message.created).getTime() + 1;
+
+    const responses = []
+    await ai(message, m => {
+        respondFn(m);
+        responses.push(m);
+    });
+    await logMessage(responses.map((m, i) => ({
+        roomId: message.roomId,
+        created: nextTimestamp++,
+        text: m,
+    })));
+}
+
 async function _textMessageRoute(message, respondFn) {
     await logMessage(message);
 }
 
 async function _route(message, respondFn) {
     console.log('route');
-    if (message.files && message.files.length > 0 ||
-        message.filesGetFn && message.filesGetFn.length > 0)
-    {
-        return await _fileRoute(message, respondFn);
+
+    if (message.text) {
+        return await _aiRoute(message, respondFn);
+    } else {
+        return;
     }
 
-    const command = message.text && message.text.toLowerCase().trim();
-    if (command && command.match(/^yes$/)) {
-        return await _findSimilarRoute(message, respondFn);
-    }
+    // TODO merge ai with fileRoute
 
-    return await _textMessageRoute(message, respondFn);
+    //
+    // if (message.files && message.files.length > 0 ||
+    //     message.filesGetFn && message.filesGetFn.length > 0)
+    // {
+    //     return await _fileRoute(message, respondFn);
+    // }
+    //
+    //
+    // const command = message.text && message.text.toLowerCase().trim();
+    // if (command && command.match(/^yes$/)) {
+    //     return await _findSimilarRoute(message, respondFn);
+    // }
+    //
+    // return await _textMessageRoute(message, respondFn);
 }
 
 

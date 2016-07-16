@@ -6,7 +6,8 @@ NODE_ENV=production
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-DB_TABLE_NAME=
+DB_LOG_TABLE_NAME=
+DB_WIT_TABLE_NAME=
 S3_BUCKET_NAME=
 GOOGLE_CLOUD_VISION_API_KEY=
 MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
@@ -105,3 +106,30 @@ Currently Skype and Slack are supported.
 
 ## Development
 During development, instead of `npm run build` or `npm run redeploy`, you can use `npm run build -- --watch` to tell webpack to automatically re-build when something changes. Then after each re-build, you can run `eb deploy` in another terminal to re-deploy.
+
+## TODO
+Webhooks must verify request signatures. For messenger, something like this could work:
+```
+function verifyRequestSignature(req, res, buf) {
+  var signature = req.headers["x-hub-signature"];
+
+  if (!signature) {
+    // For testing, let's log an error. In production, you should throw an
+    // error.
+    console.error("Couldn't validate the signature.");
+  } else {
+    var elements = signature.split('=');
+    var method = elements[0];
+    var signatureHash = elements[1];
+
+    var expectedHash = crypto.createHmac('sha1', FB_APP_SECRET)
+                        .update(buf)
+                        .digest('hex');
+
+    if (signatureHash != expectedHash) {
+      throw new Error("Couldn't validate the request signature.");
+    }
+  }
+}
+
+```

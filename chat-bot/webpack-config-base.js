@@ -1,4 +1,4 @@
-const envDefs = require('./dotenv.js')();
+const envDefs = require('dotenv').config({silent: true}) || {};
 const DEV = process.env.NODE_ENV === 'development';
 if (!DEV) {
     process.env.NODE_ENV = envDefs.NODE_ENV = 'production';
