@@ -27,7 +27,9 @@ Leave `.ebextensions/00.config` as is. Add your configs in separate files (e.g. 
 Environment variables defined in these config files will overwrite those in `.env` file.
 
 ## Chat Bot's DynamoDB Database
-The table must have the primary key `roomId` of type `String` and sort key `timestamp` of type `Number`.
+The table whose name is specified by `DB_LOG_TABLE_NAME` must have the primary key `roomId` of type `String` and sort key `timestamp` of type `Number`.
+
+The table whose name is specified by `DB_WIT_TABLE_NAME` must have the primary key `roomId` of type `String` and no sort key.
 
 ## S3 Bucket
 Add the following policy to your bucket (replace `XXXXX` with your bucket's name):
