@@ -6,15 +6,11 @@ NODE_ENV=production
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-DB_LOG_TABLE_NAME=
-DB_WIT_TABLE_NAME=
-S3_BUCKET_NAME=
+DB_TABLE_BOTS=bots
+DB_TABLE_CONVERSATIONS=conversations
+DB_TABLE_WIT_SESSIONS=witSessions
+S3_BUCKET_NAME=deepiksbotdev
 GOOGLE_CLOUD_VISION_API_KEY=
-CISCOSPARK_ACCESS_TOKEN=
-CISCOSPARK_BOT_EMAIL=
-MESSENGER_PAGE_ACCESS_TOKEN=
-MICROSOFT_APP_ID=
-MICROSOFT_APP_PASSWORD=
 MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
 WIT_ACCESS_TOKEN=
 FAKE_SIMILAR_IMAGES=
@@ -22,33 +18,33 @@ FAKE_SIMILAR_IMAGES=
 
 Setting `FAKE_SIMILAR_IMAGES` to `1`, is useful for development. It avoids connecting to 'find similar images' server and returns fake images instead.
 
+### .test.env file or environment variables in console
+This is the same as `.env` but only used for running the tests (see below). Since tests are only run locally, `.ebextensions/*` files have no effect here.
+
 ### .ebextensions
 Leave `.ebextensions/00.config` as is. Add your configs in separate files (e.g. `.ebextensions/01.config`). Everything in `.ebextensions/` is git-ignored except `00.config`.
 
 Environment variables defined in these config files will overwrite those in `.env` file.
 
-## Chat Bot's DynamoDB Database
-The table whose name is specified by `DB_LOG_TABLE_NAME` must have the primary key `roomId` of type `String` and sort key `timestamp` of type `Number`.
+### Resources (Database and S3)
+No need to configure the database or s3 buckets. They are created automatically if none exists.
 
-The table whose name is specified by `DB_WIT_TABLE_NAME` must have the primary key `roomId` of type `String` and no sort key.
+NOTE: Existing database tables and s3 buckets are never overwritten.
 
-## S3 Bucket
-Add the following policy to your bucket (replace `XXXXX` with your bucket's name):
+Temporarily, until we have a UI for registering publishers and creating bots, we can enter bots' information directly into the DynamoDB table named by `DB_TABLE_BOTS`. For example an item in the table would look like this:
 ```
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AddPerm",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetObject",
-			"Resource": "arn:aws:s3:::XXXXX/*"
-		}
-	]
+  "botId": "someBotId",
+  "publisherId": "somePublisherA",
+  "settings": {
+    "ciscosparkAccessToken": "XXX",
+    "ciscosparkBotEmail": "XXX",
+    "messengerPageAccessToken": "XXX",
+    "microsoftAppId": "XXX",
+    "microsoftAppPassword": "XXX"
+  }
 }
 ```
-Make sure the bucket has "View Permissions" for "Everyone" so that it can be accessed by external services for image keyword detection and find similar images.
 
 ## Build and Deploy
 You should have awsebcli installed and configured. See [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) and [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html?shortFooter=true).
@@ -82,11 +78,13 @@ npm run redeploy
 
 ## Setting Up Webhooks
 ### Spark
-The webhook target url is https://SOME_DOMAIN/webhooks/spark
+The webhook target url is https://SOME_DOMAIN/BOT_ID/webhooks/spark
+Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
 Use SparkWebHookManager to set up webhooks.
 
 ### Messenger
-The webhook target url is https://SOME_DOMAIN/webhooks/messenger
+The webhook target url is https://SOME_DOMAIN/BOT_ID/webhooks/messenger
+Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
 Messenger requires a HTTPS webhook.
 
 See the first 4 steps in [this page](https://developers.facebook.com/docs/messenger-platform/quickstart). In step 2 when setting up the webhook, select messages. Use the url above for the `Callback URL` and use `boohoo` for `Verify token`. Your server must be running before the webhook can be set up.
@@ -98,7 +96,8 @@ Before your facebook app is published, only developers and testers can use it. Y
 Unfortunately facebook does not support adding bots to group chats.
 
 ### Microsoft Bot Framework
-The webhook target url is https://SOME_DOMAIN/webhooks/ms
+The webhook target url is https://SOME_DOMAIN/BOT_ID/webhooks/ms
+Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
 Must be using the new Bot Framework V3.
 
 Create an app in your [Microsoft account](https://apps.dev.microsoft.com) and create a bot in [Microsoft Bot Framework](https://dev.botframework.com/bots?id=botframework)
@@ -108,7 +107,18 @@ Then go to [my bots](https://dev.botframework.com/bots?id=botframework) and unde
 Currently Skype and Slack are supported.
 
 ## Development
+### Tests
+Make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for real use.
+
+```
+npm test
+```
+
+### Faster workflow
 During development, instead of `npm run build` or `npm run redeploy`, you can use `npm run build -- --watch` to tell webpack to automatically re-build when something changes. Then after each re-build, you can run `eb deploy` in another terminal to re-deploy.
+
+In the same way you could use `npm test -- --watch` instead of `npm test`.
+
 
 ## TODO
 Webhooks must verify request signatures. For messenger, something like this could work:
