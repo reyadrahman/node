@@ -94,7 +94,7 @@ async function receivedMessage(entry: MessengerReqEntry,
                    .map(x => x.payload.url);
 
     const conversationId = entry.id + '_' + messagingEvent.sender.id;
-    const message = {
+    const message: WebhookMessage = {
         conversationId,
         creationTimestamp: new Date(messagingEvent.timestamp).getTime(),
         id: messagingEvent.message.mid,

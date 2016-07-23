@@ -6,9 +6,16 @@ import logger from 'morgan';
 import bodyParser from 'body-parser';
 import http from 'http';
 import routes from './server-routes.js';
+import { initResources } from './lib/aws.js';
 
 const PORT = process.env.PORT || 3000;
 const DEV = process.env.NODE_ENV === 'development';
+
+initResources().then(() => {
+    console.log('Successfully initialized resources');
+}).catch(err => {
+    console.error('Failed initializing resources: ', err);
+})
 
 var app = express();
 

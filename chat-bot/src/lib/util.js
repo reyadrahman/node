@@ -14,6 +14,14 @@ export function callbackToPromise(f: Function, context?: Object) {
 
 export const request = callbackToPromise(request_);
 
+export function timeout(time: number) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
+}
+
 // export function memoize0(f: Function) {
 //     let result;
 //     return function() {
@@ -23,6 +31,45 @@ export const request = callbackToPromise(request_);
 //         return result;
 //     }
 // }
+
+// Needed for mocha
+export function arity(length: number, fn: Function) {
+    switch (length) {
+        case 0 : return function () {
+            return fn.apply(this, arguments);
+        };
+        case 1 : return function (a:any) {
+            return fn.apply(this, arguments);
+        };
+        case 2 : return function (a:any, b:any) {
+            return fn.apply(this, arguments);
+        };
+        case 3 : return function (a:any, b:any, c:any) {
+            return fn.apply(this, arguments);
+        };
+        case 4 : return function (a:any, b:any, c:any, d:any) {
+            return fn.apply(this, arguments);
+        };
+        case 5 : return function (a:any, b:any, c:any, d:any, e:any) {
+            return fn.apply(this, arguments);
+        };
+        default : return function (a:any, b:any, c:any, d:any, e:any, f:any) {
+            return fn.apply(this, arguments);
+        };
+    }
+};
+
+export function catchPromise(fn: Function) {
+    return arity(fn.length, async function() {
+        try {
+            return await fn.apply(this, arguments);
+        } catch(error) {
+            console.error(error);
+            throw error;
+        }
+    });
+}
+
 
 export type TENV = {
     NODE_ENV: string,

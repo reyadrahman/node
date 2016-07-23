@@ -5,9 +5,9 @@
   "scripts": {
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
-    "build": "npm run clean && webpack --config webpack-config-base.js --color --progress",
+    "build": "npm run clean && webpack --config webpack-config-main.js --color --progress",
     "redeploy": "npm install && npm run build && eb deploy",
-    "test": "mocha-webpack --colors --webpack-config webpack-config-base.js \"src/**/*.test.js\""
+    "test": "mocha-webpack --colors --webpack-config webpack-config-test.js \"src/**/*.test.js\""
   },
   "author": "Sean Shirazi <sean@plumcake.engineer>",
   "dependencies": {

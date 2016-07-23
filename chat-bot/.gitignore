@@ -1,6 +1,7 @@
 .DS_Store
 .swp
 .env
+.test.env
 .tmp
 npm-debug.log
 node_modules
