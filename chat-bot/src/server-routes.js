@@ -1,3 +1,5 @@
+/* @flow */
+
 import express from 'express';
 import sparkWebhook from './spark-webhook/spark-webhook.js'
 import messengerWebhook from './messenger-webhook/messenger-webhook.js'
@@ -5,20 +7,27 @@ import msWebhook from './ms-webhook/ms-webhook.js'
 
 const routes = express.Router();
 
-routes.use('/webhooks/spark', (req, res, next) => {
-    sparkWebhook(req, res);
-});
+const serviceHandlers = {
+    spark: sparkWebhook,
+    messenger: messengerWebhook,
+    ms: msWebhook,
+};
 
-routes.use('/webhooks/messenger', (req, res, next) => {
-    messengerWebhook(req, res);
-});
+routes.use('/webhooks/:botId/:sourceService', (req, res, next) => {
+    const { sourceService } = req.params;
+    console.log('server-routes');
+    console.log('sourceService: ', sourceService);
+    console.log('botId: ', req.params.botId);
+    if (!serviceHandlers[sourceService]) {
+        return next();
+    }
 
-routes.use('/webhooks/ms', (req, res, next) => {
-    msWebhook(req, res);
+    serviceHandlers[sourceService](req, res);
 });
 
 routes.use('/', (req, res, next) => {
-    res.send('Nothing to see here...');
+    //res.status(404).send('Nothing to see here...');
+    next();
 });
 
 

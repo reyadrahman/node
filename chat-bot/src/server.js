@@ -1,3 +1,4 @@
+/* @flow */
 
 import express from 'express';
 import path from 'path';
@@ -33,7 +34,7 @@ if (DEV) {
     app.use((req, res, next) => {
         if (req.originalUrl !== '/reqs' && req.originalUrl !== '/favicon.ico') {
             allReqs.unshift({
-                time: new Date().toGMTString(),
+                time: new Date().toISOString(),
                 method: req.method,
                 url: req.originalUrl,
                 protocol: req.protocol,
@@ -58,9 +59,10 @@ app.use('/', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+    var err = new Error('Not Found');
+    // $FlowFixMe
+    err.status = 404;
+    next(err);
 });
 
 // error handlers
@@ -68,24 +70,27 @@ app.use(function(req, res, next) {
 // development error handler
 // will print stacktrace
 if (process.env.NODE_ENV !== 'production') {
-  app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    console.error('ERROR: ', err.message);
-    res.render('error', {
-      message: err.message,
-      error: err
+    app.use(function(err, req, res, next) {
+        res.status(err.status || 500);
+        // $FlowFixMe
+        console.error('ERROR: ', err.message);
+        res.render('error', {
+            // $FlowFixMe
+            message: err.message,
+            error: err
+        });
     });
-  });
 }
 
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
+    res.status(err.status || 500);
+    res.render('error', {
+        // $FlowFixMe
+        message: err.message,
+        error: {}
+    });
 });
 
 
@@ -100,6 +105,7 @@ app.set('port', PORT);
  * Create HTTP server.
  */
 
+// $FlowFixMe
 var server = http.createServer(app);
 
 /**

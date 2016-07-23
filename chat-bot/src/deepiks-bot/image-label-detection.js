@@ -1,6 +1,7 @@
-'use strict';
+/* @flow */
 
-import { request } from '../lib/util.js';
+
+import { request, ENV } from '../lib/util.js';
 import gVision from 'node-cloud-vision-api';
 import flatten from 'lodash/flatten';
 import uniqBy from 'lodash/uniqBy';
@@ -8,9 +9,11 @@ import uniqBy from 'lodash/uniqBy';
 const MS_LABEL_CONFIDENCE_THRESHOLD = 0.6;
 const G_LABEL_CONFIDENCE_THRESHOLD = 0.7;
 
-gVision.init({auth: process.env.GOOGLE_CLOUD_VISION_API_KEY});
+const { GOOGLE_CLOUD_VISION_API_KEY, MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY } = ENV;
 
-export default function(imageBuffer) {
+gVision.init({auth: GOOGLE_CLOUD_VISION_API_KEY});
+
+export default function(imageBuffer: Buffer) {
     const sources = [fromGoogle(imageBuffer), fromMicrosoft(imageBuffer)];
     return Promise.all(sources).then(combineLabelSources);
 }
@@ -51,7 +54,7 @@ function fromMicrosoft(imageBuffer) {
     return request({
         url: 'https://api.projectoxford.ai/vision/v1.0/tag',
         headers: {
-            'Ocp-Apim-Subscription-Key': process.env.MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY,
+            'Ocp-Apim-Subscription-Key': MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY,
             'Content-Type': 'application/octet-stream',
         },
         method: 'POST',

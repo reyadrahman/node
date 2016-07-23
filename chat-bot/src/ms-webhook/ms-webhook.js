@@ -1,56 +1,66 @@
+/* @flow */
+
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
+import { callbackToPromise, request, ENV } from '../lib/util.js';
+import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
+import * as aws from '../lib/aws.js';
 import builder from 'botbuilder';
-import { callbackToPromise, memoize0, request } from '../lib/util.js';
+import type { Request, Response } from 'express';
+import memoize from 'lodash/memoize';
 
-const { MICROSOFT_APP_ID, MICROSOFT_APP_PASSWORD } = process.env;
 
-const connector = new builder.ChatConnector({
-    appId: MICROSOFT_APP_ID,
-    appPassword: MICROSOFT_APP_PASSWORD
-});
+async function handle(req: Request, res: Response) {
+    const { botId } = req.params;
+    const botParams = await aws.getBotById(botId);
 
-const bot = new builder.UniversalBot(connector);
-const botListener = connector.listen();
-const authRequest = callbackToPromise(connector.authenticatedRequest, connector);
+    const connector = new builder.ChatConnector({
+        appId: botParams.settings.microsoftAppId,
+        appPassword: botParams.settings.microsoftAppPassword,
+    });
 
-bot.dialog('/', async function(session) {
-    try {
-        await processMessage(session);
-        console.log('Success');
-    } catch(err) {
-        console.log('Error: ', err || '-');
-    }
-});
+    const ubot = new builder.UniversalBot(connector);
+    const botListener = connector.listen();
+    const authRequest = callbackToPromise(connector.authenticatedRequest, connector);
 
-async function processMessage(session) {
+    ubot.dialog('/', async function(session) {
+        try {
+            await processMessage(session, authRequest, botParams);
+            console.log('Success');
+        } catch(err) {
+            console.log('Error: ', err || '-');
+        }
+    });
+
+    botListener(req, res);
+}
+
+async function processMessage(session, authRequest, botParams) {
     const m = session.message;
     const atts = m.attachments;
-    const filesGetFn = !atts ? null :
+    const filesGetFn = !atts ? undefined :
         atts.filter(a => a.contentType && a.contentType.startsWith('image')).map(
-            a => memoize0(async function () {
+            memoize(async function (a) {
                 console.log('ms-webhook: attachment download requested');
                 let buffer;
                 // some services such as slack do not accept Authenticated requests
                 // for downloading attachments. But some services require it.
                 if (m.address.channelId === 'slack') {
-                    buffer = await getBinaryUnauth(a.contentUrl);
+                    buffer = await getBinary(request, a.contentUrl);
                 } else {
-                    buffer = await getBinaryAuth(a.contentUrl);
+                    buffer = await getBinary(authRequest, a.contentUrl);
                 }
                 console.log('ms-webhook: successfully downloaded attachment');
                 return buffer;
             })
         );
 
-    const message = {
-        roomId: m.address.conversation.id,
-        created: m.timestamp,
+    const message: WebhookMessage = {
+        conversationId: m.address.conversation.id,
+        creationTimestamp: new Date(m.timestamp).getTime(),
         id: m.address.id,
-        personId: session.message.user.id,
-        //personEmail: ,
-        sourceBot: m.address.channelId + 'bot',
+        senderId: session.message.user.id,
+        source: m.address.channelId + 'bot',
         text: session.message.text,
-        files: null,
         filesGetFn,
     };
 
@@ -58,10 +68,11 @@ async function processMessage(session) {
     console.log('ms-webhook: attachments: ', atts);
 
     const responses = [];
-    await deepiksBot(message, m => {
+    await deepiksBot(message, botParams, m => {
         responses.push(respondFn(session, m));
     });
 
+    console.log('ms-webhook: await all responses');
     await Promise.all(responses);
 };
 
@@ -71,61 +82,23 @@ async function getBinary(requestFn, url) {
         encoding: null,
     });
     if (r.statusCode !== 200 || !r.body) {
-//        console.error('ms-webhook: attachment download failed with error: ', r.statusCode, r.statusMessage);
         throw new Error('ms-webhook: attachment download failed with error: ',
                         r.statusCode, r.statusMessage, '\n\turl was: ', url)
     }
     return r.body;
 }
 
-const getBinaryAuth = url => getBinary(authRequest, url);
-const getBinaryUnauth = url => getBinary(request, url);
-
-async function respondFn(session, message) {
+async function respondFn(session, message: ResponseMessage) {
     console.log('respondFn: ', message);
 
     if (typeof message === 'string' && message.trim()) {
         session.send(message);
     } else if (typeof message === 'object') {
-        // if (message.text) {
-        //     session.send(message.text);
-        // }
-
-        if (message.files) {
-
-            // const cards = message.files.map(url => {
-            //     return new builder.HeroCard(session)
-            //         .title("some title")
-            //         .text("some text")
-            //         .images([
-            //             builder.CardImage.create(session, url),
-            //         ]);
-            // });
-            // var msg = new builder.Message(session).attachments(cards);
-            // session.send(msg);
-
-            // const card = new builder.HeroCard(session)
-            //     .title("some title")
-            //     .text("some text")
-            //     .images(message.files.map(url => builder.CardImage.create(session, url)));
-            // var msg = new builder.Message(session).attachments(card);
-            // session.send(msg);
-
-            // const msg = new builder.Message(session)
-            //     .attachments([
-            //         new builder.ThumbnailCard(session)
-            //             .title("title")
-            //             .subtitle("subtitle")
-            //             .text("text")
-            //             .images(message.files.map(url => builder.CardImage.create(session, url)))
-            //     ]);
-            // session.send(msg);
-
-
-
+        const { files } = message;
+        if (files) {
             const m = new builder.Message(session)
                 .text(message.text)
-                .attachments(message.files.map(url => ({
+                .attachments(files.map(url => ({
                     contentType: 'image',
                     contentUrl: url,
                 })));
@@ -134,13 +107,23 @@ async function respondFn(session, message) {
     }
 }
 
-export default function(req, res) {
+export default function(req: Request, res: Response) {
+    console.log('ms-webhook: env: ', ENV);
     if (req.method !== 'POST') {
         res.send();
         return;
     }
 
-    botListener(req, res);
+    handle(req, res)
+        .then(() => {
+            console.log('Success');
+        })
+        .catch(err => {
+            console.log('Error: ', err || '-');
+            if (err instanceof Error) {
+                throw err;
+            }
+        });
 }
 
 /*

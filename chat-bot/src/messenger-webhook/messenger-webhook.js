@@ -1,9 +1,46 @@
+/* @flow */
+
 import { request } from '../lib/util.js';
+import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
+import * as aws from '../lib/aws.js';
+import type { BotParams } from '../lib/aws.js';
+import type { Request, Response } from 'express';
 
-const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
+//const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
 
-async function handle(req, res) {
+type MessengerReqBody = {
+    object: string,
+    entry: Array<MessengerReqEntry>,
+};
+type MessengerReqEntry = {
+    id: string,
+    time: number,
+    messaging: Array<MessengerReqMessaging>
+};
+type MessengerReqMessaging = {
+    sender: {
+        id: string,
+    },
+    recipient: {
+        id: string,
+    },
+    timestamp: number,
+    message: {
+        mid: string,
+        seq: number,
+        text?: string,
+        attachments?: Array<MessengerReqAttachment>
+    },
+};
+type MessengerReqAttachment = {
+    type: string,
+    payload: {
+        url: string,
+    },
+};
+
+async function handle(req: Request, res: Response) {
 
     // webhook verification
     if (req.method === 'GET' &&
@@ -15,22 +52,26 @@ async function handle(req, res) {
         return;
     }
 
-    if (req.method !== 'POST' || req.body.object !== 'page') {
+    const { botId } = req.params;
+    const botParams = await aws.getBotById(botId);
+    const body: MessengerReqBody = (req.body: any);
+
+    if (req.method !== 'POST' || body.object !== 'page') {
         res.send();
         return;
     }
 
     res.send();
-    await processMessages(req.body);
+    await processMessages(body, botParams);
 }
 
-async function processMessages(body) {
+async function processMessages(body: MessengerReqBody, botParams: BotParams) {
     for (let entry of body.entry) {
         for (let messagingEvent of entry.messaging) {
             if (messagingEvent.optin) {
                 // receivedAuthentication(messagingEvent);
             } else if (messagingEvent.message) {
-                await receivedMessage(entry, messagingEvent);
+                await receivedMessage(entry, messagingEvent, botParams);
             } else if (messagingEvent.delivery) {
                 // receivedDeliveryConfirmation(messagingEvent);
             } else if (messagingEvent.postback) {
@@ -43,20 +84,22 @@ async function processMessages(body) {
     }
 }
 
-async function receivedMessage(entry, messagingEvent) {
+async function receivedMessage(entry: MessengerReqEntry,
+                               messagingEvent: MessengerReqMessaging,
+                               botParams: BotParams)
+{
     const {attachments} = messagingEvent.message;
-    const files = !attachments ? null :
+    const files = !attachments ? undefined :
         attachments.filter(x => x.type === 'image')
                    .map(x => x.payload.url);
 
-    const roomId = entry.id + '_' + messagingEvent.sender.id;
+    const conversationId = entry.id + '_' + messagingEvent.sender.id;
     const message = {
-        roomId,
-        created: messagingEvent.timestamp,
+        conversationId,
+        creationTimestamp: new Date(messagingEvent.timestamp).getTime(),
         id: messagingEvent.message.mid,
-        personId: messagingEvent.sender.id,
-        //personEmail: ,
-        sourceBot: 'messengerbot',
+        senderId: messagingEvent.sender.id,
+        source: 'messengerbot',
         text: messagingEvent.message.text,
         files,
     };
@@ -64,18 +107,20 @@ async function receivedMessage(entry, messagingEvent) {
     console.log('messenger-webhook sending deepiks-bot: ', message);
 
     const responses = [];
-    await deepiksBot(message, m => {
-        responses.push(respondFn(roomId, messagingEvent.sender.id, m));
+    await deepiksBot(message, botParams, m => {
+        responses.push(respondFn(botParams, conversationId, messagingEvent.sender.id, m));
     });
 
     await Promise.all(responses);
 }
 
-async function respondFn(roomId, to, message) {
-    console.log('respondFn: ', roomId, to, message);
+async function respondFn(botParams: BotParams, conversationId: string,
+                         to: string, message: ResponseMessage)
+{
+    console.log('respondFn: ', conversationId, to, message);
 
     if (typeof message === 'string' && message.trim()) {
-        await sendMessage({
+        await sendMessage(botParams, {
             recipient: {
                 id: to,
             },
@@ -86,7 +131,7 @@ async function respondFn(roomId, to, message) {
 
     } else if (typeof message === 'object') {
         if (message.text) {
-            await sendMessage({
+            await sendMessage(botParams, {
                 recipient: {
                     id: to,
                 },
@@ -133,15 +178,15 @@ async function respondFn(roomId, to, message) {
             }
             console.log('**** to be sent elements', toBeSent.message.attachment.payload.elements);
             // await sendMessage(toBeSent);
-            setTimeout(() => sendMessage(toBeSent), 3000);
+            setTimeout(() => sendMessage(botParams, toBeSent), 3000);
         }
     }
 }
 
-async function sendMessage(messageData) {
+async function sendMessage(botParams: BotParams, messageData) {
     const r = await request({
         uri: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: { access_token: MESSENGER_PAGE_ACCESS_TOKEN },
+        qs: { access_token: botParams.settings.messengerPageAccessToken },
         method: 'POST',
         json: messageData
     });
@@ -152,7 +197,7 @@ async function sendMessage(messageData) {
 }
 
 
-export default function(req, res) {
+export default function(req: Request, res: Response) {
     console.log('messenger-webhook...');
     handle(req, res)
         .then(() => {

@@ -1,59 +1,70 @@
+/* @flow */
+
 import detectImageLabels from './image-label-detection.js';
 import * as aws from '../lib/aws.js';
-import { callbackToPromise, request } from '../lib/util.js';
+import type { BotParams } from '../lib/aws.js';
+import { callbackToPromise, request, ENV } from '../lib/util.js';
 import findSimilarImages from './similar-image-search.js';
 import ai from './ai.js';
+import type { DBMessage, WebhookMessage, ResponseMessage } from '../lib/types.js';
 import URL from 'url';
 import gm from 'gm';
 
-const { DB_LOG_TABLE_NAME, S3_BUCKET_NAME } = process.env;
+const { DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = ENV;
 
+type RespondFn = (response: ResponseMessage) => void;
+// type Bot = {
+//     bot: BotParams,
+// };
 
-async function isMessageInDB(message) {
+async function isMessageInDB(message: WebhookMessage) {
+    console.log('isMessageInDB');
     const qres = await aws.dynamoQuery({
-        TableName: DB_LOG_TABLE_NAME,
+        TableName: DB_TABLE_CONVERSATIONS,
         // IndexName: 'Index',
-        KeyConditionExpression: 'roomId = :roomId and #t = :t',
+        KeyConditionExpression: 'conversationId = :conversationId and creationTimestamp = :t',
         ExpressionAttributeValues: {
-            ':roomId': message.roomId,
-            ':t': new Date(message.created).getTime(),
-        },
-        ExpressionAttributeNames: {
-            '#t': 'timestamp',
+            ':conversationId': message.conversationId,
+            ':t': message.creationTimestamp,
         },
     });
     return qres.Count > 0;
 
 }
 
-async function logMessage(messageOrMessages) {
-    const messages = Array.isArray(messageOrMessages)
-        ? messageOrMessages : [messageOrMessages];
-    console.log('logMessage: ', messageOrMessages);
+async function logWebhookMessage(ms: WebhookMessage | Array<WebhookMessage>) {
+    await logMessage((ms: any));
+}
+async function logMessage(ms: DBMessage | Array<DBMessage>) {
+    const messages = Array.isArray(ms)
+        ? ms : [ms];
+    console.log('logMessage: ', ms);
 
     await aws.dynamoBatchWrite({
         RequestItems: {
-            [DB_LOG_TABLE_NAME]: messages.map(x => ({
-                PutRequest: {
-                    Item: {
-                        roomId: x.roomId,
-                        timestamp: new Date(x.created).getTime(),
-                        messageId: x.id,
-                        personId: x.personId,
-                        personEmail: x.personEmail,
-                        source: x.sourceBot,
-                        text: x.text || null,
-                        files: x.files,
-                    },
-                }
-            }))
+            [DB_TABLE_CONVERSATIONS]: messages.map(x => {
+                const item: DBMessage = {
+                    conversationId: x.conversationId,
+                    creationTimestamp: x.creationTimestamp,
+                    id: x.id,
+                    senderId: x.senderId,
+                    source: x.source,
+                    text: x.text === '' ? undefined : x.text,
+                    files: x.files,
+                };
+                return {
+                    PutRequest: {
+                        Item: item,
+                    }
+                };
+            })
         }
     });
     console.log('logMessage end');
 
 }
 
-async function uploadToS3(key, buffer) {
+async function uploadToS3(key: string, buffer: Buffer) {
     console.log('uploadToS3: key: ', key);
 
     const res = await aws.s3Upload({
@@ -65,29 +76,28 @@ async function uploadToS3(key, buffer) {
     return res.Location;
 }
 
-async function _fileRoute(message, respondFn) {
+async function _fileRoute(message: WebhookMessage, respondFn: RespondFn, botParams: BotParams) {
     respondFn('Detecting keywords, one moment please...');
     console.log('fileRoute');
 
-    let downloads;
+    let downloads: Array<Buffer> = [];
     if (message.files) {
         const rawDownloads = await Promise.all(message.files.map(
             file => request({
                 url: URL.parse(file),
-                // TODO use message.filesGetFn instead
-                headers: {
-                    Authorization: message.filesDownloadAuth || '',
-                },
                 encoding: null,
             })
         ));
         downloads = rawDownloads.map(x => x.body);
-    } else { // message.filesGetFn
+    } else if (message.filesGetFn) {
         downloads = await Promise.all(message.filesGetFn.map(f => f()));
     }
 
     const s3LocationsP = Promise.all(downloads.map((buffer, i) => {
-        return uploadToS3(`${message.roomId}/${message.id}_${i}`, buffer)
+        const cid = message.conversationId,
+              mid = message.id,
+              pid = botParams.publisherId;
+        return uploadToS3(`${pid}/${cid}/${mid}_${i}`, buffer)
     }));
 
     const labelSrcData = downloads[downloads.length-1];
@@ -102,13 +112,13 @@ async function _fileRoute(message, respondFn) {
     lastImageLabels.map(x => x.label).join(', ');
 
     console.log('responseText!: ', responseText);
-    console.log('created: ', new Date(message.created).getTime() + 1);
+    console.log('creationTimestamp: ', message.creationTimestamp + 1);
 
     await logMessage([
         Object.assign({}, message, { files: s3Files }),
         {
-            roomId: message.roomId,
-            created: new Date(message.created).getTime() + 1, // must be unique
+            conversationId: message.conversationId,
+            creationTimestamp: message.creationTimestamp + 1, // must be unique
             text: responseText,
         }
     ]);
@@ -116,19 +126,19 @@ async function _fileRoute(message, respondFn) {
     respondFn(responseText + '\n\nWould you like to see existing similar images?');
 }
 
-export async function _findSimilarRoute(message, respondFn) {
+export async function _findSimilarRoute(message: WebhookMessage, respondFn: RespondFn, botParams: BotParams) {
     respondFn('Finding similar images, one moment please...');
-    await logMessage(message);
+    await logWebhookMessage(message);
 
-    let nextTimestamp = new Date(message.created).getTime() + 1; //must be unique
+    let nextTimestamp = message.creationTimestamp + 1; //must be unique
     console.log('nextTimestamp: ', nextTimestamp);
 
     const qres = await aws.dynamoQuery({
-        TableName: DB_LOG_TABLE_NAME,
+        TableName: DB_TABLE_CONVERSATIONS,
         // IndexName: 'Index',
-        KeyConditionExpression: 'roomId = :roomId and #t < :t',
+        KeyConditionExpression: 'conversationId = :conversationId and #t < :t',
         ExpressionAttributeValues: {
-            ':roomId': message.roomId,
+            ':conversationId': message.conversationId,
             ':t': nextTimestamp++,
         },
         ExpressionAttributeNames: {
@@ -143,8 +153,8 @@ export async function _findSimilarRoute(message, respondFn) {
     if (!lastMessageWithFile) {
         const responseText = 'No image was posted recently';
         await logMessage({
-            roomId: message.roomId,
-            created: nextTimestamp++, // must be unique
+            conversationId: message.conversationId,
+            creationTimestamp: nextTimestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
@@ -156,8 +166,8 @@ export async function _findSimilarRoute(message, respondFn) {
     if (!similarImagesResponse.successful) {
         const responseText = 'Unfortunately there was an error while trying to find similar images.';
         await logMessage({
-            roomId: message.roomId,
-            created: nextTimestamp++, // must be unique
+            conversationId: message.conversationId,
+            creationTimestamp: nextTimestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
@@ -170,8 +180,8 @@ export async function _findSimilarRoute(message, respondFn) {
     if (similarImages.length === 0) {
         const responseText = 'Did not find any similar images';
         await logMessage({
-            roomId: message.roomId,
-            created: nextTimestamp++, // must be unique
+            conversationId: message.conversationId,
+            creationTimestamp: nextTimestamp++, // must be unique
             text: responseText,
         });
         return respondFn(responseText);
@@ -179,8 +189,8 @@ export async function _findSimilarRoute(message, respondFn) {
     }
 
     await logMessage({
-        roomId: message.roomId,
-        created: nextTimestamp++, // must be unique
+        conversationId: message.conversationId,
+        creationTimestamp: nextTimestamp++, // must be unique
         files: similarImages,
     });
 
@@ -190,10 +200,10 @@ export async function _findSimilarRoute(message, respondFn) {
     });
 }
 
-async function _aiRoute(message, respondFn) {
+async function _aiRoute(message: WebhookMessage, respondFn: RespondFn, botParams: BotParams) {
     console.log('_aiRoute...');
-    await logMessage(message);
-    let nextTimestamp = new Date(message.created).getTime() + 1;
+    await logWebhookMessage(message);
+    let nextTimestamp = message.creationTimestamp + 1;
 
     const responses = []
     await ai(message, m => {
@@ -201,21 +211,21 @@ async function _aiRoute(message, respondFn) {
         responses.push(m);
     });
     await logMessage(responses.map((m, i) => ({
-        roomId: message.roomId,
-        created: nextTimestamp++,
+        conversationId: message.conversationId,
+        creationTimestamp: nextTimestamp++, // must be unique
         text: m,
     })));
 }
 
-async function _textMessageRoute(message, respondFn) {
-    await logMessage(message);
+async function _textMessageRoute(message: WebhookMessage, respondFn: RespondFn) {
+    await logWebhookMessage(message);
 }
 
-async function _route(message, respondFn) {
+async function _route(message: WebhookMessage, respondFn: RespondFn, botParams: BotParams) {
     console.log('route');
 
     if (message.text) {
-        return await _aiRoute(message, respondFn);
+        return await _aiRoute(message, respondFn, botParams);
     } else {
         return;
     }
@@ -239,10 +249,14 @@ async function _route(message, respondFn) {
 }
 
 
-export default async function deepiksBot(message, respondFn) {
+export default async function deepiksBot(message: WebhookMessage,
+                                         botParams: BotParams,
+                                         respondFn: RespondFn)
+{
+    console.log('deepiksBot');
     if (await isMessageInDB(message)) {
         console.log(`Message is already in the db. It won't be processed.`)
         return;
     }
-    await _route(message, respondFn);
+    await _route(message, respondFn, botParams);
 };

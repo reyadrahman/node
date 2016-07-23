@@ -1,7 +1,23 @@
-import AWS from 'aws-sdk';
-import { callbackToPromise } from './util.js';
+/* @flow */
 
-const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } = process.env;
+import AWS from 'aws-sdk';
+import { callbackToPromise, ENV } from './util.js';
+
+const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+        DB_TABLE_BOTS } = ENV;
+
+
+export type BotParams = {
+    botId: string,
+    publisherId: string,
+    settings: {
+        ciscosparkAccessToken: string,
+        messengerPageAccessToken: string,
+        microsoftAppId: string,
+        microsoftAppPassword: string,
+        ciscosparkBotEmail: string,
+    },
+};
 
 AWS.config.update({
     apiVersions: {
@@ -22,3 +38,19 @@ export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
 export const dynamoQuery = callbackToPromise(dynamoDoc.query, dynamoDoc);
 export const s3PutObject = callbackToPromise(s3.putObject, s3);
 export const s3Upload = callbackToPromise(s3.upload, s3);
+
+
+export async function getBotById(botId: string): Promise<BotParams> {
+    const qres = await dynamoQuery({
+        TableName: DB_TABLE_BOTS,
+        KeyConditionExpression: 'botId = :botId',
+        ExpressionAttributeValues: {
+            ':botId': botId,
+        },
+    });
+    if (qres.Count === 0) {
+        throw new Error(`Cannot find bot with id ${botId}`);
+    }
+
+    return qres.Items[0];
+}

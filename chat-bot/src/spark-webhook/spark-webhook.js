@@ -1,37 +1,93 @@
+/* @flow */
+
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
+import { ENV, request } from '../lib/util.js';
+import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
+import * as aws from '../lib/aws.js';
 import URL from 'url';
 import ciscospark from 'ciscospark';
+import type { Request, Response } from 'express';
+import memoize from 'lodash/memoize';
 
-const { CISCOSPARK_BOT_EMAIL, CISCOSPARK_ACCESS_TOKEN } = process.env;
+type SparkReqBody = {
+    id: string,
+    name: string,
+    resource: string,
+    event: string,
+    data:{
+        id: string,
+        roomId: string,
+        personId: string,
+        personEmail: string,
+        created: string,
+    }
+}
 
+async function handle(req: Request) {
+    const body: SparkReqBody = (req.body: any);
 
-async function handle(req) {
-    console.log('CISCOSPARK_BOT_EMAIL: ', CISCOSPARK_BOT_EMAIL);
-    if (req.body.data.personEmail.toLowerCase() === CISCOSPARK_BOT_EMAIL.toLowerCase()) {
+    if (body.resource !== 'messages' || body.event !== 'created') {
+        return;
+    }
+    const { botId } = req.params;
+    const botParams = await aws.getBotById(botId);
+    const { settings: { ciscosparkBotEmail, ciscosparkAccessToken } } = botParams;
+    if (!ciscosparkBotEmail ||
+        body.data.personEmail.toLowerCase() === ciscosparkBotEmail.toLowerCase()) {
         return;
     }
 
-    const roomId = req.body.data.roomId;
+    const { roomId, id: messageId } = body.data;
 
-    const message = await ciscospark.messages.get(req.body.data.id);
+    const client = ciscospark.init({
+        credentials: {
+            access_token: ciscosparkAccessToken,
+        },
+    });
+
+    const rawMessage = await client.messages.get(messageId);
+    const filesGetFn = !rawMessage.files ? undefined : rawMessage.files.map(
+        memoize(async function (a) {
+            console.log('spark-webhook: attachment download requested');
+            const buffer = await request({
+                url: URL.parse(a),
+                encoding: null,
+                headers: {
+                    Authorization: `Bearer ${ciscosparkAccessToken}`,
+                },
+            });
+            console.log('spark-webhook: successfully downloaded attachment');
+            return buffer;
+        })
+    );
+    const message: WebhookMessage = {
+        conversationId: rawMessage.roomId,
+        creationTimestamp: new Date(rawMessage.created).getTime(),
+        id: rawMessage.id,
+        senderId: rawMessage.personId,
+        source: 'ciscosparkbot',
+        text: rawMessage.text,
+        filesGetFn,
+    };
+
     console.log('got message: ', message);
 
     const responses = [];
     await deepiksBot({
         ...message,
-        filesDownloadAuth: `Bearer ${CISCOSPARK_ACCESS_TOKEN}`,
+        //TODO filesDownloadAuth: `Bearer ${CISCOSPARK_ACCESS_TOKEN}`,
         sourceBot: 'ciscospark',
-    }, m => {
-        responses.push(respondFn(roomId, m))
+    }, botParams, m => {
+        responses.push(respondFn(client, roomId, m))
     });
 
     await Promise.all(responses);
 }
 
-async function respondFn(roomId, message) {
+async function respondFn(client, roomId, message) {
     console.log('respondFn sending message: ', message);
     if (typeof message === 'string' && message.trim()) {
-        await ciscospark.messages.create({
+        await client.messages.create({
             text: message,
             roomId,
         });
@@ -39,7 +95,7 @@ async function respondFn(roomId, message) {
         // ciscospark can only send 1 file at a time
         const toBeSent = [];
         if (message.text) {
-            await ciscospark.messages.create({
+            await client.messages.create({
                 text: message.text,
                 roomId,
             });
@@ -48,7 +104,7 @@ async function respondFn(roomId, message) {
             // TODO 1 at a time
             await Promise.all(
                 message.files.map(
-                    x => ciscospark.messages.create({
+                    x => client.messages.create({
                         text: '',
                         files: [x],
                         roomId,
@@ -60,7 +116,7 @@ async function respondFn(roomId, message) {
 };
 
 
-export default function(req, res) {
+export default function(req: Request, res: Response) {
     // respond immediately
     res.send();
 

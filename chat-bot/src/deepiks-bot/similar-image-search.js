@@ -1,9 +1,12 @@
+/* @flow */
+
 
 import { request } from '../lib/util.js';
+import URL from 'url';
 
 const { FAKE_SIMILAR_IMAGES } = process.env;
 
-export default async function findSimilarImages(url) {
+export default async function findSimilarImages(url: string) {
     if (Number(FAKE_SIMILAR_IMAGES) === 1) {
         return {
             fake: true,

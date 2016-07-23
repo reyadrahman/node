@@ -1,8 +1,12 @@
+/* @flow */
+
 import * as aws from '../lib/aws.js';
+import type { DBMessage, WebhookMessage, ResponseMessage } from '../lib/types.js';
+import { ENV } from '../lib/util.js';
 import { Wit, log as witLog } from 'node-wit';
 import uuid from 'node-uuid';
 
-const { WIT_ACCESS_TOKEN, DB_WIT_TABLE_NAME } = process.env;
+const { WIT_ACCESS_TOKEN, DB_TABLE_WIT_SESSIONS } = ENV;
 
 const firstEntityValue = (entities, entity) => {
     const val = entities && entities[entity] &&
@@ -52,15 +56,17 @@ function mkClient(respondFn) {
 }
 
 
-export default async function ai(message, respondFn) {
+export default async function ai(message: WebhookMessage,
+                                 respondFn: (text: string) => void)
+{
     // ===== get session id
 
     // uuid.v1();
     const qres = await aws.dynamoQuery({
-        TableName: DB_WIT_TABLE_NAME,
-        KeyConditionExpression: 'roomId = :roomId',
+        TableName: DB_TABLE_WIT_SESSIONS,
+        KeyConditionExpression: 'conversationId = :conversationId',
         ExpressionAttributeValues: {
-            ':roomId': message.roomId,
+            ':conversationId': message.conversationId,
         },
     });
     console.log('qres: ', qres);
@@ -88,9 +94,9 @@ export default async function ai(message, respondFn) {
     console.error('bbb');
 
     await aws.dynamoPut({
-        TableName: DB_WIT_TABLE_NAME,
+        TableName: DB_TABLE_WIT_SESSIONS,
         Item: {
-            roomId: message.roomId,
+            conversationId: message.conversationId,
             sessionId,
             context: JSON.stringify(newContext),
         },
