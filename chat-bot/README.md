@@ -78,12 +78,12 @@ npm run redeploy
 
 ## Setting Up Webhooks
 ### Spark
-The webhook target url is https://SOME_DOMAIN/BOT_ID/webhooks/spark
+The webhook target url is https://SOME_DOMAIN/webhooks/BOT_ID/spark
 Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
 Use SparkWebHookManager to set up webhooks.
 
 ### Messenger
-The webhook target url is https://SOME_DOMAIN/BOT_ID/webhooks/messenger
+The webhook target url is https://SOME_DOMAIN/webhooks/BOT_ID/messenger
 Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
 Messenger requires a HTTPS webhook.
 
@@ -96,7 +96,7 @@ Before your facebook app is published, only developers and testers can use it. Y
 Unfortunately facebook does not support adding bots to group chats.
 
 ### Microsoft Bot Framework
-The webhook target url is https://SOME_DOMAIN/BOT_ID/webhooks/ms
+The webhook target url is https://SOME_DOMAIN/webhooks/BOT_ID/ms
 Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
 Must be using the new Bot Framework V3.
 
