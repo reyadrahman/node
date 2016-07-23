@@ -41,7 +41,7 @@ function createSampleWebhookMessage(): WebhookMessage {
 
 
 describe('tests', function() {
-    this.timeout(15000);
+    this.timeout(60000);
 
     before(catchPromise(async function (done) {
         await aws.initResources();

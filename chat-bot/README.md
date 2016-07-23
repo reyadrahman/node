@@ -111,6 +111,7 @@ Currently Skype and Slack are supported.
 Make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for real use.
 
 ```
+npm install
 npm test
 ```
 
