@@ -4,7 +4,7 @@ import AWS from 'aws-sdk';
 import { callbackToPromise, ENV } from './util.js';
 
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
-        DB_TABLE_BOTS, DB_TABLE_CONVERSATIONS, DB_TABLE_WIT_SESSIONS,
+        DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
         S3_BUCKET_NAME } = ENV;
 
 
@@ -53,6 +53,7 @@ export const s3WaitFor = callbackToPromise(s3.waitFor, s3);
 export async function getBotById(botId: string): Promise<BotParams> {
     const qres = await dynamoQuery({
         TableName: DB_TABLE_BOTS,
+        IndexName: 'botIdIndex',
         KeyConditionExpression: 'botId = :botId',
         ExpressionAttributeValues: {
             ':botId': botId,
@@ -65,17 +66,25 @@ export async function getBotById(botId: string): Promise<BotParams> {
     return qres.Items[0];
 }
 
-export async function initResources() {
+export function composeKeys(a: string, b: string): string {
+    return `${a}__${b}`;
+}
+
+export function decomposeKeys(k: string): Array<string> {
+    return k.split('__');
+}
+
+export async function initResources(readCapacityUnits: number, writeCapacityUnits: number) {
 
     const promises = [
-        initResourcesDB(),
+        initResourcesDB(readCapacityUnits, writeCapacityUnits),
         initResourcesS3(),
     ];
 
     await Promise.all(promises);
 }
 
-async function initResourcesDB() {
+async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: number) {
     const { TableNames: tables } = await dynamoListTables({});
 
     const creatingTables = [];
@@ -84,16 +93,35 @@ async function initResourcesDB() {
         const tableParams = {
             TableName : DB_TABLE_BOTS,
             KeySchema: [
-                { AttributeName: 'botId', KeyType: 'HASH'},
-                // { AttributeName: "title", KeyType: "RANGE" }
+                { AttributeName: 'publisherId', KeyType: 'HASH'},
+                { AttributeName: 'botId', KeyType: 'RANGE'},
             ],
             AttributeDefinitions: [
+                { AttributeName: 'publisherId', AttributeType: 'S' },
                 { AttributeName: 'botId', AttributeType: 'S' },
             ],
             ProvisionedThroughput: {
-                ReadCapacityUnits: 1,
-                WriteCapacityUnits: 1,
-            }
+                ReadCapacityUnits: readCapacityUnits,
+                WriteCapacityUnits: writeCapacityUnits,
+            },
+            GlobalSecondaryIndexes: [
+                {
+                    IndexName: 'botIdIndex',
+                    KeySchema: [
+                        {
+                            AttributeName: 'botId',
+                            KeyType: 'HASH',
+                        },
+                    ],
+                    Projection: {
+                        ProjectionType: 'ALL',
+                    },
+                    ProvisionedThroughput: {
+                        ReadCapacityUnits: readCapacityUnits,
+                        WriteCapacityUnits: writeCapacityUnits,
+                    },
+                },
+            ],
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(DB_TABLE_BOTS);
@@ -103,38 +131,41 @@ async function initResourcesDB() {
         const tableParams = {
             TableName : DB_TABLE_CONVERSATIONS,
             KeySchema: [
-                { AttributeName: 'conversationId', KeyType: 'HASH'},
-                { AttributeName: 'creationTimestamp', KeyType: 'RANGE' }
+                { AttributeName: 'publisherId', KeyType: 'HASH'},
+                { AttributeName: 'conversationId', KeyType: 'RANGE'},
+                // { AttributeName: "title", KeyType: "RANGE" }
             ],
             AttributeDefinitions: [
+                { AttributeName: 'publisherId', AttributeType: 'S' },
                 { AttributeName: 'conversationId', AttributeType: 'S' },
-                { AttributeName: 'creationTimestamp', AttributeType: 'N' },
             ],
             ProvisionedThroughput: {
-                ReadCapacityUnits: 1,
-                WriteCapacityUnits: 1,
+                ReadCapacityUnits: readCapacityUnits,
+                WriteCapacityUnits: writeCapacityUnits,
             }
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(DB_TABLE_CONVERSATIONS);
     }
-    if (!tables.includes(DB_TABLE_WIT_SESSIONS)) {
-        console.log('creating table: ', DB_TABLE_WIT_SESSIONS);
+    if (!tables.includes(DB_TABLE_MESSAGES)) {
+        console.log('creating table: ', DB_TABLE_MESSAGES);
         const tableParams = {
-            TableName : DB_TABLE_WIT_SESSIONS,
+            TableName : DB_TABLE_MESSAGES,
             KeySchema: [
-                { AttributeName: 'conversationId', KeyType: 'HASH'},
+                { AttributeName: 'publisherId_conversationId', KeyType: 'HASH'},
+                { AttributeName: 'creationTimestamp', KeyType: 'RANGE' }
             ],
             AttributeDefinitions: [
-                { AttributeName: 'conversationId', AttributeType: 'S' },
+                { AttributeName: 'publisherId_conversationId', AttributeType: 'S' },
+                { AttributeName: 'creationTimestamp', AttributeType: 'N' },
             ],
             ProvisionedThroughput: {
-                ReadCapacityUnits: 1,
-                WriteCapacityUnits: 1,
+                ReadCapacityUnits: readCapacityUnits,
+                WriteCapacityUnits: writeCapacityUnits,
             }
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(DB_TABLE_WIT_SESSIONS);
+        creatingTables.push(DB_TABLE_MESSAGES);
     }
 
     await Promise.all(creatingTables.map(

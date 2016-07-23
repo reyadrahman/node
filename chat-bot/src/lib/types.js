@@ -1,7 +1,7 @@
 /* @flow */
 
 export type DBMessage = {
-    conversationId: string,
+    publisherId_conversationId: string,
     creationTimestamp: number,
     id?: string,
     senderId?: string,
@@ -11,7 +11,7 @@ export type DBMessage = {
 };
 
 export type WebhookMessage = {
-    conversationId: string,
+    publisherId_conversationId: string,
     creationTimestamp: number,
     id: string,
     senderId: string,

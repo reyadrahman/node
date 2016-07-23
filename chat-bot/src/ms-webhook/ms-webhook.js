@@ -55,7 +55,8 @@ async function processMessage(session, authRequest, botParams) {
         );
 
     const message: WebhookMessage = {
-        conversationId: m.address.conversation.id,
+        publisherId_conversationId:
+            aws.composeKeys(botParams.publisherId, m.address.conversation.id),
         creationTimestamp: new Date(m.timestamp).getTime(),
         id: m.address.id,
         senderId: session.message.user.id,
@@ -68,7 +69,7 @@ async function processMessage(session, authRequest, botParams) {
     console.log('ms-webhook: attachments: ', atts);
 
     const responses = [];
-    await deepiksBot(message, botParams, m => {
+    await deepiksBot(message, m => {
         responses.push(respondFn(session, m));
     });
 

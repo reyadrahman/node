@@ -2,7 +2,6 @@
 
 import detectImageLabels from './image-label-detection.js';
 import * as aws from '../lib/aws.js';
-import type { BotParams } from '../lib/aws.js';
 import { callbackToPromise, request, ENV } from '../lib/util.js';
 import findSimilarImages from './similar-image-search.js';
 import ai from './ai.js';
@@ -10,21 +9,18 @@ import type { DBMessage, WebhookMessage, ResponseMessage } from '../lib/types.js
 import URL from 'url';
 import gm from 'gm';
 
-const { DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = ENV;
+const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = ENV;
 
 type RespondFn = (response: ResponseMessage) => void;
-// type Bot = {
-//     bot: BotParams,
-// };
 
 export async function _isMessageInDB(message: WebhookMessage) {
     console.log('_isMessageInDB');
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_CONVERSATIONS,
+        TableName: DB_TABLE_MESSAGES,
         // IndexName: 'Index',
-        KeyConditionExpression: 'conversationId = :conversationId and creationTimestamp = :t',
+        KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp = :t',
         ExpressionAttributeValues: {
-            ':conversationId': message.conversationId,
+            ':pc': message.publisherId_conversationId,
             ':t': message.creationTimestamp,
         },
     });
@@ -37,13 +33,14 @@ export async function _logWebhookMessage(ms: WebhookMessage | Array<WebhookMessa
 export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
     const messages = Array.isArray(ms)
         ? ms : [ms];
-    console.log('_logMessage: ', ms);
+    console.log('_logMessage: ', messages);
+    if (messages.length === 0) return;
 
     await aws.dynamoBatchWrite({
         RequestItems: {
-            [DB_TABLE_CONVERSATIONS]: messages.map(x => {
+            [DB_TABLE_MESSAGES]: messages.map(x => {
                 const item: DBMessage = {
-                    conversationId: x.conversationId,
+                    publisherId_conversationId: x.publisherId_conversationId,
                     creationTimestamp: x.creationTimestamp,
                     id: x.id,
                     senderId: x.senderId,
@@ -75,7 +72,7 @@ export async function _uploadToS3(key: string, buffer: Buffer) {
     return res.Location;
 }
 
-async function _fileRoute(message: WebhookMessage, respondFn: RespondFn, botParams: BotParams) {
+async function _fileRoute(message: WebhookMessage, respondFn: RespondFn) {
     respondFn('Detecting keywords, one moment please...');
     console.log('fileRoute');
 
@@ -93,9 +90,8 @@ async function _fileRoute(message: WebhookMessage, respondFn: RespondFn, botPara
     }
 
     const s3LocationsP = Promise.all(downloads.map((buffer, i) => {
-        const cid = message.conversationId,
-              mid = message.id,
-              pid = botParams.publisherId;
+        const [pid, cid] = aws.decomposeKeys(message.publisherId_conversationId);
+        const mid = message.id;
         return _uploadToS3(`${pid}/${cid}/${mid}_${i}`, buffer)
     }));
 
@@ -116,7 +112,7 @@ async function _fileRoute(message: WebhookMessage, respondFn: RespondFn, botPara
     await _logMessage([
         Object.assign({}, message, { files: s3Files }),
         {
-            conversationId: message.conversationId,
+            publisherId_conversationId: message.publisherId_conversationId,
             creationTimestamp: message.creationTimestamp + 1, // must be unique
             text: responseText,
         }
@@ -125,7 +121,7 @@ async function _fileRoute(message: WebhookMessage, respondFn: RespondFn, botPara
     respondFn(responseText + '\n\nWould you like to see existing similar images?');
 }
 
-export async function _findSimilarRoute(message: WebhookMessage, respondFn: RespondFn, botParams: BotParams) {
+export async function _findSimilarRoute(message: WebhookMessage, respondFn: RespondFn) {
     respondFn('Finding similar images, one moment please...');
     await _logWebhookMessage(message);
 
@@ -133,11 +129,11 @@ export async function _findSimilarRoute(message: WebhookMessage, respondFn: Resp
     console.log('nextTimestamp: ', nextTimestamp);
 
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_CONVERSATIONS,
+        TableName: DB_TABLE_MESSAGES,
         // IndexName: 'Index',
-        KeyConditionExpression: 'conversationId = :conversationId and #t < :t',
+        KeyConditionExpression: 'publisherId_conversationId = :pc and #t < :t',
         ExpressionAttributeValues: {
-            ':conversationId': message.conversationId,
+            ':pc': message.publisherId_conversationId,
             ':t': nextTimestamp++,
         },
         ExpressionAttributeNames: {
@@ -152,7 +148,7 @@ export async function _findSimilarRoute(message: WebhookMessage, respondFn: Resp
     if (!lastMessageWithFile) {
         const responseText = 'No image was posted recently';
         await _logMessage({
-            conversationId: message.conversationId,
+            publisherId_conversationId: message.publisherId_conversationId,
             creationTimestamp: nextTimestamp++, // must be unique
             text: responseText,
         });
@@ -165,7 +161,7 @@ export async function _findSimilarRoute(message: WebhookMessage, respondFn: Resp
     if (!similarImagesResponse.successful) {
         const responseText = 'Unfortunately there was an error while trying to find similar images.';
         await _logMessage({
-            conversationId: message.conversationId,
+            publisherId_conversationId: message.publisherId_conversationId,
             creationTimestamp: nextTimestamp++, // must be unique
             text: responseText,
         });
@@ -179,7 +175,7 @@ export async function _findSimilarRoute(message: WebhookMessage, respondFn: Resp
     if (similarImages.length === 0) {
         const responseText = 'Did not find any similar images';
         await _logMessage({
-            conversationId: message.conversationId,
+            publisherId_conversationId: message.publisherId_conversationId,
             creationTimestamp: nextTimestamp++, // must be unique
             text: responseText,
         });
@@ -188,7 +184,7 @@ export async function _findSimilarRoute(message: WebhookMessage, respondFn: Resp
     }
 
     await _logMessage({
-        conversationId: message.conversationId,
+        publisherId_conversationId: message.publisherId_conversationId,
         creationTimestamp: nextTimestamp++, // must be unique
         files: similarImages,
     });
@@ -212,7 +208,7 @@ export async function _aiRoute(message: WebhookMessage,
         responses.push(m);
     });
     await _logMessage(responses.map((m, i) => ({
-        conversationId: message.conversationId,
+        publisherId_conversationId: message.publisherId_conversationId,
         creationTimestamp: nextTimestamp++, // must be unique
         text: m,
     })));
@@ -222,8 +218,32 @@ async function _textMessageRoute(message: WebhookMessage, respondFn: RespondFn) 
     await _logWebhookMessage(message);
 }
 
-async function _route(message: WebhookMessage, respondFn: RespondFn, botParams: BotParams) {
+export async function _updateConversationTable(message: WebhookMessage)
+{
+    console.log('_updateConversationTable');
+    const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
+    // TODO use DynamoDoc.update instead
+    try {
+        const res = await aws.dynamoPut({
+            TableName: DB_TABLE_CONVERSATIONS,
+            Item: {
+                publisherId,
+                conversationId,
+            },
+            ConditionExpression: 'attribute_not_exists(publisherId)',
+        });
+        console.log('_updateConversationTable res: ', res);
+    } catch(err) {
+        if (err.code !== 'ConditionalCheckFailedException') {
+            throw err;
+        }
+    }
+}
+
+export async function _route(message: WebhookMessage, respondFn: RespondFn) {
     console.log('route');
+
+    await _updateConversationTable(message);
 
     if (message.text) {
         return await _aiRoute(message, respondFn);
@@ -251,7 +271,6 @@ async function _route(message: WebhookMessage, respondFn: RespondFn, botParams: 
 
 
 export default async function deepiksBot(message: WebhookMessage,
-                                         botParams: BotParams,
                                          respondFn: RespondFn)
 {
     console.log('deepiksBot');
@@ -259,5 +278,5 @@ export default async function deepiksBot(message: WebhookMessage,
         console.log(`Message is already in the db. It won't be processed.`)
         return;
     }
-    await _route(message, respondFn, botParams);
+    await _route(message, respondFn);
 };

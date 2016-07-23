@@ -4,9 +4,8 @@ import * as aws from '../lib/aws.js';
 import type { DBMessage, WebhookMessage, ResponseMessage } from '../lib/types.js';
 import { ENV } from '../lib/util.js';
 import { Wit, log as witLog } from 'node-wit';
-import uuid from 'node-uuid';
 
-const { WIT_ACCESS_TOKEN, DB_TABLE_WIT_SESSIONS } = ENV;
+const { WIT_ACCESS_TOKEN, DB_TABLE_CONVERSATIONS } = ENV;
 
 const firstEntityValue = (entities, entity) => {
     const val = entities && entities[entity] &&
@@ -59,52 +58,38 @@ function mkClient(respondFn) {
 export default async function ai(message: WebhookMessage,
                                  respondFn: (text: string) => void)
 {
-    // ===== get session id
-
-    // uuid.v1();
+    const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_WIT_SESSIONS,
-        KeyConditionExpression: 'conversationId = :conversationId',
+        TableName: DB_TABLE_CONVERSATIONS,
+        KeyConditionExpression: 'publisherId = :publisherId and conversationId = :conversationId',
         ExpressionAttributeValues: {
-            ':conversationId': message.conversationId,
+            ':publisherId': publisherId,
+            ':conversationId': conversationId,
         },
     });
-    console.log('qres: ', qres);
+    console.log('ai: qres: ', qres);
 
-    let sessionId;
-    let context;
     if (qres.Count === 0) {
-        sessionId = uuid.v1();
-        context = {};
-        console.log('generated new sessionId: ', sessionId);
-    } else {
-        sessionId = qres.Items[0].sessionId;
-        context = JSON.parse(qres.Items[0].context);
-        console.log('got sesssionId: %s, context: ', sessionId, context);
+        console.error('ai: couldn\'t find the conversation');
+        return;
     }
 
-    console.error('0000');
+    const context = qres.Items[0].witContext || {};
+    console.log('ai: got context: ', context);
+
     // ===== talk to wit
     const client = mkClient(respondFn);
 
-    console.error('aaa');
     // let newContext = await client.runActions(sessionId, message.text, context);
     // TODO investigate: do we need context at all?
-    let newContext = await client.runActions(sessionId, message.text, {});
-    console.error('bbb');
+    let newContext = await client.runActions(conversationId, message.text, {});
 
     await aws.dynamoPut({
-        TableName: DB_TABLE_WIT_SESSIONS,
+        TableName: DB_TABLE_CONVERSATIONS,
         Item: {
-            conversationId: message.conversationId,
-            sessionId,
-            context: JSON.stringify(newContext),
+            publisherId,
+            conversationId,
+            witContext: newContext,
         },
     });
-
-
-
-    // TODO log to DB_LOG_TABLE_NAME here or in deepiks-bot?
-
-
 }

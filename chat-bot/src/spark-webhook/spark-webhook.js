@@ -61,7 +61,7 @@ async function handle(req: Request) {
         })
     );
     const message: WebhookMessage = {
-        conversationId: rawMessage.roomId,
+        publisherId_conversationId: aws.composeKeys(botParams.publisherId, rawMessage.roomId),
         creationTimestamp: new Date(rawMessage.created).getTime(),
         id: rawMessage.id,
         senderId: rawMessage.personId,
@@ -77,7 +77,7 @@ async function handle(req: Request) {
         ...message,
         //TODO filesDownloadAuth: `Bearer ${CISCOSPARK_ACCESS_TOKEN}`,
         sourceBot: 'ciscospark',
-    }, botParams, m => {
+    }, m => {
         responses.push(respondFn(client, roomId, m))
     });
 

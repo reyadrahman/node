@@ -95,7 +95,8 @@ async function receivedMessage(entry: MessengerReqEntry,
 
     const conversationId = entry.id + '_' + messagingEvent.sender.id;
     const message: WebhookMessage = {
-        conversationId,
+        publisherId_conversationId:
+            aws.composeKeys(botParams.publisherId, conversationId),
         creationTimestamp: new Date(messagingEvent.timestamp).getTime(),
         id: messagingEvent.message.mid,
         senderId: messagingEvent.sender.id,
@@ -107,7 +108,7 @@ async function receivedMessage(entry: MessengerReqEntry,
     console.log('messenger-webhook sending deepiks-bot: ', message);
 
     const responses = [];
-    await deepiksBot(message, botParams, m => {
+    await deepiksBot(message, m => {
         responses.push(respondFn(botParams, conversationId, messagingEvent.sender.id, m));
     });
 

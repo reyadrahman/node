@@ -11,12 +11,6 @@ import { initResources } from './lib/aws.js';
 const PORT = process.env.PORT || 3000;
 const DEV = process.env.NODE_ENV === 'development';
 
-initResources().then(() => {
-    console.log('Successfully initialized resources');
-}).catch(err => {
-    console.error('Failed initializing resources: ', err);
-})
-
 var app = express();
 
 // app.use((req, res, next) => {
@@ -119,9 +113,17 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(PORT);
-server.on('error', onError);
-server.on('listening', onListening);
+console.log('Initializing resources...');
+initResources(5, 5).then(() => {
+    console.log('Successfully initialized resources');
+    server.listen(PORT);
+    server.on('error', onError);
+    server.on('listening', onListening);
+
+}).catch(err => {
+    console.error('Failed initializing resources: ', err);
+})
+
 
 
 /**
