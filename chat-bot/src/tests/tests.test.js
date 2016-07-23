@@ -25,13 +25,13 @@ declare function beforeEach(f: Function): void;
 declare function afterEach(f: Function): void;
 
 
-const { DB_TABLE_CONVERSATIONS, DB_TABLE_BOTS, S3_BUCKET_NAME } = ENV;
+const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, DB_TABLE_BOTS, S3_BUCKET_NAME } = ENV;
 
 function createSampleWebhookMessage(): WebhookMessage {
     return {
-        conversationId: uuid.v1(),
+        publisherId_conversationId: aws.composeKeys(uuid.v1(), uuid.v1()),
         creationTimestamp: Date.now(),
-        id: 'someid',
+        id: uuid.v1(),
         senderId: 'somesenderid',
         source: 'somesource',
         text: 'sometext',
@@ -44,7 +44,7 @@ describe('tests', function() {
     this.timeout(60000);
 
     before(catchPromise(async function (done) {
-        await aws.initResources();
+        await aws.initResources(1, 1);
         done();
     }));
 
@@ -60,11 +60,11 @@ describe('tests', function() {
         await deepiksBot._logWebhookMessage(message);
 
         const qres = await aws.dynamoQuery({
-            TableName: DB_TABLE_CONVERSATIONS,
+            TableName: DB_TABLE_MESSAGES,
             // IndexName: 'Index',
-            KeyConditionExpression: 'conversationId = :conversationId and creationTimestamp = :t',
+            KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp = :t',
             ExpressionAttributeValues: {
-                ':conversationId': message.conversationId,
+                ':pc': message.publisherId_conversationId,
                 ':t': message.creationTimestamp,
             },
         });
@@ -96,8 +96,41 @@ describe('tests', function() {
         assert.equal(Buffer.compare(buf, res.Body), 0);
         done();
     }));
+    it('updates conversation table', catchPromise(async function(done) {
+        const message: WebhookMessage = createSampleWebhookMessage();
+        const witSession = {a: 1, b: 2};
+
+        const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
+
+        await deepiksBot._updateConversationTable(message);
+        await aws.dynamoPut({
+            TableName: DB_TABLE_CONVERSATIONS,
+            Item: {
+                publisherId,
+                conversationId,
+                witSession,
+            },
+        });
+
+        // must not overwrite
+        await deepiksBot._updateConversationTable(message);
+
+        const qres = await aws.dynamoQuery({
+            TableName: DB_TABLE_CONVERSATIONS,
+            KeyConditionExpression: 'publisherId = :publisherId and conversationId = :conversationId',
+            ExpressionAttributeValues: {
+                ':publisherId': publisherId,
+                ':conversationId': conversationId,
+            },
+        });
+        assert.equal(qres.Count, 1);
+        assert.deepEqual(qres.Items[0].witSession, witSession);
+        done();
+
+    }));
+
     it('routes to ai', catchPromise(async function(done) {
-        const message = {
+        const message: WebhookMessage = {
             ...createSampleWebhookMessage(),
             text: 'hi',
         };
@@ -105,33 +138,52 @@ describe('tests', function() {
         const respondFn = m => {
             responses.push(m);
         };
-        await deepiksBot._aiRoute(message, respondFn, {});
+        await deepiksBot._route(message, respondFn);
 
         await timeout(5000);
 
         assert.deepEqual(responses, ['Hi there']);
-        done();
 
         const res1 = await deepiksBot._isMessageInDB(message);
         assert.equal(res1, true);
 
         const res2 = await aws.dynamoQuery({
-            TableName: DB_TABLE_CONVERSATIONS,
+            TableName: DB_TABLE_MESSAGES,
             // IndexName: 'Index',
-            KeyConditionExpression: 'conversationId = :conversationId and creationTimestamp = :t',
+            KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp = :t',
             ExpressionAttributeValues: {
-                ':conversationId': message.conversationId,
+                ':pc': message.publisherId_conversationId,
                 ':t': message.creationTimestamp+1,
             },
         });
 
         assert.equal(res2.Count, 1);
         assert.deepEqual(res2.Items[0], {
-            conversationId: message.conversationId,
+            publisherId_conversationId: message.publisherId_conversationId,
             creationTimestamp: message.creationTimestamp+1, // must be unique
             text: 'Hi there',
         });
 
+        done();
+
     }));
+
+    it('can find a bot by id', catchPromise(async function(done) {
+        const expected = {
+            publisherId: uuid.v1(),
+            botId: uuid.v1(),
+            witSessionContext: {a:1, b:2},
+        }
+
+        await aws.dynamoPut({
+            TableName: DB_TABLE_BOTS,
+            Item: expected,
+        });
+
+        const bot = await aws.getBotById(expected.botId);
+        assert.deepEqual(bot, expected);
+        done();
+    }));
+
 
 });
