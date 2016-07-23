@@ -7,14 +7,16 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 DB_TABLE_BOTS=bots
-DB_TABLE_CONVERSATIONS=conversations
-DB_TABLE_MESSAGES=messages
-S3_BUCKET_NAME=deepiksbotdev
+DB_TABLE_CONVERSATIONS=
+DB_TABLE_MESSAGES=
+S3_BUCKET_NAME=
 GOOGLE_CLOUD_VISION_API_KEY=
 MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
 WIT_ACCESS_TOKEN=
 FAKE_SIMILAR_IMAGES=
 ```
+
+`NODE_ENV` can be `production` (default) or `development`.
 
 Setting `FAKE_SIMILAR_IMAGES` to `1`, is useful for development. It avoids connecting to 'find similar images' server and returns fake images instead.
 
