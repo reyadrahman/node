@@ -45,9 +45,10 @@ function createSampleWebhookMessage(): WebhookMessage {
 
 
 describe('tests', function() {
-    this.timeout(60000);
+    this.timeout(15000);
 
     before(catchPromise(async function (done) {
+        this.timeout(60000);
         await aws.initResources(1, 1);
         done();
     }));
@@ -236,7 +237,7 @@ describe('tests', function() {
             Item: expected,
         });
 
-        const bot = await aws.getBotById(expected.botId);
+        const bot = await aws.getBot(expected.publisherId, expected.botId);
         assert.deepEqual(bot, expected);
         done();
     }));
