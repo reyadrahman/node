@@ -51,12 +51,12 @@ export const s3WaitFor = callbackToPromise(s3.waitFor, s3);
 export const s3PutBucketPolicy = callbackToPromise(s3.putBucketPolicy, s3);
 
 
-export async function getBotById(botId: string): Promise<BotParams> {
+export async function getBot(publisherId: string, botId: string): Promise<BotParams> {
     const qres = await dynamoQuery({
         TableName: DB_TABLE_BOTS,
-        IndexName: 'botIdIndex',
-        KeyConditionExpression: 'botId = :botId',
+        KeyConditionExpression: 'publisherId = :publisherId and botId = :botId',
         ExpressionAttributeValues: {
+            ':publisherId': publisherId,
             ':botId': botId,
         },
     });
@@ -105,24 +105,6 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
                 ReadCapacityUnits: readCapacityUnits,
                 WriteCapacityUnits: writeCapacityUnits,
             },
-            GlobalSecondaryIndexes: [
-                {
-                    IndexName: 'botIdIndex',
-                    KeySchema: [
-                        {
-                            AttributeName: 'botId',
-                            KeyType: 'HASH',
-                        },
-                    ],
-                    Projection: {
-                        ProjectionType: 'ALL',
-                    },
-                    ProvisionedThroughput: {
-                        ReadCapacityUnits: readCapacityUnits,
-                        WriteCapacityUnits: writeCapacityUnits,
-                    },
-                },
-            ],
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(DB_TABLE_BOTS);

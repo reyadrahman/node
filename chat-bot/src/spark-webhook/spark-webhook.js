@@ -29,8 +29,8 @@ async function handle(req: Request) {
     if (body.resource !== 'messages' || body.event !== 'created') {
         return;
     }
-    const { botId } = req.params;
-    const botParams = await aws.getBotById(botId);
+    const { publisherId, botId } = req.params;
+    const botParams = await aws.getBot(publisherId, botId);
     const { settings: { ciscosparkBotEmail, ciscosparkAccessToken } } = botParams;
     if (!ciscosparkBotEmail ||
         body.data.personEmail.toLowerCase() === ciscosparkBotEmail.toLowerCase()) {

@@ -13,10 +13,11 @@ const serviceHandlers = {
     ms: msWebhook,
 };
 
-routes.use('/webhooks/:botId/:sourceService', (req, res, next) => {
+routes.use('/webhooks/:publisherId/:botId/:sourceService', (req, res, next) => {
     const { sourceService } = req.params;
     console.log('server-routes');
     console.log('sourceService: ', sourceService);
+    console.log('publisherId: ', req.params.publisherId);
     console.log('botId: ', req.params.botId);
     if (!serviceHandlers[sourceService]) {
         return next();

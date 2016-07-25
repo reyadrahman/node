@@ -37,7 +37,7 @@ Temporarily, until we have a UI for registering publishers and creating bots, we
 ```
 {
   "botId": "someBotId",
-  "publisherId": "somePublisherA",
+  "publisherId": "somePublisherId",
   "settings": {
     "ciscosparkAccessToken": "XXX",
     "ciscosparkBotEmail": "XXX",
@@ -80,13 +80,13 @@ npm run redeploy
 
 ## Setting Up Webhooks
 ### Spark
-The webhook target url is https://SOME_DOMAIN/webhooks/BOT_ID/spark
-Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
+The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/spark
+Where `SOME_DOMAIN`, `PUBLISHER_ID` and `BOT_ID` must be replaced with appropriate values.
 Use SparkWebHookManager to set up webhooks.
 
 ### Messenger
-The webhook target url is https://SOME_DOMAIN/webhooks/BOT_ID/messenger
-Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
+The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/messenger
+Where `SOME_DOMAIN`, `PUBLISHER_ID` and `BOT_ID` must be replaced with appropriate values.
 Messenger requires a HTTPS webhook.
 
 See the first 4 steps in [this page](https://developers.facebook.com/docs/messenger-platform/quickstart). In step 2 when setting up the webhook, select messages. Use the url above for the `Callback URL` and use `boohoo` for `Verify token`. Your server must be running before the webhook can be set up.
@@ -98,8 +98,8 @@ Before your facebook app is published, only developers and testers can use it. Y
 Unfortunately facebook does not support adding bots to group chats.
 
 ### Microsoft Bot Framework
-The webhook target url is https://SOME_DOMAIN/webhooks/BOT_ID/ms
-Where `SOME_DOMAIN` and `BOT_ID` must be replaced with appropriate values.
+The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/ms
+Where `SOME_DOMAIN`, `PUBLISHER_ID` and `BOT_ID` must be replaced with appropriate values.
 Must be using the new Bot Framework V3.
 
 Create an app in your [Microsoft account](https://apps.dev.microsoft.com) and create a bot in [Microsoft Bot Framework](https://dev.botframework.com/bots?id=botframework)

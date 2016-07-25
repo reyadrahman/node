@@ -52,8 +52,8 @@ async function handle(req: Request, res: Response) {
         return;
     }
 
-    const { botId } = req.params;
-    const botParams = await aws.getBotById(botId);
+    const { publisherId, botId } = req.params;
+    const botParams = await aws.getBot(publisherId, botId);
     const body: MessengerReqBody = (req.body: any);
 
     if (req.method !== 'POST' || body.object !== 'page') {

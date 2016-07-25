@@ -10,8 +10,8 @@ import memoize from 'lodash/memoize';
 
 
 async function handle(req: Request, res: Response) {
-    const { botId } = req.params;
-    const botParams = await aws.getBotById(botId);
+    const { publisherId, botId } = req.params;
+    const botParams = await aws.getBot(publisherId, botId);
 
     const connector = new builder.ChatConnector({
         appId: botParams.settings.microsoftAppId,
