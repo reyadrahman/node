@@ -24,6 +24,7 @@ async function handle(req: Request, res: Response) {
 
     ubot.dialog('/', async function(session) {
         try {
+            session.sendTyping();
             await processMessage(session, authRequest, botParams);
             console.log('Success');
         } catch(err) {
@@ -95,14 +96,20 @@ async function respondFn(session, message: ResponseMessage) {
     if (typeof message === 'string' && message.trim()) {
         session.send(message);
     } else if (typeof message === 'object') {
-        const { files } = message;
-        if (files) {
+        const { files, text } = message;
+        if (files && files.length || text) {
             const m = new builder.Message(session)
-                .text(message.text)
-                .attachments(files.map(url => ({
-                    contentType: 'image',
-                    contentUrl: url,
-                })));
+            if (text) {
+                m.text(message.text);
+            }
+            if (files) {
+                m.attachments(files.map(
+                    url => ({
+                        contentType: 'image',
+                        contentUrl: url,
+                    })
+                ));
+            }
             session.send(m);
         }
     }

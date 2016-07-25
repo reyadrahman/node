@@ -14,6 +14,7 @@ type RespondFn = (response: ResponseMessage) => void;
 type ProcessedAttachment = {
     urlP: Promise<string>,
     buffer: Buffer,
+    format: string,
 };
 
 export async function _isMessageInDB(message: WebhookMessage) {
@@ -66,6 +67,15 @@ export async function _uploadToS3(key: string, buffer: Buffer) {
     return res.Location;
 }
 
+async function _getFileFormat(buffer: Buffer): Promise<string> {
+    const gmImg = gm(buffer);
+    const formatFn = callbackToPromise(gmImg.format, gmImg);
+    try {
+        return (await formatFn()).toLowerCase();
+    } catch(err) { }
+    return '';
+}
+
 export async function _attachmentMiddleware(message: WebhookMessage):
     Promise<?Array<ProcessedAttachment>>
 {
@@ -87,16 +97,22 @@ export async function _attachmentMiddleware(message: WebhookMessage):
     } else if (message.filesGetFn) {
         downloads = await Promise.all(message.filesGetFn.map(f => f()));
     }
+    const formats = await Promise.all(downloads.map(_getFileFormat));
 
-    const s3LocationPs = downloads.map((buffer, i) => {
+    const s3LocationAndFormatPs = _.zip(downloads, formats).map(([buffer, format], i) => {
         const [pid, cid] = aws.decomposeKeys(message.publisherId_conversationId);
         const mid = message.id;
-        return _uploadToS3(`${pid}/${cid}/${mid}_${i}`, buffer);
+        const extension = format ? '.' + format : '';
+        return {
+            urlP: _uploadToS3(`${pid}/${cid}/${mid}_${i}${extension}`, buffer),
+            format,
+        };
     });
 
-    return _.zipWith(downloads, s3LocationPs, (buffer, urlP) => ({
+    return _.zipWith(downloads, s3LocationAndFormatPs, (buffer, { urlP, format }) => ({
         buffer,
         urlP,
+        format,
     }));
 }
 
@@ -236,7 +252,7 @@ export async function _route(rawMessage: WebhookMessage, respondFn: RespondFn) {
     // will await later
     const updateConversationP = _updateConversationTable(rawMessage);
 
-    // [{urlP, buffer}]
+    // [{urlP, buffer, format}]
     const attachments = await _attachmentMiddleware(rawMessage);
 
     const dbMessage = _webhookMessageToDBMessage(rawMessage);

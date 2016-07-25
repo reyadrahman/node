@@ -100,7 +100,7 @@ async function respondFn(client, roomId, message) {
                 roomId,
             });
         }
-        if (message.files) {
+        if (message.files && message.files.length) {
             // TODO 1 at a time
             await Promise.all(
                 message.files.map(

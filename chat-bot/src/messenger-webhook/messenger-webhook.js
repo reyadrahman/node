@@ -107,6 +107,10 @@ async function receivedMessage(entry: MessengerReqEntry,
 
     console.log('messenger-webhook sending deepiks-bot: ', message);
 
+    respondFn(botParams, conversationId, messagingEvent.sender.id, {
+        action: 'typingOn'
+    });
+
     const responses = [];
     await deepiksBot(message, m => {
         responses.push(respondFn(botParams, conversationId, messagingEvent.sender.id, m));
@@ -131,6 +135,15 @@ async function respondFn(botParams: BotParams, conversationId: string,
         });
 
     } else if (typeof message === 'object') {
+        if (message.action && message.action === 'typingOn') {
+            await sendMessage(botParams, {
+                recipient: {
+                    id: to,
+                },
+                sender_action: 'typing_on',
+            });
+        }
+
         if (message.text) {
             await sendMessage(botParams, {
                 recipient: {
@@ -143,7 +156,8 @@ async function respondFn(botParams: BotParams, conversationId: string,
 
         }
 
-        if (message.files) {
+        if (message.files && message.files.length) {
+            // TODO do this for only one image
             // for (let file of message.files) {
             //     await sendMessage({
             //         recipient: {
@@ -178,8 +192,8 @@ async function respondFn(botParams: BotParams, conversationId: string,
                 }
             }
             console.log('**** to be sent elements', toBeSent.message.attachment.payload.elements);
-            // await sendMessage(toBeSent);
-            setTimeout(() => sendMessage(botParams, toBeSent), 3000);
+            await sendMessage(botParams, toBeSent);
+            // setTimeout(() => sendMessage(botParams, toBeSent), 3000);
         }
     }
 }

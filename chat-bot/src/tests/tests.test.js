@@ -3,7 +3,7 @@
 import '../preamble.js';
 import 'babel-polyfill';
 
-import { arity, catchPromise, ENV, timeout, request } from '../lib/util.js';
+import { callbackToPromise, arity, catchPromise, ENV, timeout, request } from '../lib/util.js';
 import * as aws from '../lib/aws.js';
 import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
 import * as deepiksBot from '../deepiks-bot/deepiks-bot.js';
@@ -15,6 +15,7 @@ import uuid from 'node-uuid';
 import { Wit, log as witLog } from 'node-wit';
 import { inspect } from 'util';
 import URL from 'url';
+import gm from 'gm';
 // import http from 'http';
 // import https from 'https';
 // import { PassThrough } from 'stream';
@@ -147,6 +148,7 @@ describe('tests', function() {
         assert.equal(res.length, 1, `_attachmentMiddleware returned ${JSON.stringify(res)}`);
         assert(res[0].buffer instanceof Buffer,
             '_attachmentMiddleware did not return a buffer');
+        assert.equal(res[0].format, 'png', 'failed to add the file extension');
 
         const reqRes = await request({
             url: URL.parse(fileUrl),
@@ -241,6 +243,24 @@ describe('tests', function() {
         assert.deepEqual(bot, expected);
         done();
     }));
+
+    // it('graphicsmagick', catchPromise(async function(done) {
+        // const uri = 'https://s3.amazonaws.com/deepiksbotdev/somePublisherA/B1S3AJG77%3AT1S1LLNCT%3AC1S32B39S/211d18021ed045a7908741bf088705d0_0';
+        //
+        // const { body } = await request({
+        //     uri,
+        //     encoding: null,
+        // });
+        // const body = Buffer.from([0x01,0x02,0x03,0x04,0x05,0x06]);
+        // const gmImg = gm(body);
+        // const formatFn = callbackToPromise(gmImg.format, gmImg);
+        // const format = await formatFn();
+        // console.log('format: ', format);
+        //
+        //
+        // done();
+
+    // }));
 
     // it('wit.ai', catchPromise(async function(done) {
     //

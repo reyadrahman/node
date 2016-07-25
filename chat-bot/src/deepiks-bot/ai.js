@@ -5,6 +5,7 @@ import type { DBMessage, ResponseMessage } from '../lib/types.js';
 import { ENV, catchPromise, callbackToPromise, request } from '../lib/util.js';
 import detectImageLabels from './image-label-detection.js';
 import findSimilarImages from './similar-image-search.js';
+import applyEffect from './image-effects.js';
 import { Wit, log as witLog } from 'node-wit';
 import gm from 'gm';
 import _ from 'lodash';
@@ -111,6 +112,7 @@ export function _mkClient(respondFn: (m: ResponseMessage) => void) {
 
                 if (!context.imageAttachment) {
                     console.error('ERROR: no imageAttachment')
+                    return context;
                 }
 
                 let similarImagesResponse = await findSimilarImages(context.imageAttachment);
@@ -126,6 +128,30 @@ export function _mkClient(respondFn: (m: ResponseMessage) => void) {
 
                 respondFn({
                     files: similarImages,
+                });
+                return {};
+            },
+
+            applyEffect: async function({sessionId, context, text, entities}) {
+                console.log('actions.applyEffect...');
+                console.log(`Session ${sessionId} received ${text}`);
+                console.log(`The current context is ${JSON.stringify(context)}`);
+                console.log(`Wit extracted ${JSON.stringify(entities)}`);
+
+                if (!context.imageAttachment) {
+                    console.error('ERROR: no imageAttachment')
+                    return context;
+                }
+
+                let newImage;
+                try {
+                    newImage = await applyEffect(context.imageAttachment);
+                } catch(err) {
+                    respondFn('Sorry, I was unable to apply the effect.');
+                    return context;
+                }
+                respondFn({
+                    files: [newImage],
                 });
                 return {};
             },

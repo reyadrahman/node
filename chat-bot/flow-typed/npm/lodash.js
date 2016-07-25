@@ -8,7 +8,8 @@ declare module "lodash" {
   declare function extend<S, T>(o1: S, o2: T): S & T;
 
   declare function zip<S, T>(a1: S[], a2: T[]): Array<[S, T]>;
-  declare function zipWith<S, T, U>(a1: S[], a2: T[], fn: (a1: S, a2: T) => U): Array<U>;
+  declare function zipWith<S, T, R>(a1: S[], a2: T[], fn: (a1: S, a2: T) => R): Array<R>;
+  declare function zipWith<S, T, U, R>(a1: S[], a2: T[], a3: U[], fn: (a1: S, a2: T, a3: U) => R): Array<R>;
 
   declare function flatten<S>(a: S[][]): S[];
 

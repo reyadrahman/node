@@ -1,3 +1,6 @@
+
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 module.exports = function config(envDefs) {
     const DEV = process.env.NODE_ENV === 'development';
     if (!DEV) {
@@ -28,7 +31,10 @@ module.exports = function config(envDefs) {
         // devtool: DEV ? 'source-map' : false,
         plugins: [
             // at runtime, read __dotEnvObj__ and update process.env
-            new webpack.DefinePlugin({ '__dotEnvObj__': JSON.stringify(envDefs) })
+            new webpack.DefinePlugin({ '__dotEnvObj__': JSON.stringify(envDefs) }),
+            new CopyWebpackPlugin([
+                { from: 'assets', to: 'assets' },
+            ]),
 
         ].concat(!DEV ? [
             // new webpack.optimize.DedupePlugin(),
