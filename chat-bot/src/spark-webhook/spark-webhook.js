@@ -47,7 +47,7 @@ async function handle(req: Request) {
 
     const rawMessage = await client.messages.get(messageId);
     const filesGetFn = !rawMessage.files ? undefined : rawMessage.files.map(
-        memoize(async function (a) {
+        a => memoize(async function () {
             console.log('spark-webhook: attachment download requested');
             const buffer = await request({
                 url: URL.parse(a),
@@ -57,7 +57,7 @@ async function handle(req: Request) {
                 },
             });
             console.log('spark-webhook: successfully downloaded attachment');
-            return buffer;
+            return buffer.body;
         })
     );
     const message: WebhookMessage = {

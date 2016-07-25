@@ -39,7 +39,7 @@ async function processMessage(session, authRequest, botParams) {
     const atts = m.attachments;
     const filesGetFn = !atts ? undefined :
         atts.filter(a => a.contentType && a.contentType.startsWith('image')).map(
-            memoize(async function (a) {
+            a => memoize(async function () {
                 console.log('ms-webhook: attachment download requested');
                 let buffer;
                 // some services such as slack do not accept Authenticated requests

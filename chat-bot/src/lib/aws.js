@@ -48,6 +48,7 @@ export const s3Upload = callbackToPromise(s3.upload, s3);
 export const s3ListBuckets = callbackToPromise(s3.listBuckets, s3);
 export const s3CreateBucket = callbackToPromise(s3.createBucket, s3);
 export const s3WaitFor = callbackToPromise(s3.waitFor, s3);
+export const s3PutBucketPolicy = callbackToPromise(s3.putBucketPolicy, s3);
 
 
 export async function getBotById(botId: string): Promise<BotParams> {
@@ -174,6 +175,23 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
     console.log('All DynamoDB tables are ready');
 }
 
+function createS3Policy(bucketName) {
+    // TODO allow publishers to get/put/list their directories
+    return (
+`{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::${S3_BUCKET_NAME}/*"
+		}
+	]
+}`
+);
+}
+
 async function initResourcesS3() {
     const { Buckets: buckets } = await s3ListBuckets();
     const bucketNames = buckets.map(x => x.Name);
@@ -182,9 +200,11 @@ async function initResourcesS3() {
         console.log('creating s3 bucket ', S3_BUCKET_NAME);
         await s3CreateBucket({
             Bucket: S3_BUCKET_NAME,
-            // TODO add policy
-            // ACL: 'public-read',
         });
+        await s3PutBucketPolicy({
+            Bucket: S3_BUCKET_NAME,
+            Policy: createS3Policy(S3_BUCKET_NAME),
+        })
         await s3WaitFor('bucketExists', {
             Bucket: S3_BUCKET_NAME,
         });
