@@ -12,15 +12,12 @@ import URL from 'url';
 
 const { WIT_ACCESS_TOKEN, DB_TABLE_CONVERSATIONS } = ENV;
 
-export const _firstEntityValue = (entities: any, entity: any) => {
-    const val = entities && entities[entity] &&
-        Array.isArray(entities[entity]) &&
-        entities[entity].length > 0 &&
-        entities[entity][0].value;
-    if (!val) {
-        return null;
+export function _allEntityValues(entities: any, entity: any) {
+    if (!entities || !entities[entity] || !Array.isArray(entities[entity])) {
+        return [];
     }
-    return typeof val === 'object' ? val.value : val;
+    const es = entities[entity];
+    return es.map(x => typeof x.value === 'object' ? x.value.value : x.value);
 };
 
 export function _mkClient(respondFn: (m: ResponseMessage) => void) {
@@ -45,7 +42,8 @@ export function _mkClient(respondFn: (m: ResponseMessage) => void) {
                 console.log(`Session ${sessionId} received ${text}`);
                 console.log(`The current context is ${JSON.stringify(context)}`);
                 console.log(`Wit extracted ${JSON.stringify(entities)}`);
-                if (!_firstEntityValue(entities, 'location')){
+                const entityValues = _allEntityValues(entities, 'location');
+                if (entityValues.length === 0) {
                     return { missingLocation: true };
                 } else {
                     return { forecast: 'rainy as always' };
@@ -61,30 +59,45 @@ export function _mkClient(respondFn: (m: ResponseMessage) => void) {
                 console.log(`The current context is ${JSON.stringify(context)}`);
                 console.log(`Wit extracted ${JSON.stringify(entities)}`);
 
-                const url = _firstEntityValue(entities, 'url');
-                if (!url) {
+                const urls = _allEntityValues(entities, 'url');
+                if (urls.length === 0) {
                     console.log('ERROR: url missing');
                     return context;
                 }
 
-                const reqRes = await request({
-                    url: URL.parse(url),
-                    encoding: null,
-                })
-
-                if (!reqRes || reqRes.statusCode !== 200 || !(reqRes.body instanceof Buffer)) {
-                    console.error(`ERROR: coudn't download url: `, url);
-                    return {};
+                let selectedImage;
+                for (let i=0; i<urls.length && !selectedImage; i++) {
+                    const url = urls[i];
+                    try {
+                        const reqRes = await request({
+                            url: URL.parse(url),
+                            encoding: null,
+                        });
+                        if (reqRes && reqRes.statusCode === 200 && reqRes.body instanceof Buffer) {
+                            selectedImage = { url, buffer: reqRes.body };
+                        }
+                    } catch(err){ }
                 }
 
-                const gmStream = gm(reqRes.body).resize(800, 800, '>');
+                if (!selectedImage) {
+                    console.error(`ERROR: coudn't download urls: `, urls);
+                    if (urls.length === 1) {
+                        respondFn(`Could not download image located at "${urls[0]}"`);
+                    } else {
+                        respondFn(`Detected multiple urls, none of which is a valid image: ` +
+                                  urls.map(x=>`"${x}"`).join(', '));
+                    }
+                    return context;
+                }
+
+                const gmStream = gm(selectedImage.buffer).resize(800, 800, '>');
                 const smallImage = await callbackToPromise(gmStream.toBuffer, gmStream)('jpg');
                 const imageLabels = await detectImageLabels(smallImage);
 
                 const labelsStr = imageLabels.map(x => x.label).join(', ');
 
                 return {
-                    imageAttachment: url,
+                    imageAttachment: selectedImage.url,
                     imageLabels: labelsStr
                 }
 
