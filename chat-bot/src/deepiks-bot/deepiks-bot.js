@@ -56,6 +56,7 @@ export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
 }
 
 export async function _uploadToS3(key: string, buffer: Buffer) {
+    const startTime = Date.now();
     console.log('_uploadToS3: key: ', key);
 
     const res = await aws.s3Upload({
@@ -63,6 +64,7 @@ export async function _uploadToS3(key: string, buffer: Buffer) {
         Key: key,
         Body: buffer,
     });
+    console.log('PROFILING: s3 time upload: %s ms', Date.now() - startTime);
     console.log(`Location: ${res.Location}`)
     return res.Location;
 }
@@ -80,22 +82,27 @@ export async function _attachmentMiddleware(message: WebhookMessage):
     Promise<?Array<ProcessedAttachment>>
 {
     console.log('_attachmentMiddleware');
+    const { files, filesGetFn } = message;
 
-    if (!message.files && !message.filesGetFn) {
+    if (!files && !filesGetFn) {
         return null;
     }
 
     let downloads: Array<Buffer> = [];
-    if (message.files) {
-        const rawDownloads = await Promise.all(message.files.map(
+    if (files) {
+        const startTime = Date.now();
+        const rawDownloads = await Promise.all(files.map(
             file => request({
                 url: URL.parse(file),
                 encoding: null,
             })
         ));
+        console.log('PROFILING: raw download time: %s ms', Date.now() - startTime);
         downloads = rawDownloads.map(x => x.body);
-    } else if (message.filesGetFn) {
-        downloads = await Promise.all(message.filesGetFn.map(f => f()));
+    } else if (filesGetFn) {
+        const startTime = Date.now();
+        downloads = await Promise.all(filesGetFn.map(f => f()));
+        console.log('PROFILING: raw download time: %s ms', Date.now() - startTime);
     }
     const formats = await Promise.all(downloads.map(_getFileFormat));
 

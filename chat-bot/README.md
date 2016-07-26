@@ -10,15 +10,13 @@ DB_TABLE_BOTS=bots
 DB_TABLE_CONVERSATIONS=
 DB_TABLE_MESSAGES=
 S3_BUCKET_NAME=
-GOOGLE_CLOUD_VISION_API_KEY=
-MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
 WIT_ACCESS_TOKEN=
-FAKE_SIMILAR_IMAGES=
+AI_ACTIONS_SERVER=
 ```
 
 `NODE_ENV` can be `production` (default) or `development`.
 
-Setting `FAKE_SIMILAR_IMAGES` to `1`, is useful for development. It avoids connecting to 'find similar images' server and returns fake images instead.
+Check out "chat-bot-ai-actions"s `README.md` for instructions on how to get the `AI_ACTIONS_SERVER` value.
 
 ### .test.env file or environment variables in console
 This is the same as `.env` but only used for running the tests (see below). Since tests are only run locally, `.ebextensions/*` files have no effect here.

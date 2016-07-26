@@ -1,5 +1,5 @@
 {
-  "name": "ChatBot",
+  "name": "ChatBotAIActions",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -14,17 +14,15 @@
     "aws-sdk": "^2.4.0",
     "babel-polyfill": "^6.9.1",
     "body-parser": "^1.15.2",
-    "botbuilder": "^3.1.1",
-    "ciscospark": "0.6.4",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "fs-extra": "^0.30.0",
     "gm": "^1.22.0",
+    "grpc": "^1.0.0-pre1",
     "lodash": "^4.13.1",
     "morgan": "^1.7.0",
     "node-cloud-vision-api": "^0.2.0",
     "node-uuid": "^1.4.7",
-    "node-wit": "^4.0.0",
     "request": "^2.72.0"
   },
   "devDependencies": {

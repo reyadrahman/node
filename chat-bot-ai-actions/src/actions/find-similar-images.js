@@ -1,12 +1,43 @@
 /* @flow */
 
-
-import { request } from '../lib/util.js';
+import { request, allEntityValues, ENV } from '../lib/util.js';
+import type { ActionRequest, ActionResponse, ActionResponseMessage } from '../lib/types.js';
 import URL from 'url';
 
-const { FAKE_SIMILAR_IMAGES } = process.env;
+const { FAKE_SIMILAR_IMAGES } = ENV;
 
-export default async function findSimilarImages(url: string) {
+export default async function findSimilarImages(req: ActionRequest): ActionResponse {
+    const { sessionId, context, text, entities } = req;
+    console.log('actions.findSimilarImages...');
+    console.log(`Session ${sessionId} received ${text}`);
+    console.log(`The current context is ${JSON.stringify(context)}`);
+    console.log(`Wit extracted ${JSON.stringify(entities)}`);
+
+    if (!context.imageAttachment) {
+        console.error('ERROR: no imageAttachment')
+        return { context };
+    }
+
+    let similarImagesResponse = await _findSimilarImagesHelper(context.imageAttachment);
+    if (!similarImagesResponse.successful) {
+        return {
+            msg: 'Unfortunately there was an error while trying to find similar images.',
+            context: {},
+        }
+    }
+
+    const similarImages = similarImagesResponse.results;
+
+    const msg: ActionResponseMessage = {
+        files: similarImages,
+    };
+    if (similarImagesResponse.fake) {
+        msg.text = '(these results are fake, just for development purposes)';
+    }
+    return { msg, context: {} };
+};
+
+export async function _findSimilarImagesHelper(url: string) {
     if (Number(FAKE_SIMILAR_IMAGES) === 1) {
         return {
             fake: true,

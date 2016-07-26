@@ -22,15 +22,6 @@ export function timeout(time: number) {
     });
 }
 
-// export function memoize0(f: Function) {
-//     let result;
-//     return function() {
-//         if (!result) {
-//             result = f.call(this, arguments);
-//         }
-//         return result;
-//     }
-// }
 
 // Needed for mocha
 export function arity(length: number, fn: Function) {
@@ -70,6 +61,14 @@ export function catchPromise(fn: Function) {
     });
 }
 
+export function allEntityValues(entities: any, entity: any) {
+    if (!entities || !entities[entity] || !Array.isArray(entities[entity])) {
+        return [];
+    }
+    const es = entities[entity];
+    return es.map(x => typeof x.value === 'object' ? x.value.value : x.value);
+};
+
 
 export type TENV = {
     NODE_ENV: string,
@@ -80,8 +79,9 @@ export type TENV = {
     DB_TABLE_CONVERSATIONS: string,
     DB_TABLE_MESSAGES: string,
     S3_BUCKET_NAME: string,
-    WIT_ACCESS_TOKEN: string,
-    AI_ACTIONS_SERVER: string,
+    GOOGLE_CLOUD_VISION_API_KEY: string,
+    MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,
+    FAKE_SIMILAR_IMAGES: string,
 };
 
 export const ENV: TENV = process.env;

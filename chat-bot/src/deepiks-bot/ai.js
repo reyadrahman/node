@@ -3,27 +3,23 @@
 import * as aws from '../lib/aws.js';
 import type { DBMessage, ResponseMessage } from '../lib/types.js';
 import { ENV, catchPromise, callbackToPromise, request } from '../lib/util.js';
-import detectImageLabels from './image-label-detection.js';
-import findSimilarImages from './similar-image-search.js';
-import applyEffect from './image-effects.js';
 import { Wit, log as witLog } from 'node-wit';
-import gm from 'gm';
 import _ from 'lodash';
 import URL from 'url';
 
-const { WIT_ACCESS_TOKEN, DB_TABLE_CONVERSATIONS } = ENV;
+const { WIT_ACCESS_TOKEN, DB_TABLE_CONVERSATIONS, AI_ACTIONS_SERVER } = ENV;
 
-export function _allEntityValues(entities: any, entity: any) {
-    if (!entities || !entities[entity] || !Array.isArray(entities[entity])) {
-        return [];
-    }
-    const es = entities[entity];
-    return es.map(x => typeof x.value === 'object' ? x.value.value : x.value);
+type ActionRequest = {
+    sessionId: string,
+    context: Object,
+    text: string,
+    entities: Object,
 };
 
 export function _mkClient(respondFn: (m: ResponseMessage) => void) {
     return new Wit({
         accessToken: WIT_ACCESS_TOKEN,
+        respondFn,
         actions: {
             send: async function(request, response) {
                 console.log('actions.send: ', JSON.stringify(response));
@@ -37,129 +33,101 @@ export function _mkClient(respondFn: (m: ResponseMessage) => void) {
                 console.log('sessionId: ', sessionId);
                 return context;
             },
-
-            getForecast: async function({sessionId, context, text, entities}) {
-                console.log('actions.getForecast...');
-                console.log(`Session ${sessionId} received ${text}`);
-                console.log(`The current context is ${JSON.stringify(context)}`);
-                console.log(`Wit extracted ${JSON.stringify(entities)}`);
-                const entityValues = _allEntityValues(entities, 'location');
-                if (entityValues.length === 0) {
-                    return { missingLocation: true };
-                } else {
-                    return { forecast: 'rainy as always' };
-                }
-                // context.forecast = 'rainy as always';
-                // return context;
-                // return {forecast: 'rainy as always'};
-            },
-
-            gotAttachment: async function({sessionId, context, text, entities}) {
-                console.log('actions.gotAttachments...');
-                console.log(`Session ${sessionId} received ${text}`);
-                console.log(`The current context is ${JSON.stringify(context)}`);
-                console.log(`Wit extracted ${JSON.stringify(entities)}`);
-
-                const urls = _allEntityValues(entities, 'url');
-                if (urls.length === 0) {
-                    console.log('ERROR: url missing');
-                    return context;
-                }
-
-                let selectedImage;
-                for (let i=0; i<urls.length && !selectedImage; i++) {
-                    const url = urls[i];
-                    try {
-                        const reqRes = await request({
-                            url: URL.parse(url),
-                            encoding: null,
-                        });
-                        if (reqRes && reqRes.statusCode === 200 && reqRes.body instanceof Buffer) {
-                            selectedImage = { url, buffer: reqRes.body };
-                        }
-                    } catch(err){ }
-                }
-
-                if (!selectedImage) {
-                    console.error(`ERROR: coudn't download urls: `, urls);
-                    if (urls.length === 1) {
-                        respondFn(`Could not download image located at "${urls[0]}"`);
-                    } else {
-                        respondFn(`Detected multiple urls, none of which is a valid image: ` +
-                                  urls.map(x=>`"${x}"`).join(', '));
-                    }
-                    return context;
-                }
-
-                const gmStream = gm(selectedImage.buffer).resize(800, 800, '>');
-                const smallImage = await callbackToPromise(gmStream.toBuffer, gmStream)('jpg');
-                const imageLabels = await detectImageLabels(smallImage);
-
-                const labelsStr = imageLabels.map(x => x.label).join(', ');
-
-                return {
-                    imageAttachment: selectedImage.url,
-                    imageLabels: labelsStr
-                }
-
-            },
-
-            findSimilarImages: async function({sessionId, context, text, entities}) {
-                console.log('actions.findSimilarImages...');
-                console.log(`Session ${sessionId} received ${text}`);
-                console.log(`The current context is ${JSON.stringify(context)}`);
-                console.log(`Wit extracted ${JSON.stringify(entities)}`);
-
-                if (!context.imageAttachment) {
-                    console.error('ERROR: no imageAttachment')
-                    return context;
-                }
-
-                let similarImagesResponse = await findSimilarImages(context.imageAttachment);
-                if (!similarImagesResponse.successful) {
-                    respondFn('Unfortunately there was an error while trying to find similar images.');
-                    return {};
-                }
-                if (similarImagesResponse.fake) {
-                    respondFn('(these results are fake, just for development purposes)');
-                }
-
-                const similarImages = similarImagesResponse.results;
-
-                respondFn({
-                    files: similarImages,
-                });
-                return {};
-            },
-
-            applyEffect: async function({sessionId, context, text, entities}) {
-                console.log('actions.applyEffect...');
-                console.log(`Session ${sessionId} received ${text}`);
-                console.log(`The current context is ${JSON.stringify(context)}`);
-                console.log(`Wit extracted ${JSON.stringify(entities)}`);
-
-                if (!context.imageAttachment) {
-                    console.error('ERROR: no imageAttachment')
-                    return context;
-                }
-
-                let newImage;
-                try {
-                    newImage = await applyEffect(context.imageAttachment);
-                } catch(err) {
-                    respondFn('Sorry, I was unable to apply the effect.');
-                    return context;
-                }
-                respondFn({
-                    files: [newImage],
-                });
-                return {};
-            },
         },
         logger: new witLog.Logger(witLog.DEBUG)
     });
 }
 
+export async function _runActions(client: Wit, sessionId: string,
+                                  text: string, context: Object)
+{
+    let converseData = await client.converse(sessionId, text, context);
+    return await _runActionsHelper(client, sessionId, text, context, converseData, 5);
+}
+
+export async function _runActionsHelper(client: Wit, sessionId: string,
+                                        text: string, context: Object,
+                                        converseData: Object, level: number)
+{
+    if (level < 0) {
+        console.log('_runActionsHelper: Max steps reached, stopping.');
+        return context;
+    }
+
+    if (!converseData.type) {
+        throw new Error('Couldn\'t find type in Wit response');
+    }
+
+    console.log('Context: ', context);
+    console.log('Response type: ', converseData.type);
+
+    // backwards-cpmpatibility with API version 20160516
+    if (converseData.type === 'merge') {
+        converseData.type = 'action';
+        converseData.action = 'merge';
+    }
+
+    if (converseData.type === 'error') {
+        throw new Error('Oops, I don\'t know what to do.');
+    }
+
+    if (converseData.type === 'stop') {
+        return context;
+    }
+
+    const requestData = {
+        sessionId,
+        context,
+        text,
+        entities: converseData.entities,
+    };
+
+    if (converseData.type === 'msg') {
+        const response = {
+            text: converseData.msg,
+            quickreplies: converseData.quickreplies,
+        };
+        const invalidContext = await client.config.actions.send(requestData, response);
+        if (invalidContext) {
+            throw new Error('Cannot update context after \'send\' action');
+        }
+        const newConverseData = await client.converse(sessionId, null, context);
+        return await _runActionsHelper(client, sessionId, text, context,
+                                       newConverseData, level-1)
+
+    } else if (converseData.type === 'action') {
+        const action = converseData.action;
+        const { msg, context: newContext = {} } =
+            await _runExternalFunction(action, requestData) || {};
+        if (msg) {
+            client.config.respondFn(msg);
+        }
+        const newConverseData = await client.converse(sessionId, null, newContext);
+        return await _runActionsHelper(client, sessionId, text, newContext,
+                                       newConverseData, level-1)
+    } else {
+        console.error('unknown response type', converseData);
+        throw new Error('unknown response type ' + converseData.type);
+    }
+}
+
+export async function _runExternalFunction(action: string, requestData: ActionRequest) {
+    const res = await request({
+        uri: AI_ACTIONS_SERVER,
+        method: 'POST',
+        json: true,
+        body: {
+            ...requestData,
+            action,
+        },
+    });
+    if (res.statusCode === 200) {
+        console.log('_runExternalFunction returned: ', res.body);
+        return res.body;
+    } else {
+        throw new Error('AI_ACTIONS_SERVER at ' + AI_ACTIONS_SERVER + ' returned: ', res);
+    }
+}
 
 export async function ai(message: DBMessage,
                          respondFn: (m: ResponseMessage) => void)
@@ -191,8 +159,11 @@ export async function ai(message: DBMessage,
     if (message.files) {
         text = `${text || ''} ${_.last(message.files)}`
     }
+    if (!text) {
+        return;
+    }
     const client = _mkClient(respondFn);
-    const newContext = await client.runActions(conversationId, text, context);
+    const newContext = await _runActions(client, conversationId, text, context);
 
     await aws.dynamoPut({
         TableName: DB_TABLE_CONVERSATIONS,
