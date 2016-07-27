@@ -1,7 +1,7 @@
 /* @flow */
 
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import { callbackToPromise, request, ENV } from '../lib/util.js';
+import { callbackToPromise, request, ENV, CONSTANTS } from '../lib/util.js';
 import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
 import * as aws from '../lib/aws.js';
 import builder from 'botbuilder';
@@ -24,7 +24,6 @@ async function handle(req: Request, res: Response) {
 
     ubot.dialog('/', async function(session) {
         try {
-            session.sendTyping();
             await processMessage(session, authRequest, botParams);
             console.log('Success');
         } catch(err) {
@@ -70,6 +69,11 @@ async function processMessage(session, authRequest, botParams) {
     console.log('ms-webhook: attachments: ', atts);
 
     const responses = [];
+    setTimeout(() => {
+        if (responses.length === 0) {
+            session.sendTyping();
+        }
+    }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
     await deepiksBot(message, m => {
         responses.push(respondFn(session, m));
     });

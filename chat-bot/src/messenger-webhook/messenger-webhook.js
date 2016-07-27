@@ -1,6 +1,6 @@
 /* @flow */
 
-import { request } from '../lib/util.js';
+import { request, CONSTANTS } from '../lib/util.js';
 import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../lib/aws.js';
@@ -107,14 +107,21 @@ async function receivedMessage(entry: MessengerReqEntry,
 
     console.log('messenger-webhook sending deepiks-bot: ', message);
 
-    respondFn(botParams, conversationId, messagingEvent.sender.id, {
-        action: 'typingOn'
-    });
-
     const responses = [];
+    setTimeout(() => {
+        if (responses.length === 0) {
+            respondFn(botParams, conversationId, messagingEvent.sender.id, {
+                action: 'typingOn'
+            });
+        }
+    }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
+
     await deepiksBot(message, m => {
         responses.push(respondFn(botParams, conversationId, messagingEvent.sender.id, m));
     });
+
+
+
 
     await Promise.all(responses);
 }

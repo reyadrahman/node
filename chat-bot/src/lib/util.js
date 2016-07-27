@@ -99,4 +99,5 @@ export const ENV: TENV = process.env;
 
 export const CONSTANTS = {
     AI_ACTION_CACHE_VALID_TIME_S: 10,
+    TYPING_INDICATOR_DELAY_S: 2,
 };
