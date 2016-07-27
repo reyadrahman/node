@@ -2,31 +2,13 @@
 
 import AWS from 'aws-sdk';
 import { callbackToPromise, ENV, CONSTANTS } from './util.js';
+import type { BotParams, AIActionInfo } from './types.js';
 import _ from 'lodash';
 
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
         DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
         DB_TABLE_AI_ACTIONS, S3_BUCKET_NAME } = ENV;
 
-
-export type BotParams = {
-    botId: string,
-    publisherId: string,
-    settings: {
-        ciscosparkAccessToken: string,
-        messengerPageAccessToken: string,
-        microsoftAppId: string,
-        microsoftAppPassword: string,
-        ciscosparkBotEmail: string,
-    },
-};
-
-export type AIActionInfo =
-    {
-        action: string,
-        url?: string,
-        lambda?: string,
-    };
 
 AWS.config.update({
     apiVersions: {

@@ -3,7 +3,7 @@
 import * as aws from '../lib/aws.js';
 import { callbackToPromise, request, ENV } from '../lib/util.js';
 import ai from './ai.js';
-import type { DBMessage, WebhookMessage, ResponseMessage } from '../lib/types.js';
+import type { DBMessage, WebhookMessage, ResponseMessage, BotParams } from '../lib/types.js';
 import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
@@ -107,11 +107,13 @@ export async function _attachmentMiddleware(message: WebhookMessage):
     const formats = await Promise.all(downloads.map(_getFileFormat));
 
     const s3LocationAndFormatPs = _.zip(downloads, formats).map(([buffer, format], i) => {
-        const [pid, cid] = aws.decomposeKeys(message.publisherId_conversationId);
+        const [pid] = aws.decomposeKeys(message.publisherId_conversationId);
+        // const bid = botParams.botId;
         const mid = message.id;
+        const sid = message.senderId;
         const extension = format ? '.' + format : '';
         return {
-            urlP: _uploadToS3(`${pid}/${cid}/${mid}_${i}${extension}`, buffer),
+            urlP: _uploadToS3(`${pid}/${sid}/${mid}_${i}${extension}`, buffer),
             format,
         };
     });
@@ -260,7 +262,10 @@ export async function _updateConversationTable(message: WebhookMessage)
     }
 }
 
-export async function _route(rawMessage: WebhookMessage, respondFn: RespondFn) {
+export async function _route(rawMessage: WebhookMessage,
+                             botParams: BotParams,
+                             respondFn: RespondFn)
+{
     console.log('route');
 
     // will await later
@@ -294,6 +299,7 @@ export async function _route(rawMessage: WebhookMessage, respondFn: RespondFn) {
 
 
 export default async function deepiksBot(message: WebhookMessage,
+                                         botParams: BotParams,
                                          respondFn: RespondFn)
 {
     console.log('deepiksBot');
@@ -301,5 +307,5 @@ export default async function deepiksBot(message: WebhookMessage,
         console.log(`Message is already in the db. It won't be processed.`)
         return;
     }
-    await _route(message, respondFn);
+    await _route(message, botParams, respondFn);
 };

@@ -1,10 +1,9 @@
 /* @flow */
 
 import { request, CONSTANTS } from '../lib/util.js';
-import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
+import type { WebhookMessage, ResponseMessage, BotParams } from '../lib/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../lib/aws.js';
-import type { BotParams } from '../lib/aws.js';
 import type { Request, Response } from 'express';
 
 //const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
@@ -116,7 +115,7 @@ async function receivedMessage(entry: MessengerReqEntry,
         }
     }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
 
-    await deepiksBot(message, m => {
+    await deepiksBot(message, botParams, m => {
         responses.push(respondFn(botParams, conversationId, messagingEvent.sender.id, m));
     });
 

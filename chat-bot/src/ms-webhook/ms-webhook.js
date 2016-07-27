@@ -74,7 +74,7 @@ async function processMessage(session, authRequest, botParams) {
             session.sendTyping();
         }
     }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
-    await deepiksBot(message, m => {
+    await deepiksBot(message, botParams, m => {
         responses.push(respondFn(session, m));
     });
 

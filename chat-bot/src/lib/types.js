@@ -43,3 +43,22 @@ export type ActionResponse = {
     msg?: ActionResponseMessage,
     context: Object,
 };
+
+export type BotParams = {
+    botId: string,
+    publisherId: string,
+    settings: {
+        ciscosparkAccessToken: string,
+        messengerPageAccessToken: string,
+        microsoftAppId: string,
+        microsoftAppPassword: string,
+        ciscosparkBotEmail: string,
+    },
+};
+
+export type AIActionInfo =
+    {
+        action: string,
+        url?: string,
+        lambda?: string,
+    };

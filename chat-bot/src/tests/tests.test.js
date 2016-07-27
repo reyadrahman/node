@@ -5,7 +5,7 @@ import 'babel-polyfill';
 
 import { callbackToPromise, arity, catchPromise, ENV, CONSTANTS, timeout, request } from '../lib/util.js';
 import * as aws from '../lib/aws.js';
-import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
+import type { WebhookMessage, ResponseMessage, BotParams } from '../lib/types.js';
 import * as deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as ais from '../deepiks-bot/ai.js';
 import { assert } from 'chai';
@@ -195,7 +195,7 @@ describe('tests', function() {
         await deepiksBot._updateConversationTable(message);
 
         const responses = [];
-        await deepiksBot._route(message, m => {
+        await deepiksBot._route(message, ({}: any), m => {
             responses.push(m);
         });
 

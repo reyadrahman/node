@@ -77,7 +77,7 @@ async function handle(req: Request) {
         ...message,
         //TODO filesDownloadAuth: `Bearer ${CISCOSPARK_ACCESS_TOKEN}`,
         sourceBot: 'ciscospark',
-    }, m => {
+    }, botParams, m => {
         responses.push(respondFn(client, roomId, m))
     });
 
