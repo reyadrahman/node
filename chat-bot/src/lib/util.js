@@ -89,7 +89,6 @@ export type TENV = {
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
     S3_BUCKET_NAME: string,
-    WIT_ACCESS_TOKEN: string,
     AI_ACTIONS_SERVER: string,
     GOOGLE_CLOUD_VISION_API_KEY: string,
     MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,

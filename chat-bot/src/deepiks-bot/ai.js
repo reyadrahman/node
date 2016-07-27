@@ -1,14 +1,14 @@
 /* @flow */
 
 import * as aws from '../lib/aws.js';
-import type { DBMessage, ResponseMessage } from '../lib/types.js';
+import type { DBMessage, ResponseMessage, BotParams } from '../lib/types.js';
 import { ENV, catchPromise, callbackToPromise, request, allEntityValues } from '../lib/util.js';
 import gotAttachment from './got-attachment-action.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
 import URL from 'url';
 
-const { WIT_ACCESS_TOKEN, DB_TABLE_CONVERSATIONS, AI_ACTIONS_SERVER } = ENV;
+const { DB_TABLE_CONVERSATIONS, AI_ACTIONS_SERVER } = ENV;
 
 type ActionRequest = {
     sessionId: string,
@@ -17,9 +17,9 @@ type ActionRequest = {
     entities: Object,
 };
 
-export function _mkClient(respondFn: (m: ResponseMessage) => void) {
+export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) => void) {
     return new Wit({
-        accessToken: WIT_ACCESS_TOKEN,
+        accessToken,
         respondFn,
         actions: {
             send: async function(request, response) {
@@ -166,9 +166,14 @@ export async function _runAction(actionName: string, actionRequest: ActionReques
 }
 
 export async function ai(message: DBMessage,
+                         botParams: BotParams,
                          respondFn: (m: ResponseMessage) => void)
 {
     // TODO figure out when to use context and when to clear context
+
+    if (!botParams.settings.witAccessToken) {
+        throw new Error(`Bot doesn't have witAccessToken: `, botParams);
+    }
 
     const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
 
@@ -184,11 +189,10 @@ export async function ai(message: DBMessage,
     console.log('ai: qres: ', qres);
 
     if (qres.Count === 0) {
-        console.error('ai: couldn\'t find the conversation');
-        return;
+        throw new Error('ai: couldn\'t find the conversation');
     }
 
-    const context = qres.Items[0].witContext || {};
+    const { context = {} } = qres.Items[0];
     console.log('ai: got context: ', context);
 
     let text = message.text;
@@ -198,7 +202,7 @@ export async function ai(message: DBMessage,
     if (!text) {
         return;
     }
-    const client = _mkClient(respondFn);
+    const client = _mkClient(botParams.settings.witAccessToken, respondFn);
     const newContext = await _runActions(client, conversationId, text, context);
 
     await aws.dynamoPut({

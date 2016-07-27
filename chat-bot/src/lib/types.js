@@ -54,6 +54,7 @@ export type BotParams = {
         microsoftAppId: string,
         microsoftAppPassword: string,
         ciscosparkBotEmail: string,
+        witAccessToken: string,
     },
 };
 

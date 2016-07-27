@@ -30,7 +30,10 @@ declare function afterEach(f: Function): void;
 
 
 const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, DB_TABLE_BOTS, DB_TABLE_AI_ACTIONS,
-        S3_BUCKET_NAME, WIT_ACCESS_TOKEN } = ENV;
+        S3_BUCKET_NAME } = ENV;
+
+// additional environment variables exclusive to testing
+const { WIT_ACCESS_TOKEN } = process.env;
 
 function createSampleWebhookMessage(): WebhookMessage {
     return {
@@ -175,14 +178,23 @@ describe('tests', function() {
         };
         await deepiksBot._updateConversationTable(message);
 
+        const botParams = {
+            publisherId: uuid.v1(),
+            botId: uuid.v1(),
+            settings: {
+                witAccessToken: WIT_ACCESS_TOKEN,
+            },
+        };
+
         const responses = [];
-        await ais.ai(deepiksBot._webhookMessageToDBMessage(message), m => {
-            responses.push(m);
-        });
+        await ais.ai(deepiksBot._webhookMessageToDBMessage(message),
+            (botParams: any),
+            m => { responses.push(m); }
+        );
 
         await timeout(5000);
 
-        assert.deepEqual(responses, ['Hi there'], `ai responses: ${JSON.stringify(responses)}`);
+        assert.deepEqual(responses, [{ text: 'Hi there' }], `ai responses: ${JSON.stringify(responses)}`);
         done();
     }));
 
@@ -201,7 +213,7 @@ describe('tests', function() {
 
         await timeout(5000);
 
-        assert.deepEqual(responses, ['Hi there'], `ai responses: ${JSON.stringify(responses)}`);
+        assert.deepEqual(responses, [{ text: 'Hi there' }], `ai responses: ${JSON.stringify(responses)}`);
 
         const res1 = await deepiksBot._isMessageInDB(message);
         assert.equal(res1, true);

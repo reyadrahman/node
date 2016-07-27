@@ -216,6 +216,7 @@ export async function _insertAttachmentsIntoMessage(
 
 export async function _aiRoute(
     message: DBMessage,
+    botParams: BotParams,
     respondFn: RespondFn
 ): Promise<Array<ResponseMessage>>
 {
@@ -223,7 +224,7 @@ export async function _aiRoute(
 
     const responses = []
     try {
-        await ai(message, m => {
+        await ai(message, botParams, m => {
             respondFn(m);
             responses.push(m);
         });
@@ -285,7 +286,7 @@ export async function _route(rawMessage: WebhookMessage,
 
     await updateConversationP;
 
-    const aiRouteResponses = await _aiRoute(processedMessage, respondFn);
+    const aiRouteResponses = await _aiRoute(processedMessage, botParams, respondFn);
 
     await logP;
 

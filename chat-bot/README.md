@@ -11,7 +11,6 @@ DB_TABLE_CONVERSATIONS=
 DB_TABLE_MESSAGES=
 DB_TABLE_AI_ACTIONS=
 S3_BUCKET_NAME=
-WIT_ACCESS_TOKEN=
 ```
 
 `NODE_ENV` can be `production` (default) or `development`.
@@ -19,7 +18,13 @@ WIT_ACCESS_TOKEN=
 Check out "chat-bot-ai-actions"s `README.md` for instructions on how to get the `AI_ACTIONS_SERVER` value.
 
 ### .test.env file or environment variables in console
-This is the same as `.env` but only used for running the tests (see below). Since tests are only run locally, `.ebextensions/*` files have no effect here.
+This is mostly the same as `.env` but only used for running the tests (see below). So pick different names for the database tables and s3 buckets as they will be modified. `.test.env` needs the following variables in addition to those of `.env`:
+
+```
+WIT_ACCESS_TOKEN=
+```
+
+Since tests are only run locally, `.ebextensions/*` files have no effect here.
 
 ### .ebextensions
 Leave `.ebextensions/00.config` as is. Add your configs in separate files (e.g. `.ebextensions/01.config`). Everything in `.ebextensions/` is git-ignored except `00.config`.
