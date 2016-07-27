@@ -1,11 +1,12 @@
 /* @flow */
 
 import AWS from 'aws-sdk';
-import { callbackToPromise, ENV } from './util.js';
+import { callbackToPromise, ENV, CONSTANTS } from './util.js';
+import _ from 'lodash';
 
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
         DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
-        S3_BUCKET_NAME } = ENV;
+        DB_TABLE_AI_ACTIONS, S3_BUCKET_NAME } = ENV;
 
 
 export type BotParams = {
@@ -19,6 +20,13 @@ export type BotParams = {
         ciscosparkBotEmail: string,
     },
 };
+
+export type AIActionInfo =
+    {
+        action: string,
+        url?: string,
+        lambda?: string,
+    };
 
 AWS.config.update({
     apiVersions: {
@@ -34,10 +42,12 @@ AWS.config.update({
 const dynamoDoc = new AWS.DynamoDB.DocumentClient();
 const dynamodb = new AWS.DynamoDB();
 const s3 = new AWS.S3();
+const lambda = new AWS.Lambda();
 
 export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
 export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
 export const dynamoQuery = callbackToPromise(dynamoDoc.query, dynamoDoc);
+export const dynamoScan = callbackToPromise(dynamoDoc.scan, dynamoDoc);
 export const dynamoCreateTable = callbackToPromise(dynamodb.createTable, dynamodb);
 export const dynamoDeleteTable = callbackToPromise(dynamodb.deleteTable, dynamodb);
 export const dynamoListTables = callbackToPromise(dynamodb.listTables, dynamodb);
@@ -49,6 +59,7 @@ export const s3ListBuckets = callbackToPromise(s3.listBuckets, s3);
 export const s3CreateBucket = callbackToPromise(s3.createBucket, s3);
 export const s3WaitFor = callbackToPromise(s3.waitFor, s3);
 export const s3PutBucketPolicy = callbackToPromise(s3.putBucketPolicy, s3);
+export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
 
 
 export async function getBot(publisherId: string, botId: string): Promise<BotParams> {
@@ -67,6 +78,36 @@ export async function getBot(publisherId: string, botId: string): Promise<BotPar
     return qres.Items[0];
 }
 
+export const getAIAction = _createGetAIAction();
+
+export function _createGetAIAction() {
+    let cache;
+    let lastCacheTimestamp = 0;
+
+    return async function getAIActionHelper(actionName: string): Promise<AIActionInfo> {
+        const dt = (Date.now() - lastCacheTimestamp)/1000;
+        if (cache && dt < CONSTANTS.AI_ACTION_CACHE_VALID_TIME_S && cache[actionName]) {
+            console.log('getAIActionHelper: returning from cache');
+            return cache[actionName];
+        }
+        console.log('getAIActionHelper: making DB request');
+
+        const qres = await dynamoScan({
+            TableName: DB_TABLE_AI_ACTIONS,
+        });
+
+        cache = _.fromPairs(qres.Items.map(x => [x.action, x]));
+        console.log('new cache: ', cache);
+        lastCacheTimestamp = Date.now();
+
+        if (!cache[actionName]) {
+            throw new Error(`Coudn't find action named ${actionName}`);
+        }
+
+        return cache[actionName]
+    }
+}
+
 export function composeKeys(a: string, b: string): string {
     return `${a}__${b}`;
 }
@@ -75,6 +116,11 @@ export function decomposeKeys(k: string): Array<string> {
     return k.split('__');
 }
 
+/*
+    readCapacityUnits and writeCapacityUnits are used for DynamoDB tables. But not all of them.
+    For example DB_TABLE_AI_ACTIONS may choose (1, 1) because it uses caching, reducing the need to
+    read.
+ */
 export async function initResources(readCapacityUnits: number, writeCapacityUnits: number) {
 
     const promises = [
@@ -90,7 +136,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
 
     const creatingTables = [];
     if (!tables.includes(DB_TABLE_BOTS)) {
-        console.log('creating table: ', DB_TABLE_BOTS);
+        console.log('creating table: DB_TABLE_BOTS');
         const tableParams = {
             TableName : DB_TABLE_BOTS,
             KeySchema: [
@@ -110,7 +156,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         creatingTables.push(DB_TABLE_BOTS);
     }
     if (!tables.includes(DB_TABLE_CONVERSATIONS)) {
-        console.log('creating table: ', DB_TABLE_CONVERSATIONS);
+        console.log('creating table: DB_TABLE_CONVERSATIONS');
         const tableParams = {
             TableName : DB_TABLE_CONVERSATIONS,
             KeySchema: [
@@ -131,7 +177,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         creatingTables.push(DB_TABLE_CONVERSATIONS);
     }
     if (!tables.includes(DB_TABLE_MESSAGES)) {
-        console.log('creating table: ', DB_TABLE_MESSAGES);
+        console.log('creating table: DB_TABLE_MESSAGES');
         const tableParams = {
             TableName : DB_TABLE_MESSAGES,
             KeySchema: [
@@ -149,6 +195,24 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(DB_TABLE_MESSAGES);
+    }
+    if (!tables.includes(DB_TABLE_AI_ACTIONS)) {
+        console.log('creating table: DB_TABLE_AI_ACTIONS');
+        const tableParams = {
+            TableName : DB_TABLE_AI_ACTIONS,
+            KeySchema: [
+                { AttributeName: 'action', KeyType: 'HASH'},
+            ],
+            AttributeDefinitions: [
+                { AttributeName: 'action', AttributeType: 'S' },
+            ],
+            ProvisionedThroughput: {
+                ReadCapacityUnits: 1,
+                WriteCapacityUnits: 1,
+            }
+        };
+        const res = await dynamoCreateTable(tableParams);
+        creatingTables.push(DB_TABLE_AI_ACTIONS);
     }
 
     await Promise.all(creatingTables.map(

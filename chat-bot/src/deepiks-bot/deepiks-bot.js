@@ -220,10 +220,17 @@ export async function _aiRoute(
     console.log('_aiRoute...');
 
     const responses = []
-    await ai(message, m => {
+    try {
+        await ai(message, m => {
+            respondFn(m);
+            responses.push(m);
+        });
+    } catch(err) {
+        console.error(err);
+        const m = 'Sorry, there seems to be a problem...';
         respondFn(m);
         responses.push(m);
-    });
+    }
     return responses;
 }
 

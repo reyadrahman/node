@@ -22,6 +22,7 @@ declare module "lodash" {
   declare function map<K, T, U>(a: {[key:K]: T}, iteratee: (val: T, k?: K)=>U): U[];
 
   declare function object<T>(a: Array<[string, T]>): {[key:string]: T};
+  declare function fromPairs<T>(a: Array<[string, T]>): {[key:string]: T};
 
   declare function every<T>(a: Array<T>, pred: (val: T)=>boolean): boolean;
 
@@ -44,7 +45,6 @@ declare module "lodash" {
   declare function max<T>(a: Array<T>|{[key:any]: T}): T;
 
   declare function values<T>(o: {[key: any]: T}): T[];
-  declare function flatten(a: Array<any>): Array<any>;
 
   // TODO: improve this
   declare function chain<S>(obj: S): any;

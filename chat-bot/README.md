@@ -9,9 +9,9 @@ AWS_SECRET_ACCESS_KEY=
 DB_TABLE_BOTS=bots
 DB_TABLE_CONVERSATIONS=
 DB_TABLE_MESSAGES=
+DB_TABLE_AI_ACTIONS=
 S3_BUCKET_NAME=
 WIT_ACCESS_TOKEN=
-AI_ACTIONS_SERVER=
 ```
 
 `NODE_ENV` can be `production` (default) or `development`.
@@ -45,6 +45,71 @@ Temporarily, until we have a UI for registering publishers and creating bots, we
   }
 }
 ```
+
+Also you can enter AI actions directly into `DB_TABLE_AI_ACTIONS`. See "AI Actions" section for more details.
+
+### AI Actions (Config)
+Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
+```
+{
+    "action": "getForecast",
+    "lambda": "get-forecast-development"
+}
+```
+This item sets the action named "getForecast" to the lambda function named "get-forecast-development".
+
+**NOTE: When using node-lambda to deploy, it may add a suffix like "-development" to the name of your lambda**
+
+An example of a URL action:
+```
+{
+    "action": "getForecast",
+    "url": "http://xxx.com/get-forecast"
+}
+```
+
+You can add/remove/modify actions at run-time and the changes will take effect within at most 10s. That's because in order to avoid a DB call for every action, chat-bot caches the table for 10s.
+
+## AI Actions (API)
+Actions receive JSON data in the following form:
+```
+{
+    "sessionId": "abcdefghi123",
+    "context": { },
+    "entities": {
+        "location": [
+            {
+                "confidence": 0.959803566093133,
+                "type": "value",
+                "value": "London",
+                "suggested":true
+            }
+        ]
+    }
+}
+```
+- `sessionId`, `context` and `entities` are all values the chat-bot has received from Wit.ai. You can check Wit.ai's docs for more details on that
+- Lambda actions receive the data in their `event` argument.
+- URL actions receive it in the body of a **POST** request.
+
+Each action is supposed to return JSON data in the following form:
+``` json
+{
+    "msg": {
+        "text": "some text message for user",
+        "files": [
+            "http://xxx.com/a.jpg",
+            "http://xxx.com/b.jpg",
+        ]
+    },
+    "context": {
+        "forecast": "raining"
+    }
+}
+```
+- `context` will be sent directly to Wit.ai.
+- `msg` is **optional**. It's just a message that will be sent to the user.
+- `msg` must have **at least one** of `text` or `files`.
 
 ## Build and Deploy
 You should have awsebcli installed and configured. See [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) and [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html?shortFooter=true).

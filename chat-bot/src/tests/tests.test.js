@@ -3,7 +3,7 @@
 import '../preamble.js';
 import 'babel-polyfill';
 
-import { callbackToPromise, arity, catchPromise, ENV, timeout, request } from '../lib/util.js';
+import { callbackToPromise, arity, catchPromise, ENV, CONSTANTS, timeout, request } from '../lib/util.js';
 import * as aws from '../lib/aws.js';
 import type { WebhookMessage, ResponseMessage } from '../lib/types.js';
 import * as deepiksBot from '../deepiks-bot/deepiks-bot.js';
@@ -29,8 +29,8 @@ declare function beforeEach(f: Function): void;
 declare function afterEach(f: Function): void;
 
 
-const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, DB_TABLE_BOTS, S3_BUCKET_NAME,
-        WIT_ACCESS_TOKEN } = ENV;
+const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, DB_TABLE_BOTS, DB_TABLE_AI_ACTIONS,
+        S3_BUCKET_NAME, WIT_ACCESS_TOKEN } = ENV;
 
 function createSampleWebhookMessage(): WebhookMessage {
     return {
@@ -232,7 +232,7 @@ describe('tests', function() {
             publisherId: uuid.v1(),
             botId: uuid.v1(),
             witSessionContext: {a:1, b:2},
-        }
+        };
 
         await aws.dynamoPut({
             TableName: DB_TABLE_BOTS,
@@ -241,6 +241,39 @@ describe('tests', function() {
 
         const bot = await aws.getBot(expected.publisherId, expected.botId);
         assert.deepEqual(bot, expected);
+        done();
+    }));
+
+    it('can find an AI action', catchPromise(async function(done) {
+        const expected = {
+            action: uuid.v1(),
+            lambda: uuid.v1(),
+        };
+
+        await aws.dynamoPut({
+            TableName: DB_TABLE_AI_ACTIONS,
+            Item: expected,
+        });
+
+        const temp = CONSTANTS.AI_ACTION_CACHE_VALID_TIME_S;
+        CONSTANTS.AI_ACTION_CACHE_VALID_TIME_S = 0;
+        let startTime = Date.now();
+        const action1 = await aws.getAIAction(expected.action);
+        assert.deepEqual(action1, expected);
+        const dt1 = Date.now() - startTime;
+        console.log('dt no cache: ', dt1);
+
+        CONSTANTS.AI_ACTION_CACHE_VALID_TIME_S = temp;
+        startTime = Date.now();
+        const action2 = await aws.getAIAction(expected.action);
+        assert.deepEqual(action2, expected);
+
+        const dt2 = Date.now() - startTime;
+        assert(dt2 < dt1/10,
+            'The second call to aws.getAIAction was not cached'
+        );
+        console.log('dt cache: ', dt2);
+
         done();
     }));
 

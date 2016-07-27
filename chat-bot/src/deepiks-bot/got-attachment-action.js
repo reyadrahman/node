@@ -7,6 +7,7 @@ import gVision from 'node-cloud-vision-api';
 import _ from 'lodash';
 import gm from 'gm';
 
+// TODO move these to util.CONSTANTS
 const MS_LABEL_CONFIDENCE_THRESHOLD = 0.6;
 const G_LABEL_CONFIDENCE_THRESHOLD = 0.7;
 
@@ -15,9 +16,9 @@ const { GOOGLE_CLOUD_VISION_API_KEY, MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY } = ENV
 gVision.init({auth: GOOGLE_CLOUD_VISION_API_KEY});
 
 
-export default async function gotAttachment(req: ActionRequest): ActionResponse {
+export default async function gotAttachment(req: ActionRequest): Promise<ActionResponse> {
     const { sessionId, context, text, entities } = req;
-    console.log('actions.gotAttachments...');
+    console.log('actions.gotAttachment...');
     console.log(`Session ${sessionId} received ${text}`);
     console.log(`The current context is ${JSON.stringify(context)}`);
     console.log(`Wit extracted ${JSON.stringify(entities)}`);

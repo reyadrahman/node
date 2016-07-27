@@ -2,7 +2,8 @@
 
 import * as aws from '../lib/aws.js';
 import type { DBMessage, ResponseMessage } from '../lib/types.js';
-import { ENV, catchPromise, callbackToPromise, request } from '../lib/util.js';
+import { ENV, catchPromise, callbackToPromise, request, allEntityValues } from '../lib/util.js';
+import gotAttachment from './got-attachment-action.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
 import URL from 'url';
@@ -33,6 +34,7 @@ export function _mkClient(respondFn: (m: ResponseMessage) => void) {
                 console.log('sessionId: ', sessionId);
                 return context;
             },
+            gotAttachment,
         },
         logger: new witLog.Logger(witLog.DEBUG)
     });
@@ -98,7 +100,7 @@ export async function _runActionsHelper(client: Wit, sessionId: string,
     } else if (converseData.type === 'action') {
         const action = converseData.action;
         const { msg, context: newContext = {} } =
-            await _runExternalFunction(action, requestData) || {};
+            await _runAction(action, requestData, client.config.actions) || {};
         if (msg) {
             client.config.respondFn(msg);
         }
@@ -111,22 +113,52 @@ export async function _runActionsHelper(client: Wit, sessionId: string,
     }
 }
 
-export async function _runExternalFunction(action: string, requestData: ActionRequest) {
-    const res = await request({
-        uri: AI_ACTIONS_SERVER,
-        method: 'POST',
-        json: true,
-        body: {
-            ...requestData,
-            action,
-        },
-    });
-    if (res.statusCode === 200) {
-        console.log('_runExternalFunction returned: ', res.body);
-        return res.body;
-    } else {
-        throw new Error('AI_ACTIONS_SERVER at ' + AI_ACTIONS_SERVER + ' returned: ', res);
+export async function _runAction(actionName: string, actionRequest: ActionRequest,
+                                 localActions: {[key: string]: Function})
+{
+    const requestData = {
+        ...actionRequest,
+        action: actionName,
     }
+    if (localActions[actionName]) {
+        return await localActions[actionName](requestData);
+    }
+
+    const action = await aws.getAIAction(actionName);
+    console.log('_runAction: ', action);
+    if (action.url) {
+        const res = await request({
+            uri: action.url,
+            method: 'POST',
+            json: true,
+            body: requestData,
+        });
+
+        if (res.statusCode === 200) {
+            console.log('_runAction url, returned: ', res.body);
+            return res.body;
+        } else {
+            throw new Error('AI_ACTIONS_SERVER at ' + AI_ACTIONS_SERVER + ' returned: ', res);
+        }
+    }
+    else if (action.lambda){
+        const { lambda } = action;
+        const res = await aws.lambdaInvoke({
+            FunctionName: lambda,
+            Payload: JSON.stringify(requestData),
+        });
+        console.log('lambda returned: ', res);
+        if (res.StatusCode !== 200) {
+            throw new Error(`lambda ${lambda} returned status code ${res.StatusCode}`);
+        }
+        const resPayload = JSON.parse(res.Payload);
+        if (!resPayload.context){
+            throw new Error(`lambda ai action named ${lambda} did not return a context: `, resPayload);
+        }
+        return resPayload;
+    }
+
+    throw new Error('Unknown action: ', action);
 }
 
 export async function ai(message: DBMessage,

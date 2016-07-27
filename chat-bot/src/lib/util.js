@@ -70,6 +70,14 @@ export function catchPromise(fn: Function) {
     });
 }
 
+export function allEntityValues(entities: any, entity: any) {
+    if (!entities || !entities[entity] || !Array.isArray(entities[entity])) {
+        return [];
+    }
+    const es = entities[entity];
+    return es.map(x => typeof x.value === 'object' ? x.value.value : x.value);
+};
+
 
 export type TENV = {
     NODE_ENV: string,
@@ -79,9 +87,16 @@ export type TENV = {
     DB_TABLE_BOTS: string,
     DB_TABLE_CONVERSATIONS: string,
     DB_TABLE_MESSAGES: string,
+    DB_TABLE_AI_ACTIONS: string,
     S3_BUCKET_NAME: string,
     WIT_ACCESS_TOKEN: string,
     AI_ACTIONS_SERVER: string,
+    GOOGLE_CLOUD_VISION_API_KEY: string,
+    MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,
 };
 
 export const ENV: TENV = process.env;
+
+export const CONSTANTS = {
+    AI_ACTION_CACHE_VALID_TIME_S: 10,
+};
