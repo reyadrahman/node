@@ -4,6 +4,7 @@ import * as aws from '../lib/aws.js';
 import type { DBMessage, ResponseMessage, BotParams } from '../lib/types.js';
 import { ENV, omitFalsy, catchPromise, callbackToPromise, request,
          allEntityValues } from '../lib/util.js';
+import type { ActionRequest, ActionResponse } from '../lib/types.js';
 import gotAttachment from './got-attachment-action.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
@@ -11,12 +12,6 @@ import URL from 'url';
 
 const { DB_TABLE_CONVERSATIONS, AI_ACTIONS_SERVER } = ENV;
 
-type ActionRequest = {
-    sessionId: string,
-    context: Object,
-    text: string,
-    entities: Object,
-};
 
 export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) => void) {
     return new Wit({

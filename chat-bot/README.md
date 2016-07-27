@@ -81,6 +81,8 @@ Actions receive JSON data in the following form:
 {
     "sessionId": "abcdefghi123",
     "context": { },
+    "publisherId": "abcdefg",
+    "botId": "abcdefghijkl",
     "entities": {
         "location": [
             {
