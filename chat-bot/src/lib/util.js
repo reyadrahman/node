@@ -1,6 +1,7 @@
 /* @flow */
 
 import request_ from 'request';
+import _ from 'lodash';
 
 
 export function callbackToPromise(f: Function, context?: Object) {
@@ -77,6 +78,10 @@ export function allEntityValues(entities: any, entity: any) {
     const es = entities[entity];
     return es.map(x => typeof x.value === 'object' ? x.value.value : x.value);
 };
+
+export function omitFalsy(x: Object) {
+    return _.pickBy(x, y => !!y);
+}
 
 
 export type TENV = {

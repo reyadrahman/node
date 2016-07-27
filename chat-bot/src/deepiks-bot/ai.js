@@ -2,7 +2,8 @@
 
 import * as aws from '../lib/aws.js';
 import type { DBMessage, ResponseMessage, BotParams } from '../lib/types.js';
-import { ENV, catchPromise, callbackToPromise, request, allEntityValues } from '../lib/util.js';
+import { ENV, omitFalsy, catchPromise, callbackToPromise, request,
+         allEntityValues } from '../lib/util.js';
 import gotAttachment from './got-attachment-action.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
@@ -24,10 +25,10 @@ export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) =
         actions: {
             send: async function(request, response) {
                 console.log('actions.send: ', JSON.stringify(response));
-                respondFn({
+                respondFn(_.pickBy({
                     text: response.text,
                     quickReplies: response.quickReplies,
-                });
+                }, x=>!!x));
             },
             merge: async function({entities, context, message, sessionId}) {
                 console.log('actions.merge...');
@@ -44,14 +45,17 @@ export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) =
 }
 
 export async function _runActions(client: Wit, sessionId: string,
-                                  text: string, context: Object)
+                                  text: string, context: Object,
+                                  botParams: BotParams)
 {
     let converseData = await client.converse(sessionId, text, context);
-    return await _runActionsHelper(client, sessionId, text, context, converseData, 5);
+    return await _runActionsHelper(client, sessionId, text, context,
+                                   botParams, converseData, 5);
 }
 
 export async function _runActionsHelper(client: Wit, sessionId: string,
                                         text: string, context: Object,
+                                        botParams: BotParams,
                                         converseData: Object, level: number)
 {
     console.log('_runActionsHelper: converseData: ', converseData);
@@ -86,6 +90,8 @@ export async function _runActionsHelper(client: Wit, sessionId: string,
         context,
         text,
         entities: converseData.entities,
+        publisherId: botParams.publisherId,
+        botId: botParams.botId,
     };
 
     if (converseData.type === 'msg') {
@@ -99,7 +105,7 @@ export async function _runActionsHelper(client: Wit, sessionId: string,
         }
         const newConverseData = await client.converse(sessionId, null, context);
         return await _runActionsHelper(client, sessionId, text, context,
-                                       newConverseData, level-1)
+                                       botParams, newConverseData, level-1)
 
     } else if (converseData.type === 'action') {
         const action = converseData.action;
@@ -110,7 +116,7 @@ export async function _runActionsHelper(client: Wit, sessionId: string,
         }
         const newConverseData = await client.converse(sessionId, null, newContext);
         return await _runActionsHelper(client, sessionId, text, newContext,
-                                       newConverseData, level-1)
+                                       botParams, newConverseData, level-1)
     } else {
         console.error('unknown response type', converseData);
         throw new Error('unknown response type ' + converseData.type);
@@ -203,7 +209,7 @@ export async function ai(message: DBMessage,
         return;
     }
     const client = _mkClient(botParams.settings.witAccessToken, respondFn);
-    const newContext = await _runActions(client, conversationId, text, context);
+    const newContext = await _runActions(client, conversationId, text, context, botParams);
 
     await aws.dynamoPut({
         TableName: DB_TABLE_CONVERSATIONS,

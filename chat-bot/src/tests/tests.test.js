@@ -206,8 +206,17 @@ describe('tests', function() {
         };
         await deepiksBot._updateConversationTable(message);
 
+        const botParams = {
+            publisherId: uuid.v1(),
+            botId: uuid.v1(),
+            settings: {
+                witAccessToken: WIT_ACCESS_TOKEN,
+            },
+        };
+
+
         const responses = [];
-        await deepiksBot._route(message, ({}: any), m => {
+        await deepiksBot._route(message, (botParams: any), m => {
             responses.push(m);
         });
 

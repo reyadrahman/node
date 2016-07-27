@@ -5,6 +5,7 @@ import type { WebhookMessage, ResponseMessage, BotParams } from '../lib/types.js
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../lib/aws.js';
 import type { Request, Response } from 'express';
+import _ from 'lodash';
 
 //const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
 
@@ -150,22 +151,21 @@ async function respondFn(botParams: BotParams, conversationId: string,
             });
         }
 
-        if (message.text) {
-            const quick_replies = (message.quickReplies || []).map(x => ({
-                content_type: 'text',
-                title: x,
-                payload: x,
-            }))
+        if (message.text || message.quickReplies) {
+            const quick_replies = message.quickReplies &&
+                message.quickReplies.map(x => ({
+                    content_type: 'text',
+                    title: x,
+                    payload: x,
+                }))
             await sendMessage(botParams, {
                 recipient: {
                     id: to,
                 },
-                message: {
-                    text: message.text,
-                    ...(
-                        quick_replies.length ? { quick_replies } : null
-                    ),
-                }
+                message: _.pickBy({
+                    text: message.text || ' ', // text cannot be empty when using quick_replies
+                    quick_replies,
+                }, x=>!!x),
             });
 
         }

@@ -105,6 +105,10 @@ Each action is supposed to return JSON data in the following form:
         "files": [
             "http://xxx.com/a.jpg",
             "http://xxx.com/b.jpg",
+        ],
+        "quickReplies": [
+            "option A",
+            "option B"
         ]
     },
     "context": {
@@ -114,7 +118,7 @@ Each action is supposed to return JSON data in the following form:
 ```
 - `context` will be sent directly to Wit.ai.
 - `msg` is **optional**. It's just a message that will be sent to the user.
-- `msg` must have **at least one** of `text` or `files`.
+- `msg` must have **at least one** of `text`, `files` or `quickReplies`.
 
 ## Build and Deploy
 You should have awsebcli installed and configured. See [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) and [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html?shortFooter=true).

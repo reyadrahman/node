@@ -8,6 +8,7 @@ export type DBMessage = {
     source?: string,
     text?: string,
     files?: Array<string>,
+    quickReplies?: Array<string>,
 };
 
 export type WebhookMessage = {
@@ -33,11 +34,14 @@ export type ActionRequest = {
     context: Object,
     text: string,
     entities: Object,
+    publisherId: string,
+    botId: string,
 };
 
 export type ActionResponseMessage = string | {
     text?: string,
     files?: Array<string>,
+    quickReplies?: Array<string>,
 };
 
 export type ActionResponse = {
