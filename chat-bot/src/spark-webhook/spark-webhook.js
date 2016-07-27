@@ -93,17 +93,18 @@ async function respondFn(client, roomId, message) {
         });
     } else if (typeof message === 'object') {
         // ciscospark can only send 1 file at a time
+        const { files, text, quickReplies } = message;
         const toBeSent = [];
-        if (message.text) {
+        if (text) {
             await client.messages.create({
-                text: message.text,
+                text: text,
                 roomId,
             });
         }
-        if (message.files && message.files.length) {
+        if (files && files.length) {
             // TODO 1 at a time
             await Promise.all(
-                message.files.map(
+                files.map(
                     x => client.messages.create({
                         text: '',
                         files: [x],
@@ -112,6 +113,10 @@ async function respondFn(client, roomId, message) {
                 )
             );
         }
+        if (quickReplies && quickReplies.length) {
+            respondFn(client, roomId, `(some possible answers: ${quickReplies.join(', ')})`);
+        }
+
     }
 };
 

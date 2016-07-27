@@ -151,12 +151,20 @@ async function respondFn(botParams: BotParams, conversationId: string,
         }
 
         if (message.text) {
+            const quick_replies = (message.quickReplies || []).map(x => ({
+                content_type: 'text',
+                title: x,
+                payload: x,
+            }))
             await sendMessage(botParams, {
                 recipient: {
                     id: to,
                 },
                 message: {
                     text: message.text,
+                    ...(
+                        quick_replies.length ? { quick_replies } : null
+                    ),
                 }
             });
 

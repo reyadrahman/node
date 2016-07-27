@@ -100,7 +100,7 @@ async function respondFn(session, message: ResponseMessage) {
     if (typeof message === 'string' && message.trim()) {
         session.send(message);
     } else if (typeof message === 'object') {
-        const { files, text } = message;
+        const { files, text, quickReplies } = message;
         if (files && files.length || text) {
             const m = new builder.Message(session)
             if (text) {
@@ -115,6 +115,10 @@ async function respondFn(session, message: ResponseMessage) {
                 ));
             }
             session.send(m);
+
+            if (quickReplies && quickReplies.length) {
+                respondFn(session, `(some possible answers: ${quickReplies.join(', ')})`);
+            }
         }
     }
 }

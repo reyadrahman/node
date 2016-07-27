@@ -25,6 +25,7 @@ export type ResponseMessage = string | {
     files?: Array<string>,
     text?: string,
     action?: 'typingOn' | 'typingOff',
+    quickReplies?: Array<string>,
 };
 
 export type ActionRequest = {

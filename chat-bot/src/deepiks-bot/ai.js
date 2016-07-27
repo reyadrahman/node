@@ -24,7 +24,10 @@ export function _mkClient(respondFn: (m: ResponseMessage) => void) {
         actions: {
             send: async function(request, response) {
                 console.log('actions.send: ', JSON.stringify(response));
-                respondFn(response.text);
+                respondFn({
+                    text: response.text,
+                    quickReplies: response.quickReplies,
+                });
             },
             merge: async function({entities, context, message, sessionId}) {
                 console.log('actions.merge...');
@@ -51,6 +54,7 @@ export async function _runActionsHelper(client: Wit, sessionId: string,
                                         text: string, context: Object,
                                         converseData: Object, level: number)
 {
+    console.log('_runActionsHelper: converseData: ', converseData);
     if (level < 0) {
         console.log('_runActionsHelper: Max steps reached, stopping.');
         return context;
@@ -87,7 +91,7 @@ export async function _runActionsHelper(client: Wit, sessionId: string,
     if (converseData.type === 'msg') {
         const response = {
             text: converseData.msg,
-            quickreplies: converseData.quickreplies,
+            quickReplies: converseData.quickreplies,
         };
         const invalidContext = await client.config.actions.send(requestData, response);
         if (invalidContext) {
