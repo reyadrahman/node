@@ -83,6 +83,7 @@ Actions receive JSON data in the following form:
     "context": { },
     "publisherId": "abcdefg",
     "botId": "abcdefghijkl",
+    "text": "the text message from user",
     "entities": {
         "location": [
             {

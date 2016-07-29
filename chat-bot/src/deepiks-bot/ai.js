@@ -187,14 +187,14 @@ export async function ai(message: DBMessage,
             ':conversationId': conversationId,
         },
     });
-    console.log('ai: qres: ', qres);
+    qres.Items.map((x, i) => console.log(`ai: qres ${i}`, x));
 
     if (qres.Count === 0) {
         throw new Error('ai: couldn\'t find the conversation');
     }
 
-    const { context = {} } = qres.Items[0];
-    console.log('ai: got context: ', context);
+    const { witContext = {} } = qres.Items[0];
+    console.log('ai: got context: ', witContext);
 
     let text = message.text;
     if (message.files) {
@@ -204,14 +204,14 @@ export async function ai(message: DBMessage,
         return;
     }
     const client = _mkClient(botParams.settings.witAccessToken, respondFn);
-    const newContext = await _runActions(client, conversationId, text, context, botParams);
+    const newWitContext = await _runActions(client, conversationId, text, witContext, botParams);
 
     await aws.dynamoPut({
         TableName: DB_TABLE_CONVERSATIONS,
         Item: {
             publisherId,
             conversationId,
-            witContext: newContext,
+            witContext: newWitContext,
         },
     });
 }
