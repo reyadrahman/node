@@ -47,6 +47,7 @@ Temporarily, until we have a UI for registering publishers and creating bots, we
     "messengerPageAccessToken": "XXX",
     "microsoftAppId": "XXX",
     "microsoftAppPassword": "XXX"
+    "witAccessToken":"XXX"
   }
 }
 ```
