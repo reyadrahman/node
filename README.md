@@ -168,6 +168,9 @@ After changing the source (or `git pull`) run the following to re-deploy:
 npm run redeploy
 ```
 
+
+**NOTE: `eb deploy` [deploys git's HEAD commit](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-cli-git.html). You can use `eb deploy --staged` to deploy the staged changes (those that are `git add`'ed)**
+
 ## Setting Up Webhooks
 ### Spark
 The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/spark
