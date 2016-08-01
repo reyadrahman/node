@@ -1,0 +1,90 @@
+/* @flow */
+
+//require('dotenv').config({path: '../../.env'});
+console.log('NODE_ENV: ', process.env.NODE_ENV);
+
+import 'babel-polyfill';
+
+import { assert } from 'chai';
+import _ from 'lodash';
+import util from 'util';
+import http from 'http';
+import https from 'https';
+// import { PassThrough } from 'stream';
+import sinon from 'sinon';
+// const gm = require('gm').subClass({imageMagick: true});
+// import fs from 'fs';
+
+function arity(length, fn) {
+    switch (length) {
+    case 0 : return function () { return fn.apply(this, arguments); };
+    case 1 : return function (a) { return fn.apply(this, arguments); };
+    case 2 : return function (a,b) { return fn.apply(this, arguments); };
+    case 3 : return function (a,b,c) { return fn.apply(this, arguments); };
+    case 4 : return function (a,b,c,d) { return fn.apply(this, arguments); };
+    case 5 : return function (a,b,c,d,e) { return fn.apply(this, arguments); };
+    case 6 : return function (a,b,c,d,e,f) { return fn.apply(this, arguments); };
+    case 7 : return function (a,b,c,d,e,f,g) { return fn.apply(this, arguments); };
+    case 8 : return function (a,b,c,d,e,f,g,h) { return fn.apply(this, arguments); };
+    case 9 : return function (a,b,c,d,e,f,g,h,i) { return fn.apply(this, arguments); };
+    default : return function (a,b,c,d,e,f,g,h,i,j) { return fn.apply(this, arguments); };
+    }
+};
+
+function catchPromise(fn) {
+    return arity(fn.length, async function() {
+        try {
+            return await fn.apply(this, arguments);
+        } catch(error) {
+            console.error(error);
+            throw error;
+        }
+    });
+}
+
+/*
+
+see wit.js:interactive():
+
+let context = initContext || {};
+let line = await prompt();
+let sessionId = uuid.v1();
+while(...) {
+    context = await this.runActions(sessionId, line, context, steps)
+    line = await prompt();
+}
+
+
+*/
+
+
+const message1 = {
+    roomId: 'roomidabcdefg',
+    created: new Date().toISOString(),
+    id: 'idaaaaadsf',
+    personId: 'personidaababababab',
+    //personEmail: ,
+    sourceBot: 'somebot',
+    text: 'What is weather in Rome',
+};
+
+import ai from './ai.js';
+
+
+describe('wit.ai', function() {
+    beforeEach(() => {
+    });
+    afterEach(() => {
+        // http.request.restore();
+    })
+    it('...', catchPromise(async function(done) {
+        this.timeout(15000);
+
+        await ai(message1, m => {
+            console.error('********* ', m);
+            done();
+        });
+
+
+    }));
+});
