@@ -1,5 +1,10 @@
 /* @flow */
 
+export type QuickReply = string | {
+    text: string,
+    file?: string,
+};
+
 export type DBMessage = {
     publisherId_conversationId: string,
     creationTimestamp: number,
@@ -8,7 +13,7 @@ export type DBMessage = {
     source?: string,
     text?: string,
     files?: Array<string>,
-    quickReplies?: Array<string>,
+    quickReplies?: Array<QuickReply>,
 };
 
 export type WebhookMessage = {
@@ -26,7 +31,7 @@ export type ResponseMessage = string | {
     files?: Array<string>,
     text?: string,
     action?: 'typingOn' | 'typingOff',
-    quickReplies?: Array<string>,
+    quickReplies?: Array<QuickReply>,
 };
 
 export type ActionRequest = {
@@ -41,7 +46,7 @@ export type ActionRequest = {
 export type ActionResponseMessage = string | {
     text?: string,
     files?: Array<string>,
-    quickReplies?: Array<string>,
+    quickReplies?: Array<QuickReply>,
 };
 
 export type ActionResponse = {

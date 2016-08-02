@@ -6,6 +6,7 @@ import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
 import type { Request, Response } from 'express';
 import _ from 'lodash';
+import uuid from 'node-uuid';
 
 //const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
 
@@ -16,7 +17,7 @@ type MessengerReqBody = {
 type MessengerReqEntry = {
     id: string,
     time: number,
-    messaging: Array<MessengerReqMessaging>
+    messaging: Array<MessengerReqMessaging | MessengerReqPostback>
 };
 type MessengerReqMessaging = {
     sender: {
@@ -28,9 +29,20 @@ type MessengerReqMessaging = {
     timestamp: number,
     message: {
         mid: string,
-        seq: number,
         text?: string,
         attachments?: Array<MessengerReqAttachment>
+    },
+};
+type MessengerReqPostback = {
+    sender: {
+        id: string,
+    },
+    recipient: {
+        id: string,
+    },
+    timestamp: number,
+    postback: {
+        payload: string,
     },
 };
 type MessengerReqAttachment = {
@@ -71,17 +83,33 @@ async function processMessages(body: MessengerReqBody, botParams: BotParams) {
             if (messagingEvent.optin) {
                 // receivedAuthentication(messagingEvent);
             } else if (messagingEvent.message) {
-                await receivedMessage(entry, messagingEvent, botParams);
+                await receivedMessage(entry, (messagingEvent: any), botParams);
             } else if (messagingEvent.delivery) {
                 // receivedDeliveryConfirmation(messagingEvent);
             } else if (messagingEvent.postback) {
-                // receivedPostback(messagingEvent);
+                await receivedPostback(entry, (messagingEvent: any), botParams);
             } else {
                 console.error('Webhook received unknown messagingEvent: ', messagingEvent);
             }
 
         }
     }
+}
+
+async function receivedPostback(entry: MessengerReqEntry,
+                                messagingEvent: MessengerReqPostback,
+                                botParams: BotParams)
+{
+    const m: MessengerReqMessaging = {
+        sender: messagingEvent.sender,
+        recipient: messagingEvent.recipient,
+        timestamp: messagingEvent.timestamp,
+        message: {
+            mid: uuid.v1(),
+            text: messagingEvent.postback.payload,
+        },
+    };
+    return await receivedMessage(entry, m, botParams);
 }
 
 async function receivedMessage(entry: MessengerReqEntry,
@@ -142,7 +170,8 @@ async function respondFn(botParams: BotParams, conversationId: string,
         });
 
     } else if (typeof message === 'object') {
-        if (message.action && message.action === 'typingOn') {
+        const { action, text, files, quickReplies } = message;
+        if (action && action === 'typingOn') {
             await sendMessage(botParams, {
                 recipient: {
                     id: to,
@@ -151,26 +180,58 @@ async function respondFn(botParams: BotParams, conversationId: string,
             });
         }
 
-        if (message.text || message.quickReplies) {
-            const quick_replies = message.quickReplies &&
-                message.quickReplies.map(x => ({
-                    content_type: 'text',
-                    title: x,
-                    payload: x,
-                }))
+        const isRichQuickReplies = quickReplies && quickReplies.find(
+            x => typeof x === 'object' && x.file);
+
+        if (text || quickReplies && !isRichQuickReplies) {
+            const quick_replies = quickReplies && quickReplies.map(x => ({
+                content_type: 'text',
+                title: x,
+                payload: x,
+            }));
             await sendMessage(botParams, {
                 recipient: {
                     id: to,
                 },
                 message: _.pickBy({
-                    text: message.text || ' ', // text cannot be empty when using quick_replies
+                    text: text || ' ', // text cannot be empty when using quick_replies
                     quick_replies,
                 }, x=>!!x),
             });
-
         }
 
-        if (message.files && message.files.length) {
+        if (quickReplies && isRichQuickReplies) {
+            const richQuickReplies = quickReplies.map(x => {
+                return typeof x === 'string' ? { text: x } : x;
+            });
+            await sendMessage(botParams, {
+                recipient: {
+                    id: to,
+                },
+                message: {
+                    attachment: {
+                        type: 'template',
+                        payload: {
+                            template_type: 'generic',
+                            elements: richQuickReplies.slice(0,10).map((x, i) => ({
+                                title: `${i+1}`,
+                                image_url: x.file || null,
+                                item_url: x.file || null,
+                                buttons: [
+                                    {
+                                        type: 'postback',
+                                        title: x.text,
+                                        payload: x.text,
+                                    }
+                                ]
+                            })),
+                        }
+                    }
+                }
+            });
+        }
+
+        if (files && files.length) {
             // TODO do this for only one image
             // for (let file of message.files) {
             //     await sendMessage({
@@ -196,7 +257,7 @@ async function respondFn(botParams: BotParams, conversationId: string,
                         type: 'template',
                         payload: {
                             template_type: 'generic',
-                            elements: message.files.slice(0,10).map((url, i) => ({
+                            elements: files.slice(0,10).map((url, i) => ({
                                 title: `${i+1}`,
                                 image_url: url,
                                 item_url: url,

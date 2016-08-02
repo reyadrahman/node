@@ -51,7 +51,7 @@ No need to configure the database or s3 buckets. They are created automatically 
 NOTE: Existing database tables and s3 buckets are never overwritten.
 
 Temporarily, until we have a UI for registering publishers and creating bots, we can enter bots' information directly into the DynamoDB table named by `DB_TABLE_BOTS`. For example an item in the table would look like this:
-```
+``` json
 {
   "botId": "someBotId",
   "publisherId": "somePublisherId",
@@ -60,7 +60,7 @@ Temporarily, until we have a UI for registering publishers and creating bots, we
     "ciscosparkBotEmail": "XXX",
     "messengerPageAccessToken": "XXX",
     "microsoftAppId": "XXX",
-    "microsoftAppPassword": "XXX"
+    "microsoftAppPassword": "XXX",
     "witAccessToken":"XXX"
   }
 }
@@ -70,7 +70,7 @@ Also you can enter AI actions directly into `DB_TABLE_AI_ACTIONS`. See "AI Actio
 
 ### AI Actions (Config)
 Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
-```
+``` json
 {
     "action": "getForecast",
     "lambda": "get-forecast-development"
@@ -81,7 +81,7 @@ This item sets the action named "getForecast" to the lambda function named "get-
 **NOTE: When using node-lambda to deploy, it may add a suffix like "-development" to the name of your lambda**
 
 An example of a URL action:
-```
+``` json
 {
     "action": "getForecast",
     "url": "http://xxx.com/get-forecast"
@@ -92,7 +92,7 @@ You can add/remove/modify actions at run-time and the changes will take effect w
 
 ## AI Actions (API)
 Actions receive JSON data in the following form:
-```
+``` json
 {
     "sessionId": "abcdefghi123",
     "context": { },
@@ -122,11 +122,17 @@ Each action is supposed to return JSON data in the following form:
         "text": "some text message for user",
         "files": [
             "http://xxx.com/a.jpg",
-            "http://xxx.com/b.jpg",
+            "http://xxx.com/b.jpg"
         ],
         "quickReplies": [
-            "option A",
-            "option B"
+            {
+                "text": "option A",
+                "file": "http://xxx.com/a.jpg"
+            },
+            {
+                "text": "option B",
+                "file": "http://xxx.com/b.jpg"
+            }
         ]
     },
     "context": {
@@ -137,6 +143,17 @@ Each action is supposed to return JSON data in the following form:
 - `context` will be sent directly to Wit.ai.
 - `msg` is **optional**. It's just a message that will be sent to the user.
 - `msg` must have **at least one** of `text`, `files` or `quickReplies`.
+
+`quickReplies` could also be just an array of strings:
+``` json
+{
+    "msg": {
+        "quickReplies": [ "option A", "option B" ],
+        ...
+    },
+    ...
+}
+```
 
 ## Build and Deploy
 You should have awsebcli installed and configured. See [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) and [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html?shortFooter=true).
@@ -182,7 +199,7 @@ The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/messe
 Where `SOME_DOMAIN`, `PUBLISHER_ID` and `BOT_ID` must be replaced with appropriate values.
 Messenger requires a HTTPS webhook.
 
-See the first 4 steps in [this page](https://developers.facebook.com/docs/messenger-platform/quickstart). In step 2 when setting up the webhook, select messages. Use the url above for the `Callback URL` and use `boohoo` for `Verify token`. Your server must be running before the webhook can be set up.
+See the first 4 steps in [this page](https://developers.facebook.com/docs/messenger-platform/quickstart). In step 2 when setting up the webhook, select "messages" and "messaging_postbacks". Use the url above for the `Callback URL` and use `boohoo` for `Verify token`. Your server must be running before the webhook can be set up.
 
 One thing that wasn't mentioned in the link above is that in order to change the webhook url or delete it, you must first use the menu on the right to select "Add Product" and add "Webhooks". That will create "Webhooks" item in the right menu which you can use to manage your webhooks.
 

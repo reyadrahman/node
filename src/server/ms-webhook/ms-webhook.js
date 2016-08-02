@@ -117,7 +117,8 @@ async function respondFn(session, message: ResponseMessage) {
             session.send(m);
 
             if (quickReplies && quickReplies.length) {
-                respondFn(session, `(some possible answers: ${quickReplies.join(', ')})`);
+                const textQR = quickReplies.map(x => typeof x === 'string' ? x : x.text);
+                respondFn(session, `(some possible answers: ${textQR.join(', ')})`);
             }
         }
     }
