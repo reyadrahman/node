@@ -3,7 +3,8 @@
 import '../preamble.js';
 import 'babel-polyfill';
 
-import { callbackToPromise, arity, catchPromise, ENV, CONSTANTS, timeout, request } from '../misc/utils.js';
+import { callbackToPromise, arity, catchPromise, ENV, CONSTANTS, timeout,
+         request } from '../misc/utils.js';
 import * as aws from '../aws/aws.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../misc/types.js';
 import * as deepiksBot from '../server/deepiks-bot/deepiks-bot.js';
@@ -294,6 +295,35 @@ describe('tests', function() {
         console.log('dt cache: ', dt2);
 
         done();
+    }));
+
+    it('dynamoCleanUpObj', catchPromise(async function(done) {
+        let x = {
+            a:1,
+            b:0,
+            c: {},
+            d: null,
+            e: {
+                f: '',
+                g: 'a',
+                h: [],
+                i: undefined,
+                j: [1, null, '', undefined],
+            },
+        };
+
+        assert.deepEqual(aws.dynamoCleanUpObj(x), {
+            a:1,
+            b:0,
+            c: {},
+            e: {
+                g: 'a',
+                h: [],
+                j: [1, null, '', undefined],
+            },
+        });
+        done();
+
     }));
 
     // it('graphicsmagick', catchPromise(async function(done) {

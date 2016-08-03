@@ -2,7 +2,7 @@
 
 import * as aws from '../../aws/aws.js';
 import type { DBMessage, ResponseMessage, BotParams } from '../../misc/types.js';
-import { ENV, omitFalsy, catchPromise, callbackToPromise, request,
+import { ENV, catchPromise, callbackToPromise, request,
          allEntityValues } from '../../misc/utils.js';
 import type { ActionRequest, ActionResponse } from '../../misc/types.js';
 import gotAttachment from './got-attachment-action.js';
@@ -26,10 +26,10 @@ export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) =
         actions: {
             send: async function(request, response) {
                 console.log('actions.send: ', JSON.stringify(response));
-                respondFn(_.pickBy({
+                respondFn({
                     text: response.text,
                     quickReplies: response.quickReplies,
-                }, x=>!!x));
+                });
             },
             merge: async function({entities, context, message, sessionId}) {
                 console.log('actions.merge...');
@@ -133,10 +133,13 @@ export async function _runActionsHelper(client: Wit,
                 context: {},
             }
         }
-        const { msg, context: newContext = {} } =
+        const actionRes =
             await _runAction(action, newRequestData, client.config.actions) || {};
-        if (msg) {
-            client.config.respondFn(msg);
+        console.log('action returned: ', actionRes);
+        newWitData.context = actionRes.context || {};
+
+        if (actionRes.msg) {
+            client.config.respondFn(actionRes.msg);
         }
         const newConverseData = await client.converse(newWitData.sessionId, null, newWitData.context);
         return await _runActionsHelper(client, text, newWitData,
@@ -151,6 +154,8 @@ export async function _runAction(actionName: string, actionRequest: ActionReques
                                  localActions: {[key: string]: Function})
 {
     console.log('_runAction: ')
+    console.log('\t actionName: ', actionName);
+    console.log('\t actionRequest: ', actionRequest);
     const requestData = {
         ...actionRequest,
         action: actionName,
@@ -230,7 +235,7 @@ export async function ai(message: DBMessage,
     console.log('ai: witData: ', witData);
 
     let text = message.text;
-    if (message.files) {
+    if (message.files && message.files.length) {
         text = `${text || ''} ${_.last(message.files)}`
     }
     if (!text) {
@@ -243,11 +248,11 @@ export async function ai(message: DBMessage,
 
     await aws.dynamoPut({
         TableName: DB_TABLE_CONVERSATIONS,
-        Item: {
+        Item: aws.dynamoCleanUpObj({
             publisherId,
             conversationId,
             witData: newWitData,
-        },
+        }),
     });
 }
 

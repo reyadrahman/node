@@ -106,7 +106,7 @@ async function respondFn(session, message: ResponseMessage) {
             if (text) {
                 m.text(message.text);
             }
-            if (files) {
+            if (files && files.length) {
                 m.attachments(files.map(
                     url => ({
                         contentType: 'image',

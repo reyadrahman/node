@@ -45,8 +45,8 @@ export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
             [DB_TABLE_MESSAGES]: messages.map(x => {
                 return {
                     PutRequest: {
-                        Item: _.pickBy(x, a=>!!a),
-                    }
+                        Item: aws.dynamoCleanUpObj(x),
+                    },
                 };
             })
         }
@@ -127,7 +127,7 @@ export async function _attachmentMiddleware(message: WebhookMessage):
 
 export function _webhookMessageToDBMessage(message: WebhookMessage): DBMessage {
     const { filesGetFn, ...rest } = message;
-    return _.pickBy(rest, x=>!!x);
+    return rest;
 }
 
 export async function _insertAttachmentsIntoMessage(

@@ -128,10 +128,6 @@ export function allEntityValues(entities: any, entity: any) {
     return es.map(x => typeof x.value === 'object' ? x.value.value : x.value);
 };
 
-export function omitFalsy(x: Object) {
-    return _.pickBy(x, y => !!y);
-}
-
 
 // TODO: move to types.js
 export type TENV = {

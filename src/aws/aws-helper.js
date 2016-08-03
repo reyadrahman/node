@@ -46,6 +46,19 @@ export const s3PutBucketPolicy = callbackToPromise(s3.putBucketPolicy, s3);
 export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
 
 
+export function dynamoCleanUpObj(obj: Object) {
+    return _.reduce(obj, (acc, v, k) => {
+        let newV = v;
+        if (_.isPlainObject(newV)) {
+            newV = dynamoCleanUpObj(newV);
+        }
+        if (!_.isNil(newV) && newV !== '') {
+            acc[k] = newV;
+        }
+        return acc;
+    }, {});
+}
+
 export async function getBot(publisherId: string, botId: string): Promise<BotParams> {
     const qres = await dynamoQuery({
         TableName: DB_TABLE_BOTS,
