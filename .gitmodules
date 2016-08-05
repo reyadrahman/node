@@ -1,3 +1,5 @@
 [submodule "external_modules/amazon-cognito-identity"]
 	path = external_modules/amazon-cognito-identity
 	url = https://github.com/aws/amazon-cognito-identity-js.git
+	ignore = dirty
+
