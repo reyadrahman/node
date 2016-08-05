@@ -4,37 +4,21 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const _ = require('lodash');
 const autoprefixer = require('autoprefixer');
 
-const defaultEnv = {
-    NODE_ENV: 'production',
-    PORT: 3000,
-    DEBUG: 'app:*',
-};
-
 const extractCSS = new ExtractTextPlugin('style.css');
 
-function updateEnv(extraEnv) {
-
-    const env = Object.assign({}, defaultEnv, extraEnv);
-    if (env.CDN && !env.TIMESTAMP) {
+function createPublicPathAndUrl(cdn, timestamp) {
+    if (cdn && !timestamp) {
         console.error('Please use the scripts/build.sh to build when using CDN.');
         process.exit(1);
     }
-    if (env.CDN) {
-        env.PUBLIC_PATH = `/dist_${env.TIMESTAMP}/`;
-        env.PUBLIC_URL = `${env.CDN}/dist_${env.TIMESTAMP}/`;
-    } else {
-        env.PUBLIC_PATH = '/dist/';
-        env.PUBLIC_URL = '/dist/';
-    }
-
-    // process.env takes precedence
-    Object.assign(env, _.pick(process.env, _.keys(env)));
-    Object.assign(process.env, env);
-    return env;
+    return {
+        PUBLIC_PATH: cdn ? `/dist_${timestamp}/` : '/dist/',
+        PUBLIC_URL: cdn ? `${cdn}/dist_${timestamp}/` : '/dist/',
+    };
 }
 
-function createBaseConfig(env) {
-    const DEV = env.NODE_ENV === 'development';
+function createBaseConfig(NODE_ENV) {
+    const DEV = NODE_ENV === 'development';
 
     return {
         // or devtool: 'eval' to debug issues with compiled output:
@@ -43,7 +27,6 @@ function createBaseConfig(env) {
             modulesDirectories: ['node_modules', 'external_modules'],
         },
         plugins: [
-            new webpack.DefinePlugin({ '__dotEnvObj__': JSON.stringify(env) }),
             extractCSS,
             //new webpack.HotModuleReplacementPlugin(),
             //new webpack.NoErrorsPlugin()
@@ -115,6 +98,6 @@ function createBaseConfig(env) {
 };
 
 module.exports = {
-    updateEnv,
     createBaseConfig,
+    createPublicPathAndUrl,
 };

@@ -2,7 +2,7 @@
 
 import * as aws from '../../aws/aws.js';
 import type { DBMessage, ResponseMessage, BotParams } from '../../misc/types.js';
-import { ENV, catchPromise, callbackToPromise, request,
+import { SERVER_ENV, catchPromise, callbackToPromise, request,
          allEntityValues } from '../../misc/utils.js';
 import type { ActionRequest, ActionResponse } from '../../misc/types.js';
 import gotAttachment from './got-attachment-action.js';
@@ -11,7 +11,7 @@ import _ from 'lodash';
 import URL from 'url';
 import uuid from 'node-uuid';
 
-const { DB_TABLE_CONVERSATIONS, AI_ACTIONS_SERVER } = ENV;
+const { DB_TABLE_CONVERSATIONS } = SERVER_ENV;
 
 type WitData = {
     context: Object,
@@ -178,7 +178,8 @@ export async function _runAction(actionName: string, actionRequest: ActionReques
             console.log('_runAction url, returned: ', res.body);
             return res.body;
         } else {
-            throw new Error('AI_ACTIONS_SERVER at ' + AI_ACTIONS_SERVER + ' returned: ', res);
+            throw new Error(`_runAction url, returned error code ${res.statusCode}`
+                          + ` and body: ${JSON.stringify(res.body)}`);
         }
     }
     else if (action.lambda){

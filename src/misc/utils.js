@@ -2,6 +2,7 @@
 
 import request_ from 'request';
 import _ from 'lodash';
+import type { ServerEnv, ClientEnv } from './types.js';
 
 function customEncodeURIComponent(comp) {
     // return encodeURIComponent(comp).replace(/\./g, '%2E').replace(/%20/g, '.');
@@ -129,30 +130,24 @@ export function allEntityValues(entities: any, entity: any) {
 };
 
 
-// TODO: move to types.js
-export type TENV = {
-    NODE_ENV: string,
-    AWS_REGION: string,
-    AWS_ACCESS_KEY_ID: string,
-    AWS_SECRET_ACCESS_KEY: string,
-    DB_TABLE_BOTS: string,
-    DB_TABLE_CONVERSATIONS: string,
-    DB_TABLE_MESSAGES: string,
-    DB_TABLE_AI_ACTIONS: string,
-    S3_BUCKET_NAME: string,
-    AI_ACTIONS_SERVER: string,
-    GOOGLE_CLOUD_VISION_API_KEY: string,
-    MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,
-    PUBLIC_PATH: string,
-    PUBLIC_URL: string,
-    PLATFORM: string,
-    PORT: string,
-    CDN?: string,
-    DEBUG?: string,
-    TIMESTAMP?: string,
-};
 
-export const ENV: TENV = process.env;
+// process.env is different on the server and client.
+// process.env on the client is injected by the server (see server/*.js).
+// The server gets to pick what environment variables the client must have.
+export const SERVER_ENV: ServerEnv = process.env;
+export const CLIENT_ENV: ClientEnv = _.pick(process.env, [
+    'NODE_ENV',
+    'PLATFORM',
+    'AWS_REGION',
+    'DB_TABLE_BOTS',
+    'DB_TABLE_CONVERSATIONS',
+    'DB_TABLE_MESSAGES',
+    'DB_TABLE_AI_ACTIONS',
+    'S3_BUCKET_NAME',
+    'PUBLIC_PATH',
+    'PUBLIC_URL',
+    'DEBUG',
+]);
 
 export const CONSTANTS = {
     AI_ACTION_CACHE_VALID_TIME_S: 10,

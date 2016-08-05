@@ -1,15 +1,16 @@
-import React from 'react';
-import ReactDOM from 'react-dom/server';
-import { RouterContext, match } from 'react-router';
 import Html from '../components/html/Html.jsx';
-import { createStore, combineReducers, applyMiddleware } from 'redux';
-import { Provider } from 'react-redux';
 import * as reducers from '../reducers/reducers.js';
 import Routes from '../Routes.jsx';
 import { languages } from '../i18n/translations.js';
+import { CLIENT_ENV } from '../misc/utils.js';
 import acceptLanguage from 'accept-language';
 import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import React from 'react';
+import ReactDOM from 'react-dom/server';
+import { RouterContext, match } from 'react-router';
 
 acceptLanguage.languages(languages);
 
@@ -27,16 +28,20 @@ export default function render(full, req, res, next) {
         } else if (renderProps == null) {
             next();
         } else {
+            const envVars = {
+                ...CLIENT_ENV,
+                PLATFORM: 'browser',
+            };
             if (full) {
-                renderFull(req, res, next, renderProps);
+                renderFull(req, res, next, renderProps, envVars);
             } else {
-                renderTemplate(req, res, next);
+                renderTemplate(req, res, next, envVars);
             }
         }
     });
 }
 
-function renderTemplate(req, res, next) {
+function renderTemplate(req, res, next, envVars) {
     const systemLang = acceptLanguage.get(req.headers['accept-language']);
 
     if (templateCache[systemLang]) {
@@ -52,6 +57,7 @@ function renderTemplate(req, res, next) {
             <Html
                 body=""
                 initAppState={store.getState()}
+                envVars={envVars}
             />
         );
         const doc = '<!doctype html>\n' + html;
@@ -60,7 +66,7 @@ function renderTemplate(req, res, next) {
     }
 }
 
-function renderFull(req, res, next, renderProps) {
+function renderFull(req, res, next, renderProps, envVars) {
     console.log('renderFull. req.url: ', req.url, 'req.cookies: ', req.cookies);
     let systemLang = acceptLanguage.get(req.headers['accept-language']);
     let lang = req.cookies.language || systemLang;
@@ -83,7 +89,8 @@ function renderFull(req, res, next, renderProps) {
             <Html
                 body={body}
                 initAppState={store.getState()}
-                />
+                envVars={envVars}
+            />
         );
         let doc = '<!doctype html>\n' + html;
 

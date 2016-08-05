@@ -1,7 +1,7 @@
 /* @flow */
 
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import { callbackToPromise, request, ENV, CONSTANTS } from '../../misc/utils.js';
+import { callbackToPromise, request, SERVER_ENV, CONSTANTS } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
 import builder from 'botbuilder';
@@ -125,7 +125,6 @@ async function respondFn(session, message: ResponseMessage) {
 }
 
 export default function(req: Request, res: Response) {
-    console.log('ms-webhook: env: ', ENV);
     if (req.method !== 'POST') {
         res.send();
         return;

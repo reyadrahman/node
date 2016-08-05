@@ -1,19 +1,12 @@
 import React, { Component, PropTypes } from 'react';
-import { ENV } from '../../misc/utils.js';
+import { CLIENT_ENV } from '../../misc/utils.js';
 
-const { PUBLIC_URL } = ENV;
+const { PUBLIC_URL } = CLIENT_ENV;
 
 const Html = React.createClass({
 
-    /*
-    appStore() {
-        log('appStoreSafeString: ', this.props.appStoreSafeString);
-        return ({ __html: this.props.appStoreSafeString});
-    }
-    */
-
-    getInitAppState() {
-        return JSON.stringify(this.props.initAppState)
+    sanitizeAndStringify(obj) {
+        return JSON.stringify(obj)
                    .replace(/<\/script/g, '<\\/script')
                    .replace(/<!--/g, '<\\!--');
     },
@@ -21,6 +14,7 @@ const Html = React.createClass({
     render() {
         const styleURL = `${PUBLIC_URL}style.css`;
         const scriptURL = `${PUBLIC_URL}bundle.js`;
+        const { initAppState, envVars } = this.props;
         return (
             <html>
                 <head>
@@ -32,7 +26,15 @@ const Html = React.createClass({
                 <body>
                     <div id="reactUI" dangerouslySetInnerHTML={{ __html: this.props.body }} />
                     <script type="application/json" id="initAppState"
-                        dangerouslySetInnerHTML={{__html: this.getInitAppState()}} />
+                        dangerouslySetInnerHTML={{
+                            __html: this.sanitizeAndStringify(initAppState)
+                        }}
+                    />
+                    <script type="application/json" id="envVars"
+                        dangerouslySetInnerHTML={{
+                            __html: this.sanitizeAndStringify(envVars)
+                        }}
+                    />
                     <script src={scriptURL} />
                 </body>
             </html>

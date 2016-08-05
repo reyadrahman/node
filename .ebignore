@@ -1,5 +1,6 @@
 node_modules/
-src/
+dist-server/
+dist-client/
 .git/
 .tmp/
 .DS_Store

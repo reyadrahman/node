@@ -67,9 +67,43 @@ export type BotParams = {
     },
 };
 
-export type AIActionInfo =
-    {
-        action: string,
-        url?: string,
-        lambda?: string,
-    };
+export type AIActionInfo = {
+    action: string,
+    url?: string,
+    lambda?: string,
+};
+
+export type ServerEnv = {
+    NODE_ENV: string,
+    PLATFORM: string,
+    AWS_REGION: string,
+    AWS_ACCESS_KEY_ID: string,
+    AWS_SECRET_ACCESS_KEY: string,
+    DB_TABLE_BOTS: string,
+    DB_TABLE_CONVERSATIONS: string,
+    DB_TABLE_MESSAGES: string,
+    DB_TABLE_AI_ACTIONS: string,
+    S3_BUCKET_NAME: string,
+    GOOGLE_CLOUD_VISION_API_KEY: string,
+    MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,
+    PUBLIC_PATH: string,
+    PUBLIC_URL: string,
+    PORT: string,
+    CDN?: string,
+    DEBUG?: string,
+};
+export type ClientEnv = {
+    NODE_ENV: string,
+    PLATFORM: string,
+    AWS_REGION: string,
+    DB_TABLE_BOTS: string,
+    DB_TABLE_CONVERSATIONS: string,
+    DB_TABLE_MESSAGES: string,
+    DB_TABLE_AI_ACTIONS: string,
+    S3_BUCKET_NAME: string,
+    GOOGLE_CLOUD_VISION_API_KEY: string,
+    MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,
+    PUBLIC_PATH: string,
+    PUBLIC_URL: string,
+    DEBUG?: string,
+};

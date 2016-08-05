@@ -2,7 +2,7 @@ import * as aws from '../aws/aws.js';
 import Cookies from 'js-cookie';
 import * as utils from '../misc/utils.js';
 
-const { PLATFORM } = utils.ENV;
+const { PLATFORM } = utils.CLIENT_ENV;
 
 export function test(v) {
     return {

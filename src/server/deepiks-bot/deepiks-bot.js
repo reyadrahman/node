@@ -1,14 +1,14 @@
 /* @flow */
 
 import * as aws from '../../aws/aws.js';
-import { callbackToPromise, request, ENV } from '../../misc/utils.js';
+import { callbackToPromise, request, SERVER_ENV } from '../../misc/utils.js';
 import ai from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
 
-const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = ENV;
+const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = SERVER_ENV;
 
 type RespondFn = (response: ResponseMessage) => void;
 type ProcessedAttachment = {

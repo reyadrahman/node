@@ -1,7 +1,7 @@
 /* @flow */
 
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import { ENV, request } from '../../misc/utils.js';
+import { SERVER_ENV, request } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
 import URL from 'url';

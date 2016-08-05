@@ -3,13 +3,13 @@ console.log('======== AWS SERVER');
 /* @flow */
 
 import AWS from 'aws-sdk';
-import { callbackToPromise, ENV, CONSTANTS } from '../misc/utils.js';
+import { callbackToPromise, SERVER_ENV, CONSTANTS } from '../misc/utils.js';
 import type { BotParams, AIActionInfo } from '../misc/types.js';
 import _ from 'lodash';
 
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
         DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
-        DB_TABLE_AI_ACTIONS, S3_BUCKET_NAME } = ENV;
+        DB_TABLE_AI_ACTIONS, S3_BUCKET_NAME } = SERVER_ENV;
 
 
 AWS.config.update({

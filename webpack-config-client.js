@@ -1,15 +1,22 @@
 const path = require('path');
 const webpack = require('webpack');
-const { updateEnv, createBaseConfig } = require('./webpack-config-base.js');
+const { createBaseConfig, createPublicPathAndUrl } = require('./webpack-config-base.js');
 const _ = require('lodash');
 
-const dotenv = require('dotenv').config({
+/*
+    Environment Variables:
+    process.env takes precedence. Then .env file and finally the default values.
+    We don't build the environment variables into webpack's output using
+    DefinePlugin. All environment variables will be injected into the client
+    by the server at run time
+*/
+require('dotenv').config({
     silent: true,
-    path: './.env',
-}) || {};
-const extraEnv = { PLATFORM: 'browser' };
-const env = updateEnv(Object.assign({}, dotenv, extraEnv));
-const baseConfig = createBaseConfig(env);
+});
+_.defaults(process.env, { NODE_ENV: 'production' });
+const { NODE_ENV, CDN, TIMESTAMP } = process.env;
+const { PUBLIC_URL } = createPublicPathAndUrl(CDN, TIMESTAMP);
+const baseConfig = createBaseConfig(NODE_ENV);
 
 
 module.exports = Object.assign({}, baseConfig, {
@@ -17,14 +24,13 @@ module.exports = Object.assign({}, baseConfig, {
         extensions: ['', '.web.js', '.js', '.jsx']
     }),
     entry: [
-        './src/preamble.js',
         'babel-polyfill',
         './src/client/client.js'
     ],
     output: {
         path: path.join(__dirname, 'dist-client'),
         filename: 'bundle.js',
-        publicPath: env.PUBLIC_URL,
+        publicPath: PUBLIC_URL,
     },
     node: {
         // console: true,
@@ -37,5 +43,7 @@ module.exports = Object.assign({}, baseConfig, {
             /node_modules\/json-schema\/lib\/validate\.js/,
         ].concat(baseConfig.module.noParse || [])
     }),
-    // plugins: [ ].concat(baseConfig.plugins),
+    plugins: [
+        new webpack.DefinePlugin({ 'process.env': 'window.process.env' }),
+    ].concat(baseConfig.plugins),
 });

@@ -1,14 +1,16 @@
 /* @flow */
 
-console.log('!!!! PLATFORM: ', process.env.PLATFORM);
-console.log('!!!! NODE_ENV: ', process.env.NODE_ENV);
-console.log('!!!! PORT: ', process.env.PORT);
+console.log('PLATFORM: ', process.env.PLATFORM);
+console.log('NODE_ENV: ', process.env.NODE_ENV);
+console.log('PORT: ', process.env.PORT);
 
-const DEV = process.env.NODE_ENV === 'development';
-
-// if (DEV) {
-//     console.log('registering source-map-support');
-//     require('source-map-support').install();
+// {
+//     const DEV = process.env.NODE_ENV === 'development';
+//
+//     if (DEV) {
+//         console.log('registering source-map-support');
+//         require('source-map-support').install();
+//     }
 // }
 
 import express from 'express';
@@ -21,17 +23,17 @@ import http from 'http';
 import compression from 'compression';
 import router from './server-router.js';
 import { initResources } from '../aws/aws.js';
-import { ENV } from '../misc/utils.js';
+import { SERVER_ENV } from '../misc/utils.js';
 const debug = require('debug')('app:server');
 
 const ROOT_DIR = path.join(__dirname, '../');
 
-const { PUBLIC_PATH, PUBLIC_URL, PORT } = ENV;
+const { PUBLIC_PATH, PUBLIC_URL, PORT, NODE_ENV } = SERVER_ENV;
+
+const DEV = NODE_ENV === 'development';
 
 
 debug(`running server in ${DEV ? 'development' : 'production'} mode`);
-debug(`PUBLIC_PATH: `, JSON.stringify(PUBLIC_PATH));
-debug(`PUBLIC_URL: `, JSON.stringify(PUBLIC_URL));
 
 const app = express();
 
