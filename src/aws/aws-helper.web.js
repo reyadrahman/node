@@ -1,5 +1,10 @@
 console.log('======== AWS CLIENT...');
 
+import { CLIENT_ENV } from '../misc/utils.js';
+
+const { IDENTITY_POOL_ID, IDENTITY_POOL_ROLE_ARN, USER_POOL_ID,
+        USER_POOL_APP_CLIENT_ID, AWS_REGION} = CLIENT_ENV;
+
 const XMLHttpRequest = require('xhr2');
 global.XMLHttpRequest = XMLHttpRequest;
 
@@ -14,41 +19,23 @@ import 'script!amazon-cognito-identity/dist/amazon-cognito-identity.min.js';
 
 import fromPairs from 'lodash/fromPairs';
 
-// Sean's AWS account:
-const IdentityPoolId = 'us-east-1:bd245beb-b15b-4a45-87a1-1f955f0cc1f7';
-const RoleArn = 'arn:aws:iam::063863219770:role/Cognito_myidentitypool1Unauth_Role';
-const AccountId = '063863219770';
-const UserPoolId = 'us-east-1_8TsX0W4Tz';
-const ClientId = '5buhqgfeq5vj1qst7u0rukuvf';
-const Region = 'us-east-1';
-
-// Emmanuel's AWS account:
-// const IdentityPoolId = 'us-east-1:ed5cce84-3ee0-431a-9c48-cb409d707a63';
-// const RoleArn = 'arn:aws:iam::517510819783:role/Cognito_LambdAuthUnauth_Role';
-// const AccountId = '517510819783';
-// const UserPoolId = 'us-east-1_HucYipUfN';
-// const ClientId = '3l7t9s8f8rjaf8674f6kch4t76';
-// const Region = 'us-east-1';
-
-
-
-AWS.config.region = Region;
+AWS.config.region = AWS_REGION;
 AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId,
-    RoleArn,
-    AccountId,
+    IdentityPoolId: IDENTITY_POOL_ID,
+    RoleArn: IDENTITY_POOL_ROLE_ARN,
+    // AccountId,
 });
 
-AWSCognito.config.region = Region;
+AWSCognito.config.region = AWS_REGION;
 AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId,
-    RoleArn,
-    AccountId,
+    IdentityPoolId: IDENTITY_POOL_ID,
+    RoleArn: IDENTITY_POOL_ROLE_ARN,
+    // AccountId,
 });
 
 var poolData = {
-    UserPoolId,
-    ClientId,
+    UserPoolId: USER_POOL_ID,
+    ClientId: USER_POOL_APP_CLIENT_ID,
 };
 var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 

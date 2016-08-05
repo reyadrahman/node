@@ -21,6 +21,10 @@ DB_TABLE_CONVERSATIONS=
 DB_TABLE_MESSAGES=
 DB_TABLE_AI_ACTIONS=
 S3_BUCKET_NAME=
+IDENTITY_POOL_ID=
+IDENTITY_POOL_ROLE_ARN=
+USER_POOL_ID=
+USER_POOL_APP_CLIENT_ID=
 GOOGLE_CLOUD_VISION_API_KEY=
 MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
 CDN=
@@ -45,7 +49,7 @@ Leave `.ebextensions/00.config` as is. Add your configs in separate files (e.g. 
 
 Environment variables defined in these config files will overwrite those in `.env` file.
 
-### Resources (Database and S3)
+### Database and S3
 No need to configure the database or s3 buckets. They are created automatically if none exists.
 
 NOTE: Existing database tables and s3 buckets are never overwritten.
@@ -67,6 +71,9 @@ Temporarily, until we have a UI for registering publishers and creating bots, we
 ```
 
 Also you can enter AI actions directly into `DB_TABLE_AI_ACTIONS`. See "AI Actions" section for more details.
+
+### User Pool
+When creating an app for your user pool, make sure "Generate client secret" is **unchecked**.
 
 ### AI Actions (Config)
 Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
