@@ -2,6 +2,7 @@ console.log('======== AWS SERVER');
 
 /* @flow */
 
+// server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.js'
 import AWS from 'aws-sdk';
 import { callbackToPromise, SERVER_ENV, CONSTANTS } from '../misc/utils.js';
 import type { BotParams, AIActionInfo } from '../misc/types.js';

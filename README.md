@@ -232,6 +232,20 @@ During development, instead of `npm run build` or `npm run redeploy`, you can us
 
 In the same way you could use `npm test -- --watch` instead of `npm test`.
 
+### AWS-SDK
+The server uses the aws-sdk package from npm. But the client uses a custom built library reduced to only the services we need on the client. Here is how you can build the custom library:
+``` sh
+git clone https://github.com/aws/aws-sdk-js.git
+git checkout v2.4.13
+npm install
+MINIFY=1 node dist-tools/browser-builder.js cognitoidentity-2014-06-30 >aws-sdk.js
+mv aws-sdk.js /DEEPIKS_ROOT/external_modules/aws-sdk.js
+
+```
+Where `DEEPIKS_ROOT` is the root directory of this repository.
+
+For more information see [aws-sdk-js's docs](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/browser-building.html).
+
 ## TODO
 Customize icons using Fontello to include only the used icons.
 

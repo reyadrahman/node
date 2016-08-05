@@ -1,48 +1,34 @@
 console.log('======== AWS CLIENT...');
 
+const XMLHttpRequest = require('xhr2');
+global.XMLHttpRequest = XMLHttpRequest;
+
+// server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.js'
+import 'script!aws-sdk.js';
+import "script!jsbn.js";
+import "script!jsbn2.js";
+import 'script!sjcl.js';
+import 'script!moment.min.js';
+import 'script!amazon-cognito-identity/dist/aws-cognito-sdk.min.js';
+import 'script!amazon-cognito-identity/dist/amazon-cognito-identity.min.js';
+
 import fromPairs from 'lodash/fromPairs';
 
-import "script!jsbn.js";
-//window.BigInteger = BigInteger;
-
-import "script!jsbn2.js";
-console.log('BigInteger', BigInteger);
-
-
-import 'script!sjcl.js';
-//window.sjcl = sjcl;
-
-import 'script!moment.min.js';
-//window.moment = moment;
-
-import 'script!aws-sdk.js';
-//const AWS = window.AWS;
-
-import 'script!amazon-cognito-identity-js/dist/aws-cognito-sdk.min.js';
-import 'script!amazon-cognito-identity-js/dist/amazon-cognito-identity.min.js';
-
-
-
-
-
 // Sean's AWS account:
-/*
 const IdentityPoolId = 'us-east-1:bd245beb-b15b-4a45-87a1-1f955f0cc1f7';
 const RoleArn = 'arn:aws:iam::063863219770:role/Cognito_myidentitypool1Unauth_Role';
 const AccountId = '063863219770';
 const UserPoolId = 'us-east-1_8TsX0W4Tz';
 const ClientId = '5buhqgfeq5vj1qst7u0rukuvf';
 const Region = 'us-east-1';
-*/
 
 // Emmanuel's AWS account:
-const IdentityPoolId = 'us-east-1:ed5cce84-3ee0-431a-9c48-cb409d707a63';
-const RoleArn = 'arn:aws:iam::517510819783:role/Cognito_LambdAuthUnauth_Role';
-const AccountId = '517510819783';
-const UserPoolId = 'us-east-1_HucYipUfN';
-const ClientId = '3l7t9s8f8rjaf8674f6kch4t76';
-const Region = 'us-east-1';
-//const CloudSearchEndPoint = 'http://search-deepiks-mg6dg6gwke3gtpsagxzwynbuqe.us-east-1.cloudsearch.amazonaws.com';
+// const IdentityPoolId = 'us-east-1:ed5cce84-3ee0-431a-9c48-cb409d707a63';
+// const RoleArn = 'arn:aws:iam::517510819783:role/Cognito_LambdAuthUnauth_Role';
+// const AccountId = '517510819783';
+// const UserPoolId = 'us-east-1_HucYipUfN';
+// const ClientId = '3l7t9s8f8rjaf8674f6kch4t76';
+// const Region = 'us-east-1';
 
 
 
