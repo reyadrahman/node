@@ -73,7 +73,7 @@ Temporarily, until we have a UI for registering publishers and creating bots, we
 Also you can enter AI actions directly into `DB_TABLE_AI_ACTIONS`. See "AI Actions" section for more details.
 
 ### User Pool
-When creating an app for your user pool, make sure "Generate client secret" is **unchecked**.
+When creating an app for your user pool, make sure "Generate client secret"
 
 ### AI Actions (Config)
 Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
@@ -162,15 +162,19 @@ Each action is supposed to return JSON data in the following form:
 }
 ```
 
-## Build and Deploy
-You should have awsebcli installed and configured. See [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) and [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html?shortFooter=true).
+## Deploy
+We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule, because it is not available in npm. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
 ```
-npm install
-npm run build
+git submodule update --init
+```
+You also need to run the above command after `git pull` if the submodule has been modified.
+
+For deployment, you should have awsebcli installed and configured. See [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) and [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html?shortFooter=true).
+
+This command will let you create a new app or choose an old one (but it won't deploy)
+```
 eb init
 ```
-
-The last command (`eb init`) will let you create a new app or choose an old one (but it won't deploy)
 
 If you are creating a new app then you also need to create a new environment which will automatically deploy it as well:
 ```
@@ -186,12 +190,6 @@ This will open the url in your browser:
 ```
 eb open
 ```
-
-After changing the source (or `git pull`) run the following to re-deploy:
-```
-npm run redeploy
-```
-
 
 **NOTE: `eb deploy` [deploys git's HEAD commit](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-cli-git.html). You can use `eb deploy --staged` to deploy the staged changes (those that are `git add`'ed)**
 
@@ -234,10 +232,24 @@ npm install
 npm test
 ```
 
-### Faster workflow
-During development, instead of `npm run build` or `npm run redeploy`, you can use `npm run build -- --watch` to tell webpack to automatically re-build when something changes. Then after each re-build, you can run `eb deploy` in another terminal to re-deploy.
+### Workflow
+After `npm install`, you can open 3 terminals and run the following commands in each:
+Terminal A:
+```
+npm run build-server -- --watch
+```
+Terminal B:
+```
+npm run build-client -- --watch
+```
+Terminal C:
+```
+npm run run-server
+```
 
-In the same way you could use `npm test -- --watch` instead of `npm test`.
+The first 2 commands, will automatically rebuild on every change (except changes to `.env`). After a rebuild you must kill the server (terminal C) and run it again.
+
+You can also use `npm test -- --watch` to automatically re-run all tests on every change.
 
 ### AWS-SDK
 The server uses the aws-sdk package from npm. But the client uses a custom built library reduced to only the services we need on the client. Here is how you can build the custom library:
