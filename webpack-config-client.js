@@ -25,6 +25,7 @@ module.exports = Object.assign({}, baseConfig, {
     }),
     entry: [
         'babel-polyfill',
+        'whatwg-fetch',
         './src/client/client.js'
     ],
     output: {

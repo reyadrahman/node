@@ -6,17 +6,25 @@ export default {
         verifyRegistration: 'FR Verify registration',
     },
     sideMenu: {
-        search: 'Search FR',
-        quickSearch: 'Quick Search FR',
-        smartSearch: 'Smart Search FR',
-        lightboxes: 'Lightboxes FR',
-        contacts: 'Contacts FR',
+        bots: 'FR Bots',
+        contacts: 'FR Contacts',
     },
     home: {
     },
-    search: {
-        image: 'ImageFR',
-        footage: 'FootageFR',
+    bots: {
+        title: 'FR Bots',
+        addBot: 'FR Add bot',
+    },
+    addBot: {
+        title: 'FR Add bot',
+        botName: 'FR name',
+        addBot: 'FR Add bot',
+        ciscosparkAccessToken: 'FR Cisco Spark access token',
+        ciscosparkBotEmail: 'FR Cisco Spark bot\'s email address',
+        messengerPageAccessToken: 'FR Facebook page access token',
+        microsoftAppId: 'FR Microsoft app ID',
+        microsoftAppPassword: 'FR Microsoft app password',
+        witAccessToken: 'FR Wit access token',
     },
     signup: {
         title: 'French Sign Up',

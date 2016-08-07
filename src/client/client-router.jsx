@@ -45,7 +45,7 @@ aws.getCurrentUserAttributes()
        initAndRender(attrs);
    })
    .catch(err => {
-       console.log('client-router: ERROR: ', err);
+       console.log('client-router: ', err);
        initAndRender();
    });
 

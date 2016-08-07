@@ -1,25 +1,28 @@
 /* @flow */
 
-import request_ from 'request';
 import _ from 'lodash';
 import type { ServerEnv, ClientEnv } from './types.js';
 
+// TODO remove this
 function customEncodeURIComponent(comp) {
     // return encodeURIComponent(comp).replace(/\./g, '%2E').replace(/%20/g, '.');
     return encodeURIComponent(comp);
 }
 
+// TODO remove this
 function customDecodeURIComponent(comp) {
     // return decodeURIComponent(comp.replace(/\./g, '%20'));
     return decodeURIComponent(comp);
 }
 
+// TODO remove this
 export function searchQueryToPath(query: { searchPhrase: string, filterPhotographer: string }) {
     const comps = ['search', query.searchPhrase, query.filterPhotographer];
     const path = comps.filter(x => x).map(customEncodeURIComponent).join('/');
     return `/${path}`;
 }
 
+// TODO remove this
 export function pathToSearchQuery(path: string) {
     if (!path) return null;
     const split = path.split('/').filter(x => x);
@@ -30,40 +33,6 @@ export function pathToSearchQuery(path: string) {
     };
 }
 
-export function isFullscreen() {
-    return Boolean(document && (
-                   document.fullscreenElement ||
-                   document.mozFullScreenElement ||
-                   document.webkitFullscreenElement ||
-                   // $FlowFixMe
-                   document.msFullscreenElement));
-}
-
-export function requestFullscreen() {
-    if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-    } else if (document.documentElement.msRequestFullscreen) {
-        document.documentElement.msRequestFullscreen();
-    } else if (document.documentElement.mozRequestFullScreen) {
-        document.documentElement.mozRequestFullScreen();
-    } else if (document.documentElement.webkitRequestFullscreen) {
-        // $FlowFixMe
-        document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-    }
-}
-
-export function exitFullscreen() {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    }
-}
-
 export function callbackToPromise(f: Function, context?: Object) {
     return function() {
         return new Promise((resolve, reject) => {
@@ -72,8 +41,6 @@ export function callbackToPromise(f: Function, context?: Object) {
         });
     };
 }
-
-export const request = callbackToPromise(request_);
 
 export function timeout(time: number) {
     return new Promise((resolve, reject) => {
@@ -120,40 +87,3 @@ export function catchPromise(fn: Function) {
         }
     });
 }
-
-export function allEntityValues(entities: any, entity: any) {
-    if (!entities || !entities[entity] || !Array.isArray(entities[entity])) {
-        return [];
-    }
-    const es = entities[entity];
-    return es.map(x => typeof x.value === 'object' ? x.value.value : x.value);
-};
-
-
-
-// process.env is different on the server and client.
-// process.env on the client is injected by the server (see server/*.js).
-// The server gets to pick what environment variables the client must have.
-export const SERVER_ENV: ServerEnv = process.env;
-export const CLIENT_ENV: ClientEnv = _.pick(process.env, [
-    'NODE_ENV',
-    'PLATFORM',
-    'AWS_REGION',
-    'DB_TABLE_BOTS',
-    'DB_TABLE_CONVERSATIONS',
-    'DB_TABLE_MESSAGES',
-    'DB_TABLE_AI_ACTIONS',
-    'S3_BUCKET_NAME',
-    'IDENTITY_POOL_ID',
-    'IDENTITY_POOL_ROLE_ARN',
-    'USER_POOL_ID',
-    'USER_POOL_APP_CLIENT_ID',
-    'PUBLIC_PATH',
-    'PUBLIC_URL',
-    'DEBUG',
-]);
-
-export const CONSTANTS = {
-    AI_ACTION_CACHE_VALID_TIME_S: 10,
-    TYPING_INDICATOR_DELAY_S: 2,
-};

@@ -1,8 +1,9 @@
 import * as aws from '../aws/aws.js';
+import * as utils from '../client/client-utils.js';
+import * as bridge from '../client/client-server-bridge.js';
 import Cookies from 'js-cookie';
-import * as utils from '../misc/utils.js';
 
-const { PLATFORM } = utils.CLIENT_ENV;
+const { PLATFORM } = utils.ENV;
 
 export function test(v) {
     return {
@@ -354,5 +355,12 @@ export function sendEmail(data) {
                    dispatch(sendEmailFailed(typeof err === 'string' ? err : 'Failed'));
                })
         );
+    }
+}
+
+export function addBot(botName, data) {
+    return async function(dispatch) {
+        const session = await aws.getCurrentSession();
+        await bridge.addBot(session.getIdToken().getJwtToken(), botName, data);
     }
 }

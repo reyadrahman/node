@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
-import { CLIENT_ENV } from '../../misc/utils.js';
+import { ENV } from '../../client/client-utils.js';
 
-const { PUBLIC_URL } = CLIENT_ENV;
+const { PUBLIC_URL } = ENV;
 
 const Html = React.createClass({
 

@@ -2,8 +2,8 @@
 
 import * as aws from '../../aws/aws.js';
 import type { DBMessage, ResponseMessage, BotParams } from '../../misc/types.js';
-import { SERVER_ENV, catchPromise, callbackToPromise, request,
-         allEntityValues } from '../../misc/utils.js';
+import { ENV, request, allEntityValues } from '../server-utils.js';
+import { catchPromise, callbackToPromise } from '../../misc/utils.js';
 import type { ActionRequest, ActionResponse } from '../../misc/types.js';
 import gotAttachment from './got-attachment-action.js';
 import { Wit, log as witLog } from 'node-wit';
@@ -11,7 +11,7 @@ import _ from 'lodash';
 import URL from 'url';
 import uuid from 'node-uuid';
 
-const { DB_TABLE_CONVERSATIONS } = SERVER_ENV;
+const { DB_TABLE_CONVERSATIONS } = ENV;
 
 type WitData = {
     context: Object,

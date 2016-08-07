@@ -1,6 +1,6 @@
 /* @flow */
 
-import { request, CONSTANTS } from '../../misc/utils.js';
+import { request, ENV, CONSTANTS } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';

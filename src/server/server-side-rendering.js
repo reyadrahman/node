@@ -2,7 +2,7 @@ import Html from '../components/html/Html.jsx';
 import * as reducers from '../reducers/reducers.js';
 import Routes from '../Routes.jsx';
 import { languages } from '../i18n/translations.js';
-import { CLIENT_ENV } from '../misc/utils.js';
+import { ENV as CLIENT_ENV } from '../client/client-utils.js';
 import acceptLanguage from 'accept-language';
 import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'

@@ -1,8 +1,11 @@
+/* @flow */
+
 import express from 'express';
 import render from './server-side-rendering.js';
 import sparkWebhook from './spark-webhook/spark-webhook.js';
 import messengerWebhook from './messenger-webhook/messenger-webhook.js';
 import msWebhook from './ms-webhook/ms-webhook.js';
+import bridge from './client-server-bridge.js';
 
 const routes = express.Router();
 
@@ -25,6 +28,8 @@ routes.use('/webhooks/:publisherId/:botId/:sourceService', (req, res, next) => {
 
     serviceHandlers[sourceService](req, res);
 });
+
+routes.use('/api', bridge);
 
 routes.use('/', (req, res, next) => {
     console.log('server-router: /');

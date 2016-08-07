@@ -7,7 +7,7 @@ import Signup from '../signup/Signup.jsx';
 import VerifyRegistration from '../verify-registration/VerifyRegistration.jsx';
 import Signin from '../signin/Signin.jsx';
 import SideMenu from '../side-menu/SideMenu.jsx';
-import * as utils from '../../misc/utils.js';
+import * as utils from '../../client/client-utils.js';
 import Header from '../header/Header.jsx';
 
 import 'normalize.css';
@@ -28,7 +28,7 @@ export const App_ = React.createClass({
     },
 
     render() {
-        const { children, lang, ui, location } = this.props;
+        const { currentUser, children, lang, ui, location } = this.props;
         console.log('App render, lang', lang, ', props: ', this.props);
         const i18n = {
             lang,
@@ -40,28 +40,38 @@ export const App_ = React.createClass({
 
         const sideMenuStrings = translations[lang].sideMenu;
 
-        const menu = [
+        const userMenu = !currentUser ? [] : [
             {
-                label: sideMenuStrings.search,
-                icon: 'icon-search',
-                children: [
-                    {
-                        label: sideMenuStrings.quickSearch,
-                        link: '/search',
-                    },
-                    {
-                        label: sideMenuStrings.smartSearch,
-                        link: '/search',
-                        value: 'search',
-                    },
-                ],
-            },
-            {
-                label: sideMenuStrings.lightboxes,
-                link: '/lightboxes',
+                label: sideMenuStrings.bots,
+                link: '/bots',
                 icon: 'icon-th-large',
-                value: 'lightboxes',
+                value: 'bots',
             },
+        ];
+
+        const menu = [
+            // {
+            //     label: sideMenuStrings.search,
+            //     icon: 'icon-search',
+            //     children: [
+            //         {
+            //             label: sideMenuStrings.quickSearch,
+            //             link: '/search',
+            //         },
+            //         {
+            //             label: sideMenuStrings.smartSearch,
+            //             link: '/search',
+            //             value: 'search',
+            //         },
+            //     ],
+            // },
+            // {
+            //     label: sideMenuStrings.lightboxes,
+            //     link: '/lightboxes',
+            //     icon: 'icon-th-large',
+            //     value: 'lightboxes',
+            // },
+            ...userMenu,
             {
                 label: sideMenuStrings.contacts,
                 link: '/contacts',
@@ -107,6 +117,7 @@ let App = connect(
         systemLang: state.systemLang,
         lang: state.lang,
         ui: state.ui,
+        currentUser: state.currentUser,
     }),
     {
         setFullscreen: actions.setFullscreen,

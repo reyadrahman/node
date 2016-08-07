@@ -6,7 +6,6 @@ import * as actions from '../../actions/actions.js';
 
 let VerifyRegistration = React.createClass({
     getInitialState() {
-        console.log('getInitialState', this.props);
         return {
             code: '',
             email: this.props.initialEmail || '',

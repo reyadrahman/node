@@ -23,12 +23,12 @@ import http from 'http';
 import compression from 'compression';
 import router from './server-router.js';
 import { initResources } from '../aws/aws.js';
-import { SERVER_ENV } from '../misc/utils.js';
+import { ENV } from './server-utils.js';
 const debug = require('debug')('app:server');
 
 const ROOT_DIR = path.join(__dirname, '../');
 
-const { PUBLIC_PATH, PUBLIC_URL, PORT, NODE_ENV } = SERVER_ENV;
+const { PUBLIC_PATH, PUBLIC_URL, PORT, NODE_ENV } = ENV;
 
 const DEV = NODE_ENV === 'development';
 

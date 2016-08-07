@@ -1,6 +1,7 @@
 /* @flow */
 
-import { SERVER_ENV, callbackToPromise, request, allEntityValues } from '../../misc/utils.js';
+import { callbackToPromise } from '../../misc/utils.js';
+import { ENV, request, allEntityValues } from '../server-utils.js';
 import type { ActionRequest, ActionResponse } from '../../misc/types.js';
 import URL from 'url';
 import gVision from 'node-cloud-vision-api';
@@ -11,7 +12,7 @@ import gm from 'gm';
 const MS_LABEL_CONFIDENCE_THRESHOLD = 0.6;
 const G_LABEL_CONFIDENCE_THRESHOLD = 0.7;
 
-const { GOOGLE_CLOUD_VISION_API_KEY, MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY } = SERVER_ENV;
+const { GOOGLE_CLOUD_VISION_API_KEY, MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY } = ENV;
 
 gVision.init({auth: GOOGLE_CLOUD_VISION_API_KEY});
 

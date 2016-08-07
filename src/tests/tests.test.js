@@ -1,10 +1,10 @@
 /* @flow */
 
-import '../preamble.js';
+import '../server/preamble.js';
 import 'babel-polyfill';
 
-import { callbackToPromise, arity, catchPromise, SERVER_ENV, CONSTANTS, timeout,
-         request } from '../misc/utils.js';
+import { arity, callbackToPromise, catchPromise, timeout } from '../misc/utils.js';
+import { ENV, CONSTANTS, request } from '../server/server-utils.js';
 import * as aws from '../aws/aws.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../misc/types.js';
 import * as deepiksBot from '../server/deepiks-bot/deepiks-bot.js';
@@ -31,7 +31,7 @@ declare function afterEach(f: Function): void;
 
 
 const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, DB_TABLE_BOTS, DB_TABLE_AI_ACTIONS,
-        S3_BUCKET_NAME } = SERVER_ENV;
+        S3_BUCKET_NAME } = ENV;
 
 // additional environment variables exclusive to testing
 const { WIT_ACCESS_TOKEN } = process.env;

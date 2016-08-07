@@ -1,9 +1,10 @@
 console.log('======== AWS CLIENT...');
 
-import { CLIENT_ENV } from '../misc/utils.js';
+import { ENV } from '../client/client-utils.js';
+import { callbackToPromise } from '../misc/utils.js';
 
 const { IDENTITY_POOL_ID, IDENTITY_POOL_ROLE_ARN, USER_POOL_ID,
-        USER_POOL_APP_CLIENT_ID, AWS_REGION} = CLIENT_ENV;
+        USER_POOL_APP_CLIENT_ID, AWS_REGION} = ENV;
 
 const XMLHttpRequest = require('xhr2');
 global.XMLHttpRequest = XMLHttpRequest;
@@ -116,33 +117,30 @@ export function signin({email, password}) {
     });
 }
 
-export function getCurrentUser() {
-    console.log('X 1');
-    return new Promise((resolve, reject) => {
-        console.log('X 2');
-        let cognitoUser = userPool.getCurrentUser();
-        if (cognitoUser != null) {
-            cognitoUser.getSession(function(err, session) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(cognitoUser);
-                }
-            });
-        } else {
-            reject('no current user');
-        }
-    });
+export async function getSession(cognitoUser) {
+    const fn = callbackToPromise(cognitoUser.getSession, cognitoUser);
+    return await fn();
+}
+
+export async function getCurrentSession() {
+    const cognitoUser = await userPool.getCurrentUser();
+    if (cognitoUser != null) {
+        return await getSession(cognitoUser);
+    } else {
+        reject('no current user');
+    }
+}
+
+export async function getCurrentUser() {
+    const cognitoUser = await userPool.getCurrentUser();
+    await getSession(cognitoUser);
+    return cognitoUser;
 }
 
 export function getCurrentUserAttributes() {
-    console.log('1');
     return getCurrentUser().then(cognitoUser => {
-        console.log('2');
         return new Promise((resolve, reject) => {
-            console.log('3');
             cognitoUser.getUserAttributes(function(err, res) {
-                console.log('4');
                 if (err) {
                     return reject(err);
                 }

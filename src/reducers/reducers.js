@@ -83,6 +83,20 @@ export function currentUser(state = null, action) {
     return state;
 }
 
+export function publisher(state =
+    {
+        bots: null,
+        isFetchingBots: false,
+        addBotSuccessMessage: '',
+        addBotErrorMessage: '',
+    }, action)
+{
+    if (action.type === 'PUBLISHER') {
+        return { ...state, ...action.state };
+    }
+    return state;
+}
+
 export function search(state =
     {
         query: {
