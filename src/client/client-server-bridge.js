@@ -1,20 +1,27 @@
 /* @flow */
 
-export async function addBot(jwtIdToken, botName: string, settings) {
+import { fetchjp, fetchg2j } from './client-utils.js';
+
+export async function addBot(jwtIdToken: string, botName: string, settings) {
     console.log('client-server-bridge addBot:');
     console.log('\tjwtIdToken: ', jwtIdToken);
     console.log('\tbotName: ', botName);
     console.log('\tsettings: ', settings);
 
-    fetch('/api/add-bot', {
-        method: 'POST',
-        headers: new Headers({
-            'Content-Type': 'application/json',
-        }),
-        body: JSON.stringify({
-            jwtIdToken,
-            botName,
-            settings,
-        }),
-    })
+    return await fetchjp('/api/add-bot', { jwtIdToken, botName, settings })
+}
+
+export async function fetchBots(jwtIdToken: string) {
+    console.log('fetchBots: jwtIdToken: ', jwtIdToken);
+    return await fetchg2j('/api/fetch-bots', { jwtIdToken });
+}
+
+export async function fetchConversations(jwtIdToken: string) {
+    console.log('fetchConversations: jwtIdToken: ', jwtIdToken);
+    return await fetchg2j('/api/fetch-conversations', { jwtIdToken });
+}
+
+export async function fetchMessages(jwtIdToken: string, conversationId: string) {
+    console.log('fetchMessages: jwtIdToken: ', jwtIdToken, conversationId);
+    return await fetchg2j('/api/fetch-messages', { jwtIdToken, conversationId });
 }

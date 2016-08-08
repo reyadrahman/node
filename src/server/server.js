@@ -75,6 +75,7 @@ app.use(function(req, res, next) {
 
 
 app.use(function(err, req, res, next) {
+    debug(err);
     res.status(err.status || 500);
     res.send(`Error ${err.status || 500}\n\n${err.message || ''}`);
 });

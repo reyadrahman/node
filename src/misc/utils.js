@@ -3,6 +3,13 @@
 import _ from 'lodash';
 import type { ServerEnv, ClientEnv } from './types.js';
 
+export function createUrlQuery(obj: {[key: string]: any}): string {
+    const euc = encodeURIComponent;
+    // $FlowFixMe
+    return _.map(obj, (v, k) => `${euc(k)}=${euc(v)}`)
+            .join('&');
+}
+
 // TODO remove this
 function customEncodeURIComponent(comp) {
     // return encodeURIComponent(comp).replace(/\./g, '%2E').replace(/%20/g, '.');

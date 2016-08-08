@@ -1,0 +1,48 @@
+.root {
+    min-height: 800px;
+    padding: 80px 50px 30px 50px;
+
+    & .title {
+        font-size: 20px;
+        color: rgb(70, 70, 70);
+        letter-spacing: 5px;
+    }
+
+    .leftRightSplit {
+        display: flex;
+
+        .contacts {
+            flex: 0 0 auto;
+            width: 300px;
+            padding: 30px;
+
+            .contact {
+                margin: 20px 0;
+                padding: 20px;
+                background: #ddd;
+                color: #111;
+                &:hover {
+                    background: #cacaca;
+                    cursor: pointer;
+                }
+            }
+        }
+        .messages {
+            flex: 1 0 0;
+            padding: 30px;
+
+            .message {
+                margin: 20px 0;
+                padding: 20px;
+
+                background: #888;
+                color: #eee;
+
+                .image {
+                    max-width: 500px;
+                    max-height: 500px;
+                }
+            }
+        }
+    }
+}

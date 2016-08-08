@@ -3,7 +3,7 @@ import { Form, Input, Button, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
 import * as actions from '../../actions/actions.js';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import { withRouter, Link } from 'react-router';
 
 let BotsPage = React.createClass({
     getInitialState() {
@@ -23,33 +23,58 @@ let BotsPage = React.createClass({
     },
 
     componentDidMount() {
-        if (this.props.currentUser && !this.props.bots) {
-            this.props.fetchBots(this.props.currentUser);
+        const { currentUser: cu, fetchBots } = this.props;
+        if (cu) {
+            fetchBots();
         }
     },
 
     render() {
         const { className, styles, styles: { botsPage: ss },
-                publisher, i18n: { strings: { bots: strings } },
+                currentUser, i18n: { strings: { bots: strings } },
                 /*successMessage, errorMessage*/ } = this.props;
         // const { state } = this;
 
-        const fetchingBots = publisher.isFetchingBots;
-        const botList = publisher.bots && publisher.bots.map(x => {
-            return (
-                <div>
-                    {x.name}
-                </div>
-            );
-        });
-        const emptyBotList = (!botList || botList.length === 0) &&
+        if (!currentUser || !currentUser.attributes || !currentUser.attributes.sub) {
+            return <h3>Please log in</h3>;
+        }
+
+        const botsState = currentUser && currentUser.botsState;
+
+        const fetchingBots = botsState && botsState.isFetchingBotsState &&
+            <div>Fetching bots...</div>;
+        const botList = botsState && botsState.bots &&
+            <table>
+                <tr>
+                    <th>{strings.botName}</th>
+                    <th>Webhook Base URL</th>
+                </tr>
+                {
+                    botsState.bots.map(x => {
+                        return (
+                            <tr>
+                                <td>{x.botName}</td>
+                                <td>
+                                    {
+                                        window.location.origin +
+                                        '/webhooks/' +
+                                        x.publisherId + '/' +
+                                        x.botId + '/XXX'
+                                    }
+                                </td>
+                            </tr>
+                        );
+                    })
+                }
+            </table>
+        const emptyBotList = (botList && botList.length === 0) &&
             <div>You have no bots</div>;
 
 
         return (
             <div className={`${ss.root} ${className || ''}`}>
                 {
-                    fetchingBots && emptyBotList && botList
+                    fetchingBots || emptyBotList || botList
                 }
                 <Form styles={styles} onSubmit={this.addBot}>
                     <Button
@@ -67,9 +92,9 @@ let BotsPage = React.createClass({
 BotsPage = connect(
     state => ({
         currentUser: state.currentUser,
-        publisher: state.publisher,
     }),
     {
+        fetchBots: actions.fetchBots,
     }
 )(BotsPage);
 

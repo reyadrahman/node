@@ -78,21 +78,33 @@ export function signin(state =
 
 export function currentUser(state = null, action) {
     if (action.type === 'CURRENT_USER') {
-        return !action.state ? null : Object.assign({}, state, action.state);
-    }
-    return state;
-}
+        return !action.state ? null : { ...state, ...action.state };
 
-export function publisher(state =
-    {
-        bots: null,
-        isFetchingBots: false,
-        addBotSuccessMessage: '',
-        addBotErrorMessage: '',
-    }, action)
-{
-    if (action.type === 'PUBLISHER') {
-        return { ...state, ...action.state };
+    } else if (action.type === 'CURRENT_USER/BOTS_STATE') {
+        return !action.state
+            ? { ...state, botsState: null }
+            : { ...state, botsState: { ...state.botsState, ...action.state } };
+
+    } else if (action.type === 'CURRENT_USER/CONVERSATIONS_STATE') {
+        return !action.state
+            ? { ...state, conversationsState: null }
+            : {
+                ...state,
+                conversationsState: {
+                    ...(state && state.conversationsState),
+                    ...action.state
+                },
+            };
+    } else if (action.type === 'CURRENT_USER/MESSAGES_CACHE_STATE') {
+        return !action.state
+            ? { ...state, messagesCacheState: null }
+            : {
+                ...state,
+                messagesCacheState: {
+                    ...(state && state.messagesCacheState),
+                    ...action.state
+                },
+            };
     }
     return state;
 }

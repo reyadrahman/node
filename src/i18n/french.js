@@ -7,6 +7,7 @@ export default {
     },
     sideMenu: {
         bots: 'FR Bots',
+        conversations: 'FR Conversations',
         contacts: 'FR Contacts',
     },
     home: {
@@ -14,11 +15,16 @@ export default {
     bots: {
         title: 'FR Bots',
         addBot: 'FR Add bot',
+        botName: 'FR Bot Name',
+    },
+    conversations: {
+
     },
     addBot: {
         title: 'FR Add bot',
         botName: 'FR name',
         addBot: 'FR Add bot',
+        cancel: 'FR Cancel',
         ciscosparkAccessToken: 'FR Cisco Spark access token',
         ciscosparkBotEmail: 'FR Cisco Spark bot\'s email address',
         messengerPageAccessToken: 'FR Facebook page access token',

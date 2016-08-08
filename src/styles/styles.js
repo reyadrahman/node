@@ -8,6 +8,7 @@ const styles = {
         homeIntro: require('./style-1/home-intro.scss'),
         home: require('./style-1/home.scss'),
         botsPage: require('./style-1/bots-page.scss'),
+        conversationsPage: require('./style-1/conversations-page.scss'),
         addBotPage: require('./style-1/add-bot-page.scss'),
         modalBox1: require('./style-1/modal-box-1.scss'),
         searchBar: require('./style-1/search-bar.scss'),

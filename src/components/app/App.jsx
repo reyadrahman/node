@@ -47,6 +47,12 @@ export const App_ = React.createClass({
                 icon: 'icon-th-large',
                 value: 'bots',
             },
+            {
+                label: sideMenuStrings.conversations,
+                link: '/conversations',
+                icon: 'icon-th-large',
+                value: 'conversations',
+            },
         ];
 
         const menu = [

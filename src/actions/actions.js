@@ -154,7 +154,27 @@ export function sendEmailFailed(message) {
 export function setCurrentUserAttributes(attributes) {
     return {
         type: 'CURRENT_USER',
-        state: attributes,
+        state: {
+            attributes,
+        }
+    }
+}
+export function setCurrentUserBotsState(botsState) {
+    return {
+        type: 'CURRENT_USER/BOTS_STATE',
+        state: botsState,
+    }
+}
+export function setCurrentUserConversationsState(conversationsState) {
+    return {
+        type: 'CURRENT_USER/CONVERSATIONS_STATE',
+        state: conversationsState,
+    }
+}
+export function setCurrentUserMessagesCacheState(messagesCacheState) {
+    return {
+        type: 'CURRENT_USER/MESSAGES_CACHE_STATE',
+        state: messagesCacheState,
     }
 }
 export function clearCurrentUserAttributes() {
@@ -363,4 +383,83 @@ export function addBot(botName, data) {
         const session = await aws.getCurrentSession();
         await bridge.addBot(session.getIdToken().getJwtToken(), botName, data);
     }
+}
+
+export function fetchBots() {
+    return async function(dispatch) {
+        dispatch(setCurrentUserBotsState({
+            isFetchingBotsState: true,
+            errorMessage: '',
+        }));
+        try {
+            const session = await aws.getCurrentSession();
+            const bots = await bridge.fetchBots(session.getIdToken().getJwtToken());
+            dispatch(setCurrentUserBotsState({
+                isFetchingBotsState: false,
+                errorMessage: '',
+                bots,
+            }))
+        } catch(err) {
+            dispatch(setCurrentUserBotsState({
+                isFetchingBotsState: false,
+                errorMessage: 'Could not fetch the bots',
+            }));
+        }
+    }
+}
+
+export function fetchConversations() {
+    return async function(dispatch) {
+        dispatch(setCurrentUserConversationsState({
+            isFetchingConversationsState: true,
+            errorMessage: '',
+        }));
+        try {
+            const session = await aws.getCurrentSession();
+            const conversations = await bridge.fetchConversations(
+                session.getIdToken().getJwtToken()
+            );
+            dispatch(setCurrentUserConversationsState({
+                isFetchingConversationsState: false,
+                errorMessage: '',
+                conversations,
+            }));
+        } catch(error) {
+            dispatch(setCurrentUserConversationsState({
+                isFetchingConversationsState: false,
+                errorMessage: 'Could not fetch the bots',
+            }));
+        }
+    }
+
+}
+
+export function fetchMessages(conversationId: string) {
+    return async function(dispatch) {
+        dispatch(setCurrentUserMessagesCacheState({
+            isFetchingMessagesCacheState: true,
+            errorMessage: '',
+        }));
+        try {
+            const session = await aws.getCurrentSession();
+            const messages = await bridge.fetchMessages(
+                session.getIdToken().getJwtToken(),
+                conversationId
+            );
+            dispatch(setCurrentUserMessagesCacheState({
+                isFetchingMessagesCacheState: false,
+                errorMessage: '',
+                // TODO append to cache instead of replace
+                messagesCache: {
+                    [conversationId]: messages,
+                },
+            }));
+        } catch(error) {
+            dispatch(setCurrentUserMessagesCacheState({
+                isFetchingMessagesCacheState: false,
+                errorMessage: 'Could not fetch the bots',
+            }));
+        }
+    }
+
 }

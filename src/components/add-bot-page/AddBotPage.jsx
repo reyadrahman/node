@@ -3,8 +3,9 @@ import { Form, Input, Button, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
 import * as actions from '../../actions/actions.js';
 import { connect } from 'react-redux';
+import { withRouter, Link } from 'react-router';
 
-let BotsPage = React.createClass({
+let AddBotPage = React.createClass({
     getInitialState() {
         return {
             botName: '',
@@ -19,7 +20,13 @@ let BotsPage = React.createClass({
     addBot(e) {
         e.preventDefault();
         const { botName, ...settings } = this.state;
-        this.props.addBot(botName, settings);
+        this.props.addBot(botName, settings).then(() => {
+            this.props.router.push('/bots');
+        });
+    },
+    cancel(e) {
+        e.preventDefault();
+        this.props.router.push('/bots');
     },
     botNameChanged(e) {
         this.setState({ botName: e.target.value });
@@ -53,8 +60,13 @@ let BotsPage = React.createClass({
     render() {
         const { className, styles, styles: { addBotPage: ss },
                 i18n: { strings: { addBot: strings } },
-                successMessage, errorMessage } = this.props;
+                currentUser, successMessage, errorMessage } = this.props;
         const { state } = this;
+
+        if (!currentUser || !currentUser.attributes || !currentUser.attributes.sub) {
+            return <h3>Please log in</h3>;
+        }
+
 
         return (
             <div className={`${ss.root} ${className || ''}`}>
@@ -133,6 +145,12 @@ let BotsPage = React.createClass({
                     </div>
                     <div className={ss.buttonArea}>
                         <Button
+                            className={ss.cancelButton}
+                            label={strings.cancel}
+                            styles={styles}
+                            onClick={this.cancel}
+                        />
+                        <Button
                             className={ss.addBotButton}
                             label={strings.addBot}
                             type="submit"
@@ -145,7 +163,7 @@ let BotsPage = React.createClass({
     }
 });
 
-BotsPage = connect(
+AddBotPage = connect(
     state => ({
         currentUser: state.currentUser,
         successMessage: state.addBotSuccessMessage,
@@ -154,6 +172,8 @@ BotsPage = connect(
     {
         addBot: actions.addBot,
     }
-)(BotsPage);
+)(AddBotPage);
 
-export default BotsPage;
+AddBotPage = withRouter(AddBotPage);
+
+export default AddBotPage;

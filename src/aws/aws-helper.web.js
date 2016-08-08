@@ -124,16 +124,18 @@ export async function getSession(cognitoUser) {
 
 export async function getCurrentSession() {
     const cognitoUser = await userPool.getCurrentUser();
-    if (cognitoUser != null) {
-        return await getSession(cognitoUser);
-    } else {
-        reject('no current user');
+    if (cognitoUser == null) {
+        throw new Error('No current user');
     }
+    return await getSession(cognitoUser);
 }
 
 export async function getCurrentUser() {
     const cognitoUser = await userPool.getCurrentUser();
-    await getSession(cognitoUser);
+    if (cognitoUser == null) {
+        throw new Error('No current user');
+    }
+    await getSession(cognitoUser); // refreshes session if necessary
     return cognitoUser;
 }
 

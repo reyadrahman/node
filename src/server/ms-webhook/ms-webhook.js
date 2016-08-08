@@ -2,7 +2,7 @@
 
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import { callbackToPromise } from '../../misc/utils.js';
-import { request } from '../server-utils.js';
+import { request, CONSTANTS } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
 import builder from 'botbuilder';
