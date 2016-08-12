@@ -134,10 +134,12 @@ Each action is supposed to return JSON data in the following form:
         "quickReplies": [
             {
                 "text": "option A",
+                "title": "title A",
                 "file": "http://xxx.com/a.jpg"
             },
             {
                 "text": "option B",
+                "title": "title A",
                 "file": "http://xxx.com/b.jpg"
             }
         ]

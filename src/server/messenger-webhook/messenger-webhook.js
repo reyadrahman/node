@@ -214,7 +214,7 @@ async function respondFn(botParams: BotParams, conversationId: string,
                         payload: {
                             template_type: 'generic',
                             elements: richQuickReplies.slice(0,10).map((x, i) => ({
-                                title: `${i+1}`,
+                                title: x.title || `${i+1}`,
                                 image_url: x.file || null,
                                 item_url: x.file || null,
                                 buttons: [
