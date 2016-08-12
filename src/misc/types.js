@@ -3,6 +3,7 @@
 export type QuickReply = string | {
     text: string,
     title?: string,
+    subtitle?: string,
     file?: string,
 };
 

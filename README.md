@@ -135,11 +135,13 @@ Each action is supposed to return JSON data in the following form:
             {
                 "text": "option A",
                 "title": "title A",
+                "subtitle": "subtitle B",
                 "file": "http://xxx.com/a.jpg"
             },
             {
                 "text": "option B",
-                "title": "title A",
+                "title": "title B",
+                "subtitle": "subtitle B",
                 "file": "http://xxx.com/b.jpg"
             }
         ]
@@ -152,6 +154,7 @@ Each action is supposed to return JSON data in the following form:
 - `context` will be sent directly to Wit.ai.
 - `msg` is **optional**. It's just a message that will be sent to the user.
 - `msg` must have **at least one** of `text`, `files` or `quickReplies`.
+- `title` and `subtitle` inside `quickReplies` are **optional**.
 
 `quickReplies` could also be just an array of strings:
 ``` json
