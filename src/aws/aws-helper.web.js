@@ -287,3 +287,10 @@ export async function signout() {
         // RoleArn: IDENTITY_POOL_UNAUTH_ROLE_ARN,
     });
 }
+
+export async function s3GetSignedUrl(operation, params) {
+    // TODO can we have just 1 global s3 instance?
+    const s3 = new AWS.S3();
+    const getSignedUrl = callbackToPromise(s3.getSignedUrl, s3);
+    return await getSignedUrl(operation, params);
+}

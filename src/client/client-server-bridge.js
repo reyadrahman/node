@@ -1,6 +1,7 @@
 /* @flow */
 
 import { fetchjp, fetchg2j } from './client-utils.js';
+import type { DBMessage } from '../misc/types.js';
 
 export async function addBot(jwtIdToken: string, botName: string, settings) {
     console.log('client-server-bridge addBot:');
@@ -21,7 +22,9 @@ export async function fetchConversations(jwtIdToken: string) {
     return await fetchg2j('/api/fetch-conversations', { jwtIdToken });
 }
 
-export async function fetchMessages(jwtIdToken: string, conversationId: string) {
+export async function fetchMessages(jwtIdToken: string, conversationId: string)
+    : Promise<DBMessage[]>
+{
     console.log('fetchMessages: jwtIdToken: ', jwtIdToken, conversationId);
     return await fetchg2j('/api/fetch-messages', { jwtIdToken, conversationId });
 }

@@ -1,17 +1,21 @@
+/* @flow */
+
 import * as aws from '../aws/aws.js';
+import { destructureS3Url } from '../misc/utils.js';
 import * as utils from '../client/client-utils.js';
 import * as bridge from '../client/client-server-bridge.js';
+import type { DBMessage } from '../misc/types.js';
 import Cookies from 'js-cookie';
 
 const { PLATFORM } = utils.ENV;
 
-export function test(v) {
+export function test(v: string) {
     return {
         type: 'TEST',
         test: v,
     };
 }
-export function changeLocation(location) {
+export function changeLocation(location: string) {
     return {
         type: 'LOCATION',
         location,
@@ -33,7 +37,7 @@ export function closeSignup() {
         signup: {isOpen: false},
     };
 }
-export function signupSucceeded(message) {
+export function signupSucceeded(message: string) {
     return {
         type: 'SIGNUP',
         signup: {
@@ -42,7 +46,7 @@ export function signupSucceeded(message) {
         }
     }
 }
-export function signupFailed(message) {
+export function signupFailed(message: string) {
     return {
         type: 'SIGNUP',
         signup: {
@@ -53,7 +57,7 @@ export function signupFailed(message) {
 }
 
 
-export function openVerifyRegistration(data = {}) {
+export function openVerifyRegistration(data: { email?: string, password?: string } = {}) {
     return {
         type: 'VERIFY_REGISTRATION',
         state: {
@@ -71,7 +75,7 @@ export function closeVerifyRegistration() {
         state: {isOpen: false, password: ''},
     };
 }
-export function verifyRegistrationSucceeded(message) {
+export function verifyRegistrationSucceeded(message: string) {
     return {
         type: 'VERIFY_REGISTRATION',
         state: {
@@ -80,7 +84,7 @@ export function verifyRegistrationSucceeded(message) {
         }
     }
 }
-export function verifyRegistrationFailed(message) {
+export function verifyRegistrationFailed(message: string) {
     return {
         type: 'VERIFY_REGISTRATION',
         state: {
@@ -106,7 +110,7 @@ export function closeSignin() {
         state: {isOpen: false},
     };
 }
-export function signinSucceeded(message) {
+export function signinSucceeded(message: string) {
     return {
         type: 'SIGNIN',
         state: {
@@ -115,7 +119,7 @@ export function signinSucceeded(message) {
         }
     }
 }
-export function signinFailed(message) {
+export function signinFailed(message: string) {
     return {
         type: 'SIGNIN',
         state: {
@@ -124,7 +128,7 @@ export function signinFailed(message) {
         }
     }
 }
-export function clearContactsMessages(message) {
+export function clearContactsMessages(message: string) {
     return {
         type: 'CONTACTS',
         state: {
@@ -133,7 +137,7 @@ export function clearContactsMessages(message) {
         }
     }
 }
-export function sendEmailSucceeded(message) {
+export function sendEmailSucceeded(message: string) {
     return {
         type: 'CONTACTS',
         state: {
@@ -142,7 +146,7 @@ export function sendEmailSucceeded(message) {
         }
     }
 }
-export function sendEmailFailed(message) {
+export function sendEmailFailed(message: string) {
     return {
         type: 'CONTACTS',
         state: {
@@ -184,26 +188,26 @@ export function clearCurrentUserAttributes() {
     }
 }
 
-export function replaceSearchResults(query, results) {
-    return {
-        type: 'SEARCH',
-        state: {
-            query,
-            results,
-        },
-    };
-}
+// export function replaceSearchResults(query, results) {
+//     return {
+//         type: 'SEARCH',
+//         state: {
+//             query,
+//             results,
+//         },
+//     };
+// }
 
-export function setIsSearching(isSearching) {
-    return {
-        type: 'SEARCH',
-        state: {
-            isSearching,
-        },
-    };
-}
+// export function setIsSearching(isSearching) {
+//     return {
+//         type: 'SEARCH',
+//         state: {
+//             isSearching,
+//         },
+//     };
+// }
 
-export function setFullscreen(value) {
+export function setFullscreen(value: boolean) {
     return {
         type: 'UI',
         state: {
@@ -224,8 +228,8 @@ export function toggleSideMenu() {
 // Thunks
 // ==================================================
 
-export function changeLang(lang) {
-    return dispatch => {
+export function changeLang(lang: string) {
+    return (dispatch: Function) => {
         dispatch({
             type: 'CHANGE_LANG',
             lang,
@@ -243,7 +247,7 @@ export function changeLang(lang) {
 }
 export function signup(data_) {
     let data = {...data_, sdf: 'asdf'};
-    return dispatch => {
+    return (dispatch: Function) => {
         return (
             aws.signup(data)
                .then(res => {
@@ -263,7 +267,7 @@ export function signup(data_) {
 }
 
 export function verifyRegistration(data) {
-    return (dispatch, getState) => {
+    return (dispatch: Function, getState: Function) => {
         return (
             aws.verifyRegistration(data.email, data.code)
                .then(res => {
@@ -286,7 +290,7 @@ export function verifyRegistration(data) {
 }
 
 export function signin(data) {
-    return dispatch => {
+    return (dispatch: Function) => {
         return (
             aws.signin(data)
                .then(res => {
@@ -312,7 +316,7 @@ export function signin(data) {
 }
 
 export function signout() {
-    return dispatch => {
+    return (dispatch: Function) => {
         return (
             aws.signout()
                .then(() => {
@@ -328,32 +332,32 @@ export function signout() {
 }
 
 
-export function search(query) {
-    return dispatch => {
-        if (!query) {
-            dispatch(replaceSearchResults({ searchPhrase: '' }, {}));
-            dispatch(setIsSearching(false));
-            return Promise.resolve();
-        }
-        dispatch(replaceSearchResults(query, {}));
-        dispatch(setIsSearching(true));
-        return (
-            aws.search(query)
-               .then(results => {
-                   console.log('search SUCCEEDED: ', results);
-                   dispatch(replaceSearchResults(query, results));
-                   dispatch(setIsSearching(false));
-               })
-               .catch(err => {
-                   console.log('search FAILED: ', err);
-                   dispatch(setIsSearching(false));
-               })
-        );
-    };
-}
+// export function search(query) {
+//     return dispatch => {
+//         if (!query) {
+//             dispatch(replaceSearchResults({ searchPhrase: '' }, {}));
+//             dispatch(setIsSearching(false));
+//             return Promise.resolve();
+//         }
+//         dispatch(replaceSearchResults(query, {}));
+//         dispatch(setIsSearching(true));
+//         return (
+//             aws.search(query)
+//                .then(results => {
+//                    console.log('search SUCCEEDED: ', results);
+//                    dispatch(replaceSearchResults(query, results));
+//                    dispatch(setIsSearching(false));
+//                })
+//                .catch(err => {
+//                    console.log('search FAILED: ', err);
+//                    dispatch(setIsSearching(false));
+//                })
+//         );
+//     };
+// }
 
 export function toggleFullscreen() {
-    return dispatch => {
+    return (dispatch: Function) => {
         if (utils.isFullscreen()) {
             utils.exitFullscreen();
         } else {
@@ -363,7 +367,7 @@ export function toggleFullscreen() {
 }
 
 export function sendEmail(data) {
-    return dispatch => {
+    return (dispatch: Function) => {
         return (
             aws.sendEmail(data)
                .then(res => {
@@ -378,15 +382,15 @@ export function sendEmail(data) {
     }
 }
 
-export function addBot(botName, data) {
-    return async function(dispatch) {
+export function addBot(botName: string, data) {
+    return async function(dispatch: Function) {
         const session = await aws.getCurrentSession();
         await bridge.addBot(session.getIdToken().getJwtToken(), botName, data);
     }
 }
 
 export function fetchBots() {
-    return async function(dispatch) {
+    return async function(dispatch: Function) {
         dispatch(setCurrentUserBotsState({
             isFetchingBotsState: true,
             errorMessage: '',
@@ -409,7 +413,7 @@ export function fetchBots() {
 }
 
 export function fetchConversations() {
-    return async function(dispatch) {
+    return async function(dispatch: Function) {
         dispatch(setCurrentUserConversationsState({
             isFetchingConversationsState: true,
             errorMessage: '',
@@ -435,7 +439,7 @@ export function fetchConversations() {
 }
 
 export function fetchMessages(conversationId: string) {
-    return async function(dispatch) {
+    return async function(dispatch: Function) {
         dispatch(setCurrentUserMessagesCacheState({
             isFetchingMessagesCacheState: true,
             errorMessage: '',
@@ -446,12 +450,15 @@ export function fetchMessages(conversationId: string) {
                 session.getIdToken().getJwtToken(),
                 conversationId
             );
+            console.log('fetchMessages before signing: ', messages);
+            const messagesWithSignedUrls = await signS3UrlsInMesssages(messages);
+            console.log('fetchMessages after signing: ', messagesWithSignedUrls);
             dispatch(setCurrentUserMessagesCacheState({
                 isFetchingMessagesCacheState: false,
                 errorMessage: '',
                 // TODO append to cache instead of replace
                 messagesCache: {
-                    [conversationId]: messages,
+                    [conversationId]: messagesWithSignedUrls,
                 },
             }));
         } catch(error) {
@@ -462,4 +469,48 @@ export function fetchMessages(conversationId: string) {
         }
     }
 
+}
+
+async function signS3UrlsInMesssages(messages: DBMessage[]): Promise<DBMessage[]> {
+    return await Promise.all(messages.map(async function(m) {
+        const clone = { ...m };
+        let filesP, quickRepliesP;
+        if (clone.files) {
+            filesP = Promise.all(clone.files.map(async function(f) {
+                const bucketAndKey = destructureS3Url(f);
+                if (!bucketAndKey) return f;
+
+                return await aws.s3GetSignedUrl('getObject', {
+                    Bucket: bucketAndKey.bucket,
+                    Key: bucketAndKey.key,
+                    Expires: 60 * 60, // 1 hour
+                });
+            }));
+        }
+        if (clone.quickReplies) {
+            quickRepliesP = Promise.all(clone.quickReplies.map(async function(q) {
+                if (typeof q === 'string') return q;
+                if (!q.file) return q;
+                const bucketAndKey = destructureS3Url(q.file);
+                if (!bucketAndKey) return q;
+
+                return {
+                    ...q,
+                    file: await aws.s3GetSignedUrl('getObject', {
+                        Bucket: bucketAndKey.bucket,
+                        Key: bucketAndKey.key,
+                        Expires: 60 * 60, // 1 hour
+                    }),
+                };
+            }));
+        }
+
+        if (filesP) {
+            clone.files = await filesP;
+        }
+        if (quickRepliesP) {
+            clone.quickReplies = await quickRepliesP;
+        }
+        return clone;
+    }));
 }
