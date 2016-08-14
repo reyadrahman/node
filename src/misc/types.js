@@ -107,5 +107,10 @@ export type ClientEnv = {
     MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,
     PUBLIC_PATH: string,
     PUBLIC_URL: string,
+    USER_POOL_ID: string,
+    USER_POOL_APP_CLIENT_ID: string,
+    IDENTITY_POOL_ID: string,
+    IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
+    IDENTITY_POOL_AUTH_ROLE_ARN: string,
     DEBUG?: string,
 };
