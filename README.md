@@ -116,7 +116,18 @@ Actions receive JSON data in the following form:
                 "suggested":true
             }
         ]
+    },
+    "credentials": {
+        "accessKeyId": "xxx",
+        "secretAccessKey": "xxx",
+        "sessionToken": "xxx",
+        "expiration": "2016-08-15T00:24:26.000Z"
+    },
+    "s3": {
+        "bucket": "bucket name",
+        "prefix": "s3/directory/with/read/and/write/credentials/"
     }
+
 }
 ```
 - `sessionId`, `context` and `entities` are all values the chat-bot has received from Wit.ai. You can check Wit.ai's docs for more details on that

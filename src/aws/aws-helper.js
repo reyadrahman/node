@@ -20,6 +20,9 @@ AWS.config.update({
         dynamodb: '2012-08-10',
         s3: '2006-03-01',
         lambda: '2015-03-31',
+        sts: '2011-06-15',
+        cognitoidentity: '2014-06-30',
+        cognitosync: '2014-06-30',
     },
     region: AWS_REGION,
     accessKeyId: AWS_ACCESS_KEY_ID,
@@ -31,6 +34,7 @@ const dynamodb = new AWS.DynamoDB();
 const s3 = new AWS.S3();
 const lambda = new AWS.Lambda();
 const cognitoIdentity = new AWS.CognitoIdentity();
+const sts = new AWS.STS();
 
 export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
 export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
@@ -50,6 +54,7 @@ export const s3PutBucketPolicy = callbackToPromise(s3.putBucketPolicy, s3);
 export const s3PutBucketCors = callbackToPromise(s3.putBucketCors, s3);
 export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
 export const cognitoIdentityGetId = callbackToPromise(cognitoIdentity.getId, cognitoIdentity);
+export const stsGetFederationToken = callbackToPromise(sts.getFederationToken, sts);
 
 
 export function dynamoCleanUpObj(obj: Object) {

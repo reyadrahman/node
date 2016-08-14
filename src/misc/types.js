@@ -43,6 +43,16 @@ export type ActionRequest = {
     entities: Object,
     publisherId: string,
     botId: string,
+    credentials: {
+        accessKeyId: string,
+        secretAccessKey: string,
+        sessionToken: string,
+        expiration: string,
+    },
+    s3: {
+        bucket: string,
+        prefix: string,
+    }
 };
 
 export type ActionResponseMessage = string | {

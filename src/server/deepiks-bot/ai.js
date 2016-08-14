@@ -11,12 +11,21 @@ import _ from 'lodash';
 import URL from 'url';
 import uuid from 'node-uuid';
 
-const { DB_TABLE_CONVERSATIONS } = ENV;
+const { DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = ENV;
 
 type WitData = {
     context: Object,
     sessionId: string,
     lastActionPrefix?: string,
+};
+
+type ActionRequestIncomplete = {
+    sessionId: string,
+    context: Object,
+    text: string,
+    entities: Object,
+    publisherId: string,
+    botId: string,
 };
 
 export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) => void) {
@@ -45,17 +54,21 @@ export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) =
     });
 }
 
-export async function _runActions(client: Wit, text: string, witData: WitData,
-                                  botParams: BotParams)
-                                  : Promise<WitData>
+export async function _runActions(client: Wit,
+                                  text: string,
+                                  originalMessage: DBMessage,
+                                  witData: WitData,
+                                  botParams: BotParams
+) : Promise<WitData>
 {
     let converseData = await client.converse(witData.sessionId, text, witData.context);
-    return await _runActionsHelper(client, text, witData,
+    return await _runActionsHelper(client, text, originalMessage, witData,
                                    botParams, converseData, 5);
 }
 
 export async function _runActionsHelper(client: Wit,
                                         text: string,
+                                        originalMessage: DBMessage,
                                         witData: WitData,
                                         botParams: BotParams,
                                         converseData: Object,
@@ -108,7 +121,7 @@ export async function _runActionsHelper(client: Wit,
             throw new Error('Cannot update context after \'send\' action');
         }
         const newConverseData = await client.converse(witData.sessionId, null, witData.context);
-        return await _runActionsHelper(client, text, witData,
+        return await _runActionsHelper(client, text, originalMessage, witData,
                                        botParams, newConverseData, level-1)
 
     } else if (converseData.type === 'action') {
@@ -134,7 +147,8 @@ export async function _runActionsHelper(client: Wit,
             }
         }
         const actionRes =
-            await _runAction(action, newRequestData, client.config.actions) || {};
+            await _runAction(action, newRequestData, originalMessage, botParams,
+                             client.config.actions) || {};
         console.log('action returned: ', actionRes);
         newWitData.context = actionRes.context || {};
 
@@ -142,7 +156,7 @@ export async function _runActionsHelper(client: Wit,
             client.config.respondFn(actionRes.msg);
         }
         const newConverseData = await client.converse(newWitData.sessionId, null, newWitData.context);
-        return await _runActionsHelper(client, text, newWitData,
+        return await _runActionsHelper(client, text, originalMessage, newWitData,
                                        botParams, newConverseData, level-1)
     } else {
         console.error('unknown response type', converseData);
@@ -150,15 +164,40 @@ export async function _runActionsHelper(client: Wit,
     }
 }
 
-export async function _runAction(actionName: string, actionRequest: ActionRequest,
+export async function _runAction(actionName: string,
+                                 actionRequest: ActionRequestIncomplete,
+                                 originalMessage: DBMessage,
+                                 botParams: BotParams,
                                  localActions: {[key: string]: Function})
 {
     console.log('_runAction: ')
     console.log('\t actionName: ', actionName);
     console.log('\t actionRequest: ', actionRequest);
-    const requestData = {
+    const { publisherId } = botParams;
+    const { senderId } = originalMessage;
+    if (!senderId) {
+        throw new Error(`ERROR: _runAction senderId: ${senderId || ''}`);
+    }
+    const federationToken = await aws.stsGetFederationToken({
+        Name: uuid.v1().substr(0, 30),
+        DurationSeconds: 15 * 60,
+        Policy: _generateS3Policy(publisherId, senderId),
+    });
+    const credentials = federationToken.Credentials;
+    console.log('got federationToken: ', federationToken);
+    const requestData: ActionRequest = {
         ...actionRequest,
-        action: actionName,
+        // action: actionName,
+        credentials: {
+            accessKeyId: credentials.AccessKeyId,
+            secretAccessKey: credentials.SecretAccessKey,
+            sessionToken: credentials.SessionToken,
+            expiration: credentials.Expiration,
+        },
+        s3: {
+            bucket: S3_BUCKET_NAME,
+            prefix: `${publisherId}/${senderId}/`,
+        }
     }
     if (localActions[actionName]) {
         return await localActions[actionName](requestData);
@@ -202,12 +241,28 @@ export async function _runAction(actionName: string, actionRequest: ActionReques
     throw new Error('Unknown action: ', action);
 }
 
+export function _generateS3Policy(publisherId: string, senderId: string): string {
+    return JSON.stringify({
+        Version: '2012-10-17',
+        Statement: [
+            {
+                Effect: 'Allow',
+                Action: [
+                    's3:GetObject',
+                    's3:PutObject',
+                ],
+                Resource: [
+                    `arn:aws:s3:::${S3_BUCKET_NAME}/${publisherId}/${senderId}/*`,
+                ]
+            }
+        ]
+    });
+}
+
 export async function ai(message: DBMessage,
                          botParams: BotParams,
                          respondFn: (m: ResponseMessage) => void)
 {
-    // TODO figure out when to use context and when to clear context
-
     if (!botParams.settings.witAccessToken) {
         throw new Error(`Bot doesn't have witAccessToken: `, botParams);
     }
@@ -245,7 +300,7 @@ export async function ai(message: DBMessage,
 
 
     const client = _mkClient(botParams.settings.witAccessToken, respondFn);
-    const newWitData = await _runActions(client, text, witData, botParams);
+    const newWitData = await _runActions(client, text, message, witData, botParams);
 
     await aws.dynamoPut({
         TableName: DB_TABLE_CONVERSATIONS,
