@@ -12,9 +12,9 @@ const { IDENTITY_POOL_ID, USER_POOL_ID, AWS_REGION,
 const XMLHttpRequest = require('xhr2');
 global.XMLHttpRequest = XMLHttpRequest;
 
-// server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.js'
+// server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.min.js'
 // $FlowFixMe
-import 'script!aws-sdk.js';
+import 'script!aws-sdk.min.js';
 // $FlowFixMe
 import "script!jsbn.js";
 // $FlowFixMe
@@ -51,7 +51,6 @@ class AutoRefreshCredential extends AWS.CognitoIdentityCredentials {
 
     refresh(cb) {
         console.log('AutoRefreshCredential refresh');
-        //AWS.config.credentials.params.Logins['graph.facebook.com'] = updatedToken;
         this.getSession()
             .then(session => {
                 console.log('AutoRefreshCredential got session: ', session);
@@ -185,6 +184,7 @@ function updateCredentials(session) {
         AWS.config.credentials = new AutoRefreshCredential({
             IdentityPoolId : IDENTITY_POOL_ID,
             getSession: getCurrentSession,
+            RoleArn: IDENTITY_POOL_AUTH_ROLE_ARN,
             Logins: {},
             // Logins : {
             //     [`cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`]:

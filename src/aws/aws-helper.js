@@ -2,7 +2,7 @@ console.log('======== AWS SERVER');
 
 /* @flow */
 
-// server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.js'
+// server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.min.js'
 import AWS from 'aws-sdk';
 import { callbackToPromise } from '../misc/utils.js';
 import { ENV, CONSTANTS } from '../server/server-utils.js';
@@ -11,7 +11,8 @@ import _ from 'lodash';
 
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
         DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
-        DB_TABLE_AI_ACTIONS, S3_BUCKET_NAME } = ENV;
+        DB_TABLE_AI_ACTIONS, S3_BUCKET_NAME, IDENTITY_POOL_ID,
+        USER_POOL_ID} = ENV;
 
 
 AWS.config.update({
@@ -29,6 +30,7 @@ const dynamoDoc = new AWS.DynamoDB.DocumentClient();
 const dynamodb = new AWS.DynamoDB();
 const s3 = new AWS.S3();
 const lambda = new AWS.Lambda();
+const cognitoIdentity = new AWS.CognitoIdentity();
 
 export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
 export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
@@ -45,7 +47,9 @@ export const s3ListBuckets = callbackToPromise(s3.listBuckets, s3);
 export const s3CreateBucket = callbackToPromise(s3.createBucket, s3);
 export const s3WaitFor = callbackToPromise(s3.waitFor, s3);
 export const s3PutBucketPolicy = callbackToPromise(s3.putBucketPolicy, s3);
+export const s3PutBucketCors = callbackToPromise(s3.putBucketCors, s3);
 export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
+export const cognitoIdentityGetId = callbackToPromise(cognitoIdentity.getId, cognitoIdentity);
 
 
 export function dynamoCleanUpObj(obj: Object) {
@@ -75,6 +79,16 @@ export async function getBot(publisherId: string, botId: string): Promise<BotPar
     }
 
     return qres.Items[0];
+}
+
+export async function getIdFromJwtIdToken(jwtIdToken: string): string {
+    const res = await cognitoIdentityGetId({
+        IdentityPoolId: IDENTITY_POOL_ID,
+        Logins: {
+            [`cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`]: jwtIdToken
+        }
+    });
+    return res.IdentityId;
 }
 
 export const getAIAction = _createGetAIAction();
@@ -220,23 +234,6 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
     console.log('All DynamoDB tables are ready');
 }
 
-function createS3Policy(bucketName) {
-    // TODO allow publishers to get/put/list their directories
-    return (
-`{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetObject",
-			"Resource": "arn:aws:s3:::${S3_BUCKET_NAME}/*"
-		}
-	]
-}`
-);
-}
-
 async function initResourcesS3() {
     const { Buckets: buckets } = await s3ListBuckets();
     const bucketNames = buckets.map(x => x.Name);
@@ -246,9 +243,22 @@ async function initResourcesS3() {
         await s3CreateBucket({
             Bucket: S3_BUCKET_NAME,
         });
-        await s3PutBucketPolicy({
+        // await s3PutBucketPolicy({
+        //     Bucket: S3_BUCKET_NAME,
+        //     Policy: createS3Policy(S3_BUCKET_NAME),
+        // })
+        await s3PutBucketCors({
             Bucket: S3_BUCKET_NAME,
-            Policy: createS3Policy(S3_BUCKET_NAME),
+            CORSConfiguration: {
+                CORSRules: [
+                    {
+                        AllowedMethods: [ 'GET', 'POST', 'PUT' ],
+                        AllowedOrigins: [ '*' ],
+                        AllowedHeaders: [ '*' ],
+                        MaxAgeSeconds: 3000
+                    },
+                ]
+            },
         })
         await s3WaitFor('bucketExists', {
             Bucket: S3_BUCKET_NAME,

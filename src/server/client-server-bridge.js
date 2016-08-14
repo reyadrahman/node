@@ -8,7 +8,8 @@ import express from 'express';
 // TODO use express-jwt
 import jwtDecode from 'jwt-decode';
 
-const { DB_TABLE_BOTS, DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES } = ENV;
+const { AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
+        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES } = ENV;
 
 const routes = express.Router();
 
@@ -25,10 +26,32 @@ function parseJwtIdToken(jwtIdToken) {
     throw new Error('invalid jwtIdToken: ', jwtIdToken);
 }
 
+routes.use('/', (req, res, next) => {
+    let jwtIdToken;
+    if (req.query.jwtIdToken) {
+        jwtIdToken = decodeURIComponent(req.query.jwtIdToken);
+    } else if (req.body && req.body.jwtIdToken) {
+        jwtIdToken = req.body.jwtIdToken;
+    }
+    if (jwtIdToken) {
+        let idToken = parseJwtIdToken(jwtIdToken);
+        aws.getIdFromJwtIdToken(jwtIdToken)
+            .then(identityId => {
+                req.customData = {
+                    jwtIdToken,
+                    idToken,
+                    identityId,
+                };
+                next();
+            })
+            .catch(next);
+    }
+});
+
 // TODO validate input
 routes.get('/fetch-bots', (req, res, next) => {
-    const idToken = parseJwtIdToken(decodeURIComponent(req.query.jwtIdToken));
-    fetchBots(idToken)
+    const { idToken, identityId } = req.customData;
+    fetchBots(identityId, idToken)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -36,8 +59,8 @@ routes.get('/fetch-bots', (req, res, next) => {
 
 // TODO validate input
 routes.get('/fetch-conversations', (req, res, next) => {
-    const idToken = parseJwtIdToken(decodeURIComponent(req.query.jwtIdToken));
-    fetchConversations(idToken)
+    const { idToken, identityId } = req.customData;
+    fetchConversations(identityId, idToken)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -45,8 +68,8 @@ routes.get('/fetch-conversations', (req, res, next) => {
 
 // TODO validate input
 routes.get('/fetch-messages', (req, res, next) => {
-    const idToken = parseJwtIdToken(decodeURIComponent(req.query.jwtIdToken));
-    fetchMessages(idToken, req.query.conversationId)
+    const { idToken, identityId } = req.customData;
+    fetchMessages(identityId, idToken, req.query.conversationId)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -54,33 +77,33 @@ routes.get('/fetch-messages', (req, res, next) => {
 
 // TODO validate input
 routes.post('/add-bot', (req, res, next) => {
-    const idToken = parseJwtIdToken(req.body.jwtIdToken);
-    addBot(idToken, req.body.botName, req.body.settings)
+    const { idToken, identityId } = req.customData;
+    addBot(identityId, idToken, req.body.botName, req.body.settings)
         .then(x => res.send(x))
         .catch(err => next(err));
 });
 
 
-async function fetchBots(idToken) {
+async function fetchBots(identityId, idToken) {
     console.log('fetchBots: ', idToken);
     const qres = await aws.dynamoQuery({
         TableName: DB_TABLE_BOTS,
         KeyConditionExpression: 'publisherId = :pid',
         ExpressionAttributeValues: {
-            ':pid': idToken.sub,
+            ':pid': identityId,
         },
     });
     console.log('qres: ', qres);
     return qres.Items || [];
 }
 
-async function fetchConversations(idToken) {
+async function fetchConversations(identityId, idToken) {
     console.log('fetchConversations: ', idToken);
     const qres = await aws.dynamoQuery({
         TableName: DB_TABLE_CONVERSATIONS,
         KeyConditionExpression: 'publisherId = :pid',
         ExpressionAttributeValues: {
-            ':pid': idToken.sub,
+            ':pid': identityId,
         },
     });
 
@@ -88,13 +111,13 @@ async function fetchConversations(idToken) {
     return qres.Items || [];
 }
 
-async function fetchMessages(idToken, conversationId) {
+async function fetchMessages(identityId, idToken, conversationId) {
     console.log('fetchMessages: ', idToken);
     const qres = await aws.dynamoQuery({
         TableName: DB_TABLE_MESSAGES,
         KeyConditionExpression: 'publisherId_conversationId = :pc',
         ExpressionAttributeValues: {
-            ':pc': aws.composeKeys(idToken.sub, conversationId),
+            ':pc': aws.composeKeys(identityId, conversationId),
         },
     });
 
@@ -102,13 +125,13 @@ async function fetchMessages(idToken, conversationId) {
     return qres.Items || [];
 }
 
-async function addBot(idToken, botName, settings) {
+async function addBot(identityId, idToken, botName, settings) {
     console.log('addBot: ', idToken, botName, settings);
     const botId = uuid.v1();
     await aws.dynamoPut({
         TableName: DB_TABLE_BOTS,
         Item: aws.dynamoCleanUpObj({
-            publisherId: idToken.sub,
+            publisherId: identityId,
             botId,
             botName,
             settings,

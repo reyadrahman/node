@@ -3,7 +3,8 @@
 import '../server/preamble.js';
 import 'babel-polyfill';
 
-import { arity, callbackToPromise, catchPromise, timeout } from '../misc/utils.js';
+import { arity, callbackToPromise, catchPromise, timeout,
+         destructureS3Url } from '../misc/utils.js';
 import { ENV, CONSTANTS, request } from '../server/server-utils.js';
 import * as aws from '../aws/aws.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../misc/types.js';
@@ -38,7 +39,10 @@ const { WIT_ACCESS_TOKEN } = process.env;
 
 function createSampleWebhookMessage(): WebhookMessage {
     return {
-        publisherId_conversationId: aws.composeKeys(uuid.v1(), uuid.v1()),
+        publisherId_conversationId: aws.composeKeys(
+            uuid.v1().substr(0, 10) + ':' + uuid.v1().substr(10),
+            uuid.v1()
+        ),
         creationTimestamp: Date.now(),
         id: uuid.v1(),
         senderId: 'somesenderid',
@@ -161,12 +165,19 @@ describe('tests', function() {
         assert.equal(Buffer.compare(res[0].buffer, reqRes.body), 0, 'comparison to direct download failed');
 
 
-        const s3Res = await request({
-            url: await res[0].urlP,
-            encoding: null,
+        const bucketAndKey = destructureS3Url(await res[0].urlP);
+        const s3Res = await aws.s3GetObject({
+            Bucket: bucketAndKey.bucket,
+            Key: bucketAndKey.key,
         });
+        // const s3Res = await request({
+        //     url: await res[0].urlP,
+        //     encoding: null,
+        // });
 
-        assert.equal(Buffer.compare(res[0].buffer, s3Res.body), 0, 'comparison to s3 object failed');
+        console.log('res[0].buffer: ', res[0].buffer);
+        console.log('s3Res.Body: ', s3Res.Body);
+        assert.equal(Buffer.compare(res[0].buffer, s3Res.Body), 0, 'comparison to s3 object failed');
 
         done();
     }));

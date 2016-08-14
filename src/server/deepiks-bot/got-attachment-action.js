@@ -1,7 +1,8 @@
 /* @flow */
 
-import { callbackToPromise } from '../../misc/utils.js';
+import { callbackToPromise, destructureS3Url } from '../../misc/utils.js';
 import { ENV, request, allEntityValues } from '../server-utils.js';
+import * as aws from '../../aws/aws.js';
 import type { ActionRequest, ActionResponse } from '../../misc/types.js';
 import URL from 'url';
 import gVision from 'node-cloud-vision-api';
@@ -35,14 +36,25 @@ export default async function gotAttachment(req: ActionRequest): Promise<ActionR
         const url = urls[i];
         try {
             const startTime = Date.now();
-            const reqRes = await request({
-                url: URL.parse(url),
-                encoding: null,
+            const bucketAndKey = destructureS3Url(url);
+            if (!bucketAndKey) continue;
+
+            const res = await aws.s3GetObject({
+                Bucket: bucketAndKey.bucket,
+                Key: bucketAndKey.key,
             });
+
+            selectedImage = { url, buffer: res.Body };
             console.log('PROFILING: s3 download time: %s ms', Date.now() - startTime);
-            if (reqRes && reqRes.statusCode === 200 && reqRes.body instanceof Buffer) {
-                selectedImage = { url, buffer: reqRes.body };
-            }
+
+            // const reqRes = await request({
+            //     url: URL.parse(url),
+            //     encoding: null,
+            // });
+            // console.log('PROFILING: s3 download time: %s ms', Date.now() - startTime);
+            // if (reqRes && reqRes.statusCode === 200 && reqRes.body instanceof Buffer) {
+            //     selectedImage = { url, buffer: reqRes.body };
+            // }
         } catch(err){ }
     }
 

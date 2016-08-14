@@ -22,7 +22,8 @@ DB_TABLE_MESSAGES=
 DB_TABLE_AI_ACTIONS=
 S3_BUCKET_NAME=
 IDENTITY_POOL_ID=
-IDENTITY_POOL_ROLE_ARN=
+IDENTITY_POOL_UNAUTH_ROLE_ARN=
+IDENTITY_POOL_AUTH_ROLE_ARN=
 USER_POOL_ID=
 USER_POOL_APP_CLIENT_ID=
 GOOGLE_CLOUD_VISION_API_KEY=
@@ -260,10 +261,10 @@ You can also use `npm test -- --watch` to automatically re-run all tests on ever
 The server uses the aws-sdk package from npm. But the client uses a custom built library reduced to only the services we need on the client. Here is how you can build the custom library:
 ``` sh
 git clone https://github.com/aws/aws-sdk-js.git
-git checkout v2.4.13
+git checkout v2.4.14
 npm install
-MINIFY=1 node dist-tools/browser-builder.js cognitoidentity-2014-06-30 >aws-sdk.js
-mv aws-sdk.js /DEEPIKS_ROOT/external_modules/aws-sdk.js
+MINIFY=1 node dist-tools/browser-builder.js cognitoidentity-2014-06-30,s3-2006-03-01 >aws-sdk.min.js
+mv aws-sdk.min.js /DEEPIKS_ROOT/external_modules/aws-sdk.min.js
 
 ```
 Where `DEEPIKS_ROOT` is the root directory of this repository.

@@ -16,7 +16,7 @@ const initAppState = JSON.parse(document.getElementById('initAppState').innerHTM
 const loggerMiddleware = createLogger();
 
 
-let initAndRender = currentUser => {
+let initAndRender = userAttributes => {
     if (!initAppState.lang) {
         initAppState.lang = Cookies.get('language') || initAppState.systemLang;
     }
@@ -26,8 +26,8 @@ let initAndRender = currentUser => {
                                   thunkMiddleware,
                                   loggerMiddleware));
 
-    if (currentUser) {
-        store.dispatch(actions.setCurrentUserAttributes(currentUser));
+    if (userAttributes) {
+        store.dispatch(actions.setCurrentUserAttributes(userAttributes));
     }
 
     render((

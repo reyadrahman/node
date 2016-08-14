@@ -40,6 +40,12 @@ export function pathToSearchQuery(path: string) {
     };
 }
 
+export function destructureS3Url(url: string): ?{ bucket: string, key: string} {
+    let res = url.match(/https:\/\/(.*?)\.s3\.amazonaws\.com\/(.*)/);
+    if (!res) return null;
+    return { bucket: decodeURIComponent(res[1]), key: decodeURIComponent(res[2]) };
+}
+
 export function callbackToPromise(f: Function, context?: Object) {
     return function() {
         return new Promise((resolve, reject) => {
