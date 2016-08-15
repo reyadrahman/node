@@ -10,12 +10,13 @@ export type QuickReply = string | {
 export type DBMessage = {
     publisherId_conversationId: string,
     creationTimestamp: number,
+    senderName: string,
+    senderId: string,
     id?: string,
-    senderId?: string,
     source?: string,
     text?: string,
     files?: Array<string>,
-    quickReplies?: Array<QuickReply>,
+    senderProfilePic?: string,
 };
 
 export type WebhookMessage = {
@@ -24,9 +25,11 @@ export type WebhookMessage = {
     id: string,
     senderId: string,
     source: string,
+    senderName: string,
     text?: string,
     files?: Array<string>,
     filesGetFn?: Array<() => Buffer>,
+    senderProfilePic?: string,
 };
 
 export type ResponseMessage = string | {
@@ -65,10 +68,12 @@ export type ActionResponseMessage = string | {
 export type ActionResponse = {
     msg?: ActionResponseMessage,
     context: Object,
+    userPrefs?: Object,
 };
 
 export type BotParams = {
     botId: string,
+    botName: string,
     publisherId: string,
     settings: {
         ciscosparkAccessToken: string,

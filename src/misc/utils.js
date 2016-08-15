@@ -3,6 +3,27 @@
 import _ from 'lodash';
 import type { ServerEnv, ClientEnv } from './types.js';
 
+export function leftPad(x: string | number, pad: string, n: number): string {
+    const str = String(x);
+    return pad.repeat(Math.max(0, n - str.length)) + str;
+}
+
+export function simpleTimeFormat(timeRaw: Date | number | string) {
+    const time = new Date(timeRaw);
+    const within24H = time.getTime() > Date.now() - 1000 * 60 * 60 * 24;
+    if (within24H) {
+        const h = leftPad(time.getHours(), '0', 2);
+        const m = leftPad(time.getMinutes(), '0', 2);
+        return `${h}:${m}`;
+    }
+    // TODO translation
+    var monthNames = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    return `${leftPad(time.getDate(), '0', 2)} ${monthNames[time.getMonth()]}`;
+}
+
 export function createUrlQuery(obj: {[key: string]: any}): string {
     const euc = encodeURIComponent;
     // $FlowFixMe

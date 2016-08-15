@@ -1,7 +1,11 @@
+/* @flow */
+
 import React from 'react';
 import { Form, Input, Button, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
 import * as actions from '../../actions/actions.js';
+import Conversations from './Conversations.jsx';
+import Messages from './Messages.jsx';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
 
@@ -15,6 +19,10 @@ let ConversationPage = React.createClass({
     //     e.preventDefault();
     //     this.props.router.push('/add-bot');
     // },
+
+    conversationSelected(conversationId) {
+        this.props.router.push(`/messages/${conversationId}`)
+    },
 
     componentDidMount() {
         const { currentUser: cu, params, fetchConversations, fetchMessages } = this.props;
@@ -58,109 +66,113 @@ let ConversationPage = React.createClass({
 
     render() {
         const { className, styles, styles: { conversationsPage: ss },
-                params, currentUser, i18n: { strings: { conversations: strings } },
+                params, currentUser, i18n,
+                i18n: { strings: { conversations: strings } },
                 /*successMessage, errorMessage*/ } = this.props;
         // const { state } = this;
 
-        console.log('ConversationsPage: currentUser: ', currentUser);
-
         if (!currentUser) {
-            return (
-                <h3>Please log in</h3>
-            );
+            return <div className={`${ss.root} ${className || ''}`}></div>
+            // return (
+            //     <div className={ss.pleaseLogin}>
+            //         Please log in
+            //     </div>
+            // );
         }
-
-        if (!currentUser.conversationsState ||
-            !currentUser.conversationsState.conversations ||
-            currentUser.conversationsState.isFetchingConversationsState)
-        {
-            return (
-                <h3>Please wait...</h3>
-            );
-        }
-
-        const convs = currentUser.conversationsState.conversations;
-
-        if (convs.length === 0) {
-            return (
-                <h3>No conversations found</h3>
-            );
-        }
-
-        const contacts = convs.map((x, i) => {
-            return (
-                <div
-                    className={ss.contact}
-                    onClick={() => this.props.router.push(`/conversations/${x.conversationId}`)}
-                >
-                    {`Conversation ${i + 1}`}
-                </div>
-            );
-        });
-
-        const noConvSelected = !params.conversationId &&
-            <h3>Please select a conversation</h3>;
-
-        const messagesCacheState = currentUser.messagesCacheState;
-
-        const messagesCache = messagesCacheState &&
-            messagesCacheState.messagesCache
-
-        const fetchingMessages = params.conversationId &&
-            (!messagesCache || !messagesCache[params.conversationId]) &&
-            <h3>Please wait</h3>
-
-        const messages = messagesCache &&
-            params.conversationId &&
-            messagesCache[params.conversationId] &&
-            messagesCache[params.conversationId].map(
-                x => <Message styles={styles} message={x} />
-            );
-
 
         return (
             <div className={`${ss.root} ${className || ''}`}>
                 <div className={ss.leftRightSplit}>
-                    <div className={ss.contacts}>
-                        { contacts }
-                    </div>
-                    <div className={ss.messages}>
-                        { noConvSelected || fetchingMessages || messages }
-                    </div>
+                    <Conversations
+                        className={ss.conversations}
+                        currentUser={currentUser}
+                        selectedConversationId={params.conversationId}
+                        styles={styles}
+                        i18n={i18n}
+                        onSelectConversation={this.conversationSelected}
+                    />
+                    <Messages
+                        className={ss.messages}
+                        currentUser={currentUser}
+                        selectedConversationId={params.conversationId}
+                        styles={styles}
+                        i18n={i18n}
+                    />
                 </div>
             </div>
         );
-
-        // const botsState = currentUser && currentUser.botsState;
         //
-        // const fetchingBot = botsState && botsState.isFetchingBotState &&
-        //     <div>Fetching bots...</div>;
-        // const botList = botsState && botsState.bots && botsState.bots.map(x => {
+        //
+        //
+        //
+        //
+        //
+        // console.log('ConversationsPage: currentUser: ', currentUser);
+        //
+        // if (!currentUser) {
         //     return (
-        //         <div>
-        //             <Link to={`/bots/${x.botId}`}>
-        //                 {x.botName}
-        //             </Link>
+        //         <h3>Please log in</h3>
+        //     );
+        // }
+        //
+        // if (!currentUser.conversationsState ||
+        //     !currentUser.conversationsState.conversations ||
+        //     currentUser.conversationsState.isFetchingConversationsState)
+        // {
+        //     return (
+        //         <h3>Please wait...</h3>
+        //     );
+        // }
+        //
+        // const convs = currentUser.conversationsState.conversations;
+        //
+        // if (convs.length === 0) {
+        //     return (
+        //         <h3>No conversations found</h3>
+        //     );
+        // }
+        //
+        // const contacts = convs.map((x, i) => {
+        //     return (
+        //         <div
+        //             className={ss.contact}
+        //             onClick={() => this.props.router.push(`/conversations/${x.conversationId}`)}
+        //         >
+        //             {`Conversation ${i + 1}`}
         //         </div>
         //     );
         // });
-        // const emptyBotList = (botList && botList.length === 0) &&
-        //     <div>You have no bots</div>;
+        //
+        // const noConvSelected = !params.conversationId &&
+        //     <h3>Please select a conversation</h3>;
+        //
+        // const messagesCacheState = currentUser.messagesCacheState;
+        //
+        // const messagesCache = messagesCacheState &&
+        //     messagesCacheState.messagesCache
+        //
+        // const fetchingMessages = params.conversationId &&
+        //     (!messagesCache || !messagesCache[params.conversationId]) &&
+        //     <h3>Please wait</h3>
+        //
+        // const messages = messagesCache &&
+        //     params.conversationId &&
+        //     messagesCache[params.conversationId] &&
+        //     messagesCache[params.conversationId].map(
+        //         x => <Message styles={styles} message={x} />
+        //     );
         //
         //
         // return (
         //     <div className={`${ss.root} ${className || ''}`}>
-        //         {
-        //             fetchingBot || emptyBotList || botList
-        //         }
-        //         <Form styles={styles} onSubmit={this.addBot}>
-        //             <Button
-        //                 className={ss.addBotButton}
-        //                 label={strings.addBot}
-        //                 styles={styles}
-        //                 type='submit'
-        //             />
-        //         </Form>
+        //         <div className={ss.leftRightSplit}>
+        //             <div className={ss.contacts}>
+        //                 { contacts }
+        //             </div>
+        //             <div className={ss.messages}>
+        //                 { noConvSelected || fetchingMessages || messages }
+        //             </div>
+        //         </div>
         //     </div>
         // );
     }
@@ -177,25 +189,6 @@ ConversationPage = connect(
 )(ConversationPage);
 
 ConversationPage = withRouter(ConversationPage);
-
-
-export const Message = ({
-    className,
-    styles: { conversationsPage: ss },
-    message,
-    ...others
-}) => {
-    return (
-        <div className={`${ss.message} ${className || ''}`} {...others} >
-            { message.text }
-            {
-                message.files && message.files.map(x => (
-                    <img className={ss.image} src={x} />
-                ))
-            }
-        </div>
-    );
-};
 
 
 export default ConversationPage;

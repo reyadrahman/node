@@ -61,6 +61,7 @@ async function processMessage(session, authRequest, botParams) {
         creationTimestamp: new Date(m.timestamp).getTime(),
         id: m.address.id,
         senderId: session.message.user.id,
+        senderName: session.message.user.name,
         source: m.address.channelId + 'bot',
         text: session.message.text,
         filesGetFn,

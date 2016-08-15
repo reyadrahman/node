@@ -11,7 +11,7 @@ import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 const Routes = (
     <Route path="/" component={App}>
         <IndexRoute component={Home} />
-        <Route path="conversations(/:conversationId)" component={ConversationsPage} />
+        <Route path="messages(/:conversationId)" component={ConversationsPage} />
         <Route path="bots" component={BotsPage} />
         <Route path="add-bot" component={AddBotPage} />
         <Route path="contacts" component={ContactsPage} />

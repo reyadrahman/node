@@ -7,7 +7,7 @@ export default {
     },
     sideMenu: {
         bots: 'Bots',
-        conversations: 'Conversations',
+        messages: 'Messages',
         contacts: 'Contacts',
     },
     home: {

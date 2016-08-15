@@ -60,11 +60,13 @@ async function handle(req: Request) {
             return buffer.body;
         })
     );
+    const senderProfile = await client.people.get(rawMessage.personId);
     const message: WebhookMessage = {
         publisherId_conversationId: aws.composeKeys(botParams.publisherId, rawMessage.roomId),
         creationTimestamp: new Date(rawMessage.created).getTime(),
         id: rawMessage.id,
         senderId: rawMessage.personId,
+        senderName: senderProfile.displayName,
         source: 'ciscosparkbot',
         text: rawMessage.text,
         filesGetFn,

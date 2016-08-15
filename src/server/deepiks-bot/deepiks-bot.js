@@ -141,80 +141,6 @@ export async function _insertAttachmentsIntoMessage(
     return newMessage;
 }
 
-// export async function _findSimilarRoute(message: WebhookMessage, respondFn: RespondFn) {
-//     respondFn('Finding similar images, one moment please...');
-//     await _logWebhookMessage(message);
-//
-//     let nextTimestamp = message.creationTimestamp + 1; //must be unique
-//     console.log('nextTimestamp: ', nextTimestamp);
-//
-//     const qres = await aws.dynamoQuery({
-//         TableName: DB_TABLE_MESSAGES,
-//         // IndexName: 'Index',
-//         KeyConditionExpression: 'publisherId_conversationId = :pc and #t < :t',
-//         ExpressionAttributeValues: {
-//             ':pc': message.publisherId_conversationId,
-//             ':t': nextTimestamp++,
-//         },
-//         ExpressionAttributeNames: {
-//             '#t': 'timestamp',
-//         },
-//         ScanIndexForward: false,
-//         Limit: 10,
-//     });
-//
-//     const lastMessageWithFile = qres.Items.find(x => x.files);
-//     console.log('lastMessageWithFile : ', lastMessageWithFile);
-//     if (!lastMessageWithFile) {
-//         const responseText = 'No image was posted recently';
-//         await _logMessage({
-//             publisherId_conversationId: message.publisherId_conversationId,
-//             creationTimestamp: nextTimestamp++, // must be unique
-//             text: responseText,
-//         });
-//         return respondFn(responseText);
-//     }
-//
-//     const fileUrl = lastMessageWithFile.files[lastMessageWithFile.files.length-1];
-//
-//     let similarImagesResponse = await findSimilarImages(fileUrl);
-//     if (!similarImagesResponse.successful) {
-//         const responseText = 'Unfortunately there was an error while trying to find similar images.';
-//         await _logMessage({
-//             publisherId_conversationId: message.publisherId_conversationId,
-//             creationTimestamp: nextTimestamp++, // must be unique
-//             text: responseText,
-//         });
-//         return respondFn(responseText);
-//     }
-//     if (similarImagesResponse.fake) {
-//         respondFn('(these results are fake, just for development purposes)');
-//     }
-//
-//     const similarImages = similarImagesResponse.results;
-//     if (similarImages.length === 0) {
-//         const responseText = 'Did not find any similar images';
-//         await _logMessage({
-//             publisherId_conversationId: message.publisherId_conversationId,
-//             creationTimestamp: nextTimestamp++, // must be unique
-//             text: responseText,
-//         });
-//         return respondFn(responseText);
-//
-//     }
-//
-//     await _logMessage({
-//         publisherId_conversationId: message.publisherId_conversationId,
-//         creationTimestamp: nextTimestamp++, // must be unique
-//         files: similarImages,
-//     });
-//
-//     respondFn({
-//         text: '',
-//         files: similarImages,
-//     });
-// }
-
 export async function _aiRoute(
     message: DBMessage,
     botParams: BotParams,
@@ -242,26 +168,24 @@ async function _textMessageRoute(message: WebhookMessage, respondFn: RespondFn) 
     await _logWebhookMessage(message);
 }
 
-export async function _updateConversationTable(message: WebhookMessage)
+export async function _updateConversationTable(message: DBMessage)
 {
     console.log('_updateConversationTable');
     const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
-    // TODO use DynamoDoc.update instead
-    try {
-        const res = await aws.dynamoPut({
-            TableName: DB_TABLE_CONVERSATIONS,
-            Item: {
-                publisherId,
-                conversationId,
-            },
-            ConditionExpression: 'attribute_not_exists(publisherId)',
-        });
-        console.log('_updateConversationTable res: ', res);
-    } catch(err) {
-        if (err.code !== 'ConditionalCheckFailedException') {
-            throw err;
-        }
-    }
+
+    const res = await aws.dynamoUpdate({
+        TableName: DB_TABLE_CONVERSATIONS,
+        Key: {
+            publisherId,
+            conversationId,
+        },
+        UpdateExpression: 'SET lastMessage = :lastMessage, lastMessageTimestamp = :lmt',
+        ExpressionAttributeValues: {
+            ':lastMessage': message,
+            ':lmt': message.creationTimestamp,
+        },
+    });
+    console.log('_updateConversationTable res: ', res);
 }
 
 export async function _route(rawMessage: WebhookMessage,
@@ -269,9 +193,6 @@ export async function _route(rawMessage: WebhookMessage,
                              respondFn: RespondFn)
 {
     console.log('route');
-
-    // will await later
-    const updateConversationP = _updateConversationTable(rawMessage);
 
     // [{urlP, buffer, format}]
     const attachments = await _attachmentMiddleware(rawMessage);
@@ -282,10 +203,11 @@ export async function _route(rawMessage: WebhookMessage,
         : dbMessage;
 
     console.log('processedMessage: ', processedMessage);
+
     // will await later
     const logP = _logMessage(processedMessage);
 
-    await updateConversationP;
+    await _updateConversationTable(processedMessage);
 
     const aiRouteResponses = await _aiRoute(processedMessage, botParams, respondFn);
 
@@ -295,6 +217,8 @@ export async function _route(rawMessage: WebhookMessage,
     await _logMessage(aiRouteResponses.map(m => ({
         publisherId_conversationId: processedMessage.publisherId_conversationId,
         creationTimestamp: nextTimestamp++, // must be unique
+        senderId: aws.composeKeys(botParams.publisherId, botParams.botId),
+        senderName: botParams.botName,
         ...(typeof m === 'string' ? {text: m} : m),
     })));
 }

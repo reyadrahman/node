@@ -101,10 +101,13 @@ async function fetchConversations(identityId, idToken) {
     console.log('fetchConversations: ', idToken);
     const qres = await aws.dynamoQuery({
         TableName: DB_TABLE_CONVERSATIONS,
+        IndexName: 'byLastMessageTimestamp',
         KeyConditionExpression: 'publisherId = :pid',
         ExpressionAttributeValues: {
             ':pid': identityId,
         },
+        Limit: 50,
+        ScanIndexForward: false,
     });
 
     console.log('qres: ', qres);

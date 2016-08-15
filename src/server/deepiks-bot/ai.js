@@ -332,14 +332,17 @@ export async function ai(message: DBMessage,
     const { witData: newWitData, userPrefs: newUserPrefs } =
         await _runActions(client, text, message, witData, userPrefs, botParams);
 
-    // TODO batch puts
-    await aws.dynamoPut({
+    // TODO batch dynamo queries
+    await aws.dynamoUpdate({
         TableName: DB_TABLE_CONVERSATIONS,
-        Item: aws.dynamoCleanUpObj({
+        Key: {
             publisherId,
             conversationId,
-            witData: newWitData,
-        }),
+        },
+        UpdateExpression: 'SET witData = :witData',
+        ExpressionAttributeValues: {
+            ':witData': newWitData,
+        },
     });
     await aws.dynamoPut({
         TableName: DB_TABLE_USER_PREFS,

@@ -48,10 +48,10 @@ export const App_ = React.createClass({
                 value: 'bots',
             },
             {
-                label: sideMenuStrings.conversations,
-                link: '/conversations',
+                label: sideMenuStrings.messages,
+                link: '/messages',
                 icon: 'icon-th-large',
-                value: 'conversations',
+                value: 'messages',
             },
         ];
 

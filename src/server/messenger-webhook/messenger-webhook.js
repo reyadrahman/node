@@ -116,6 +116,7 @@ async function receivedMessage(entry: MessengerReqEntry,
                                messagingEvent: MessengerReqMessaging,
                                botParams: BotParams)
 {
+    const userProfile = await getUserProfile(messagingEvent.sender.id, botParams);
     const {attachments} = messagingEvent.message;
     const files = !attachments ? undefined :
         attachments.filter(x => x.type === 'image')
@@ -131,6 +132,8 @@ async function receivedMessage(entry: MessengerReqEntry,
         source: 'messengerbot',
         text: messagingEvent.message.text,
         files,
+        senderName: `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim(),
+        senderProfilePic: userProfile.profile_pic || null,
     };
 
     console.log('messenger-webhook sending deepiks-bot: ', message);
@@ -285,6 +288,22 @@ async function sendMessage(botParams: BotParams, messageData) {
         console.error('Sending message failed with code %s msg %s and body: ',
                       r.statusCode, r.statusMessage, r.body);
     }
+}
+
+async function getUserProfile(userId, botParams) {
+    const r = await request({
+        uri: `https://graph.facebook.com/v2.6/${userId}`,
+        qs: {
+            fields: 'first_name,last_name,profile_pic',
+            access_token: botParams.settings.messengerPageAccessToken,
+        },
+        method: 'GET',
+    });
+    if (r.statusCode !== 200) {
+        console.error('getUserProfile failed with code %s msg %s and body: ',
+                      r.statusCode, r.statusMessage, r.body);
+    }
+    return JSON.parse(r.body);
 }
 
 

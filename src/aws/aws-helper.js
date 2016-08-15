@@ -38,6 +38,7 @@ const sts = new AWS.STS();
 
 export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
 export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
+export const dynamoUpdate = callbackToPromise(dynamoDoc.update, dynamoDoc);
 export const dynamoQuery = callbackToPromise(dynamoDoc.query, dynamoDoc);
 export const dynamoScan = callbackToPromise(dynamoDoc.scan, dynamoDoc);
 export const dynamoCreateTable = callbackToPromise(dynamodb.createTable, dynamodb);
@@ -185,11 +186,24 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             AttributeDefinitions: [
                 { AttributeName: 'publisherId', AttributeType: 'S' },
                 { AttributeName: 'conversationId', AttributeType: 'S' },
+                { AttributeName: 'lastMessageTimestamp', AttributeType: 'N' },
+            ],
+            LocalSecondaryIndexes: [
+                {
+                    IndexName: 'byLastMessageTimestamp',
+                    KeySchema: [
+                        { AttributeName: 'publisherId', KeyType: 'HASH'},
+                        { AttributeName: 'lastMessageTimestamp', KeyType: 'RANGE'},
+                    ],
+                    Projection: {
+                        ProjectionType: 'ALL',
+                    },
+                },
             ],
             ProvisionedThroughput: {
                 ReadCapacityUnits: readCapacityUnits,
                 WriteCapacityUnits: writeCapacityUnits,
-            }
+            },
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(DB_TABLE_CONVERSATIONS);
