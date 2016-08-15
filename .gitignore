@@ -17,3 +17,5 @@ node_modules
 
 .ebextensions/*
 !.ebextensions/00.config
+
+amazon-cognito-identity-js/
