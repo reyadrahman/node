@@ -43,6 +43,7 @@ export type ActionRequest = {
     entities: Object,
     publisherId: string,
     botId: string,
+    userPrefs: UserPrefs,
     credentials: {
         accessKeyId: string,
         secretAccessKey: string,
@@ -85,6 +86,9 @@ export type AIActionInfo = {
     lambda?: string,
 };
 
+// is that it?
+export type UserPrefs = Object;
+
 export type ServerEnv = {
     NODE_ENV: string,
     PLATFORM: string,
@@ -95,6 +99,7 @@ export type ServerEnv = {
     DB_TABLE_CONVERSATIONS: string,
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
+    DB_TABLE_USER_PREFS: string,
     S3_BUCKET_NAME: string,
     GOOGLE_CLOUD_VISION_API_KEY: string,
     MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,
@@ -117,6 +122,7 @@ export type ClientEnv = {
     DB_TABLE_CONVERSATIONS: string,
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
+    DB_TABLE_USER_PREFS: string,
     S3_BUCKET_NAME: string,
     GOOGLE_CLOUD_VISION_API_KEY: string,
     MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: string,

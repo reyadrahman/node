@@ -1,17 +1,17 @@
 /* @flow */
 
 import * as aws from '../../aws/aws.js';
-import type { DBMessage, ResponseMessage, BotParams } from '../../misc/types.js';
+import type { DBMessage, ResponseMessage, BotParams, ActionRequest,
+              ActionResponse, UserPrefs } from '../../misc/types.js';
 import { ENV, request, allEntityValues } from '../server-utils.js';
 import { catchPromise, callbackToPromise } from '../../misc/utils.js';
-import type { ActionRequest, ActionResponse } from '../../misc/types.js';
 import gotAttachment from './got-attachment-action.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
 import URL from 'url';
 import uuid from 'node-uuid';
 
-const { DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = ENV;
+const { DB_TABLE_CONVERSATIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME } = ENV;
 
 type WitData = {
     context: Object,
@@ -26,6 +26,12 @@ type ActionRequestIncomplete = {
     entities: Object,
     publisherId: string,
     botId: string,
+    userPrefs: UserPrefs,
+};
+
+type RunActionsRes = {
+    witData: WitData,
+    userPrefs: UserPrefs,
 };
 
 export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) => void) {
@@ -33,7 +39,7 @@ export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) =
         accessToken,
         respondFn,
         actions: {
-            send: async function(request, response) {
+            send: async function(request: ActionRequestIncomplete, response) {
                 console.log('actions.send: ', JSON.stringify(response));
                 respondFn({
                     text: response.text,
@@ -58,27 +64,29 @@ export async function _runActions(client: Wit,
                                   text: string,
                                   originalMessage: DBMessage,
                                   witData: WitData,
+                                  userPrefs: UserPrefs,
                                   botParams: BotParams
-) : Promise<WitData>
+) : Promise<RunActionsRes>
 {
     let converseData = await client.converse(witData.sessionId, text, witData.context);
     return await _runActionsHelper(client, text, originalMessage, witData,
-                                   botParams, converseData, 5);
+                                   userPrefs, botParams, converseData, 5);
 }
 
 export async function _runActionsHelper(client: Wit,
                                         text: string,
                                         originalMessage: DBMessage,
                                         witData: WitData,
+                                        userPrefs: UserPrefs,
                                         botParams: BotParams,
                                         converseData: Object,
-                                        level: number)
-                                        : Promise<WitData>
+                                        level: number
+) : Promise<RunActionsRes>
 {
     console.log('_runActionsHelper: converseData: ', converseData);
     if (level < 0) {
         console.log('_runActionsHelper: Max steps reached, stopping.');
-        return witData;
+        return { userPrefs, witData };
     }
 
     if (!converseData.type) {
@@ -99,7 +107,7 @@ export async function _runActionsHelper(client: Wit,
     }
 
     if (converseData.type === 'stop') {
-        return witData;
+        return { userPrefs, witData };
     }
 
     const requestData = {
@@ -109,6 +117,7 @@ export async function _runActionsHelper(client: Wit,
         entities: converseData.entities,
         publisherId: botParams.publisherId,
         botId: botParams.botId,
+        userPrefs,
     };
 
     if (converseData.type === 'msg') {
@@ -122,7 +131,7 @@ export async function _runActionsHelper(client: Wit,
         }
         const newConverseData = await client.converse(witData.sessionId, null, witData.context);
         return await _runActionsHelper(client, text, originalMessage, witData,
-                                       botParams, newConverseData, level-1)
+                                       userPrefs, botParams, newConverseData, level-1)
 
     } else if (converseData.type === 'action') {
         let actionFullName = converseData.action;
@@ -151,13 +160,17 @@ export async function _runActionsHelper(client: Wit,
                              client.config.actions) || {};
         console.log('action returned: ', actionRes);
         newWitData.context = actionRes.context || {};
+        const newUserPrefs = _.has(actionRes, 'userPrefs')
+            ? actionRes.userPrefs || {}
+            : userPrefs;
 
         if (actionRes.msg) {
             client.config.respondFn(actionRes.msg);
         }
         const newConverseData = await client.converse(newWitData.sessionId, null, newWitData.context);
         return await _runActionsHelper(client, text, originalMessage, newWitData,
-                                       botParams, newConverseData, level-1)
+                                       newUserPrefs, botParams, newConverseData,
+                                       level-1)
     } else {
         console.error('unknown response type', converseData);
         throw new Error('unknown response type ' + converseData.type);
@@ -270,7 +283,8 @@ export async function ai(message: DBMessage,
     const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
 
 
-    const qres = await aws.dynamoQuery({
+    // TODO batch queries
+    const convQueryRes = await aws.dynamoQuery({
         TableName: DB_TABLE_CONVERSATIONS,
         KeyConditionExpression: 'publisherId = :publisherId and conversationId = :conversationId',
         ExpressionAttributeValues: {
@@ -278,17 +292,32 @@ export async function ai(message: DBMessage,
             ':conversationId': conversationId,
         },
     });
-    qres.Items.map((x, i) => console.log(`ai: qres ${i}`, x));
+    convQueryRes.Items.map((x, i) => console.log(`ai: convQueryRes ${i}`, x));
 
-    if (qres.Count === 0) {
+    if (convQueryRes.Count === 0) {
         throw new Error('ai: couldn\'t find the conversation');
     }
 
     const witData = Object.assign({
         sessionId: uuid.v1(),
         context: {},
-    }, qres.Items[0].witData);
+    }, convQueryRes.Items[0].witData);
     console.log('ai: witData: ', witData);
+
+
+    // TODO batch queries
+    const prefQueryRes = await aws.dynamoQuery({
+        TableName: DB_TABLE_USER_PREFS,
+        KeyConditionExpression: 'publisherId = :publisherId and botId_userId = :bu',
+        ExpressionAttributeValues: {
+            ':publisherId': publisherId,
+            ':bu': aws.composeKeys(botParams.botId, message.senderId),
+        },
+    });
+    console.log('ai: user preferences found: ', prefQueryRes.Items);
+    const userPrefs = prefQueryRes.Items && prefQueryRes.Items[0] &&
+                      prefQueryRes.Items[0].prefs || {};
+
 
     let text = message.text;
     if (message.files && message.files.length) {
@@ -300,14 +329,24 @@ export async function ai(message: DBMessage,
 
 
     const client = _mkClient(botParams.settings.witAccessToken, respondFn);
-    const newWitData = await _runActions(client, text, message, witData, botParams);
+    const { witData: newWitData, userPrefs: newUserPrefs } =
+        await _runActions(client, text, message, witData, userPrefs, botParams);
 
+    // TODO batch puts
     await aws.dynamoPut({
         TableName: DB_TABLE_CONVERSATIONS,
         Item: aws.dynamoCleanUpObj({
             publisherId,
             conversationId,
             witData: newWitData,
+        }),
+    });
+    await aws.dynamoPut({
+        TableName: DB_TABLE_USER_PREFS,
+        Item: aws.dynamoCleanUpObj({
+            publisherId,
+            botId_userId: aws.composeKeys(botParams.botId, message.senderId),
+            prefs: newUserPrefs,
         }),
     });
 }

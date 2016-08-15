@@ -11,8 +11,8 @@ import _ from 'lodash';
 
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
         DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
-        DB_TABLE_AI_ACTIONS, S3_BUCKET_NAME, IDENTITY_POOL_ID,
-        USER_POOL_ID} = ENV;
+        DB_TABLE_AI_ACTIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME,
+        IDENTITY_POOL_ID, USER_POOL_ID} = ENV;
 
 
 AWS.config.update({
@@ -231,6 +231,26 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(DB_TABLE_AI_ACTIONS);
+    }
+    if (!tables.includes(DB_TABLE_USER_PREFS)) {
+        console.log('creating table: DB_TABLE_USER_PREFS');
+        const tableParams = {
+            TableName : DB_TABLE_USER_PREFS,
+            KeySchema: [
+                { AttributeName: 'publisherId', KeyType: 'HASH' },
+                { AttributeName: 'botId_userId', KeyType: 'RANGE' }
+            ],
+            AttributeDefinitions: [
+                { AttributeName: 'publisherId', AttributeType: 'S' },
+                { AttributeName: 'botId_userId', AttributeType: 'S' },
+            ],
+            ProvisionedThroughput: {
+                ReadCapacityUnits: readCapacityUnits,
+                WriteCapacityUnits: writeCapacityUnits,
+            }
+        };
+        const res = await dynamoCreateTable(tableParams);
+        creatingTables.push(DB_TABLE_USER_PREFS);
     }
 
     await Promise.all(creatingTables.map(
