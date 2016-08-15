@@ -20,6 +20,7 @@ DB_TABLE_BOTS=
 DB_TABLE_CONVERSATIONS=
 DB_TABLE_MESSAGES=
 DB_TABLE_AI_ACTIONS=
+DB_TABLE_USER_PREFS=
 S3_BUCKET_NAME=
 IDENTITY_POOL_ID=
 IDENTITY_POOL_UNAUTH_ROLE_ARN=
@@ -55,26 +56,62 @@ No need to configure the database or s3 buckets. They are created automatically 
 
 NOTE: Existing database tables and s3 buckets are never overwritten.
 
-Temporarily, until we have a UI for registering publishers and creating bots, we can enter bots' information directly into the DynamoDB table named by `DB_TABLE_BOTS`. For example an item in the table would look like this:
-``` json
+Temporarily, until we have a UI for adding AI actions, we can enter them directly into the DynamoDB table named by `DB_TABLE_AI_ACTIONS`. See "AI Actions" section for more details.
+
+### User Pool & Identity Pool
+In [AWS Cognito Console](https://console.aws.amazon.com/cognito) you need to create an a user pool by going to "Manage your user pools" and an identity pool by going to "Manage federated identities". Then add their IDs to the environment variables `USER_POOL_ID` and `IDENTITY_POOL_ID`.
+
+While creating the user pool, you also need to create an app for it (`USER_POOL_APP_CLIENT_ID`). When doing so, make sure "Generate client secret" is **unchecked**.
+
+While creating the identity pool, it should automatically create 2 new IAM roles, one for authenticated users (`IDENTITY_POOL_AUTH_ROLE_ARN`) and one for unauthenticated users (`IDENTITY_POOL_UNAUTH_ROLE_ARN`).
+
+Then go to [AWS IAM Console -> Roles](https://console.aws.amazon.com/iam/home#roles) -> select `IDENTITY_POOL_AUTH_ROLE_ARN` role -> edit policy and replace it with the following where `XXX` is the name of your S3 bucket (`S3_BUCKET_NAME`):
+
+```
 {
-  "botId": "someBotId",
-  "publisherId": "somePublisherId",
-  "settings": {
-    "ciscosparkAccessToken": "XXX",
-    "ciscosparkBotEmail": "XXX",
-    "messengerPageAccessToken": "XXX",
-    "microsoftAppId": "XXX",
-    "microsoftAppPassword": "XXX",
-    "witAccessToken":"XXX"
-  }
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "mobileanalytics:PutEvents",
+                "cognito-sync:*",
+                "cognito-identity:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "AllowPublisherListHisFolder",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "arn:aws:s3:::XXX"
+            ],
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": [
+                        "${cognito-identity.amazonaws.com:sub}/*"
+                    ]
+                }
+            }
+        },
+        {
+            "Sid": "AllowPublisherFullControlOverHisFolder",
+            "Effect": "Allow",
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::XXX/${cognito-identity.amazonaws.com:sub}/*"
+            ]
+        }
+    ]
 }
 ```
-
-Also you can enter AI actions directly into `DB_TABLE_AI_ACTIONS`. See "AI Actions" section for more details.
-
-### User Pool
-When creating an app for your user pool, make sure "Generate client secret"
 
 ### AI Actions (Config)
 Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
@@ -126,17 +163,24 @@ Actions receive JSON data in the following form:
     "s3": {
         "bucket": "bucket name",
         "prefix": "s3/directory/with/read/and/write/credentials/"
-    }
+    },
+    "userPrefs": { },
 
 }
 ```
 - `sessionId`, `context` and `entities` are all values the chat-bot has received from Wit.ai. You can check Wit.ai's docs for more details on that
 - Lambda actions receive the data in their `event` argument.
 - URL actions receive it in the body of a **POST** request.
+- In the action's server if you want to access AWS's services, use the `credentials` provided. See "Temporary Credentials" section for more details
+- `userPrefs` is the user's preferences
+
 
 Each action is supposed to return JSON data in the following form:
 ``` json
 {
+    "context": {
+        "forecast": "raining"
+    },
     "msg": {
         "text": "some text message for user",
         "files": [
@@ -158,15 +202,16 @@ Each action is supposed to return JSON data in the following form:
             }
         ]
     },
-    "context": {
-        "forecast": "raining"
+    "userPrefs": {
+        "favoritePainter": "Van Gogh"
     }
 }
 ```
-- `context` will be sent directly to Wit.ai.
+- `context` is **required** and will be sent directly to Wit.ai
 - `msg` is **optional**. It's just a message that will be sent to the user.
 - `msg` must have **at least one** of `text`, `files` or `quickReplies`.
 - `title` and `subtitle` inside `quickReplies` are **optional**.
+- `userPrefs` is **optional**. If not provided, the user preferences remain the same. Otherwise, it will replace the old user preferences.
 
 `quickReplies` could also be just an array of strings:
 ``` json
@@ -176,6 +221,36 @@ Each action is supposed to return JSON data in the following form:
         ...
     },
     ...
+}
+```
+
+## Temporary Credentials (Federation Tokens)
+Temporary credentials consist of 3 values:
+- `accessKeyId`
+- `secretAccessKey`
+- `sessionToken`
+
+These credentials provide temporary and fine-grained access to certain resources. For example, it provides temporary read/write permissions to a certain S3 bucket and directory for up to 15 minutes.
+
+Here's an example of how to use them in Node.js
+``` javascript
+import AWS from 'aws-sdk';
+
+function handler() {
+    const s3 = new AWS.S3({
+        accessKeyId: 'XXX',
+        secretAccessKey: 'XXX',
+        sessionToken: 'XXX',
+    });
+
+    // Now use s3 as normal
+
+    s3.getObject({
+        Bucket: 'mybucket',
+        Key: 'some/key',
+    }, (error, res) => {
+        // ...
+    });
 }
 ```
 
