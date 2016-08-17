@@ -9,7 +9,7 @@ import Messages from './Messages.jsx';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
 
-let ConversationPage = React.createClass({
+let MessagesPage = React.createClass({
     getInitialState() {
         return {
         };
@@ -65,9 +65,9 @@ let ConversationPage = React.createClass({
     },
 
     render() {
-        const { className, styles, styles: { conversationsPage: ss },
+        const { className, styles, styles: { messagesPage: ss },
                 params, currentUser, i18n,
-                i18n: { strings: { conversations: strings } },
+                i18n: { strings: { messagesPage: strings } },
                 /*successMessage, errorMessage*/ } = this.props;
         // const { state } = this;
 
@@ -101,84 +101,10 @@ let ConversationPage = React.createClass({
                 </div>
             </div>
         );
-        //
-        //
-        //
-        //
-        //
-        //
-        // console.log('ConversationsPage: currentUser: ', currentUser);
-        //
-        // if (!currentUser) {
-        //     return (
-        //         <h3>Please log in</h3>
-        //     );
-        // }
-        //
-        // if (!currentUser.conversationsState ||
-        //     !currentUser.conversationsState.conversations ||
-        //     currentUser.conversationsState.isFetchingConversationsState)
-        // {
-        //     return (
-        //         <h3>Please wait...</h3>
-        //     );
-        // }
-        //
-        // const convs = currentUser.conversationsState.conversations;
-        //
-        // if (convs.length === 0) {
-        //     return (
-        //         <h3>No conversations found</h3>
-        //     );
-        // }
-        //
-        // const contacts = convs.map((x, i) => {
-        //     return (
-        //         <div
-        //             className={ss.contact}
-        //             onClick={() => this.props.router.push(`/conversations/${x.conversationId}`)}
-        //         >
-        //             {`Conversation ${i + 1}`}
-        //         </div>
-        //     );
-        // });
-        //
-        // const noConvSelected = !params.conversationId &&
-        //     <h3>Please select a conversation</h3>;
-        //
-        // const messagesCacheState = currentUser.messagesCacheState;
-        //
-        // const messagesCache = messagesCacheState &&
-        //     messagesCacheState.messagesCache
-        //
-        // const fetchingMessages = params.conversationId &&
-        //     (!messagesCache || !messagesCache[params.conversationId]) &&
-        //     <h3>Please wait</h3>
-        //
-        // const messages = messagesCache &&
-        //     params.conversationId &&
-        //     messagesCache[params.conversationId] &&
-        //     messagesCache[params.conversationId].map(
-        //         x => <Message styles={styles} message={x} />
-        //     );
-        //
-        //
-        // return (
-        //     <div className={`${ss.root} ${className || ''}`}>
-        //         <div className={ss.leftRightSplit}>
-        //             <div className={ss.contacts}>
-        //                 { contacts }
-        //             </div>
-        //             <div className={ss.messages}>
-        //                 { noConvSelected || fetchingMessages || messages }
-        //             </div>
-        //         </div>
-        //     </div>
-        // );
     }
 });
 
-ConversationPage = connect(
+MessagesPage = connect(
     state => ({
         currentUser: state.currentUser,
     }),
@@ -186,9 +112,9 @@ ConversationPage = connect(
         fetchConversations: actions.fetchConversations,
         fetchMessages: actions.fetchMessages,
     }
-)(ConversationPage);
+)(MessagesPage);
 
-ConversationPage = withRouter(ConversationPage);
+MessagesPage = withRouter(MessagesPage);
 
 
-export default ConversationPage;
+export default MessagesPage;

@@ -7,6 +7,7 @@ import * as aws from '../../aws/aws.js';
 import type { Request, Response } from 'express';
 import _ from 'lodash';
 import uuid from 'node-uuid';
+import u from 'util';
 
 //const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
 
@@ -278,6 +279,8 @@ async function respondFn(botParams: BotParams, conversationId: string,
 }
 
 async function sendMessage(botParams: BotParams, messageData) {
+    console.log('messenger-webhook sendMessage: ',
+        u.inspect(messageData, { depth: null}));
     const r = await request({
         uri: 'https://graph.facebook.com/v2.6/me/messages',
         qs: { access_token: botParams.settings.messengerPageAccessToken },

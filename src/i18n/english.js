@@ -17,7 +17,7 @@ export default {
         addBot: 'Add bot',
         botName: 'Bot Name',
     },
-    conversations: {
+    messagesPage: {
 
     },
     addBot: {

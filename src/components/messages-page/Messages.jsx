@@ -70,6 +70,7 @@ let Messages = React.createClass({
 
 const Message = ({
     className,
+    styles,
     styles: { messages: ss },
     message,
     ...others
@@ -97,6 +98,11 @@ const Message = ({
                         ))
                     }
                 </div>
+                <QuickReplies
+                    quickReplies={message.quickReplies}
+                    styles={styles}
+                />
+
             </div>
             <div className={ss.date}>
                 { simpleTimeFormat(message.creationTimestamp) }
@@ -106,7 +112,73 @@ const Message = ({
     );
 };
 
+const QuickReplies = ({
+    className,
+    styles,
+    styles: { messages: ss },
+    quickReplies,
+    ...others
+}) => {
+    if (!quickReplies) return null;
 
+    const isRichQuickReplies = quickReplies && quickReplies.find(
+        x => typeof x === 'object' && x.file);
+
+    let quickRepliesUi;
+
+    if (isRichQuickReplies) {
+        const richQuickReplies = quickReplies.map(x => {
+            return typeof x === 'string' ? { text: x } : x;
+        });
+
+        quickRepliesUi = (
+            <div className={ss.richQuickReplies}>
+                {
+                    richQuickReplies.map(x => {
+                        // const imgStyle = {
+                        //     backgroundImage: `url(${x.file})`,
+                        // };
+                        return (
+                            <div className={ss.richQuickReply}>
+                                <img className={ss.image} src={x.file} />
+                                <div className={ss.title}>
+                                    {x.title}
+                                </div>
+                                <div className={ss.subtitle}>
+                                    {x.subtitle}
+                                </div>
+                                <div className={ss.button}>
+                                    {x.text}
+                                </div>
+                            </div>
+                        );
+                    })
+                }
+            </div>
+        );
+
+    } else {
+        quickRepliesUi = (
+            <div className={ss.simpleQuickReplies}>
+                {
+                    quickReplies.map(x => (
+                        <div className={ss.simpleQuickReply}>
+                            { x }
+                        </div>
+                    ))
+                }
+            </div>
+        );
+
+    }
+
+    return (
+        <div className={`${ss.quickRepliesRoot} ${className || ''}`} {...others} >
+            {quickRepliesUi}
+        </div>
+    );
+
+};
 
 
 export default Messages;

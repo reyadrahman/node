@@ -7,7 +7,7 @@ export default {
     },
     sideMenu: {
         bots: 'FR Bots',
-        messages: 'Messages',
+        messages: 'FR Messages',
         contacts: 'FR Contacts',
     },
     home: {
@@ -17,7 +17,7 @@ export default {
         addBot: 'FR Add bot',
         botName: 'FR Bot Name',
     },
-    conversations: {
+    messagesPage: {
 
     },
     addBot: {
