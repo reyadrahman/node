@@ -34,6 +34,18 @@
         letter-spacing: 10px;
     }
 
+    .noConversationsFound, .selectConversation {
+        top: 50%;
+        left: 50%;
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-size: 20px;
+        color: #aaa;
+        letter-spacing: 10px;
+        width: 100%;
+        text-align: center;
+    }
+
     .message {
         flex: 0 0 auto;
         display: flex;

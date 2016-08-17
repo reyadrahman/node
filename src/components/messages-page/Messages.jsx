@@ -32,21 +32,45 @@ let Messages = React.createClass({
 
     render() {
         const { className, styles, styles: { messages: ss },
-                selectedConversationId, currentUser,
+                selectedConversationId, currentUser, noConversationsFound,
+                isFetchingConversationsState,
                 i18n: { strings: { messages: strings } }
               } = this.props;
 
-        const { messagesCacheState: mcs } = currentUser;
+        if (noConversationsFound) {
+            return (
+                <div className={`${ss.root} ${className || ''}`}>
+                    <div className={ss.noConversationsFound}>
+                        NO CONVERSATIONS FOUND
+                    </div>
+                </div>
+            );
+        }
 
+        const { messagesCacheState: mcs } = currentUser;
         const mc = mcs && mcs.messagesCache;
 
-        if (!selectedConversationId || !mc || !mc[selectedConversationId]) {
+        if (!isFetchingConversationsState && !selectedConversationId) {
+            return (
+                <div className={`${ss.root} ${className || ''}`}>
+                    <div className={ss.selectConversation}>
+                        PLEASE SELECT A CONVERSATION
+                    </div>
+                </div>
+            );
+        }
+
+        if (isFetchingConversationsState || !mc || mcs.isFetchingMessagesCacheState) {
             return (
                 <div className={`${ss.root} ${className || ''}`}>
                     <div className={ss.wait}>•••</div>
                 </div>
             );
         }
+
+
+
+
 
         // need to reverse it, because we are using flex-direction: column-reverse
         // to display messages
@@ -57,10 +81,7 @@ let Messages = React.createClass({
         );
 
         return (
-            <div
-                ref={ e => this._dom = e }
-                className={`${ss.root} ${className || ''}`}
-            >
+            <div className={`${ss.root} ${className || ''}`}>
                 { messagesUi }
             </div>
         );

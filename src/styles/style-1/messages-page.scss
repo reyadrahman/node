@@ -7,8 +7,18 @@
     display: flex;
     align-content: center;
     padding: 80px 50px 30px 50px;
-    
-    & .title {
+
+    .pleaseSignin {
+        top: 50%;
+        left: 50%;
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-size: 30px;
+        color: #aaa;
+        letter-spacing: 10px;
+    }
+
+    .title {
         font-size: 20px;
         color: rgb(70, 70, 70);
         letter-spacing: 5px;

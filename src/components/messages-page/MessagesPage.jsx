@@ -72,13 +72,18 @@ let MessagesPage = React.createClass({
         // const { state } = this;
 
         if (!currentUser) {
-            return <div className={`${ss.root} ${className || ''}`}></div>
-            // return (
-            //     <div className={ss.pleaseLogin}>
-            //         Please log in
-            //     </div>
-            // );
+            return (
+                <div className={`${ss.root} ${className || ''}`}>
+                    <div className={ss.pleaseSignin}>
+                        PLEAASE SIGN IN
+                    </div>
+                </div>
+            );
         }
+
+        const { conversationsState: cs } = currentUser;
+        const noConversationsFound = cs && cs.conversations && cs.conversations.length === 0;
+        const isFetchingConversationsState = !cs || cs.isFetchingConversationsState;
 
         return (
             <div className={`${ss.root} ${className || ''}`}>
@@ -95,6 +100,8 @@ let MessagesPage = React.createClass({
                         className={ss.messages}
                         currentUser={currentUser}
                         selectedConversationId={params.conversationId}
+                        noConversationsFound={noConversationsFound}
+                        isFetchingConversationsState={isFetchingConversationsState}
                         styles={styles}
                         i18n={i18n}
                     />

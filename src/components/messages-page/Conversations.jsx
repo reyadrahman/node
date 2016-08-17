@@ -18,7 +18,7 @@ let Conversations = React.createClass({
               } = this.props;
 
         const { conversationsState: cs } = currentUser;
-        if (!cs || !cs.conversations || cs.isFetchingConversationsState) {
+        if (!cs || !cs.conversations || cs.conversations.length === 0 || cs.isFetchingConversationsState) {
             return (
                 <div className={`${ss.root} ${className || ''}`}>
                     <div className={ss.wait}>•••</div>
