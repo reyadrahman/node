@@ -2,6 +2,7 @@
 
 export type QuickReply = string | {
     text: string,
+    postback?: string,
     title?: string,
     subtitle?: string,
     file?: string,

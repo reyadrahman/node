@@ -116,7 +116,9 @@ async function respondFn(client, roomId, message) {
             );
         }
         if (quickReplies && quickReplies.length) {
-            const textQR = quickReplies.map(x => typeof x === 'string' ? x : x.text);
+            const textQR = quickReplies.map(
+                x => typeof x === 'string' ? x : x.postback || x.text
+            );
             respondFn(client, roomId, `(some possible answers: ${textQR.join(', ')})`);
         }
 

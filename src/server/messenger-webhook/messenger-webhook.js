@@ -187,7 +187,18 @@ async function respondFn(botParams: BotParams, conversationId: string,
         const isRichQuickReplies = quickReplies && quickReplies.find(
             x => typeof x === 'object' && x.file);
 
-        if (text || quickReplies && !isRichQuickReplies) {
+
+        if (!quickReplies && text) {
+            await sendMessage(botParams, {
+                recipient: {
+                    id: to,
+                },
+                message: {
+                    text,
+                },
+            });
+
+        } else if (quickReplies && !isRichQuickReplies) {
             const quick_replies = quickReplies && quickReplies.map(x => ({
                 content_type: 'text',
                 title: x,
@@ -197,17 +208,17 @@ async function respondFn(botParams: BotParams, conversationId: string,
                 recipient: {
                     id: to,
                 },
-                message: _.pickBy({
+                message: {
                     text: text || ' ', // text cannot be empty when using quick_replies
                     quick_replies,
-                }, x=>!!x),
+                }
             });
-        }
 
-        if (quickReplies && isRichQuickReplies) {
+        } if (quickReplies && isRichQuickReplies) {
             const richQuickReplies = quickReplies.map(x => {
                 return typeof x === 'string' ? { text: x } : x;
             });
+            console.log('richQuickReplies: ', richQuickReplies);
             await sendMessage(botParams, {
                 recipient: {
                     id: to,
@@ -226,7 +237,7 @@ async function respondFn(botParams: BotParams, conversationId: string,
                                     {
                                         type: 'postback',
                                         title: x.text,
-                                        payload: x.text,
+                                        payload: x.postback || x.text,
                                     }
                                 ]
                             })),
