@@ -12,6 +12,7 @@ let AddBotPage = React.createClass({
             ciscosparkAccessToken: '',
             ciscosparkBotEmail: '',
             messengerPageAccessToken: '',
+            messengerAppSecret: '',
             microsoftAppId: '',
             microsoftAppPassword: '',
             witAccessToken: '',
@@ -39,6 +40,9 @@ let AddBotPage = React.createClass({
     },
     messengerPageAccessTokenChanged(e) {
         this.setState({ messengerPageAccessToken: e.target.value });
+    },
+    messengerAppSecretChanged(e) {
+        this.setState({ messengerAppSecret: e.target.value });
     },
     microsoftAppIdChanged(e) {
         this.setState({ microsoftAppId: e.target.value });
@@ -109,6 +113,15 @@ let AddBotPage = React.createClass({
                             className={ss.field}
                             value={state.messengerPageAccessToken}
                             onChange={this.messengerPageAccessTokenChanged}
+                            styles={styles}
+                        />
+                    </div>
+                    <div className={ss.inputsRow}>
+                        <label>{strings.messengerAppSecret}</label>
+                        <Input
+                            className={ss.field}
+                            value={state.messengerAppSecret}
+                            onChange={this.messengerAppSecretChanged}
                             styles={styles}
                         />
                     </div>

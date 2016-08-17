@@ -8,6 +8,7 @@ import type { Request, Response } from 'express';
 import _ from 'lodash';
 import uuid from 'node-uuid';
 import u from 'util';
+import crypto from 'crypto';
 
 //const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
 
@@ -54,7 +55,6 @@ type MessengerReqAttachment = {
 };
 
 async function handle(req: Request, res: Response) {
-
     // webhook verification
     if (req.method === 'GET' &&
         req.query['hub.mode'] === 'subscribe' &&
@@ -65,8 +65,31 @@ async function handle(req: Request, res: Response) {
         return;
     }
 
+
+    // security verification
+    // see https://developers.facebook.com/docs/messenger-platform/webhook-reference#security
+    const sig = req.get('X-Hub-Signature');
+    if (!sig) {
+        console.error('No X-Hub-Signature provided');
+        res.status(403).send('Access denied');
+        return;
+    }
+
     const { publisherId, botId } = req.params;
     const botParams = await aws.getBot(publisherId, botId);
+
+    const hmac = crypto.createHmac('sha1', botParams.settings.messengerAppSecret);
+    hmac.update(req.rawBody, 'utf-8');
+    const expectedSig = 'sha1=' + hmac.digest('hex');
+
+    if (sig !== expectedSig) {
+        console.error(`ERROR: exprected signatue: ${expectedSig} but received ${sig}`);
+        res.status(403).send('Access denied');
+        return;
+    }
+    console.log(`X-Hub-Signatue successfully verified ${sig}`);
+
+
     const body: MessengerReqBody = (req.body: any);
 
     if (req.method !== 'POST' || body.object !== 'page') {

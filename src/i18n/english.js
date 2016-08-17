@@ -28,6 +28,7 @@ export default {
         ciscosparkAccessToken: 'Cisco Spark access token',
         ciscosparkBotEmail: 'Cisco Spark bot\'s email address',
         messengerPageAccessToken: 'Facebook page access token',
+        messengerAppSecret: 'Facebook app secret',
         microsoftAppId: 'Microsoft app ID',
         microsoftAppPassword: 'Microsoft app password',
         witAccessToken: 'Wit access token',

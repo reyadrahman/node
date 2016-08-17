@@ -54,7 +54,10 @@ app.set('views', path.join(ROOT_DIR, 'src/views'));
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('short'));
-app.use(bodyParser.json());
+// save raw body and then parse as json
+app.use(bodyParser.json({
+    verify: (req, res, buf) => req.rawBody = buf
+}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));

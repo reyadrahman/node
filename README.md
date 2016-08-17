@@ -364,29 +364,3 @@ For more information see [aws-sdk-js's docs](http://docs.aws.amazon.com/AWSJavaS
 Customize icons using Fontello to include only the used icons.
 
 Customize flag icons using www.flag-sprites.com
-
-Webhooks must verify request signatures. For messenger, something like this could work:
-```
-function verifyRequestSignature(req, res, buf) {
-  var signature = req.headers["x-hub-signature"];
-
-  if (!signature) {
-    // For testing, let's log an error. In production, you should throw an
-    // error.
-    console.error("Couldn't validate the signature.");
-  } else {
-    var elements = signature.split('=');
-    var method = elements[0];
-    var signatureHash = elements[1];
-
-    var expectedHash = crypto.createHmac('sha1', FB_APP_SECRET)
-                        .update(buf)
-                        .digest('hex');
-
-    if (signatureHash != expectedHash) {
-      throw new Error("Couldn't validate the request signature.");
-    }
-  }
-}
-
-```
