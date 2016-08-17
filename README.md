@@ -140,7 +140,9 @@ Actions receive JSON data in the following form:
 ``` json
 {
     "sessionId": "abcdefghi123",
-    "context": { },
+    "context": {
+        "userPrefs": { },
+    },
     "publisherId": "abcdefg",
     "botId": "abcdefghijkl",
     "text": "the text message from user",
@@ -164,7 +166,6 @@ Actions receive JSON data in the following form:
         "bucket": "bucket name",
         "prefix": "s3/directory/with/read/and/write/credentials/"
     },
-    "userPrefs": { },
 
 }
 ```
@@ -172,7 +173,7 @@ Actions receive JSON data in the following form:
 - Lambda actions receive the data in their `event` argument.
 - URL actions receive it in the body of a **POST** request.
 - In the action's server if you want to access AWS's services, use the `credentials` provided. See "Temporary Credentials" section for more details
-- `userPrefs` is the user's preferences
+- `context.userPrefs` is the user's preferences. See below for more details.
 
 
 Each action is supposed to return JSON data in the following form:
@@ -212,6 +213,8 @@ Each action is supposed to return JSON data in the following form:
 - `msg` must have **at least one** of `text`, `files` or `quickReplies`.
 - `title` and `subtitle` inside `quickReplies` are **optional**.
 - `userPrefs` is **optional**. If not provided, the user preferences remain the same. Otherwise, it will replace the old user preferences.
+
+***NOTE:*** actions receive `userPrefs` inside `context` so that it can be used directly from wit.ai's stories. But it must be returned separately, outside `context`. The reason is to emphasize the semantic differences between the two. `userPrefs` is stored per user whereas `context` is stored per story. When a user switches between stories, `context` changes but `userPrefs` doesn't change. Moreover, `context` could timeout if the user is idle for more than a few minutes, but `userPrefs` doesn't.
 
 `quickReplies` could also be just an array of strings:
 ``` json

@@ -21,12 +21,13 @@ type WitData = {
 
 type ActionRequestIncomplete = {
     sessionId: string,
-    context: Object,
+    context: $Subtype<{
+        userPrefs: UserPrefs,
+    }>,
     text: string,
     entities: Object,
     publisherId: string,
     botId: string,
-    userPrefs: UserPrefs,
 };
 
 type RunActionsRes = {
@@ -112,12 +113,14 @@ export async function _runActionsHelper(client: Wit,
 
     const requestData = {
         sessionId: witData.sessionId,
-        context: witData.context,
+        context: {
+            ...witData.context,
+            userPrefs,
+        },
         text,
         entities: converseData.entities,
         publisherId: botParams.publisherId,
         botId: botParams.botId,
-        userPrefs,
     };
 
     if (converseData.type === 'msg') {
@@ -152,7 +155,9 @@ export async function _runActionsHelper(client: Wit,
             };
             newRequestData = {
                 ...requestData,
-                context: {},
+                context: {
+                    userPrefs,
+                },
             }
         }
         const actionRes =

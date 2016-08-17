@@ -41,12 +41,13 @@ export type ResponseMessage = string | {
 
 export type ActionRequest = {
     sessionId: string,
-    context: Object,
+    context: $Subtype<{
+        userPrefs: UserPrefs,
+    }>,
     text: string,
     entities: Object,
     publisherId: string,
     botId: string,
-    userPrefs: UserPrefs,
     credentials: {
         accessKeyId: string,
         secretAccessKey: string,
