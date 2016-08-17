@@ -21,9 +21,8 @@ type WitData = {
 
 type ActionRequestIncomplete = {
     sessionId: string,
-    context: $Subtype<{
-        userPrefs: UserPrefs,
-    }>,
+    context: Object,
+    userPrefs: UserPrefs,
     text: string,
     entities: Object,
     publisherId: string,
@@ -69,7 +68,10 @@ export async function _runActions(client: Wit,
                                   botParams: BotParams
 ) : Promise<RunActionsRes>
 {
-    let converseData = await client.converse(witData.sessionId, text, witData.context);
+    let converseData = await client.converse(witData.sessionId, text, {
+        ...witData.context,
+        userPrefs,
+    });
     return await _runActionsHelper(client, text, originalMessage, witData,
                                    userPrefs, botParams, converseData, 5);
 }
@@ -113,10 +115,8 @@ export async function _runActionsHelper(client: Wit,
 
     const requestData = {
         sessionId: witData.sessionId,
-        context: {
-            ...witData.context,
-            userPrefs,
-        },
+        context: witData.context,
+        userPrefs,
         text,
         entities: converseData.entities,
         publisherId: botParams.publisherId,
@@ -132,7 +132,10 @@ export async function _runActionsHelper(client: Wit,
         if (invalidContext) {
             throw new Error('Cannot update context after \'send\' action');
         }
-        const newConverseData = await client.converse(witData.sessionId, null, witData.context);
+        const newConverseData = await client.converse(witData.sessionId, null, {
+            ...witData.context,
+            userPrefs,
+        });
         return await _runActionsHelper(client, text, originalMessage, witData,
                                        userPrefs, botParams, newConverseData, level-1)
 
@@ -155,9 +158,7 @@ export async function _runActionsHelper(client: Wit,
             };
             newRequestData = {
                 ...requestData,
-                context: {
-                    userPrefs,
-                },
+                context: {},
             }
         }
         const actionRes =
@@ -172,7 +173,10 @@ export async function _runActionsHelper(client: Wit,
         if (actionRes.msg) {
             client.config.respondFn(actionRes.msg);
         }
-        const newConverseData = await client.converse(newWitData.sessionId, null, newWitData.context);
+        const newConverseData = await client.converse(newWitData.sessionId, null, {
+            ...newWitData.context,
+            userPrefs,
+        });
         return await _runActionsHelper(client, text, originalMessage, newWitData,
                                        newUserPrefs, botParams, newConverseData,
                                        level-1)

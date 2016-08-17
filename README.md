@@ -140,9 +140,8 @@ Actions receive JSON data in the following form:
 ``` json
 {
     "sessionId": "abcdefghi123",
-    "context": {
-        "userPrefs": { },
-    },
+    "context": { },
+    "userPrefs": { },
     "publisherId": "abcdefg",
     "botId": "abcdefghijkl",
     "text": "the text message from user",
@@ -214,7 +213,7 @@ Each action is supposed to return JSON data in the following form:
 - `title` and `subtitle` inside `quickReplies` are **optional**.
 - `userPrefs` is **optional**. If not provided, the user preferences remain the same. Otherwise, it will replace the old user preferences.
 
-***NOTE:*** actions receive `userPrefs` inside `context` so that it can be used directly from wit.ai's stories. But it must be returned separately, outside `context`. The reason is to emphasize the semantic differences between the two. `userPrefs` is stored per user whereas `context` is stored per story. When a user switches between stories, `context` changes but `userPrefs` doesn't change. Moreover, `context` could timeout if the user is idle for more than a few minutes, but `userPrefs` doesn't.
+***NOTE:*** actions receive `userPrefs` and return `userPrefs` separately from `context`. But in order for wit.ai stories to be able to access `userPrefs`, the server systematically injects the `userPrefs` into the `context` **only** when communicating with the wi.ai servers. This should be transparent to action servers. In wit.ai stories, you can access `userPrefs` like `userPrefs.language` for example.
 
 `quickReplies` could also be just an array of strings:
 ``` json
