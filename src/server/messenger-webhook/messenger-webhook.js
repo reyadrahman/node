@@ -140,7 +140,12 @@ async function receivedMessage(entry: MessengerReqEntry,
                                messagingEvent: MessengerReqMessaging,
                                botParams: BotParams)
 {
-    const userProfile = await getUserProfile(messagingEvent.sender.id, botParams);
+    let userProfile = {};
+    try {
+        userProfile = await getUserProfile(messagingEvent.sender.id, botParams);
+    } catch(error) {
+        console.error(error);
+    }
     const {attachments} = messagingEvent.message;
     const files = !attachments ? undefined :
         attachments.filter(x => x.type === 'image')
@@ -334,18 +339,20 @@ async function sendMessage(botParams: BotParams, messageData) {
 }
 
 async function getUserProfile(userId, botParams) {
-    const r = await request({
+    const reqData = {
         uri: `https://graph.facebook.com/v2.6/${userId}`,
         qs: {
             fields: 'first_name,last_name,profile_pic',
             access_token: botParams.settings.messengerPageAccessToken,
         },
         method: 'GET',
-    });
+    };
+    console.log('messenger-webhook getUserProfile: ', reqData);
+    const r = await request(reqData);
     if (r.statusCode !== 200) {
-        console.error('getUserProfile failed with code %s msg %s and body: ',
-                      r.statusCode, r.statusMessage, r.body);
+        throw new Error(`getUserProfile failed with code ${r.statusCode} msg ${r.statusMessage} and body: `, r.body);
     }
+
     return JSON.parse(r.body);
 }
 

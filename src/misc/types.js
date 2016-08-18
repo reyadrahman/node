@@ -11,7 +11,7 @@ export type QuickReply = string | {
 export type DBMessage = {
     publisherId_conversationId: string,
     creationTimestamp: number,
-    senderName: string,
+    senderName?: string,
     senderId: string,
     id?: string,
     source?: string,
@@ -26,7 +26,7 @@ export type WebhookMessage = {
     id: string,
     senderId: string,
     source: string,
-    senderName: string,
+    senderName?: string,
     text?: string,
     files?: Array<string>,
     filesGetFn?: Array<() => Buffer>,

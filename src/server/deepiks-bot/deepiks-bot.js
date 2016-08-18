@@ -181,7 +181,7 @@ export async function _updateConversationTable(message: DBMessage)
         },
         UpdateExpression: 'SET lastMessage = :lastMessage, lastMessageTimestamp = :lmt',
         ExpressionAttributeValues: {
-            ':lastMessage': message,
+            ':lastMessage': aws.dynamoCleanUpObj(message),
             ':lmt': message.creationTimestamp,
         },
     });

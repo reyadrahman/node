@@ -109,7 +109,7 @@ const Message = ({
             <div className={ss.profilePic} style={profilePicStyle} />
             <div className={ss.nameAndContent}>
                 <div className={ss.name}>
-                    { message.senderName }
+                    { message.senderName || 'UNKNOWN' }
                 </div>
                 <div className={ss.text}>
                     { message.text }

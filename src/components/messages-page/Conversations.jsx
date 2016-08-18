@@ -49,7 +49,7 @@ let Conversations = React.createClass({
                     <div className={ss.profilePic} style={profilePicStyle} />
                     <div className={ss.conversationNameAndText}>
                         <div className={ss.name}>
-                            { x.lastMessage.senderName }
+                            { x.lastMessage.senderName || 'UNKNOWN' }
                         </div>
                         <div className={ss.text}>
                             { text }
