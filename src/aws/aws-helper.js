@@ -5,15 +5,19 @@ console.log('======== AWS SERVER');
 // server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.min.js'
 import AWS from 'aws-sdk';
 import { callbackToPromise } from '../misc/utils.js';
-import { ENV, CONSTANTS } from '../server/server-utils.js';
+import { ENV, CONSTANTS, request } from '../server/server-utils.js';
 import type { BotParams, AIActionInfo } from '../misc/types.js';
 import _ from 'lodash';
+import jwt from 'jsonwebtoken';
+import jwkToPem from 'jwk-to-pem';
 
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
         DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
         DB_TABLE_AI_ACTIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME,
         IDENTITY_POOL_ID, USER_POOL_ID} = ENV;
 
+// this is used to verify signatures for user pool's JWT
+var _userPoolPems_;
 
 AWS.config.update({
     apiVersions: {
@@ -97,6 +101,34 @@ export async function getIdFromJwtIdToken(jwtIdToken: string): string {
     return res.IdentityId;
 }
 
+// verifies and returns token's payload
+// throws errors
+export function verifyJwt(token: string) {
+    console.log('verifyJwt');
+    const decoded = jwt.decode(token, {complete: true});
+    if (!decoded) {
+        throw new Error('verifyJwt: Could not decode JWT: ', token);
+    }
+    console.log('verifyJwt decoded: ', decoded);
+    const iss = `https://cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`;
+
+    if (decoded.payload.iss !== iss) {
+        throw new Error('verifyJwt: Invalid issuer: ', decoded.payload.iss);
+    }
+
+    if (decoded.payload.token_use !== 'id') {
+        throw new Error('verifyJwt: Invalid token_use', decoded.payload.token_use);
+    }
+
+    const pem = _userPoolPems_[decoded.header.kid];
+    if (!pem) {
+        throw new Error('verifyJwt: Could not find pem for kid: ', decoded.header.kid);
+    }
+
+    const payload = jwt.verify(token, pem, { issuer: iss });
+    console.log('verifyJwt: successfully verified');
+}
+
 export const getAIAction = _createGetAIAction();
 
 export function _createGetAIAction() {
@@ -145,6 +177,7 @@ export async function initResources(readCapacityUnits: number, writeCapacityUnit
     const promises = [
         initResourcesDB(readCapacityUnits, writeCapacityUnits),
         initResourcesS3(),
+        initResourcesUserPoolJwt(),
     ];
 
     await Promise.all(promises);
@@ -307,6 +340,18 @@ async function initResourcesS3() {
 }
 
 
-// export function signup(data) {
-//     throw new Error('NOT IMPLEMENTED');
-// }
+// sets _userPoolJwtByKid_
+async function initResourcesUserPoolJwt() {
+    const req = await request(
+        `https://cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}/.well-known/jwks.json`
+    );
+    const userPoolJwt = JSON.parse(req.body);
+    const userPoolJwtByKid = _.keyBy(userPoolJwt.keys, 'kid');
+    // console.log('_userPoolJwtByKid_: ', _userPoolJwtByKid_);
+
+    _userPoolPems_ = _.mapValues(userPoolJwtByKid,
+        x => jwkToPem(_.pick(x, ['kty', 'n', 'e']))
+    );
+
+    console.log('_userPoolPems_: ', _userPoolPems_);
+}

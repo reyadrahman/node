@@ -439,6 +439,7 @@ export function fetchConversations() {
 }
 
 export function fetchMessages(conversationId: string) {
+    console.log('action: fetchMessages');
     return async function(dispatch: Function) {
         dispatch(setCurrentUserMessagesCacheState({
             isFetchingMessagesCacheState: true,
