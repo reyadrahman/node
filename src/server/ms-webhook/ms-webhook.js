@@ -45,7 +45,9 @@ async function processMessage(session, authRequest, botParams) {
                 let buffer;
                 // some services such as slack do not accept Authenticated requests
                 // for downloading attachments. But some services require it.
-                if (m.address.channelId === 'slack') {
+                const cid = m.address.channelId;
+                console.log('ms-webhook, processMessage, channelId: ', cid);
+                if (cid === 'slack' || cid === 'webchat') {
                     buffer = await getBinary(request, a.contentUrl);
                 } else {
                     buffer = await getBinary(authRequest, a.contentUrl);
@@ -90,8 +92,8 @@ async function getBinary(requestFn, url) {
         encoding: null,
     });
     if (r.statusCode !== 200 || !r.body) {
-        throw new Error('ms-webhook: attachment download failed with error: ',
-                        r.statusCode, r.statusMessage, '\n\turl was: ', url)
+        throw new Error(`ms-webhook: attachment download failed with error: ` +
+                        `${r.statusCode}, ${r.statusMessage}, \n\turl was: ${url}`)
     }
     return r.body;
 }

@@ -9,6 +9,7 @@ const styles = {
         home: require('./style-1/home.scss'),
         botsPage: require('./style-1/bots-page.scss'),
         messagesPage: require('./style-1/messages-page.scss'),
+        webChatPage: require('./style-1/web-chat-page.scss'),
         conversations: require('./style-1/conversations.scss'),
         messages: require('./style-1/messages.scss'),
         addBotPage: require('./style-1/add-bot-page.scss'),

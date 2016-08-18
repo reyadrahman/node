@@ -1,6 +1,7 @@
 /* @flow */
 
 import { request, ENV, CONSTANTS } from '../server-utils.js';
+import { toStr } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
@@ -346,14 +347,16 @@ async function getUserProfile(userId, botParams) {
             access_token: botParams.settings.messengerPageAccessToken,
         },
         method: 'GET',
+        json: true,
     };
     console.log('messenger-webhook getUserProfile: ', reqData);
     const r = await request(reqData);
     if (r.statusCode !== 200) {
-        throw new Error(`getUserProfile failed with code ${r.statusCode} msg ${r.statusMessage} and body: `, r.body);
+        throw new Error(`getUserProfile failed with code ${r.statusCode} msg ` +
+                        `${r.statusMessage} and body: ${toStr(r.body)}`);
     }
 
-    return JSON.parse(r.body);
+    return r.body;
 }
 
 

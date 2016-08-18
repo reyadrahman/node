@@ -116,6 +116,7 @@ export type ServerEnv = {
     IDENTITY_POOL_ID: string,
     IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
     IDENTITY_POOL_AUTH_ROLE_ARN: string,
+    WIZARD_BOT_WEB_CHAT_SECRET: string,
     PORT: string,
     CDN?: string,
     DEBUG?: string,

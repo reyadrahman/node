@@ -83,7 +83,14 @@ export const App_ = React.createClass({
                 link: '/contacts',
                 icon: 'icon-mail-alt',
                 value: 'contacts',
+            },
+            {
+                label: sideMenuStrings.wizardBot,
+                link: '/wizard-bot',
+                icon: 'icon-mail-alt',
+                value: 'wizardBot',
             }
+
         ];
 
 

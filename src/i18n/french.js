@@ -9,6 +9,7 @@ export default {
         bots: 'FR Bots',
         messages: 'FR Messages',
         contacts: 'FR Contacts',
+        wizardBot: 'FR Wizard Bot',
     },
     home: {
     },

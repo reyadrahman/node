@@ -3,6 +3,10 @@
 import _ from 'lodash';
 import type { ServerEnv, ClientEnv } from './types.js';
 
+export function toStr(obj: any): string {
+    return JSON.stringify(obj, null, ' ');
+}
+
 export function leftPad(x: string | number, pad: string, n: number): string {
     const str = String(x);
     return pad.repeat(Math.max(0, n - str.length)) + str;

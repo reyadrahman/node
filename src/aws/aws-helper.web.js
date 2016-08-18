@@ -175,10 +175,6 @@ export function signin({email, password}) {
     });
 }
 
-// export async function ensureValidCredentialsForCurrentUser() {
-//     getSession// TODO
-// }
-
 function updateCredentials(session) {
     return new Promise((resolve, reject) => {
         AWS.config.credentials = new AutoRefreshCredential({

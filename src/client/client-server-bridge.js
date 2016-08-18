@@ -28,3 +28,11 @@ export async function fetchMessages(jwtIdToken: string, conversationId: string)
     console.log('fetchMessages: jwtIdToken: ', jwtIdToken, conversationId);
     return await fetchg2j('/api/fetch-messages', { jwtIdToken, conversationId });
 }
+
+export async function fetchWebChatSessionToken(jwtIdToken?: string)
+    : Promise<string>
+{
+    console.log('fetchWebChatSessionToken: jwtIdToken: ', jwtIdToken);
+    const params = jwtIdToken ? { jwtIdToken } : {};
+    return await fetchg2j('/api/fetch-web-chat-session-token', params);
+}

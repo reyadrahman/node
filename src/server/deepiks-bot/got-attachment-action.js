@@ -105,7 +105,7 @@ function _fromGoogle(imageBuffer) {
         //console.log('google image annotate res: ', res);
         const errors = res.responses.filter(x => x.error);
         if (errors.length > 0) {
-            throw new Error('Google image label detection error: ' + errors[0].error.message);
+            throw new Error(`Google image label detection error: ${errors[0].error.message}`);
         }
         console.log(res.responses.map(x => ({labelAnnotations: JSON.stringify(x.labelAnnotations)})))
 

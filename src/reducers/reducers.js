@@ -150,3 +150,14 @@ export function contacts(state =
     }
     return state;
 }
+
+export function webChat(state =
+    {
+        sessionToken: '',
+    }, action)
+{
+    if (action.type === 'WEB_CHAT') {
+        return { ...state, ...action.state };
+    }
+    return state;
+}

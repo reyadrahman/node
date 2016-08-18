@@ -1,13 +1,13 @@
 /* @flow */
 
-import { ENV } from './server-utils.js';
+import { ENV, request } from './server-utils.js';
 import * as aws from '../aws/aws.js';
 import uuid from 'node-uuid';
 import type { Request, Response } from 'express';
 import express from 'express';
 
 const { AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
-        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES } = ENV;
+        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, WIZARD_BOT_WEB_CHAT_SECRET } = ENV;
 
 const routes = express.Router();
 
@@ -98,6 +98,12 @@ routes.post('/add-bot', (req, res, next) => {
         .catch(err => next(err));
 });
 
+routes.get('/fetch-web-chat-session-token', (req, res, next) => {
+    const { identityId } = req.customData || {};
+    fetchWebChatSessionToken(identityId)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+});
 
 async function fetchBots(identityId) {
     console.log('fetchBots: ', identityId);
@@ -155,6 +161,33 @@ async function addBot(identityId, botName, settings) {
             settings,
         })
     });
+}
+
+async function fetchWebChatSessionToken(identityId) {
+    console.log('fetchWebChatSessionToken: ', identityId);
+    if (identityId) {
+        // TODO get token from database if available
+        // otherwise get a new one and store in database
+    }
+    return await fetchWebChatSessionTokenHelper();
+}
+
+// returns JSON of token
+async function fetchWebChatSessionTokenHelper() {
+    const reqData = {
+        uri: 'https://webchat.botframework.com/api/tokens',
+        headers: {
+            Authorization: `BotConnector ${WIZARD_BOT_WEB_CHAT_SECRET}`,
+        },
+    };
+    console.log('reqData: ', reqData);
+    const res = await request(reqData);
+    if (res.statusCode !== 200) {
+        throw new Error(`fetchWebChatSessionTokenHelper failed with status code ` +
+                        `${res.statusCode} and status message ${res.statusMessage}`);
+    }
+    console.log('fetchWebChatSessionToken got token: ', res.body);
+    return res.body;
 }
 
 

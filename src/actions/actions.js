@@ -222,6 +222,15 @@ export function toggleSideMenu() {
     };
 }
 
+export function setWebChatSessionToken(sessionToken: string) {
+    return  {
+        type: 'WEB_CHAT',
+        state: {
+            sessionToken,
+        }
+    };
+}
+
 
 
 // ==================================================
@@ -514,4 +523,18 @@ async function signS3UrlsInMesssages(messages: DBMessage[]): Promise<DBMessage[]
         }
         return clone;
     }));
+}
+
+export function fetchWebChatSessionToken() {
+    return async function(dispatch: Function) {
+        let session;
+        try {
+            session = await aws.getCurrentSession();
+        } catch(error) { }
+
+        const token = await bridge.fetchWebChatSessionToken(
+            session && session.getIdToken().getJwtToken()
+        );
+        dispatch(setWebChatSessionToken(token));
+    }
 }

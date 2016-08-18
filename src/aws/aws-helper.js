@@ -107,22 +107,22 @@ export function verifyJwt(token: string) {
     console.log('verifyJwt');
     const decoded = jwt.decode(token, {complete: true});
     if (!decoded) {
-        throw new Error('verifyJwt: Could not decode JWT: ', token);
+        throw new Error(`verifyJwt: Could not decode JWT: ${token}`);
     }
     console.log('verifyJwt decoded: ', decoded);
     const iss = `https://cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`;
 
     if (decoded.payload.iss !== iss) {
-        throw new Error('verifyJwt: Invalid issuer: ', decoded.payload.iss);
+        throw new Error(`verifyJwt: Invalid issuer: ${decoded.payload.iss}`);
     }
 
     if (decoded.payload.token_use !== 'id') {
-        throw new Error('verifyJwt: Invalid token_use', decoded.payload.token_use);
+        throw new Error(`verifyJwt: Invalid token_use ${decoded.payload.token_use}`);
     }
 
     const pem = _userPoolPems_[decoded.header.kid];
     if (!pem) {
-        throw new Error('verifyJwt: Could not find pem for kid: ', decoded.header.kid);
+        throw new Error(`verifyJwt: Could not find pem for kid: ${decoded.header.kid}`);
     }
 
     const payload = jwt.verify(token, pem, { issuer: iss });
@@ -342,11 +342,11 @@ async function initResourcesS3() {
 
 // sets _userPoolJwtByKid_
 async function initResourcesUserPoolJwt() {
-    const req = await request(
-        `https://cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}/.well-known/jwks.json`
-    );
-    const userPoolJwt = JSON.parse(req.body);
-    const userPoolJwtByKid = _.keyBy(userPoolJwt.keys, 'kid');
+    const req = await request({
+        uri: `https://cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}/.well-known/jwks.json`,
+        json: true,
+    });
+    const userPoolJwtByKid = _.keyBy(req.body.keys, 'kid');
     // console.log('_userPoolJwtByKid_: ', _userPoolJwtByKid_);
 
     _userPoolPems_ = _.mapValues(userPoolJwtByKid,

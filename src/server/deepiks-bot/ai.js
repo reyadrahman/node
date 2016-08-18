@@ -4,7 +4,7 @@ import * as aws from '../../aws/aws.js';
 import type { DBMessage, ResponseMessage, BotParams, ActionRequest,
               ActionResponse, UserPrefs } from '../../misc/types.js';
 import { ENV, request, allEntityValues } from '../server-utils.js';
-import { catchPromise, callbackToPromise } from '../../misc/utils.js';
+import { toStr, catchPromise, callbackToPromise } from '../../misc/utils.js';
 import gotAttachment from './got-attachment-action.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
@@ -93,7 +93,7 @@ export async function _runActionsHelper(client: Wit,
     }
 
     if (!converseData.type) {
-        throw new Error('Couldn\'t find type in Wit response');
+        throw new Error(`Couldn't find type in Wit response`);
     }
 
     console.log('witData: ', witData);
@@ -182,7 +182,7 @@ export async function _runActionsHelper(client: Wit,
                                        level-1)
     } else {
         console.error('unknown response type', converseData);
-        throw new Error('unknown response type ' + converseData.type);
+        throw new Error(`unknown response type ${converseData.type}`);
     }
 }
 
@@ -255,12 +255,13 @@ export async function _runAction(actionName: string,
         }
         const resPayload = JSON.parse(res.Payload);
         if (!resPayload.context){
-            throw new Error(`lambda ai action named ${lambda} did not return a context: `, resPayload);
+            throw new Error(`lambda ai action named ${lambda} did not return a context: ` +
+                            toStr(resPayload));
         }
         return resPayload;
     }
 
-    throw new Error('Unknown action: ', action);
+    throw new Error(`Unknown action: ${toStr(action)}`);
 }
 
 export function _generateS3Policy(publisherId: string, senderId: string): string {
@@ -286,7 +287,7 @@ export async function ai(message: DBMessage,
                          respondFn: (m: ResponseMessage) => void)
 {
     if (!botParams.settings.witAccessToken) {
-        throw new Error(`Bot doesn't have witAccessToken: `, botParams);
+        throw new Error(`Bot doesn't have witAccessToken: ${toStr(botParams)}`);
     }
 
     const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);

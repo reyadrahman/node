@@ -258,6 +258,30 @@ describe('tests', function() {
 
     }));
 
+    it('test ai action credentials', catchPromise(async function(done) {
+        const message: WebhookMessage = {
+            ...createSampleWebhookMessage(),
+            text: 'test',
+            files: undefined,
+        };
+
+        const botParams = {
+            publisherId: uuid.v1(),
+            botId: uuid.v1(),
+            settings: {
+                witAccessToken: WIT_ACCESS_TOKEN,
+            },
+        };
+
+        const responses = [];
+        await deepiksBot._route(message, (botParams: any), m => {
+            responses.push(m);
+        });
+
+        console.log('responses: ', responses);
+        done();
+    }))
+
     it('can find a bot by id', catchPromise(async function(done) {
         const expected = {
             publisherId: uuid.v1(),
