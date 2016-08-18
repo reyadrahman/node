@@ -255,14 +255,20 @@ async function respondFn(botParams: BotParams, conversationId: string,
                                 title: x.title || `${i+1}`,
                                 subtitle: x.subtitle || null,
                                 image_url: x.file || null,
-                                item_url: x.file || null,
+                                // item_url: x.file || null,
                                 buttons: [
                                     {
                                         type: 'postback',
                                         title: x.text,
                                         payload: x.postback || x.text,
-                                    }
-                                ]
+                                    },
+                                ].concat(!x.file ? [] : [
+                                    {
+                                        type: 'web_url',
+                                        title: 'Open Image',
+                                        url: x.file,
+                                    },
+                                ]),
                             })),
                         }
                     }
