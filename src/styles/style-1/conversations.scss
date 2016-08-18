@@ -19,6 +19,26 @@
         position: relative;
         padding: 5px;
         background: #efefef;
+        &.selected {
+            background: #6d84b4;
+
+            &:hover {
+                background: #6a80b0;
+            }
+
+            .conversationNameAndText {
+                .name {
+                    color: #fff;
+                }
+                .text {
+                    color: #ddd;
+                }
+            }
+            .date {
+                color: #ccc;
+            }
+        }
+
         &:not(:last-child) {
             border-bottom: 1px solid #dcdcdc;
         }

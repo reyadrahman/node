@@ -14,7 +14,8 @@ let Conversations = React.createClass({
 
     render() {
         const { className, styles, styles: { conversations: ss },
-                currentUser, i18n: { strings: { conversations: strings } }
+                selectedConversationId, currentUser,
+                i18n: { strings: { conversations: strings } }
               } = this.props;
 
         const { conversationsState: cs } = currentUser;
@@ -37,10 +38,12 @@ let Conversations = React.createClass({
             if (text.length > 20) {
                 text = text.substr(0, 17) + '...';
             }
+            let extraClass = x.conversationId === selectedConversationId
+                ? ss.selected : '';
             return (
                 <div
                     key={i}
-                    className={ss.conversation}
+                    className={`${ss.conversation} ${extraClass}`}
                     onClick={() => this.props.onSelectConversation(x.conversationId)}
                 >
                     <div className={ss.profilePic} style={profilePicStyle} />
