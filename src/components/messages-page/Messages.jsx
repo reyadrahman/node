@@ -60,7 +60,9 @@ let Messages = React.createClass({
             );
         }
 
-        if (isFetchingConversationsState || !mc || mcs.isFetchingMessagesCacheState) {
+        if (isFetchingConversationsState || !mc || !mc[selectedConversationId] ||
+            mcs.isFetchingMessagesCacheState)
+        {
             return (
                 <div className={`${ss.root} ${className || ''}`}>
                     <div className={ss.wait}>•••</div>
