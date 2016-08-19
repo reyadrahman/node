@@ -212,7 +212,7 @@ Each action is supposed to return JSON data in the following form:
 - `context` is **required** and will be sent directly to Wit.ai
 - `msg` is **optional**. It's just a message that will be sent to the user
 - `msg` must have **at least one** of `text`, `files` or `quickReplies`
-- `title`, `subtitle` and `postback` inside `quickReplies` are **optional**. `postback` is the message that will be sent back to the server. It's also the message that will be shown to the user if the chat service does not support quick replies. If `postback` is not provided, it defaults to the value of `text`
+- `title`, `subtitle` and `postback` inside `quickReplies` are **optional**. But for compatibility with Telegram, if you provide `file`, then provide `title` as well. `postback` is the message that will be sent back to the server. It's also the message that will be shown to the user if the chat service does not support quick replies. If `postback` is not provided, it defaults to the value of `text`
 - `userPrefs` is **optional**. If not provided, the user preferences remain the same. Otherwise, it will replace the old user preferences
 
 ***NOTE:*** actions receive `userPrefs` and return `userPrefs` separately from `context`. But in order for wit.ai stories to be able to access `userPrefs`, the server systematically injects the `userPrefs` into the `context` **only** when communicating with the wi.ai servers. This should be transparent to action servers. In wit.ai stories, you can access `userPrefs` like `userPrefs.language` for example.

@@ -1,6 +1,8 @@
 /* @flow */
 
-export type QuickReply = string | {
+export type QuickReply = string | RichQuickReply;
+
+export type RichQuickReply = {
     text: string,
     postback?: string,
     title?: string,

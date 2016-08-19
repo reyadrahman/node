@@ -3,14 +3,17 @@
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import { callbackToPromise } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
-import type { WebhookMessage, ResponseMessage } from '../../misc/types.js';
+import type { RichQuickReply, WebhookMessage, ResponseMessage } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
 import builder from 'botbuilder';
 import type { Request, Response } from 'express';
 import memoize from 'lodash/memoize';
+import { inspect } from 'util';
+import _ from 'lodash';
 
 
 async function handle(req: Request, res: Response) {
+    console.log('ms-webhook raw req.body: ', inspect(req.body, {depth:null}));
     const { publisherId, botId } = req.params;
     const botParams = await aws.getBot(publisherId, botId);
 
@@ -36,6 +39,8 @@ async function handle(req: Request, res: Response) {
 }
 
 async function processMessage(session, authRequest, botParams) {
+    console.log('ms-webhook m.sourceEvent: ', inspect(session.message.sourceEvent, {depth:null}));
+
     const m = session.message;
     const atts = m.attachments;
     const filesGetFn = !atts ? undefined :
@@ -47,25 +52,40 @@ async function processMessage(session, authRequest, botParams) {
                 // for downloading attachments. But some services require it.
                 const cid = m.address.channelId;
                 console.log('ms-webhook, processMessage, channelId: ', cid);
-                if (cid === 'slack' || cid === 'webchat') {
-                    buffer = await getBinary(request, a.contentUrl);
-                } else {
+                if (cid === 'skype') {
                     buffer = await getBinary(authRequest, a.contentUrl);
+                } else {
+                    buffer = await getBinary(request, a.contentUrl);
                 }
                 console.log('ms-webhook: successfully downloaded attachment');
                 return buffer;
             })
         );
 
+    let senderName = m.user.name || '';
+
+    // telegram doesn't set m.user.name
+    if (!senderName && m.address.channelId === 'telegram') {
+        const firstName =
+            _.get(m.sourceEvent, 'message.from.first_name') ||
+            _.get(m.sourceEvent, 'callback_query.from.first_name') ||
+            '';
+        const lastName =
+            _.get(m.sourceEvent, 'message.from.last_name') ||
+            _.get(m.sourceEvent, 'callback_query.from.last_name') ||
+            '';
+         senderName = `${firstName} ${lastName}`.trim();
+    }
+
     const message: WebhookMessage = {
         publisherId_conversationId:
             aws.composeKeys(botParams.publisherId, m.address.conversation.id),
         creationTimestamp: new Date(m.timestamp).getTime(),
         id: m.address.id,
-        senderId: session.message.user.id,
-        senderName: session.message.user.name,
-        source: m.address.channelId + 'bot',
-        text: session.message.text,
+        senderId: m.user.id,
+        senderName,
+        source: m.address.channelId,
+        text: m.text,
         filesGetFn,
     };
 
@@ -105,28 +125,48 @@ async function respondFn(session, message: ResponseMessage) {
         session.send(message);
     } else if (typeof message === 'object') {
         const { files, text, quickReplies } = message;
-        if (files && files.length || text) {
-            const m = new builder.Message(session)
-            if (text) {
-                m.text(message.text);
-            }
-            if (files && files.length) {
-                m.attachments(files.map(
-                    url => ({
-                        contentType: 'image',
-                        contentUrl: url,
-                    })
-                ));
-            }
-            session.send(m);
+        const resMessage = new builder.Message(session)
+        let resText = text || '',
+            resAttachments = [];
+
+        if (files && files.length) {
+            resAttachments = files.map(
+                url => ({
+                    contentType: 'image',
+                    contentUrl: url,
+                })
+            );
         }
 
-        if (quickReplies && quickReplies.length) {
+        const { channelId } = session.message.address;
+        if (quickReplies && quickReplies.length && channelId === 'telegram') {
+            const richQuickReplies: RichQuickReply[] = quickReplies.map(x => {
+                return typeof x === 'string' ? { text: x } : x;
+            });
+            resAttachments = resAttachments.concat(richQuickReplies.map(x => {
+                const card = new builder.HeroCard(session);
+                x.title && card.title(x.title);
+                x.subtitle && card.subtitle(x.subtitle);
+                x.file && card.images([
+                    builder.CardImage.create(session, x.file)
+                           .tap(builder.CardAction.showImage(session, x.file)),
+                ]);
+                x.text && card.buttons([
+                    builder.CardAction.imBack(session, x.postback || x.text, x.text),
+                ]);
+                return card;
+            }))
+
+        } else if (quickReplies && quickReplies.length) {
             const textQR = quickReplies.map(
                 x => typeof x === 'string' ? x : x.postback || x.text
             );
-            respondFn(session, `(some possible answers: ${textQR.join(', ')})`);
+            resText += `\n(some possible answers: ${textQR.join(', ')})`;
         }
+
+        resText && resMessage.text(resText);
+        resAttachments && resMessage.attachments(resAttachments);
+        session.send(resMessage);
     }
 }
 

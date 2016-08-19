@@ -67,7 +67,7 @@ async function handle(req: Request) {
         id: rawMessage.id,
         senderId: rawMessage.personId,
         senderName: senderProfile.displayName,
-        source: 'ciscosparkbot',
+        source: 'ciscospark',
         text: rawMessage.text,
         filesGetFn,
     };
