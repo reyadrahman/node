@@ -119,13 +119,13 @@ async function respondFn(session, message: ResponseMessage) {
                 ));
             }
             session.send(m);
+        }
 
-            if (quickReplies && quickReplies.length) {
-                const textQR = quickReplies.map(
-                    x => typeof x === 'string' ? x : x.postback || x.text
-                );
-                respondFn(session, `(some possible answers: ${textQR.join(', ')})`);
-            }
+        if (quickReplies && quickReplies.length) {
+            const textQR = quickReplies.map(
+                x => typeof x === 'string' ? x : x.postback || x.text
+            );
+            respondFn(session, `(some possible answers: ${textQR.join(', ')})`);
         }
     }
 }
