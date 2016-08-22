@@ -14,6 +14,7 @@ import _ from 'lodash';
 
 async function handle(req: Request, res: Response) {
     console.log('ms-webhook raw req.body: ', inspect(req.body, {depth:null}));
+    console.log('ms-webhook raw req.headers: ', inspect(req.headers, {depth:null}));
     const { publisherId, botId } = req.params;
     const botParams = await aws.getBot(publisherId, botId);
 
@@ -40,6 +41,7 @@ async function handle(req: Request, res: Response) {
 
 async function processMessage(session, authRequest, botParams) {
     console.log('ms-webhook m.sourceEvent: ', inspect(session.message.sourceEvent, {depth:null}));
+    console.log('ms-webhook session: ', inspect(session, {depth:null}));
 
     const m = session.message;
     const atts = m.attachments;
@@ -52,6 +54,7 @@ async function processMessage(session, authRequest, botParams) {
                 // for downloading attachments. But some services require it.
                 const cid = m.address.channelId;
                 console.log('ms-webhook, processMessage, channelId: ', cid);
+                // perhaps we could use session.message.address.useAuth ?
                 if (cid === 'skype') {
                     buffer = await getBinary(authRequest, a.contentUrl);
                 } else {
@@ -123,27 +126,50 @@ async function respondFn(session, message: ResponseMessage) {
 
     if (typeof message === 'string' && message.trim()) {
         session.send(message);
-    } else if (typeof message === 'object') {
-        const { files, text, quickReplies } = message;
-        const resMessage = new builder.Message(session)
-        let resText = text || '',
-            resAttachments = [];
+    }
+    if (typeof message !== 'object') return;
 
-        if (files && files.length) {
-            resAttachments = files.map(
-                url => ({
-                    contentType: 'image',
-                    contentUrl: url,
-                })
-            );
+    const { files, text, quickReplies } = message;
+    let resMessage = new builder.Message(session)
+    let resText = text || '',
+        resAttachments = [];
+
+    if (files && files.length) {
+        files.forEach(x => {
+            const card = new builder.HeroCard(session);
+            // x.title && card.title(x.title);
+            // x.subtitle && card.subtitle(x.subtitle);
+            card.images([
+                builder.CardImage.create(session, x)
+                       .tap(builder.CardAction.showImage(session, x)),
+            ]);
+            resAttachments.push(card);
+        })
+        resText && resMessage.text(resText);
+        if (resAttachments.length > 1) {
+            // good default fall back behaviour from MS Bot Framework
+            resMessage.attachmentLayout(builder.AttachmentLayout.carousel)
         }
 
-        const { channelId } = session.message.address;
-        if (quickReplies && quickReplies.length && channelId === 'telegram') {
-            const richQuickReplies: RichQuickReply[] = quickReplies.map(x => {
-                return typeof x === 'string' ? { text: x } : x;
-            });
-            resAttachments = resAttachments.concat(richQuickReplies.map(x => {
+        resAttachments && resMessage.attachments(resAttachments);
+        session.send(resMessage);
+
+        resMessage = new builder.Message(session)
+        resText = '';
+        resAttachments = [];
+    }
+
+    const { channelId } = session.message.address;
+    const supportsHeroCard = ['telegram', 'skype', 'slack'].includes(channelId);
+    const hasRichQuickReplies = quickReplies && quickReplies.find(
+        x => typeof x === 'object' && x.file);
+    const qrs: ?RichQuickReply[] = quickReplies &&
+        quickReplies.map(x => {
+            return typeof x === 'string' ? { text: x } : x;
+        });
+    if (qrs && qrs.length) {
+        if (hasRichQuickReplies && supportsHeroCard) {
+            resAttachments = resAttachments.concat(qrs.map(x => {
                 const card = new builder.HeroCard(session);
                 x.title && card.title(x.title);
                 x.subtitle && card.subtitle(x.subtitle);
@@ -156,18 +182,40 @@ async function respondFn(session, message: ResponseMessage) {
                 ]);
                 return card;
             }))
+        } else if (hasRichQuickReplies && !supportsHeroCard) {
+            qrs.forEach(x => {
+                const card = new builder.HeroCard(session);
+                card.title(x.postback || x.text);
+                // x.subtitle && card.subtitle(x.subtitle);
+                x.file && card.images([
+                    builder.CardImage.create(session, x.file)
+                           .tap(builder.CardAction.showImage(session, x.file)),
+                ]);
+                resAttachments.push(card);
+                console.log('adding card: ', card);
+            })
 
-        } else if (quickReplies && quickReplies.length) {
-            const textQR = quickReplies.map(
-                x => typeof x === 'string' ? x : x.postback || x.text
-            );
-            resText += `\n(some possible answers: ${textQR.join(', ')})`;
+        } else if (!hasRichQuickReplies && supportsHeroCard) {
+            const card = new builder.HeroCard(session);
+            card.buttons(qrs.map(
+                x => builder.CardAction.imBack(session, x.postback || x.text, x.text)
+            ));
+            resAttachments.push(card);
+
+        } else if (!hasRichQuickReplies && !supportsHeroCard) {
+            const textQR = qrs.map(x => x.postback || x.text);
+            resText += `\nOptions: ${textQR.join(', ')}`;
         }
-
-        resText && resMessage.text(resText);
-        resAttachments && resMessage.attachments(resAttachments);
-        session.send(resMessage);
     }
+
+    resText && resMessage.text(resText);
+
+    if (resAttachments.length > 1 && hasRichQuickReplies && supportsHeroCard) {
+        resMessage.attachmentLayout(builder.AttachmentLayout.carousel)
+    }
+
+    resAttachments && resMessage.attachments(resAttachments);
+    session.send(resMessage);
 }
 
 export default function(req: Request, res: Response) {
@@ -189,35 +237,128 @@ export default function(req: Request, res: Response) {
 }
 
 /*
+SESSION:
 {
-  "time": "Wed, 13 Jul 2016 16:23:11 GMT",
-  "method": "POST",
-  "url": "/webhooks/ms",
-  "protocol": "http",
-  "headers": {
-   "host": "chatbot-dev.9rpxkmjsyb.us-east-1.elasticbeanstalk.com",
-   "x-real-ip": "172.31.56.58",
-   "x-forwarded-for": "40.76.219.238, 172.31.56.58",
-   "content-length": "260",
-   "authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IkdDeEFyWG9OOFNxbzdQd2VBNy16NjVkZW5KUSIsIng1dCI6IkdDeEFyWG9OOFNxbzdQd2VBNy16NjVkZW5KUSJ9.eyJpc3MiOiJodHRwczovL2FwaS5ib3RmcmFtZXdvcmsuY29tIiwiYXVkIjoiOTA4NjVkNWEtZDZkZC00OWZmLWEwNWYtYTBlZWIzOTM5MWVlIiwiZXhwIjoxNDY4NDI3NTkxLCJuYmYiOjE0Njg0MjY5OTF9.DRvfKwz9oDGwre6xRIBmz3nHUflqgTM_fPQiSkXxkkm8OJFTGKoqd3ovJxiA3gNti1kJ9R5eOrxFGhrEZVJz1yeVUkrK60aQ-WOqrGiBHBxSP9fkfbGXiCCZV5ZteHcvNpH_iQulXgMhwChJ9NmnTnihvHBqLYDfUfb6iusHXBn9MejIrG6fGllzZp2Op7CKrGh0GNMFS7aKWbt7yrTnBQHZuJqFZ4RvybCT29ZtlobwFB7ySdYoAgl0GEftgqMhjdjMgDwX8rfxL_B2iVMDRVh9y8gNdL97Jl-ip7_F9o1YhkGTV7FUR7Ado5ZVjCr13yknSZmY20Xl6P9iSenT4w",
-   "content-type": "application/json; charset=utf-8",
-   "x-forwarded-port": "443",
-   "x-forwarded-proto": "https"
-  },
-  "body": {
-   "type": "ping",
-   "timestamp": "0001-01-01T00:00:00",
-   "serviceUrl": "https://dev.botframework.com/",
-   "channelId": "test",
-   "from": {
-    "id": "portal"
-   },
-   "conversation": {
-    "id": "ping"
-   },
-   "recipient": {
-    "id": "bot"
-   }
-  }
- },
+    domain: null,
+    _events: {
+        error: [Function]
+    },
+    _eventsCount: 1,
+    _maxListeners: undefined,
+    options: {
+        localizer: undefined,
+        autoBatchDelay: 250,
+        library: Library {
+            name: '*',
+            dialogs: {
+                '/': SimpleDialog {
+                    actions: {},
+                    fn: [Function: waterfallAction]
+                }
+            },
+            libraries: {
+                BotBuilder: Library {
+                    name: 'BotBuilder',
+                    dialogs: {
+                        Prompts: Prompts {
+                            actions: {}
+                        },
+                        FirstRun: SimpleDialog {
+                            actions: {},
+                            fn: [Function]
+                        }
+                    },
+                    libraries: {}
+                }
+            }
+        },
+        actions: ActionSet {
+            actions: {}
+        },
+        middleware: [],
+        dialogId: '/',
+        dialogArgs: undefined,
+        dialogErrorMessage: undefined,
+        onSave: [Function],
+        onSend: [Function]
+    },
+    msgSent: false,
+    _isReset: false,
+    lastSendTime: 1471858121252,
+    batch: [],
+    batchStarted: false,
+    sendingBatch: false,
+    inMiddleware: false,
+    library: Library {
+        name: '*',
+        dialogs: {
+            '/': SimpleDialog {
+                actions: {},
+                fn: [Function: waterfallAction]
+            }
+        },
+        libraries: {
+            BotBuilder: Library {
+                name: 'BotBuilder',
+                dialogs: {
+                    Prompts: Prompts {
+                        actions: {}
+                    },
+                    FirstRun: SimpleDialog {
+                        actions: {},
+                        fn: [Function]
+                    }
+                },
+                libraries: {}
+            }
+        }
+    },
+    userData: {},
+    conversationData: {},
+    privateConversationData: {},
+    sessionState: {
+        callstack: [{
+            id: '*:/',
+            state: {
+                'BotBuilder.Data.WaterfallStep': 0
+            }
+        }],
+        lastAccess: 1471858121252,
+        version: 0
+    },
+    dialogData: {
+        'BotBuilder.Data.WaterfallStep': 0
+    },
+    message: {
+        type: 'message',
+        timestamp: '2016-08-22T09:28:35.77Z',
+        text: 'Hi',
+        entities: [],
+        attachments: [],
+        address: {
+            id: '33OpFYkzE98UfhL6',
+            channelId: 'skype',
+            user: {
+                id: '29:1GGw8qcKlcV9r53s3wCeCZyEXb3temStZ9DMXqLYJfMs',
+                name: 'Shahab Shirazi'
+            },
+            conversation: {
+                id: '29:1GGw8qcKlcV9r53s3wCeCZyEXb3temStZ9DMXqLYJfMs'
+            },
+            bot: {
+                id: '28:90865d5a-d6dd-49ff-a05f-a0eeb39391ee',
+                name: 'Deepiks'
+            },
+            serviceUrl: 'https://skype.botframework.com',
+            useAuth: true
+        },
+        source: 'skype',
+        agent: 'botbuilder',
+        user: {
+            id: '29:1GGw8qcKlcV9r53s3wCeCZyEXb3temStZ9DMXqLYJfMs',
+            name: 'Shahab Shirazi'
+        }
+    }
+}
+
 */
