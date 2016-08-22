@@ -351,7 +351,7 @@ export async function ai(message: DBMessage,
         },
         UpdateExpression: 'SET witData = :witData',
         ExpressionAttributeValues: {
-            ':witData': newWitData,
+            ':witData': aws.dynamoCleanUpObj(newWitData),
         },
     });
     await aws.dynamoPut({
