@@ -11,6 +11,7 @@ import memoize from 'lodash/memoize';
 import { inspect } from 'util';
 import _ from 'lodash';
 
+const MAX_MS_CAROUSEL_ITEM_COUNT = 5;
 
 async function handle(req: Request, res: Response) {
     console.log('ms-webhook raw req.body: ', inspect(req.body, {depth:null}));
@@ -146,7 +147,9 @@ async function respondFn(session, message: ResponseMessage) {
             resAttachments.push(card);
         })
         resText && resMessage.text(resText);
-        if (resAttachments.length > 1) {
+        if (resAttachments.length > 1 &&
+            resAttachments.length <= MAX_MS_CAROUSEL_ITEM_COUNT)
+        {
             // good default fall back behaviour from MS Bot Framework
             resMessage.attachmentLayout(builder.AttachmentLayout.carousel)
         }
@@ -167,6 +170,7 @@ async function respondFn(session, message: ResponseMessage) {
         quickReplies.map(x => {
             return typeof x === 'string' ? { text: x } : x;
         });
+    console.log('**** : hasRichQuickReplies: ', !!hasRichQuickReplies, ', supportsHeroCard: ', !!supportsHeroCard);
     if (qrs && qrs.length) {
         if (hasRichQuickReplies && supportsHeroCard) {
             resAttachments = resAttachments.concat(qrs.map(x => {
@@ -207,10 +211,15 @@ async function respondFn(session, message: ResponseMessage) {
             resText += `\nOptions: ${textQR.join(', ')}`;
         }
     }
+    console.log('**** : text: ', resText);
+    console.log('**** : resAttachments: ', resAttachments);
 
     resText && resMessage.text(resText);
 
-    if (resAttachments.length > 1 && hasRichQuickReplies && supportsHeroCard) {
+    if (resAttachments.length > 1 &&
+        resAttachments.length <= MAX_MS_CAROUSEL_ITEM_COUNT &&
+        hasRichQuickReplies && supportsHeroCard)
+    {
         resMessage.attachmentLayout(builder.AttachmentLayout.carousel)
     }
 
