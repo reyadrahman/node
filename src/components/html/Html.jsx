@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { ENV } from '../../client/client-utils.js';
 
-import CookieConsent from '../cookie-consent/CookieConsent.jsx'
 
 const { PUBLIC_URL } = ENV;
 
