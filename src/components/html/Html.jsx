@@ -1,6 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import { ENV } from '../../client/client-utils.js';
 
+import CookieConsent from '../cookie-consent/CookieConsent.jsx'
+
 const { PUBLIC_URL } = ENV;
 
 const Html = React.createClass({
@@ -22,6 +24,7 @@ const Html = React.createClass({
                     <title>{this.props.title}</title>
                     <meta name="description" content={this.props.description} />
                     <link rel="stylesheet" type="text/css" href={styleURL} />
+                    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/1.0.10/cookieconsent.min.js"></script>
                 </head>
                 <body>
                     <div id="reactUI" dangerouslySetInnerHTML={{ __html: this.props.body }} />

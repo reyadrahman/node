@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { withRouter } from 'react-router';
 import { searchQueryToPath, pathToSearchQuery } from '../../misc/utils.js';
-
 import backgroundPoster from '../../public/background-video-poster.jpg';
 // import backgroundVideo from '../../public/background-video.mp4';
 

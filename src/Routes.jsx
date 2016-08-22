@@ -8,6 +8,7 @@ import BotsPage from './components/bots-page/BotsPage.jsx';
 import MessagesPage from './components/messages-page/MessagesPage.jsx';
 import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 import WebChatPage from './components/web-chat-page/WebChatPage.jsx';
+import TermsOfUse from './components/termsOfUse/TermsOfUse.jsx'
 
 const Routes = (
     <Route path="/" component={App}>
@@ -17,6 +18,7 @@ const Routes = (
         <Route path="add-bot" component={AddBotPage} />
         <Route path="wizard-bot" component={WebChatPage} />
         <Route path="contacts" component={ContactsPage} />
+        <Route path="tos" component={TermsOfUse} />
     </Route>
 );
 
