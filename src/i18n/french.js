@@ -59,6 +59,6 @@ export default {
         name: 'Name',
         email: 'Email address fr',
         subject: 'Subject fr',
-        message: 'Your fr message...',
+        message: 'Votre message...',
     }
 };
