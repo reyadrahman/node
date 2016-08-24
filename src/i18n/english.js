@@ -6,17 +6,24 @@ export default {
         verifyRegistration: 'Verify registration',
     },
     sideMenu: {
-        bots: 'Bots',
+        account: 'Account',
         messages: 'Messages',
         contacts: 'Contacts',
         wizardBot: 'Wizard Bot',
     },
     home: {
     },
-    bots: {
-        title: 'Bots',
+    accountPage: {
+        title: 'Account',
         addBot: 'Add bot',
         botName: 'Bot Name',
+        baseWebhookUrl: 'Base Webhook URL',
+        givenName: 'First name',
+        familyName: 'Last name',
+        phoneNumber: 'Phone',
+        oldPassword: 'Old password',
+        newPassword: 'New password',
+        save: 'Save',
     },
     messagesPage: {
 

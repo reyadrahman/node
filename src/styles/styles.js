@@ -7,7 +7,7 @@ const styles = {
         homeImageSamples: require('./style-1/home-image-samples.scss'),
         homeIntro: require('./style-1/home-intro.scss'),
         home: require('./style-1/home.scss'),
-        botsPage: require('./style-1/bots-page.scss'),
+        accountPage: require('./style-1/account-page.scss'),
         messagesPage: require('./style-1/messages-page.scss'),
         webChatPage: require('./style-1/web-chat-page.scss'),
         conversations: require('./style-1/conversations.scss'),

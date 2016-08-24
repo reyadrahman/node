@@ -42,10 +42,10 @@ export const App_ = React.createClass({
 
         const userMenu = !currentUser ? [] : [
             {
-                label: sideMenuStrings.bots,
-                link: '/bots',
-                icon: 'icon-th-large',
-                value: 'bots',
+                label: sideMenuStrings.account,
+                link: '/account',
+                icon: 'icon-user',
+                value: 'account',
             },
             {
                 label: sideMenuStrings.messages,

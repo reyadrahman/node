@@ -84,7 +84,7 @@ export async function fetchjp2j(url: string, json: Object): Promise<*> {
 }
 
 /*
-    fetch GET request with and then parse response as json
+    fetch GET request and then parse response as json
 */
 export async function fetchg2j(url: string, queryParams: {[key: string]: any}): Promise<*> {
     const urlWithQueries = `${url}?` + createUrlQuery(queryParams);

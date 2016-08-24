@@ -128,6 +128,24 @@ export function signinFailed(message: string) {
         }
     }
 }
+export function updateUserAttrsAndPassSucceeded(message) {
+    return {
+        type: 'CURRENT_USER',
+        state: {
+            updateUserAttrsAndPassErrorMessage: '',
+            updateUserAttrsAndPassSuccessMessage: message,
+        }
+    }
+}
+export function updateUserAttrsAndPassFailed(errorMessage) {
+    return {
+        type: 'CURRENT_USER',
+        state: {
+            updateUserAttrsAndPassErrorMessage: errorMessage,
+            updateUserAttrsAndPassSuccessMessage: '',
+        }
+    }
+}
 export function clearContactsMessages(message: string) {
     return {
         type: 'CONTACTS',
@@ -333,10 +351,31 @@ export function signout() {
                    // TODO navigate out of private pages
 
 
-                   Cookies.set('loggedIn', '',
-                               {expires: 1000, path: '/'});
+                   Cookies.remove('loggedIn', { path: '/' });
                })
         );
+    };
+}
+
+// TODO validate input?
+export function updateUserAttrsAndPass(attrs: Object,
+                                       oldPassword?: string,
+                                       newPassword?: string)
+{
+    return async function(dispatch: Function, getState: Function) {
+        try {
+            await aws.updateCurrentUserAttrsAndPass(attrs, oldPassword, newPassword);
+            dispatch(setCurrentUserAttributes({
+                ...getState().currentUser.attributes,
+                ...attrs
+            }));
+            // TODO multi-lingual
+            dispatch(updateUserAttrsAndPassSucceeded('Successfully updated'));
+
+        } catch(error) {
+            console.log('actions.updateUserAttrsAndPass failed: ', error);
+            dispatch(updateUserAttrsAndPassFailed(error.message));
+        }
     };
 }
 

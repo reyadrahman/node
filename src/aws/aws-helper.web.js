@@ -4,6 +4,7 @@ console.log('======== AWS CLIENT...');
 
 import { ENV } from '../client/client-utils.js';
 import { callbackToPromise } from '../misc/utils.js';
+import _ from 'lodash';
 
 const { IDENTITY_POOL_ID, USER_POOL_ID, AWS_REGION,
         IDENTITY_POOL_UNAUTH_ROLE_ARN, IDENTITY_POOL_AUTH_ROLE_ARN,
@@ -66,8 +67,6 @@ class AutoRefreshCredential extends AWS.CognitoIdentityCredentials {
 
 var _currentUser_ = null;
 
-
-import fromPairs from 'lodash/fromPairs';
 
 AWS.config.region = AWS_REGION;
 AWS.config.credentials = new AWS.CognitoIdentityCredentials({
@@ -175,6 +174,29 @@ export function signin({email, password}) {
     });
 }
 
+export async function updateCurrentUserAttrsAndPass(attrs: Object,
+                                                    oldPassword?: string,
+                                                    newPassword?: string)
+{
+    console.log('aws.updateCurrentUserAttrsAndPass attrs: ', attrs);
+    const cognitoUser = await getCurrentUser();
+    const cp = callbackToPromise(cognitoUser.changePassword, cognitoUser);
+    if (newPassword) {
+        const cpRes = await cp(oldPassword, newPassword);
+        console.log('aws.updateCurrentUserAttrsAndPass password update res: ', cpRes);
+    }
+
+    const attributeList = _.map(attrs, (v, k) =>
+        new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute({
+            Name: k,
+            Value: v,
+        })
+    );
+    const ua = callbackToPromise(cognitoUser.updateAttributes, cognitoUser);
+    const res = await ua(attributeList);
+    console.log('aws.updateCurrentUserAttrsAndPass attrs update res: ', res);
+}
+
 function updateCredentials(session) {
     return new Promise((resolve, reject) => {
         AWS.config.credentials = new AutoRefreshCredential({
@@ -268,8 +290,8 @@ export function getCurrentUserAttributes() {
                 }
                 console.log('getCurrentUserAttributes: ', res);
                 console.log('getCurrentUserAttributes map: ', res.map(x => [x.getName(), x.getValue()]));
-                console.log('getCurrentUserAttributes fromPairs: ', fromPairs(res.map(x => [x.getName(), x.getValue()])));
-                resolve(fromPairs(res.map(x => [x.getName(), x.getValue()])));
+                console.log('getCurrentUserAttributes fromPairs: ', _.fromPairs(res.map(x => [x.getName(), x.getValue()])));
+                resolve(_.fromPairs(res.map(x => [x.getName(), x.getValue()])));
             });
         });
     });
@@ -286,6 +308,7 @@ export async function signout() {
 
 export async function s3GetSignedUrl(operation, params) {
     // TODO can we have just 1 global s3 instance?
+    //      what's the cost of creating a new instance?
     const s3 = new AWS.S3();
     const getSignedUrl = callbackToPromise(s3.getSignedUrl, s3);
     return await getSignedUrl(operation, params);

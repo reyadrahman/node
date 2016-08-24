@@ -68,7 +68,7 @@ While creating the identity pool, it should automatically create 2 new IAM roles
 
 Then go to [AWS IAM Console -> Roles](https://console.aws.amazon.com/iam/home#roles) -> select `IDENTITY_POOL_AUTH_ROLE_ARN` role -> edit policy and replace it with the following where `XXX` is the name of your S3 bucket (`S3_BUCKET_NAME`):
 
-```
+``` json
 {
     "Version": "2012-10-17",
     "Statement": [
