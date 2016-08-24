@@ -9,6 +9,7 @@ import MessagesPage from './components/messages-page/MessagesPage.jsx';
 import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 import WebChatPage from './components/web-chat-page/WebChatPage.jsx';
 import TermsOfUse from './components/termsOfUse/TermsOfUse.jsx'
+import Privacy from './components/privacy/Privacy.jsx'
 
 const Routes = (
     <Route path="/" component={App}>
