@@ -127,7 +127,7 @@ async function fetchConversations(identityId) {
         ExpressionAttributeValues: {
             ':pid': identityId,
         },
-        Limit: 50,
+        // Limit: 50,
         ScanIndexForward: false,
     });
 
