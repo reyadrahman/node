@@ -18,7 +18,8 @@ const Routes = (
         <Route path="add-bot" component={AddBotPage} />
         <Route path="wizard-bot" component={WebChatPage} />
         <Route path="contacts" component={ContactsPage} />
-        <Route path="tos" component={TermsOfUse} />
+        <Route path="terms" component={TermsOfUse} />
+        <Route path="privacy" component={Privacy} />
     </Route>
 );
 
