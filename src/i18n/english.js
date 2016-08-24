@@ -13,6 +13,9 @@ export default {
     },
     home: {
     },
+    ensureSignedIn: {
+        pleaseSignIn: 'Please sign in',
+    },
     accountPage: {
         title: 'Account',
         fetching: 'Fetching bots, please wait...',

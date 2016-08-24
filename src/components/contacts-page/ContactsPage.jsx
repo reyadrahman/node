@@ -6,11 +6,10 @@ import { connect } from 'react-redux';
 
 let ContactsPage = React.createClass({
     getInitialState() {
-        const { currentUser } = this.props;
-        console.log('ContactsPage: ', currentUser);
+        const attrs = (this.props.currentUser || {}).attributes || {};
         return {
-            name: currentUser && `${currentUser.given_name} ${currentUser.family_name}`.trim() || '',
-            email: currentUser && currentUser.email || '',
+            name: `${attrs.given_name || ''} ${attrs.family_name || ''}`.trim() || '',
+            email: attrs.email || '',
             subject: '',
             message: '',
         };
@@ -47,10 +46,10 @@ let ContactsPage = React.createClass({
     },
 
     componentWillReceiveProps(newProps) {
-        const { currentUser } = newProps;
+        const attrs = (newProps.currentUser || {}).attributes || {};
         this.setState({
-            name: this.state.name || currentUser && `${currentUser.given_name} ${currentUser.family_name}`.trim() || '',
-            email: this.state.email || currentUser && currentUser.email || '',
+            name: this.state.name || `${attrs.given_name || ''} ${attrs.family_name || ''}`.trim() || '',
+            email: this.state.email || attrs.email || '',
         });
     },
 

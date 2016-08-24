@@ -334,8 +334,12 @@ export function updateUserAttrsAndPass(attrs: Object,
     return async function(dispatch: Function, getState: Function) {
         try {
             await aws.updateCurrentUserAttrsAndPass(attrs, oldPassword, newPassword);
+            const currentUser = getState().currentUser;
+            if (!currentUser || !currentUser.attributes) {
+                return;
+            }
             dispatch(setCurrentUserAttributes({
-                ...getState().currentUser.attributes,
+                ...currentUser.attributes,
                 ...attrs
             }));
             // TODO multi-lingual

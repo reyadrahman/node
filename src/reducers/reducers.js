@@ -78,11 +78,13 @@ export function currentUser(state = null, action) {
     if (action.type === 'CURRENT_USER') {
         return !action.state ? null : { ...state, ...action.state };
     } else if (action.type === 'CURRENT_USER/BOTS_STATE') {
+        if (!state) return null;
         return !action.state
             ? { ...state, botsState: null }
             : { ...state, botsState: { ...state.botsState, ...action.state } };
 
     } else if (action.type === 'CURRENT_USER/CONVERSATIONS_STATE') {
+        if (!state) return null;
         return !action.state
             ? { ...state, conversationsState: null }
             : {
@@ -93,6 +95,7 @@ export function currentUser(state = null, action) {
                 },
             };
     } else if (action.type === 'CURRENT_USER/MESSAGES_CACHE_STATE') {
+        if (!state) return null;
         return !action.state
             ? { ...state, messagesCacheState: null }
             : {

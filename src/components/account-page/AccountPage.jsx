@@ -94,9 +94,9 @@ let AccountPage = React.createClass({
         const { className, styles, styles: { accountPage: ss },
                 currentUser, i18n: { strings: { accountPage: strings } },
         } = this.props;
-        // if (!currentUser || !currentUser.attributes || !currentUser.attributes.sub) {
-        //     return <h3>Please log in</h3>;
-        // }
+        if (!currentUser || !currentUser.attributes) {
+            return null;
+        }
 
         const { userAttrs, newPassword, oldPassword } = this.state;
 
