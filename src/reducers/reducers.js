@@ -33,22 +33,21 @@ export function locationRedux(state = {pathname: '/'}, action) {
 }
 export function signup(state =
     {
-        isOpen: false,
         errorMessage: '',
         successMessage: '',
     }, action)
 {
     switch (action.type) {
         case 'SIGNUP':
-            return Object.assign({}, state, action.signup);
+            return Object.assign({}, state, action.state);
         default:
             return state;
     }
 }
 export function verifyRegistration(state =
     {
-        isOpen: false,
-        username: '',
+        initialEmail: '',
+        password: '',
         errorMessage: '',
         successMessage: '',
     }, action)
@@ -63,7 +62,6 @@ export function verifyRegistration(state =
 
 export function signin(state =
     {
-        isOpen: false,
         errorMessage: '',
         successMessage: '',
     }, action)
@@ -79,7 +77,6 @@ export function signin(state =
 export function currentUser(state = null, action) {
     if (action.type === 'CURRENT_USER') {
         return !action.state ? null : { ...state, ...action.state };
-
     } else if (action.type === 'CURRENT_USER/BOTS_STATE') {
         return !action.state
             ? { ...state, botsState: null }
@@ -129,6 +126,7 @@ export function ui(state =
     {
         fullscreen: false,
         sideMenu: false,
+        modalComponent: null,
     }, action)
 {
     if (action.type === 'UI') {

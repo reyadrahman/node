@@ -4,130 +4,73 @@ import * as aws from '../aws/aws.js';
 import { destructureS3Url } from '../misc/utils.js';
 import * as utils from '../client/client-utils.js';
 import * as bridge from '../client/client-server-bridge.js';
+import Signin from '../components/signin/Signin.jsx';
+import Signup from '../components/signup/Signup.jsx';
+import VerifyRegistration from '../components/verify-registration/VerifyRegistration.jsx';
 import type { DBMessage } from '../misc/types.js';
+
 import Cookies from 'js-cookie';
+import type { Component } from 'react';
 
 const { PLATFORM } = utils.ENV;
 
-export function test(v: string) {
-    return {
-        type: 'TEST',
-        test: v,
-    };
-}
 export function changeLocation(location: string) {
-    return {
-        type: 'LOCATION',
-        location,
-    };
+    return { type: 'LOCATION', location };
 }
-export function openSignup() {
-    return {
-        type: 'SIGNUP',
-        signup: {
-            isOpen: true,
-            errorMessage: '',
-            successMessage: '',
-        },
-    };
+
+export function setSigninState(state) {
+    return { type: 'SIGNIN', state };
 }
-export function closeSignup() {
-    return {
-        type: 'SIGNUP',
-        signup: {isOpen: false},
-    };
+
+export function setSignupState(state) {
+    return { type: 'SIGNUP', state };
 }
+
+export function setVerifyRegistrationState(state) {
+    return { type: 'VERIFY_REGISTRATION', state };
+}
+
 export function signupSucceeded(message: string) {
-    return {
-        type: 'SIGNUP',
-        signup: {
-            errorMessage: '',
-            successMessage: message,
-        }
-    }
+    return setSignupState({
+        errorMessage: '',
+        successMessage: message,
+    });
 }
 export function signupFailed(message: string) {
-    return {
-        type: 'SIGNUP',
-        signup: {
-            errorMessage: message,
-            successMessage: '',
-        }
-    }
+    return setSignupState({
+        errorMessage: message,
+        successMessage: '',
+    });
 }
 
-
-export function openVerifyRegistration(data: { email?: string, password?: string } = {}) {
-    return {
-        type: 'VERIFY_REGISTRATION',
-        state: {
-            isOpen: true,
-            initialEmail: data.email || '',
-            password: data.password || '',
-            errorMessage: '',
-            successMessage: '',
-        },
-    };
-}
-export function closeVerifyRegistration() {
-    return {
-        type: 'VERIFY_REGISTRATION',
-        state: {isOpen: false, password: ''},
-    };
-}
 export function verifyRegistrationSucceeded(message: string) {
-    return {
-        type: 'VERIFY_REGISTRATION',
-        state: {
-            errorMessage: '',
-            successMessage: message,
-        }
-    }
-}
-export function verifyRegistrationFailed(message: string) {
-    return {
-        type: 'VERIFY_REGISTRATION',
-        state: {
-            errorMessage: message,
-            successMessage: '',
-        }
-    }
+    return setVerifyRegistrationState({
+        errorMessage: '',
+        successMessage: message,
+    });
 }
 
-export function openSignin() {
-    return {
-        type: 'SIGNIN',
-        state: {
-            isOpen: true,
-            errorMessage: '',
-            successMessage: '',
-        },
-    };
+export function verifyRegistrationFailed(message: string) {
+    return setVerifyRegistrationState({
+        errorMessage: message,
+        successMessage: '',
+    });
 }
-export function closeSignin() {
-    return {
-        type: 'SIGNIN',
-        state: {isOpen: false},
-    };
-}
+
 export function signinSucceeded(message: string) {
-    return {
-        type: 'SIGNIN',
-        state: {
-            errorMessage: '',
-            successMessage: message,
-        }
-    }
+    return setSigninState({
+        errorMessage: '',
+        successMessage: message,
+    });
 }
+
 export function signinFailed(message: string) {
-    return {
-        type: 'SIGNIN',
-        state: {
-            errorMessage: message,
-            successMessage: '',
-        }
-    }
+    return setSigninState({
+        errorMessage: message,
+        successMessage: '',
+    });
 }
+
 export function updateUserAttrsAndPassSucceeded(message) {
     return {
         type: 'CURRENT_USER',
@@ -199,31 +142,12 @@ export function setCurrentUserMessagesCacheState(messagesCacheState) {
         state: messagesCacheState,
     }
 }
-export function clearCurrentUserAttributes() {
+export function clearCurrentUser() {
     return {
         type: 'CURRENT_USER',
         state: null,
     }
 }
-
-// export function replaceSearchResults(query, results) {
-//     return {
-//         type: 'SEARCH',
-//         state: {
-//             query,
-//             results,
-//         },
-//     };
-// }
-
-// export function setIsSearching(isSearching) {
-//     return {
-//         type: 'SEARCH',
-//         state: {
-//             isSearching,
-//         },
-//     };
-// }
 
 export function setFullscreen(value: boolean) {
     return {
@@ -232,6 +156,24 @@ export function setFullscreen(value: boolean) {
             fullscreen: value,
         },
     };
+}
+
+export function setModalComponent(modalComponent: Component<*,*,*>) {
+    return {
+        type: 'UI',
+        state: {
+            modalComponent,
+        }
+    }
+}
+
+export function closeModal() {
+    return {
+        type: 'UI',
+        state: {
+            modalComponent: null,
+        }
+    }
 }
 
 export function toggleSideMenu() {
@@ -255,6 +197,32 @@ export function setWebChatSessionToken(sessionToken: string) {
 // Thunks
 // ==================================================
 
+export function openSignin() {
+    return (dispatch: Function) => {
+        dispatch(setSigninState({ successMessage: '', errorMessage: '' }));
+        dispatch(setModalComponent(Signin));
+    };
+}
+
+export function openSignup() {
+    return (dispatch: Function) => {
+        dispatch(setSignupState({ successMessage: '', errorMessage: '' }));
+        dispatch(setModalComponent(Signup));
+    }
+}
+
+export function openVerifyRegistration(data: { email?: string, password?: string } = {}) {
+    return (dispatch: Function) => {
+        dispatch(setModalComponent(VerifyRegistration));
+        dispatch(setVerifyRegistrationState({
+            initialEmail: data.email || '',
+            password: data.password || '',
+            errorMessage: '',
+            successMessage: '',
+        }))
+    }
+}
+
 export function changeLang(lang: string) {
     return (dispatch: Function) => {
         dispatch({
@@ -272,16 +240,14 @@ export function changeLang(lang: string) {
         return Promise.resolve();
     }
 }
-export function signup(data_) {
-    let data = {...data_, sdf: 'asdf'};
+export function signup(data) {
     return (dispatch: Function) => {
         return (
             aws.signup(data)
                .then(res => {
                    console.log('signupThunk SUCCESS. res: ', res);
                    dispatch(signupSucceeded(''));
-                   if (!data.userConfirmed) {
-                       dispatch(closeSignup());
+                   if (!res.userConfirmed) {
                        dispatch(openVerifyRegistration(data));
                    }
                })
@@ -294,25 +260,31 @@ export function signup(data_) {
 }
 
 export function verifyRegistration(data) {
-    return (dispatch: Function, getState: Function) => {
-        return (
-            aws.verifyRegistration(data.email, data.code)
-               .then(res => {
-                   console.log('verifyRegistration SUCCESS. res: ', res);
-                   let password = getState().verifyRegistration.password;
-                   if (password) {
-                       dispatch(signin({email: data.email, password})).then(() => {
-                           dispatch(closeVerifyRegistration());
-                       });
-                   } else {
-                       dispatch(closeVerifyRegistration());
-                   }
-               })
-               .catch(err => {
-                   console.log('verifyRegistration FAILED. err: ', err);
-                   dispatch(verifyRegistrationFailed(err.message));
-               })
-        );
+    return async function(dispatch: Function, getState: Function) {
+        try {
+            var res = await aws.verifyRegistration(data.email, data.code);
+        } catch(error) {
+            console.log('verifyRegistration FAILED. error: ', error);
+            dispatch(verifyRegistrationFailed(error.message));
+            return;
+        }
+
+        console.log('verifyRegistration SUCCESS. res: ', res);
+        let password = getState().verifyRegistration.password;
+        if (password) {
+            try {
+                await dispatch(signin({email: data.email, password}));
+            } catch(error) {
+                console.log(`verifyRegistration couldn't sign in after verification`, error);
+            }
+        }
+        dispatch(setVerifyRegistrationState({
+            successMessage: '',
+            errorMessage: '',
+            initialEmail: '',
+            password: '',
+        }));
+        dispatch(closeModal());
     };
 }
 
@@ -328,8 +300,8 @@ export function signin(data) {
                })
                .then(attrs => {
                    console.log('user attributes: ', attrs);
-                   dispatch(closeSignin());
                    dispatch(setCurrentUserAttributes(attrs));
+                   dispatch(closeModal());
 
                    Cookies.set('loggedIn', 'yes',
                                {expires: 1000, path: '/'});
@@ -347,10 +319,7 @@ export function signout() {
         return (
             aws.signout()
                .then(() => {
-                   dispatch(clearCurrentUserAttributes());
-                   // TODO navigate out of private pages
-
-
+                   dispatch(clearCurrentUser());
                    Cookies.remove('loggedIn', { path: '/' });
                })
         );
@@ -378,31 +347,6 @@ export function updateUserAttrsAndPass(attrs: Object,
         }
     };
 }
-
-
-// export function search(query) {
-//     return dispatch => {
-//         if (!query) {
-//             dispatch(replaceSearchResults({ searchPhrase: '' }, {}));
-//             dispatch(setIsSearching(false));
-//             return Promise.resolve();
-//         }
-//         dispatch(replaceSearchResults(query, {}));
-//         dispatch(setIsSearching(true));
-//         return (
-//             aws.search(query)
-//                .then(results => {
-//                    console.log('search SUCCEEDED: ', results);
-//                    dispatch(replaceSearchResults(query, results));
-//                    dispatch(setIsSearching(false));
-//                })
-//                .catch(err => {
-//                    console.log('search FAILED: ', err);
-//                    dispatch(setIsSearching(false));
-//                })
-//         );
-//     };
-// }
 
 export function toggleFullscreen() {
     return (dispatch: Function) => {

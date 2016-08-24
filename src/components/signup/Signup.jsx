@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
+import { Title } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../actions/actions.js';
 
 let Signup = React.createClass({
@@ -44,12 +45,8 @@ let Signup = React.createClass({
 
 
         return (
-            <ModalBox
-                isOpen={isOpen}
-                onRequestClose={closeSignup}
-                title={strings.title}
-                styles={styles}
-            >
+            <div>
+                <Title styles={styles} title={strings.title} />
                 <Form
                     onSubmit={this.signup}
                     buttons={buttons}
@@ -95,19 +92,17 @@ let Signup = React.createClass({
                     <ErrorMessage message={errorMessage} styles={styles} />
                     <SuccessMessage message={successMessage} styles={styles} />
                 </Form>
-            </ModalBox>
+            </div>
         );
     },
 });
 
 Signup = connect(
     state => ({
-        isOpen: state.signup.isOpen,
         errorMessage: state.signup.errorMessage,
         successMessage: state.signup.successMessage,
     }),
     {
-        closeSignup: actions.closeSignup,
         signup: actions.signup,
     }
 )(Signup);

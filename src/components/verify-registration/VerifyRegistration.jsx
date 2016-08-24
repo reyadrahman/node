@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
+import { Title } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../actions/actions.js';
 
 let VerifyRegistration = React.createClass({
@@ -46,12 +47,8 @@ let VerifyRegistration = React.createClass({
         ];
 
         return (
-            <ModalBox
-                isOpen={isOpen}
-                onRequestClose={closeVerifyRegistration}
-                title={strings.title}
-                styles={styles}
-            >
+            <div>
+                <Title styles={styles} title={strings.title} />
                 <Form
                     onSubmit={this.verify}
                     buttons={buttons}
@@ -78,7 +75,7 @@ let VerifyRegistration = React.createClass({
                     <ErrorMessage message={errorMessage} styles={styles} />
                     <SuccessMessage message={successMessage} styles={styles} />
                 </Form>
-            </ModalBox>
+            </div>
         );
     },
 
@@ -86,13 +83,11 @@ let VerifyRegistration = React.createClass({
 
 VerifyRegistration = connect(
     state => ({
-        isOpen: state.verifyRegistration.isOpen,
         errorMessage: state.verifyRegistration.errorMessage,
         successMessage: state.verifyRegistration.successMessage,
         initialEmail: state.verifyRegistration.initialEmail,
     }),
     {
-        closeVerifyRegistration: actions.closeVerifyRegistration,
         verifyRegistration: actions.verifyRegistration,
     }
 )(VerifyRegistration);

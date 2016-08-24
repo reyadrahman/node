@@ -3,12 +3,13 @@ import { connect } from 'react-redux';
 import translations from '../../i18n/translations.js';
 import * as actions from '../../actions/actions.js';
 import connectRouterRedux from '../react-router-redux/connectReactRouterRedux.jsx';
-import Signup from '../signup/Signup.jsx';
-import VerifyRegistration from '../verify-registration/VerifyRegistration.jsx';
-import Signin from '../signin/Signin.jsx';
+// import Signup from '../signup/Signup.jsx';
+// import VerifyRegistration from '../verify-registration/VerifyRegistration.jsx';
+// import Signin from '../signin/Signin.jsx';
 import SideMenu from '../side-menu/SideMenu.jsx';
 import * as utils from '../../client/client-utils.js';
 import Header from '../header/Header.jsx';
+import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 
 import 'normalize.css';
 import '../../public/fonts/css/fontello.css';
@@ -28,7 +29,7 @@ export const App_ = React.createClass({
     },
 
     render() {
-        const { currentUser, children, lang, ui, location } = this.props;
+        const { currentUser, children, lang, ui, location, closeModal } = this.props;
         console.log('App render, lang', lang, ', props: ', this.props);
         const i18n = {
             lang,
@@ -100,6 +101,8 @@ export const App_ = React.createClass({
             className: `${ss.content} ${isHome ? ss.home : ''} ${ui.sideMenu ? ss.sideMenuOpen : ''}`,
         });
 
+        const ModalChild = ui.modalComponent;
+
         return (
             <div className={ss.root}>
                 <Header
@@ -115,9 +118,18 @@ export const App_ = React.createClass({
                     transparent={isHome}
                 />
                 {cs}
-                <Signup i18n={i18n} styles={styles} />
-                <VerifyRegistration i18n={i18n} styles={styles} />
-                <Signin i18n={i18n} styles={styles} />
+                <ModalBox
+                    styles={styles} i18n={i18n} isOpen={!!ModalChild}
+                    onRequestClose={closeModal}>
+                    {
+                        ModalChild && <ModalChild styles={styles} i18n={i18n} />
+                    }
+                </ModalBox>
+                {
+                    // <Signup i18n={i18n} styles={styles} />
+                    // <VerifyRegistration i18n={i18n} styles={styles} />
+                    // <Signin i18n={i18n} styles={styles} />
+                }
             </div>
         );
     },
@@ -134,6 +146,7 @@ let App = connect(
     }),
     {
         setFullscreen: actions.setFullscreen,
+        closeModal: actions.closeModal,
     }
 )(App_);
 

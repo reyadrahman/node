@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
+import { Title } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../actions/actions.js';
 
 let Signin = React.createClass({
@@ -27,21 +27,17 @@ let Signin = React.createClass({
     },
 
     render() {
-        const { isOpen, i18n: { strings: { signin: strings } },
+        const { i18n: { strings: { signin: strings } },
                 styles, styles: { signin: ss },
-                errorMessage, successMessage, closeSignin } = this.props;
+                errorMessage, successMessage } = this.props;
         const { state } = this;
         const buttons = [
             { label: strings.signin, type: 'submit' },
         ];
 
         return (
-            <ModalBox
-                isOpen={isOpen}
-                onRequestClose={closeSignin}
-                title={strings.title}
-                styles={styles}
-            >
+            <div>
+                <Title styles={styles} title={strings.title} />
                 <Form
                     onSubmit={this.signin}
                     buttons={buttons}
@@ -71,19 +67,17 @@ let Signin = React.createClass({
                     <ErrorMessage message={errorMessage} styles={styles} />
                     <SuccessMessage message={successMessage} styles={styles} />
                 </Form>
-            </ModalBox>
+            </div>
         );
     },
 });
 
 Signin = connect(
     state => ({
-        isOpen: state.signin.isOpen,
         errorMessage: state.signin.errorMessage,
         successMessage: state.signin.successMessage,
     }),
     {
-        closeSignin: actions.closeSignin,
         signin: actions.signin,
     }
 )(Signin);

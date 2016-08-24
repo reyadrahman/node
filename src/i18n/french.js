@@ -15,15 +15,21 @@ export default {
     },
     accountPage: {
         title: 'FR Account',
+        fetching: 'FR Fetching bots, please wait...',
+        profile: 'FR Profile',
+        bots: 'FR Your Bots',
         addBot: 'FR Add bot',
-        botName: 'FR Bot Name',
-        baseWebhookUrl: 'FR Base Webhook URL',
+        name: 'FR Name',
+        type: 'FR Type',
+        webhookUrls: 'FR Webhook URLs',
         givenName: 'FR First name',
         familyName: 'FR Last name',
         phoneNumber: 'FR Phone',
         oldPassword: 'FR Old password',
         newPassword: 'FR New password',
         save: 'FR Save',
+        show: 'FR show',
+        ok: 'FR OK',
     },
     messagesPage: {
 

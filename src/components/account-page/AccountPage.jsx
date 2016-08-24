@@ -2,6 +2,7 @@ import React from 'react';
 import { Form, Input, Button, ButtonArea, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
 import * as actions from '../../actions/actions.js';
+import { Title } from '../modal-box-1/ModalBox1.jsx';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
 import _ from 'lodash';
@@ -36,6 +37,17 @@ let AccountPage = React.createClass({
         this.props.updateUserAttrsAndPass(this.state.userAttrs,
                                           this.state.oldPassword,
                                           this.state.newPassword);
+    },
+
+    showBot(bot) {
+        const { setModalComponent, closeModal } = this.props;
+        const close = e => {
+            e.preventDefault();
+            closeModal();
+        };
+        setModalComponent(
+            props => <BotDetails bot={bot} {...props} onRequestClose={close} />
+        );
     },
 
     profileAttributeChanged(e, field) {
@@ -82,10 +94,9 @@ let AccountPage = React.createClass({
         const { className, styles, styles: { accountPage: ss },
                 currentUser, i18n: { strings: { accountPage: strings } },
         } = this.props;
-        if (!currentUser || !currentUser.attributes || !currentUser.attributes.sub) {
-            // TODO move me out of here
-            return <h3>Please log in</h3>;
-        }
+        // if (!currentUser || !currentUser.attributes || !currentUser.attributes.sub) {
+        //     return <h3>Please log in</h3>;
+        // }
 
         const { userAttrs, newPassword, oldPassword } = this.state;
 
@@ -179,21 +190,16 @@ let AccountPage = React.createClass({
 
         const fetchingBots = botsState && botsState.isFetchingBotsState &&
             // TODO Multi ling
-            <h2 className={ss.fetchingBots}>Fetching bots, please wait...</h2>;
+            <h2 className={ss.fetchingBots}>{strings.fetching}</h2>;
         let botGridUi;
         if (botsState && botsState.bots) {
             const { bots } = botsState;
-            // const rows = bots.map(x => [
-            //     x.botName,
-            //     `${window.location.origin}/webhooks/` +
-            //         `${x.publisherId}/${x.botId}/`,
-            // ]);
             botGridUi = (
                 <div className={ss.botGrid}>
                     <div className={ss.headerRow}>
-                        <div className={ss.nameHCell}>Name</div>
-                        <div className={ss.typeHCell}>Type</div>
-                        <div className={ss.webhookUrlsHCell}>Webhook URLs</div>
+                        <div className={ss.nameHCell}>{strings.name}</div>
+                        <div className={ss.typeHCell}>{strings.type}</div>
+                        <div className={ss.webhookUrlsHCell}>{strings.webhookUrls}</div>
                     </div>
                     {
                         bots.map((x, i) => (
@@ -202,10 +208,17 @@ let AccountPage = React.createClass({
                                     { x.botName }
                                 </div>
                                 <div className={ss.typeCell}>
-                                    Survey Bot
+                                    { /* TODO type */ }
+                                    TODO
                                 </div>
                                 <div className={ss.webhookUrlsCell}>
-                                    show
+                                    <a
+                                        href="javascript:void(0)"
+                                        className={ss.showBot}
+                                        onClick={() => this.showBot(x)}
+                                    >
+                                        {strings.show}
+                                    </a>
                                 </div>
                             </div>
                         ))
@@ -221,13 +234,13 @@ let AccountPage = React.createClass({
         return (
             <div className={`${ss.root} ${className || ''}`}>
                 <div className={ss.profileSection}>
-                    <h1>Profile</h1>
+                    <h1>{strings.profile}</h1>
                     {
                         profileInfoUi
                     }
                 </div>
                 <div className={ss.botSection}>
-                    <h1>Your Bots</h1>
+                    <h1>{strings.bots}</h1>
                     {
                         fetchingBots || emptyBotList || botGridUi
                     }
@@ -254,9 +267,53 @@ AccountPage = connect(
     {
         fetchBots: actions.fetchBots,
         updateUserAttrsAndPass: actions.updateUserAttrsAndPass,
+        setModalComponent: actions.setModalComponent,
+        closeModal: actions.closeModal,
     }
 )(AccountPage);
 
 AccountPage = withRouter(AccountPage);
+
+
+export const BotDetails = ({
+    bot, i18n: { strings: { accountPage: strings } },
+    styles, styles: { accountPage: ss }, onRequestClose,
+}) => {
+
+    const buttons = [
+        { label: strings.ok, type: 'submit' },
+    ];
+    const baseUrl = `${window.location.origin}/webhooks/` +
+                    `${bot.publisherId}/${bot.botId}/`;
+    const chans = [
+        ['Microsoft Bot Framework', 'ms'],
+        ['Facebook Messenger', 'messenger'],
+        ['Cisco Spark', 'spark'],
+    ];
+    return (
+        <div>
+            <Title styles={styles} title={strings.webhookUrls} />
+            <Form
+                className={ss.botWebhookUrlList}
+                onSubmit={onRequestClose}
+                buttons={buttons}
+                styles={styles}
+            >
+                {
+                    chans.map(c => (
+                        <div className={ss.channel}>
+                            <div className={ss.channelName}>
+                                { c[0] }
+                            </div>
+                            <div className={ss.channelWebhookUrl}>
+                                { baseUrl + c[1] }
+                            </div>
+                        </div>
+                    ))
+                }
+            </Form>
+        </div>
+    );
+};
 
 export default AccountPage;

@@ -125,12 +125,13 @@ $submitButtonWidth: 200px;
 
                 }
                 .typeCell {
-                    // text-align: center;
 
                 }
                 .webhookUrlsCell {
-                    // text-align: center;
 
+                    .showBot {
+
+                    }
                 }
             }
         }
@@ -149,6 +150,25 @@ $submitButtonWidth: 200px;
             .addBotButton {
                 width: $submitButtonWidth;
             }
+        }
+    }
+}
+
+.botWebhookUrlList {
+    .channel {
+        margin: 30px;
+        
+        .channelName {
+            color: #656565;
+            margin: 5px 10px;
+        }
+        .channelWebhookUrl {
+            background: #d6dde7;
+            padding: 10px;
+            border-radius: 0px;
+            font-size: 12px;
+            border-left: 5px solid #9cb4c5;
+            color: #305d8c;
         }
     }
 }

@@ -17,16 +17,21 @@ export const ModalBox = React.createClass({
                     className={`${ss.closeButton} icon-cancel`}
                     onClick={onRequestClose}
                 />
-                <h2 className={ss.title}>{title}</h2>
-                <Separator styles={styles} />
+                {
+                // <h2 className={ss.title}>{title}</h2>
+                // <Separator styles={styles} />
+                }
                 {children}
             </Modal>
         );
     },
 });
 
-export const Separator = ({ styles: { modalBox1: ss } }) => (
-    <div className={ss.horSeparator} />
+export const Title = ({ styles: { modalBox1: ss }, title }) => (
+    <div className={ss.title} >
+        <h2>{title}</h2>
+        <div className={ss.horSeparator} />
+    </div>
 );
 
 export default ModalBox;
