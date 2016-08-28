@@ -2,17 +2,14 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import translations from '../../i18n/translations.js';
 import * as actions from '../../actions/actions.js';
-import connectRouterRedux from '../react-router-redux/connectReactRouterRedux.jsx';
-// import Signup from '../signup/Signup.jsx';
-// import VerifyRegistration from '../verify-registration/VerifyRegistration.jsx';
-// import Signin from '../signin/Signin.jsx';
-import SideMenu from '../side-menu/SideMenu.jsx';
 import * as utils from '../../client/client-utils.js';
-import Header from '../header/Header.jsx';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 
-import 'normalize.css';
-import '../../public/fonts/css/fontello.css';
+// import 'normalize.css';
+// import '../../public/fonts/css/fontello.css';
+
+// TODO load and unload the right css files for each style
+import '../../styles/style-1/bootstrap.min.css';
 
 import allStyles from '../../styles/styles.js';
 
@@ -29,7 +26,7 @@ export const App_ = React.createClass({
     },
 
     render() {
-        const { currentUser, children, lang, ui, location, closeModal } = this.props;
+        const { currentUser, children, lang, ui, closeModal } = this.props;
         console.log('App render, lang', lang, ', props: ', this.props);
         const i18n = {
             lang,
@@ -39,84 +36,14 @@ export const App_ = React.createClass({
         const styles = allStyles.style1;
         const ss = styles.app;
 
-        const sideMenuStrings = translations[lang].sideMenu;
-
-        const userMenu = !currentUser ? [] : [
-            {
-                label: sideMenuStrings.account,
-                link: '/account',
-                icon: 'icon-user',
-                value: 'account',
-            },
-            {
-                label: sideMenuStrings.messages,
-                link: '/messages',
-                icon: 'icon-th-large',
-                value: 'messages',
-            },
-        ];
-
-        const menu = [
-            // {
-            //     label: sideMenuStrings.search,
-            //     icon: 'icon-search',
-            //     children: [
-            //         {
-            //             label: sideMenuStrings.quickSearch,
-            //             link: '/search',
-            //         },
-            //         {
-            //             label: sideMenuStrings.smartSearch,
-            //             link: '/search',
-            //             value: 'search',
-            //         },
-            //     ],
-            // },
-            // {
-            //     label: sideMenuStrings.lightboxes,
-            //     link: '/lightboxes',
-            //     icon: 'icon-th-large',
-            //     value: 'lightboxes',
-            // },
-            ...userMenu,
-            {
-                label: sideMenuStrings.contacts,
-                link: '/contacts',
-                icon: 'icon-mail-alt',
-                value: 'contacts',
-            },
-            {
-                label: sideMenuStrings.wizardBot,
-                link: '/wizard-bot',
-                icon: 'icon-mail-alt',
-                value: 'wizardBot',
-            }
-
-        ];
-
-
-        const isHome = location.pathname === '/';
         const cs = React.cloneElement(children, {
             i18n, styles,
-            className: `${ss.content} ${isHome ? ss.home : ''} ${ui.sideMenu ? ss.sideMenuOpen : ''}`,
         });
 
         const ModalChild = ui.modalComponent;
 
         return (
             <div className={ss.root}>
-                <Header
-                    className={`${ss.header} ${isHome ? ss.home : ''}`}
-                    i18n={i18n} styles={styles}
-                    transparent={isHome} hideLogo={isHome} hideSearchBar={isHome}
-                />
-                <SideMenu
-                    className={`${ss.sideMenu} ${isHome ? ss.home : ''} ${ui.sideMenu ? '' : ss.hide}`}
-                    i18n={i18n} styles={styles}
-                    menu={menu}
-                    value={location.pathname.split('/')[1] || ''}
-                    transparent={isHome}
-                />
                 {cs}
                 <ModalBox
                     styles={styles} i18n={i18n} isOpen={!!ModalChild}
@@ -125,11 +52,6 @@ export const App_ = React.createClass({
                         ModalChild && <ModalChild styles={styles} i18n={i18n} />
                     }
                 </ModalBox>
-                {
-                    // <Signup i18n={i18n} styles={styles} />
-                    // <VerifyRegistration i18n={i18n} styles={styles} />
-                    // <Signin i18n={i18n} styles={styles} />
-                }
             </div>
         );
     },
@@ -150,7 +72,6 @@ let App = connect(
     }
 )(App_);
 
-App = connectRouterRedux(App);
 
 
 export default App;

@@ -116,7 +116,7 @@ let AccountPage = React.createClass({
                         value={userAttrs.given_name}
                         onChange={e => this.profileAttributeChanged(e, 'given_name')}
                         styles={styles}
-                        icon="icon-user"
+                        icon="user"
                     />
                 </div>
                 <div className={ss.inputsRow}>
@@ -126,7 +126,7 @@ let AccountPage = React.createClass({
                         value={userAttrs.family_name}
                         onChange={e => this.profileAttributeChanged(e, 'family_name')}
                         styles={styles}
-                        icon="icon-user"
+                        icon="user"
                     />
                 </div>
                 <div className={ss.inputsRow}>
@@ -136,7 +136,7 @@ let AccountPage = React.createClass({
                         value={userAttrs.phone_number}
                         onChange={e => this.profileAttributeChanged(e, 'phone_number')}
                         styles={styles}
-                        icon="icon-phone"
+                        icon="earphone"
                     />
                 </div>
                 <div className={ss.inputsRow}>
@@ -146,7 +146,7 @@ let AccountPage = React.createClass({
                         value={newPassword}
                         onChange={this.newPasswordChanged}
                         styles={styles}
-                        icon="icon-lock"
+                        icon="lock"
                         type='password'
                     />
                 </div>
@@ -159,7 +159,7 @@ let AccountPage = React.createClass({
                                 value={oldPassword}
                                 onChange={this.oldPasswordChanged}
                                 styles={styles}
-                                icon="icon-lock"
+                                icon="lock"
                                 type='password'
                             />
                         </div>

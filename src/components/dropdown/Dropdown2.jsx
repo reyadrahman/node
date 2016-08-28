@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Glyphicon } from 'react-bootstrap';
 
 const Dropdown = React.createClass({
     getInitialState() {
@@ -69,7 +70,7 @@ const Dropdown = React.createClass({
                         activeItemRenderer(options.find(x => x.value === value))
                     }
                     {
-                        renderArrow && <div className={`${ss.arrowDown} icon-angle-down`} />
+                        renderArrow && <Glyphicon glyph="menu-down" className={ss.arrowDown} />
                     }
                 </div>
                 {

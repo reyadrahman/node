@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import { connect } from 'react-redux';
+import { Glyphicon } from 'react-bootstrap';
 import * as actions from '../../actions/actions.js';
 // import Dropdown from '../dropdown/Dropdown.jsx';
 // import SearchBar from '../search-bar/SearchBar.jsx';
@@ -81,8 +82,9 @@ let Header = React.createClass({
                     options={signOutOptions}
                     styles={styles}
                     activeItemRenderer={() => (
-                        <button
-                            className={`${buttonClass} icon-logout`}
+                        <Glyphicon
+                            glyph="log-out"
+                            className={buttonClass}
                             title={strings.signout}
                         />
                     )}
@@ -105,8 +107,9 @@ let Header = React.createClass({
                     options={signInUpVerifyOptions}
                     styles={styles}
                     activeItemRenderer={() => (
-                        <button
-                            className={`${buttonClass} icon-login`}
+                        <Glyphicon
+                            glyph="log-in"
+                            className={buttonClass}
                             title={strings.signin}
                         />
                     )}
@@ -118,8 +121,9 @@ let Header = React.createClass({
         return (
             <div className={`${ss.root} ${className || ''} ${transparent ? ss.transparent : ''}`}>
                 <div className={ss.leftSection}>
-                    <button
-                        className={`${buttonClass} ${sideMenu ? ss.active : ''} icon-menu`}
+                    <Glyphicon
+                        glyph="menu-hamburger"
+                        className={`${buttonClass} ${sideMenu ? ss.active : ''}`}
                         onClick={this.toggleSideMenu}
                     />
                     {
@@ -149,19 +153,10 @@ let Header = React.createClass({
                         }
                         onChange={this.languageChanged}
                     />
-                    <button
+                    <Glyphicon glyph="fullscreen"
                         onClick={this.props.toggleFullscreen}
-                        className={`${buttonClass} ${fullscreen ? ss.active : ''} ` +
-                                   `icon-resize-full-alt`}
+                        className={`${buttonClass} ${fullscreen ? ss.active : ''} `}
                     />
-                    {
-                        !hideSearchBar &&
-                            <SearchBar
-                                initialSearchPhrase={searchState.query.searchPhrase}
-                                i18n={i18n} styles={styles}
-                                onSubmit={this.searchSubmitted}
-                            />
-                    }
                     {signInOutElem}
                 </div>
             </div>
@@ -188,53 +183,6 @@ Header = connect(
 )(Header);
 
 Header = withRouter(Header);
-
-
-
-const SearchBar = React.createClass({
-    getInitialState() {
-        return {
-            searchPhrase: this.props.initialSearchPhrase || '',
-        };
-    },
-
-    searchPhraseChanged(e) {
-        this.setState({ searchPhrase: e.target.value });
-    },
-
-    submitted(e) {
-        e.preventDefault();
-        if (this.props.onSubmit && this.state.searchPhrase) {
-            this.props.onSubmit(this.state.searchPhrase);
-        }
-    },
-
-    componentWillReceiveProps(newProps) {
-        if (newProps.initialSearchPhrase !== this.props.initialSearchPhrase)
-        {
-            this.setState({ searchPhrase: newProps.initialSearchPhrase || '' });
-        }
-    },
-
-    render() {
-        let { i18n, className, styles, styles: { header: ss } } = this.props;
-        let { searchPhrase } = this.state;
-        return (
-            <form className={ss.searchForm} onSubmit={this.submitted}>
-                <input
-                    className={ss.searchInput}
-                    value={searchPhrase}
-                    placeholder={'Search'}
-                    onChange={this.searchPhraseChanged}
-                />
-                <button
-                    type="submit"
-                    className={`${ss.searchButton} icon-search`}
-                />
-            </form>
-        );
-    },
-});
 
 
 export default Header;

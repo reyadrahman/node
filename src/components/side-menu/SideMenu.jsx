@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
+import { Glyphicon } from 'react-bootstrap';
 
 const SideMenu = React.createClass({
     getInitialState() {
@@ -41,13 +42,11 @@ const SideMenu = React.createClass({
                                 (e) => this.toggleItem(e, i) : null
                         }
                     >
-                        <span className={`${p.icon} ${ss.menuIcon}`} />
+                        <Glyphicon glyph={p.icon} className={ss.menuIcon} />
                         {p.label}
-                        <span className={
-                                !p.children ? '' : openItemIndex === i ?
-                                `icon-minus-squared-alt ${ss.fold}` :
-                                `icon-plus-squared-alt ${ss.fold}`
-                            }
+                        <Glyphicon
+                            glyph={!p.children ? '' : openItemIndex === i ? `minus` : `plus`}
+                            className={ !p.children ? '' : ss.fold }
                         />
 
                     </Link>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Glyphicon } from 'react-bootstrap';
 
 export const Form = React.createClass({
     render() {
@@ -44,7 +45,7 @@ export const Input = ({
             onChange={onChange}
         />
         {icon && <div className={`${ss.verSeparator}`} />}
-        {icon && <div className={`${icon} ${ss.icon}`} />}
+        {icon && <Glyphicon glyph={icon} className={ss.icon} />}
     </div>
 );
 

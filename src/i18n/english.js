@@ -13,7 +13,7 @@ export default {
     },
     home: {
     },
-    ensureSignedIn: {
+    signedInPage: {
         pleaseSignIn: 'Please sign in',
     },
     accountPage: {

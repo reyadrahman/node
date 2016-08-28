@@ -11,12 +11,13 @@ import type { DBMessage } from '../misc/types.js';
 
 import Cookies from 'js-cookie';
 import type { Component } from 'react';
+import { browserHistory } from 'react-router'
 
 const { PLATFORM } = utils.ENV;
 
-export function changeLocation(location: string) {
-    return { type: 'LOCATION', location };
-}
+// export function changeLocation(location: string) {
+//     return { type: 'LOCATION', location };
+// }
 
 export function setSigninState(state) {
     return { type: 'SIGNIN', state };
@@ -305,6 +306,7 @@ export function signin(data) {
 
                    Cookies.set('loggedIn', 'yes',
                                {expires: 1000, path: '/'});
+                   browserHistory.push('/account');
                })
                .catch(err => {
                    console.log('signinThunk FAIL. err: ', err.message);

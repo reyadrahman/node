@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Glyphicon } from 'react-bootstrap';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../actions/actions.js';
@@ -50,7 +51,7 @@ let Signin = React.createClass({
                             value={state.email}
                             onChange={this.emailChanged}
                             styles={styles}
-                            icon="icon-user"
+                            icon="user"
                         />
                     </div>
                     <div className={ss.inputsRow}>
@@ -61,7 +62,7 @@ let Signin = React.createClass({
                             onChange={this.passwordChanged}
                             type="password"
                             styles={styles}
-                            icon="icon-lock"
+                            icon="lock"
                         />
                     </div>
                     <ErrorMessage message={errorMessage} styles={styles} />

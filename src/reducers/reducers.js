@@ -23,14 +23,14 @@ export function systemLang(state = '', action) {
             return state;
     }
 }
-export function locationRedux(state = {pathname: '/'}, action) {
-    switch (action.type) {
-        case 'LOCATION':
-            return Object.assign({}, state, action.location);
-        default:
-            return state;
-    }
-}
+// export function locationRedux(state = {pathname: '/'}, action) {
+//     switch (action.type) {
+//         case 'LOCATION':
+//             return Object.assign({}, state, action.location);
+//         default:
+//             return state;
+//     }
+// }
 export function signup(state =
     {
         errorMessage: '',
