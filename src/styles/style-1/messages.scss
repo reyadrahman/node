@@ -83,71 +83,68 @@
                     max-height: 300px;
                 }
             }
-            .quickRepliesRoot {
+            .simpleActionsRoot {
                 display: flex;
                 justify-content: center;
+                padding: 5px 0;
 
-                .simpleQuickReplies {
-                    display: flex;
-                    justify-content: center;
-                    padding: 5px 0;
-
-                    .simpleQuickReply {
-                        border: 1px solid #b9b9b9;
-                        padding: 5px 10px;
-                        border-radius: 20px;
-                        color: #0084ff;
-                        font-size: 13px;
-                        margin: 0px 5px;
-                    }
-                }
-                .richQuickReplies {
-                    display: flex;
-                    overflow-x: scroll;
-                    max-width: 50vw;
+                .simpleAction {
                     border: 1px solid #b9b9b9;
-                    border-radius: 10px;
-                    margin: 10px 0;
+                    padding: 5px 10px;
+                    border-radius: 20px;
+                    color: #0084ff;
+                    font-size: 13px;
+                    margin: 0px 5px;
+                }
+            }
 
-                    .richQuickReply {
-                        display: flex;
-                        flex-direction: column;
+            .cardsRoot {
+                display: flex;
+                display: flex;
+                overflow-x: scroll;
+                max-width: 50vw;
+                border: 1px solid #b9b9b9;
+                border-radius: 10px;
+                margin: 10px;
 
-                        &:not(:last-child) {
-                            margin: 0 10px 0 0;
-                        }
-                        .image {
-                            flex: 0 0 auto;
-                            max-width: 300px;
-                        }
-                        .title {
-                            flex: 0 0 auto;
-                            font-size: 14px;
-                            font-weight: bold;
-                            margin: 5px 10px;
-                        }
-                        .subtitle {
-                            flex: 1 0;
-                            font-size: 14px;
-                            margin: 0 10px;
-                            color: #888;
-                        }
-                        .button {
-                            flex: 0 0 auto;
-                            text-align: center;
-                            margin: 10px;
-                            padding: 5px;
-                            color: #365899;
-                            font-weight: bold;
-                            font-size: 14px;
-                            border: 1px solid #ddd;
-                            border-radius: 5px;
-                        }
+                .card {
+                    display: flex;
+                    flex-direction: column;
+
+                    &:not(:last-child) {
+                        margin: 0 10px 0 0;
+                    }
+                    .image {
+                        flex: 0 0 auto;
+                        max-width: 300px;
+                    }
+                    .title {
+                        flex: 0 0 auto;
+                        font-size: 14px;
+                        font-weight: bold;
+                        margin: 5px 10px;
+                    }
+                    .subtitle {
+                        flex: 1 0;
+                        font-size: 14px;
+                        margin: 0 10px;
+                        color: #888;
+                    }
+                    .button {
+                        flex: 0 0 auto;
+                        text-align: center;
+                        margin: 10px;
+                        padding: 5px;
+                        color: #365899;
+                        font-weight: bold;
+                        font-size: 14px;
+                        border: 1px solid #ddd;
+                        border-radius: 5px;
                     }
                 }
             }
         }
-
+        
         .date {
             position: absolute;
             right: 20px;

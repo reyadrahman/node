@@ -43,7 +43,7 @@ export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) =
                 console.log('actions.send: ', JSON.stringify(response));
                 respondFn({
                     text: response.text,
-                    quickReplies: response.quickReplies,
+                    actions: response.actions,
                 });
             },
             merge: async function({entities, context, message, sessionId}) {
@@ -124,9 +124,12 @@ export async function _runActionsHelper(client: Wit,
     };
 
     if (converseData.type === 'msg') {
+        const qrs = converseData.quickreplies;
         const response = {
             text: converseData.msg,
-            quickReplies: converseData.quickreplies,
+            actions:  qrs && qrs.map(
+                x => ({ text: x, fallback: x })
+            ),
         };
         const invalidContext = await client.config.actions.send(requestData, response);
         if (invalidContext) {
@@ -330,8 +333,8 @@ export async function ai(message: DBMessage,
 
 
     let text = message.text;
-    if (message.files && message.files.length) {
-        text = `${text || ''} ${_.last(message.files)}`
+    if (message.cards && message.cards.length) {
+        text = `${text || ''} ${_.last(message.cards).imageUrl}`
     }
     if (!text) {
         return;

@@ -3,7 +3,7 @@
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import { callbackToPromise } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
-import type { RichQuickReply, WebhookMessage, ResponseMessage } from '../../misc/types.js';
+import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
 import builder from 'botbuilder';
 import type { Request, Response } from 'express';
@@ -46,7 +46,7 @@ async function processMessage(session, authRequest, botParams) {
 
     const m = session.message;
     const atts = m.attachments;
-    const filesGetFn = !atts ? undefined :
+    const fetchCardImages_ = !atts ? undefined :
         atts.filter(a => a.contentType && a.contentType.startsWith('image')).map(
             a => memoize(async function () {
                 console.log('ms-webhook: attachment download requested');
@@ -65,6 +65,8 @@ async function processMessage(session, authRequest, botParams) {
                 return buffer;
             })
         );
+    const fetchCardImages = _.isEmpty(fetchCardImages_)
+        ? undefined : fetchCardImages_;
 
     let senderName = m.user.name || '';
 
@@ -90,7 +92,7 @@ async function processMessage(session, authRequest, botParams) {
         senderName,
         source: m.address.channelId,
         text: m.text,
-        filesGetFn,
+        fetchCardImages,
     };
 
     console.log('ms-webhook: got message: ', message);
@@ -128,103 +130,81 @@ async function respondFn(session, message: ResponseMessage) {
     if (typeof message === 'string' && message.trim()) {
         session.send(message);
     }
-    if (typeof message !== 'object') return;
-
-    const { files, text, quickReplies } = message;
-    let resMessage = new builder.Message(session)
-    let resText = text || '',
-        resAttachments = [];
-
-    if (files && files.length) {
-        files.forEach(x => {
-            const card = new builder.HeroCard(session);
-            // x.title && card.title(x.title);
-            // x.subtitle && card.subtitle(x.subtitle);
-            card.images([
-                builder.CardImage.create(session, x)
-                       .tap(builder.CardAction.showImage(session, x)),
-            ]);
-            resAttachments.push(card);
-        })
-        resText && resMessage.text(resText);
-        if (resAttachments.length > 1 &&
-            resAttachments.length <= MAX_MS_CAROUSEL_ITEM_COUNT)
-        {
-            // good default fall back behaviour from MS Bot Framework
-            resMessage.attachmentLayout(builder.AttachmentLayout.carousel)
-        }
-
-        resAttachments && resMessage.attachments(resAttachments);
-        session.send(resMessage);
-
-        resMessage = new builder.Message(session)
-        resText = '';
-        resAttachments = [];
+    if (typeof message !== 'object') {
+        console.log('respondFn: message is not an object');
+        return;
     }
+
+    const { text, cards, actions } = message;
 
     const { channelId } = session.message.address;
     const supportsHeroCard = ['telegram', 'skype', 'slack'].includes(channelId);
-    const hasRichQuickReplies = quickReplies && quickReplies.find(
-        x => typeof x === 'object' && x.file);
-    const qrs: ?RichQuickReply[] = quickReplies &&
-        quickReplies.map(x => {
-            return typeof x === 'string' ? { text: x } : x;
-        });
-    console.log('**** : hasRichQuickReplies: ', !!hasRichQuickReplies, ', supportsHeroCard: ', !!supportsHeroCard);
-    if (qrs && qrs.length) {
-        if (hasRichQuickReplies && supportsHeroCard) {
-            resAttachments = resAttachments.concat(qrs.map(x => {
+
+    if (cards) {
+        let resAttachments = [];
+        if (supportsHeroCard) {
+            resAttachments = cards.map(c => {
                 const card = new builder.HeroCard(session);
-                x.title && card.title(x.title);
-                x.subtitle && card.subtitle(x.subtitle);
-                x.file && card.images([
-                    builder.CardImage.create(session, x.file)
-                           .tap(builder.CardAction.showImage(session, x.file)),
+                c.title && card.title(c.title);
+                c.subtitle && card.subtitle(c.subtitle);
+                c.imageUrl && card.images([
+                    builder.CardImage.create(session, c.imageUrl)
+                           .tap(builder.CardAction.showImage(session, c.imageUrl)),
                 ]);
-                x.text && card.buttons([
-                    builder.CardAction.imBack(session, x.postback || x.text, x.text),
-                ]);
+                c.actions && card.buttons(c.actions.map(a => (
+                    builder.CardAction.imBack(session, a.postback || a.text, a.text)
+                )));
                 return card;
-            }))
-        } else if (hasRichQuickReplies && !supportsHeroCard) {
-            qrs.forEach(x => {
+            })
+        } else {
+            cards.forEach(c => {
                 const card = new builder.HeroCard(session);
-                card.title(x.postback || x.text);
+                c.fallback && card.title(c.fallback);
                 // x.subtitle && card.subtitle(x.subtitle);
-                x.file && card.images([
-                    builder.CardImage.create(session, x.file)
-                           .tap(builder.CardAction.showImage(session, x.file)),
+                c.imageUrl && card.images([
+                    builder.CardImage.create(session, c.imageUrl)
+                           .tap(builder.CardAction.showImage(session, c.imageUrl)),
                 ]);
                 resAttachments.push(card);
                 console.log('adding card: ', card);
-            })
+            });
+        }
 
-        } else if (!hasRichQuickReplies && supportsHeroCard) {
-            const card = new builder.HeroCard(session);
-            card.buttons(qrs.map(
-                x => builder.CardAction.imBack(session, x.postback || x.text, x.text)
-            ));
-            resAttachments.push(card);
+        console.log('respondFn: resAttachments: ', resAttachments);
 
-        } else if (!hasRichQuickReplies && !supportsHeroCard) {
-            const textQR = qrs.map(x => x.postback || x.text);
-            resText += `\nOptions: ${textQR.join(', ')}`;
+        let resMessage = new builder.Message(session)
+        if (resAttachments.length > 1 &&
+            resAttachments.length <= MAX_MS_CAROUSEL_ITEM_COUNT &&
+            supportsHeroCard)
+        {
+            resMessage.attachmentLayout(builder.AttachmentLayout.carousel)
+        }
+
+        if (resAttachments.length > 0) {
+            resMessage.attachments(resAttachments);
+            session.send(resMessage);
         }
     }
-    console.log('**** : text: ', resText);
-    console.log('**** : resAttachments: ', resAttachments);
 
-    resText && resMessage.text(resText);
+    if (text || actions) {
+        let resText = text || '',
+            resAttachments = [];
+        if (actions && supportsHeroCard) {
+            const card = new builder.HeroCard(session);
+            card.buttons(actions.map(
+                a => builder.CardAction.imBack(session, a.postback || a.text, a.text)
+            ));
+            resAttachments.push(card);
+        } else if (actions && !supportsHeroCard) {
+            const textActions = actions.filter(a => a.fallback).map(a => a.fallback);
+            resText += `\nOptions: ${textActions.join(', ')}`;
+        }
 
-    if (resAttachments.length > 1 &&
-        resAttachments.length <= MAX_MS_CAROUSEL_ITEM_COUNT &&
-        hasRichQuickReplies && supportsHeroCard)
-    {
-        resMessage.attachmentLayout(builder.AttachmentLayout.carousel)
+        let resMessage = new builder.Message(session)
+        resText && resMessage.text(resText);
+        resAttachments.length > 0 && resMessage.attachments(resAttachments);
+        session.send(resMessage);
     }
-
-    resAttachments && resMessage.attachments(resAttachments);
-    session.send(resMessage);
 }
 
 export default function(req: Request, res: Response) {

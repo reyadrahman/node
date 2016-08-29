@@ -148,9 +148,9 @@ async function receivedMessage(entry: MessengerReqEntry,
         console.error(error);
     }
     const {attachments} = messagingEvent.message;
-    const files = !attachments ? undefined :
+    const cards = !attachments ? undefined :
         attachments.filter(x => x.type === 'image')
-                   .map(x => x.payload.url);
+                   .map(x => ({ imageUrl: x.payload.url }));
 
     const conversationId = entry.id + '_' + messagingEvent.sender.id;
     const message: WebhookMessage = {
@@ -161,7 +161,7 @@ async function receivedMessage(entry: MessengerReqEntry,
         senderId: messagingEvent.sender.id,
         source: 'messenger',
         text: messagingEvent.message.text,
-        files,
+        cards,
         senderName: `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim(),
         senderProfilePic: userProfile.profile_pic || null,
     };
@@ -172,7 +172,7 @@ async function receivedMessage(entry: MessengerReqEntry,
     setTimeout(() => {
         if (responses.length === 0) {
             respondFn(botParams, conversationId, messagingEvent.sender.id, {
-                action: 'typingOn'
+                typingOn: true,
             });
         }
     }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
@@ -190,7 +190,7 @@ async function receivedMessage(entry: MessengerReqEntry,
 async function respondFn(botParams: BotParams, conversationId: string,
                          to: string, message: ResponseMessage)
 {
-    console.log('respondFn: ', conversationId, to, message);
+    console.log('respondFn: ', conversationId, to, toStr(message));
 
     if (typeof message === 'string' && message.trim()) {
         await sendMessage(botParams, {
@@ -201,126 +201,79 @@ async function respondFn(botParams: BotParams, conversationId: string,
                 text: message,
             }
         });
+        return;
 
-    } else if (typeof message === 'object') {
-        const { action, text, files, quickReplies } = message;
-        if (action && action === 'typingOn') {
-            await sendMessage(botParams, {
-                recipient: {
-                    id: to,
-                },
-                sender_action: 'typing_on',
-            });
-        }
+    }
+    if (typeof message !== 'object') {
+        console.log('respondFn: message is not an object');
+        return;
+    }
 
-        const isRichQuickReplies = quickReplies && quickReplies.find(
-            x => typeof x === 'object' && x.file);
+    const { typingOn, text, cards, actions } = message;
 
+    if (typingOn) {
+        await sendMessage(botParams, {
+            recipient: {
+                id: to,
+            },
+            sender_action: 'typing_on',
+        });
+    }
 
-        if (!quickReplies && text) {
-            await sendMessage(botParams, {
-                recipient: {
-                    id: to,
-                },
-                message: {
-                    text,
-                },
-            });
-
-        } else if (quickReplies && !isRichQuickReplies) {
-            const quick_replies = quickReplies && quickReplies.map(x => ({
-                content_type: 'text',
-                title: x,
-                payload: x,
+    if (cards) {
+        const payloadElements = cards.slice(0,10).map((c, i) => {
+            let buttons = c.actions && c.actions.map(a => ({
+                type: 'postback',
+                title: a.text,
+                payload: a.postback || a.text,
             }));
-            await sendMessage(botParams, {
-                recipient: {
-                    id: to,
-                },
-                message: {
-                    text: text || ' ', // text cannot be empty when using quick_replies
-                    quick_replies,
-                }
-            });
 
-        } if (quickReplies && isRichQuickReplies) {
-            const richQuickReplies = quickReplies.map(x => {
-                return typeof x === 'string' ? { text: x } : x;
-            });
-            console.log('richQuickReplies: ', richQuickReplies);
-            await sendMessage(botParams, {
-                recipient: {
-                    id: to,
-                },
-                message: {
-                    attachment: {
-                        type: 'template',
-                        payload: {
-                            template_type: 'generic',
-                            elements: richQuickReplies.slice(0,10).map((x, i) => ({
-                                title: x.title || `${i+1}`,
-                                subtitle: x.subtitle || null,
-                                image_url: x.file || null,
-                                // item_url: x.file || null,
-                                buttons: [
-                                    {
-                                        type: 'postback',
-                                        title: x.text,
-                                        payload: x.postback || x.text,
-                                    },
-                                ].concat(!x.file ? [] : [
-                                    {
-                                        type: 'web_url',
-                                        title: 'Open Image',
-                                        url: x.file,
-                                    },
-                                ]),
-                            })),
-                        }
-                    }
-                }
-            });
-        }
-
-        if (files && files.length) {
-            // TODO do this for only one image
-            // for (let file of message.files) {
-            //     await sendMessage({
-            //         recipient: {
-            //             id: to,
-            //         },
-            //         message: {
-            //             attachment: {
-            //                 type: 'image',
-            //                 payload: {
-            //                     url: file
-            //                 }
-            //             }
-            //         }
-            //     });
-            // }
-            const toBeSent = {
-                recipient: {
-                    id: to,
-                },
-                message: {
-                    attachment: {
-                        type: 'template',
-                        payload: {
-                            template_type: 'generic',
-                            elements: files.slice(0,10).map((url, i) => ({
-                                title: `${i+1}`,
-                                image_url: url,
-                                item_url: url,
-                            })),
-                        }
+            if(c.imageUrl) {
+                buttons = [{
+                    type: 'web_url',
+                    title: 'Open Image',
+                    url: c.imageUrl,
+                }].concat(buttons || []);
+            }
+            return {
+                title: c.title || `${i+1}`,
+                subtitle: c.subtitle || null,
+                image_url: c.imageUrl || null,
+                buttons,
+            };
+        });
+        await sendMessage(botParams, {
+            recipient: {
+                id: to,
+            },
+            message: {
+                attachment: {
+                    type: 'template',
+                    payload: {
+                        template_type: 'generic',
+                        elements: payloadElements,
                     }
                 }
             }
-            console.log('**** to be sent elements', toBeSent.message.attachment.payload.elements);
-            await sendMessage(botParams, toBeSent);
-            // setTimeout(() => sendMessage(botParams, toBeSent), 3000);
-        }
+        });
+    }
+
+    const quickReplies = actions && actions.map(x => ({
+        content_type: 'text',
+        title: x.text,
+        payload: x.postback || x.text,
+    }));
+
+    if (text || quickReplies) {
+        await sendMessage(botParams, {
+            recipient: {
+                id: to,
+            },
+            message: {
+                text: text || ' ', // text cannot be empty when using quick_replies
+                quick_replies: quickReplies,
+            }
+        });
     }
 }
 

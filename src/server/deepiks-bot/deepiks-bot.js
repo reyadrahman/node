@@ -83,26 +83,26 @@ export async function _attachmentMiddleware(message: WebhookMessage):
     Promise<?Array<ProcessedAttachment>>
 {
     console.log('_attachmentMiddleware');
-    const { files, filesGetFn } = message;
+    const { cards, fetchCardImages } = message;
 
-    if (!files && !filesGetFn) {
+    if (!cards && !fetchCardImages) {
         return null;
     }
 
     let downloads: Array<Buffer> = [];
-    if (files) {
+    if (cards) {
         const startTime = Date.now();
-        const rawDownloads = await Promise.all(files.map(
-            file => request({
-                url: URL.parse(file),
+        const rawDownloads = await Promise.all(cards.map(
+            c => request({
+                url: URL.parse(c.imageUrl),
                 encoding: null,
             })
         ));
         console.log('PROFILING: raw download time: %s ms', Date.now() - startTime);
         downloads = rawDownloads.map(x => x.body);
-    } else if (filesGetFn) {
+    } else if (fetchCardImages) {
         const startTime = Date.now();
-        downloads = await Promise.all(filesGetFn.map(f => f()));
+        downloads = await Promise.all(fetchCardImages.map(f => f()));
         console.log('PROFILING: raw download time: %s ms', Date.now() - startTime);
     }
     const formats = await Promise.all(downloads.map(_getFileFormat));
@@ -127,7 +127,7 @@ export async function _attachmentMiddleware(message: WebhookMessage):
 }
 
 export function _webhookMessageToDBMessage(message: WebhookMessage): DBMessage {
-    const { filesGetFn, ...rest } = message;
+    const { fetchCardImages, ...rest } = message;
     return rest;
 }
 
@@ -137,7 +137,11 @@ export async function _insertAttachmentsIntoMessage(
 ): Promise<DBMessage> {
 
     const newMessage = { ...message };
-    newMessage.files = await Promise.all(attachments.map(a => a.urlP));
+    const allImages = await Promise.all(attachments.map(a => a.urlP));
+    newMessage.cards = allImages.map((imageUrl, i) => ({
+        ...(newMessage.cards && newMessage.cards[i]),
+        imageUrl,
+    }));
     return newMessage;
 }
 

@@ -1,13 +1,16 @@
 /* @flow */
 
-export type QuickReply = string | RichQuickReply;
-
-export type RichQuickReply = {
+export type MessageAction = {
     text: string,
     postback?: string,
+    fallback?: string,
+};
+
+export type MessageCard = {
+    imageUrl: string,
     title?: string,
     subtitle?: string,
-    file?: string,
+    actions?: Array<MessageAction>,
 };
 
 export type DBMessage = {
@@ -18,7 +21,7 @@ export type DBMessage = {
     id?: string,
     source?: string,
     text?: string,
-    files?: Array<string>,
+    cards?: Array<MessageCard>,
     senderProfilePic?: string,
 };
 
@@ -30,16 +33,16 @@ export type WebhookMessage = {
     source: string,
     senderName?: string,
     text?: string,
-    files?: Array<string>,
-    filesGetFn?: Array<() => Buffer>,
+    cards?: Array<MessageCard>,
+    fetchCardImages?: Array<() => Promise<Buffer>>,
     senderProfilePic?: string,
 };
 
 export type ResponseMessage = string | {
-    files?: Array<string>,
     text?: string,
-    action?: 'typingOn' | 'typingOff',
-    quickReplies?: Array<QuickReply>,
+    cards?: Array<MessageCard>,
+    actions?: Array<MessageAction>,
+    typingOn?: boolean,
 };
 
 export type ActionRequest = {
@@ -62,14 +65,15 @@ export type ActionRequest = {
     }
 };
 
-export type ActionResponseMessage = string | {
-    text?: string,
-    files?: Array<string>,
-    quickReplies?: Array<QuickReply>,
-};
+// export type ActionResponseMessage = string | {
+//     text?: string,
+//     files?: Array<string>,
+//     quickReplies?: Array<QuickReply>,
+// };
+//
 
 export type ActionResponse = {
-    msg?: ActionResponseMessage,
+    msg?: ResponseMessage,
     context: Object,
     userPrefs?: Object,
 };

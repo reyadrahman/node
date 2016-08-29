@@ -473,42 +473,26 @@ export function fetchMessages(conversationId: string) {
 async function signS3UrlsInMesssages(messages: DBMessage[]): Promise<DBMessage[]> {
     return await Promise.all(messages.map(async function(m) {
         const clone = { ...m };
-        let filesP, quickRepliesP;
-        if (clone.files) {
-            filesP = Promise.all(clone.files.map(async function(f) {
-                const bucketAndKey = destructureS3Url(f);
-                if (!bucketAndKey) return f;
+        let cardsP;
+        if (clone.cards) {
+            cardsP = Promise.all(clone.cards.map(async function(c) {
+                const bucketAndKey = destructureS3Url(c.imageUrl);
+                if (!bucketAndKey) return c;
 
-                return await aws.s3GetSignedUrl('getObject', {
+                const newImageUrl = await aws.s3GetSignedUrl('getObject', {
                     Bucket: bucketAndKey.bucket,
                     Key: bucketAndKey.key,
                     Expires: 60 * 60, // 1 hour
                 });
-            }));
-        }
-        if (clone.quickReplies) {
-            quickRepliesP = Promise.all(clone.quickReplies.map(async function(q) {
-                if (typeof q === 'string') return q;
-                if (!q.file) return q;
-                const bucketAndKey = destructureS3Url(q.file);
-                if (!bucketAndKey) return q;
-
                 return {
-                    ...q,
-                    file: await aws.s3GetSignedUrl('getObject', {
-                        Bucket: bucketAndKey.bucket,
-                        Key: bucketAndKey.key,
-                        Expires: 60 * 60, // 1 hour
-                    }),
+                    ...c,
+                    imageUrl: newImageUrl,
                 };
             }));
         }
 
-        if (filesP) {
-            clone.files = await filesP;
-        }
-        if (quickRepliesP) {
-            clone.quickReplies = await quickRepliesP;
+        if (cardsP) {
+            clone.cards = await cardsP;
         }
         return clone;
     }));

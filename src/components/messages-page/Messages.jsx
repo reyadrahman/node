@@ -98,8 +98,6 @@ const Message = ({
     message,
     ...others
 }) => {
-    // TODO quickReplies
-
     const profilePic = message.senderProfilePic || defaultAvatarUrl;
     const profilePicStyle = {
         backgroundImage: `url(${profilePic})`,
@@ -111,21 +109,17 @@ const Message = ({
                 <div className={ss.name}>
                     { message.senderName || 'UNKNOWN' }
                 </div>
+                <Cards
+                    cards={message.cards}
+                    styles={styles}
+                />
                 <div className={ss.text}>
                     { message.text }
                 </div>
-                <div className={ss.images}>
-                    {
-                        message.files && message.files.map(x => (
-                            <img className={ss.image} src={x} />
-                        ))
-                    }
-                </div>
-                <QuickReplies
-                    quickReplies={message.quickReplies}
+                <Actions
+                    actions={message.actions}
                     styles={styles}
                 />
-
             </div>
             <div className={ss.date}>
                 { simpleTimeFormat(message.creationTimestamp) }
@@ -135,69 +129,65 @@ const Message = ({
     );
 };
 
-const QuickReplies = ({
+const Actions = ({
     className,
     styles,
     styles: { messages: ss },
-    quickReplies,
+    actions,
     ...others
 }) => {
-    if (!quickReplies) return null;
+    if (!actions || actions.length === 0) return null;
 
-    const isRichQuickReplies = quickReplies && quickReplies.find(
-        x => typeof x === 'object' && x.file);
+    const actionsUi = actions.map((x, i) => (
+        <div key={i} className={ss.simpleAction}>
+            { x.text }
+        </div>
+    ));
 
-    let quickRepliesUi;
+    return (
+        <div className={`${ss.simpleActionsRoot} ${className || ''}`} {...others} >
+            { actionsUi }
+        </div>
+    );
 
-    if (isRichQuickReplies) {
-        const richQuickReplies = quickReplies.map(x => {
-            return typeof x === 'string' ? { text: x } : x;
-        });
+};
 
-        quickRepliesUi = (
-            <div className={ss.richQuickReplies}>
+const Cards = ({
+    className,
+    styles,
+    styles: { messages: ss },
+    cards,
+    ...others
+}) => {
+    if (!cards || cards.length === 0) return null;
+
+    const cardsUi = cards.map((x, i) => {
+        // const imgStyle = {
+        //     backgroundImage: `url(${x.file})`,
+        // };
+        return (
+            <div key={i} className={ss.card}>
+                <img className={ss.image} src={x.imageUrl} />
+                <div className={ss.title}>
+                    {x.title}
+                </div>
+                <div className={ss.subtitle}>
+                    {x.subtitle}
+                </div>
                 {
-                    richQuickReplies.map(x => {
-                        // const imgStyle = {
-                        //     backgroundImage: `url(${x.file})`,
-                        // };
-                        return (
-                            <div className={ss.richQuickReply}>
-                                <img className={ss.image} src={x.file} />
-                                <div className={ss.title}>
-                                    {x.title}
-                                </div>
-                                <div className={ss.subtitle}>
-                                    {x.subtitle}
-                                </div>
-                                <div className={ss.button}>
-                                    {x.text}
-                                </div>
-                            </div>
-                        );
-                    })
-                }
-            </div>
-        );
-
-    } else {
-        quickRepliesUi = (
-            <div className={ss.simpleQuickReplies}>
-                {
-                    quickReplies.map(x => (
-                        <div className={ss.simpleQuickReply}>
-                            { x }
+                    x.actions && x.actions.map((a, j) => (
+                        <div key={j} className={ss.button}>
+                            {a.text}
                         </div>
                     ))
                 }
             </div>
         );
-
-    }
+    });
 
     return (
-        <div className={`${ss.quickRepliesRoot} ${className || ''}`} {...others} >
-            {quickRepliesUi}
+        <div className={`${ss.cardsRoot} ${className || ''}`} {...others} >
+            { cardsUi }
         </div>
     );
 
