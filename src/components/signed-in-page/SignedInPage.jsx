@@ -3,6 +3,7 @@ import Header from '../header/Header.jsx';
 import SideMenu from '../side-menu/SideMenu.jsx';
 
 import React from 'react';
+import { Glyphicon } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 
@@ -15,16 +16,20 @@ let SignedInPage = React.createClass({
 
     componentDidMount() {
         if (!this.isSignedIn()) {
-            this.props.router.push('/');
-            //this.props.openSignin();
+            // this.props.router.push('/');
+            this.props.openSignin();
         }
     },
 
     componentDidUpdate(oldProps) {
         if (this.isSignedIn(oldProps) && !this.isSignedIn()) {
-            this.props.router.push('/');
-            //this.props.openSignin();
+            // this.props.router.push('/');
+            this.props.openSignin();
         }
+    },
+
+    onMenuToggle() {
+        this.props.toggleSideMenu();
     },
 
     render() {
@@ -34,15 +39,20 @@ let SignedInPage = React.createClass({
         } = this.props;
 
         console.log('SignedInPage: props', this.props);
-        if (!this.isSignedIn()) {
-            console.log('SignedInPage: not signed in');
-            return (
+        let cs;
+        if (this.isSignedIn()) {
+            cs = React.cloneElement(children, {
+                i18n,
+                styles,
+                className: `${ss.content} ${ui.sideMenu ? ss.sideMenuOpen : ''}`,
+            });
+        } else  {
+            cs = (
                 <h1 className={`${className || ''} ${ss.pleaseSignIn}`}>
                     {strings.pleaseSignIn}
                 </h1>
             );
         }
-        console.log('SignedInPage: is signed in');
 
         const sideMenuStrings = i18n.strings.sideMenu;
         const menu = [
@@ -60,21 +70,27 @@ let SignedInPage = React.createClass({
             },
         ];
 
-        const cs = React.cloneElement(children, {
-            i18n,
-            styles,
-            className: `${ss.content} ${ui.sideMenu ? ss.sideMenuOpen : ''}`,
-        });
+        const menuToggle = (
+            <Glyphicon
+                glyph="menu-hamburger"
+                className={`${ss.menuToggle} ${ui.sideMenu ? ss.open : ''}`}
+                onClick={this.onMenuToggle}
+            />
+    );
+
         return (
             <div className={`${className || ''} ${ss.root}`}>
-                <Header className={ss.header} i18n={i18n} styles={styles} />
+                <Header
+                    className={ss.header} i18n={i18n} styles={styles}
+                    extraItemsLeft={menuToggle}
+                />
                 <SideMenu
                     className={`${ss.sideMenu} ${ui.sideMenu ? '' : ss.hide}`}
                     i18n={i18n} styles={styles}
                     menu={menu}
                     value={location.pathname.split('/')[1] || ''}
                 />
-                { cs }
+            { cs }
             </div>
         );
     }
@@ -87,6 +103,7 @@ SignedInPage = connect(
     }),
     {
         openSignin: actions.openSignin,
+        toggleSideMenu: actions.toggleSideMenu,
     }
 )(SignedInPage);
 

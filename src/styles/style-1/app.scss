@@ -43,15 +43,39 @@
         letter-spacing: 0;
     }
 
-    .flag {
-    	width: 16px;
-    	height: 11px;
-        display: inline-block;
-    	background:url(../../public/flags.png) no-repeat
+    // Animate bootstrap
+    .dropdown-menu {
+        display: block;
+        visibility: hidden;
+    }
+    .open > .dropdown-menu {
+        visibility: visible;;
+        animation-name: flipInX;
+        animation-duration: .4s;
+        animation-fill-mode: both;
     }
 
-    .flag.flag-fr {background-position: -16px 0}
-    .flag.flag-us {background-position: 0 -11px}
+    @keyframes :global(flipInX) {
+        0% {
+            transform:perspective(400px) rotateX(90deg);
+            opacity:0;
+        }
+        40% {
+            transform:perspective(400px) rotateX(-10deg);
+        }
+        70% {
+            transform:perspective(400px) rotateX(10deg);
+        }
+        100% {
+            transform:perspective(400px) rotateX(0deg);
+            opacity:1;
+        }
+    }
+
+    button {
+        transition: all 0.2s ease-in-out;
+    }
+
 }
 
 .root {

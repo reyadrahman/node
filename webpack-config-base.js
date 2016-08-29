@@ -84,7 +84,7 @@ function createBaseConfig(NODE_ENV) {
                     loader: extractCSS.extract([
                         'css?modules&importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
                         'postcss',
-                        'resolve-url',
+                        // 'resolve-url',
                         'sass?sourceMap'
                     ])
                 },
@@ -93,7 +93,7 @@ function createBaseConfig(NODE_ENV) {
                     test: /\.css$/,
                     loader: extractCSS.extract([
                         'css?importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
-                        'resolve-url',
+                        // 'resolve-url',
                     ])
                 },
                 {

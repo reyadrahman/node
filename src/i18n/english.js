@@ -1,9 +1,12 @@
 export default {
     header: {
+    },
+    accountButton: {
         signin: 'Sign in',
         signup: 'Sign up',
         signout: 'Sign out',
         verifyRegistration: 'Verify registration',
+        account: 'Account',
     },
     sideMenu: {
         account: 'Account',

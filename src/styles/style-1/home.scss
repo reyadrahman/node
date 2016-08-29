@@ -1,150 +1,7 @@
-$navbarBorderColor: #c8c8c8;
 $navbarHeight: 50px;
 
 .root {
     color: #666;
-
-    .navbar {
-        position: fixed;
-        z-index: 2000;
-        display: flex;
-        background-image: linear-gradient(to bottom, rgb(243, 243, 243), rgb(226, 226, 226));
-        border-bottom: 1px solid $navbarBorderColor;
-        height: $navbarHeight;
-        top: 0;
-        left: 0;
-        right: 0;
-
-        .leftSection {
-            flex: 0 0 auto;
-            height: 100%;
-            // margin-left: 20px;
-            display: flex;
-            align-items: center;
-        }
-
-        .middleSection {
-            flex: 1 1 auto;
-            height: 100%;
-        }
-
-        .rightSection {
-            flex: 0 0 auto;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            margin-right: 20px;
-        }
-
-        .menu {
-            color: #333;
-            height: 100%;
-            border: none;
-            border-right: 1px solid $navbarBorderColor;
-            background: none;
-            outline: none;
-            align-items: center;
-            display: flex;
-
-            &:focus, &:hover {
-                background: none;
-                outline: none;
-            }
-
-            .menuToggle {
-                width: 65px;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                font-size: 20px;
-            }
-
-            nav.leftNavbar {
-                position: fixed;
-                left: 0;
-                top: 50px;
-                bottom: 0;
-                width: 350px;
-                overflow: hidden;
-                background: linear-gradient(to right,#3a3633 93%,#2a2725 100%);
-                transform: translate3d(-350px, 0, 0);
-                transition: transform 0.2s ease-in-out;
-
-
-                &.isOpen {
-                    transform: translate3d(0, 0, 0);
-
-                    ul {
-                        transform: translate3d(0, 0, 0);
-                    }
-                }
-                &.isHovered {
-                    transform: translate3d(-285px, 0, 0);
-
-                    ul {
-                        transform: translate3d(285px, 0, 0);
-                    }
-                }
-
-                ul {
-                    margin: 0;
-                    padding: 0;
-                    color: #444;
-                    list-style: none;
-                    text-transform: none;
-                    z-index: 150;
-                    transition: transform 0.2s ease-in-out;
-                    transform: translate3d(300px, 0, 0);
-
-                    li {
-                        a {
-                            display: block;
-                            background: #f3f3f3;
-                            text-align: left;
-                            line-height: 70px;
-                            box-shadow: inset 0 1px #c6d0da;
-                            text-decoration: none;
-                            color: inherit;
-                            transition: background 0.3s ease-in-out;
-                            font-weight: 300;
-                            font-size: 18px;
-
-                            &:hover, &:active, &:visited {
-                                color: inherit;
-                            }
-                            &:hover {
-                                background: #e8e8e8;
-                            }
-                            .icon {
-                                padding: 20px 23px 0 23px;
-                            }
-
-                        }
-                    }
-                }
-            }
-
-
-        }
-
-        .logo {
-            display: block;
-            width: 250px;
-            height: 100%;
-            background: url(/dist/8815aecf6ca8dcb2b30405405bf1858b.png) center/200px no-repeat;
-            border-right: 1px solid #c8c8c8;
-            padding: 0 20px;
-            margin: 0 0 5px 0;
-        }
-
-        .signInDropdown {
-            button, button:focus, button:active {
-                outline: none;
-            }
-        }
-    }
 
     section {
         background: #fff;
@@ -171,8 +28,8 @@ $navbarHeight: 50px;
     }
 
     .intro {
-        height: calc(100vh - #{$navbarHeight});
-        padding-top: 50px;
+        height: 100vh;
+        padding-top: $navbarHeight;
 
         display: flex;
         align-items: center;
@@ -189,7 +46,7 @@ $navbarHeight: 50px;
 
         .pricingPanel {
             position: relative;
-            border-color: $navbarBorderColor;
+            border-color: #c8c8c8;
 
             :global(.panel-heading) {
                 text-transform: capitalize;

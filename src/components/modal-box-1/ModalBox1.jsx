@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from 'react-modal';
+import { Glyphicon } from 'react-bootstrap';
 
 export const ModalBox = React.createClass({
     render() {
@@ -13,8 +14,9 @@ export const ModalBox = React.createClass({
                 overlayClassName={`${ss.modalOverlay} ${overlayClassName || ''}`}
             >
 
-                <div
-                    className={`${ss.closeButton} icon-cancel`}
+                <Glyphicon
+                    glyph="remove"
+                    className={ss.closeButton}
                     onClick={onRequestClose}
                 />
                 {

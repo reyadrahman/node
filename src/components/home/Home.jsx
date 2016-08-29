@@ -6,10 +6,10 @@ import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Glyphicon,
          Carousel, FormGroup, ControlLabel, FormControl,
          InputGroup, Dropdown } from 'react-bootstrap';
 import * as actions from '../../actions/actions.js';
+import Header from '../header/Header.jsx';
+import HomeMenu from './HomeMenu.jsx';
 
-import Scroll from 'react-scroll';
 import Lightbox from 'react-images';
-const Link = Scroll.Link;
 
 
 const ribbonUrl = require('../../public/ribbon.png');
@@ -35,27 +35,9 @@ let Home = React.createClass({
         return {
             quotesIndex: 0,
             quotesDirection: null,
-            isMenuOpen: false,
-            isMenuHovered: false,
             isLightboxOpen: false,
             lightboxCurrentIndex: 0,
         };
-        this.menuHoverTimeout = null;
-        this.menuToggleTimeout = null;
-    },
-
-    onSignUpOrVerifyClick(eventKey) {
-        console.log('onSignUpOrVerifyClick eventKey: ', eventKey);
-        if (eventKey === 'signup') {
-            this.props.openSignup();
-        } else if (eventKey === 'verify') {
-            this.props.openVerifyRegistration();
-        }
-    },
-
-    onSignInClick() {
-        console.log('sign in');
-        this.props.openSignin();
     },
 
     quotesOnSelect(selectedIndex, e) {
@@ -64,40 +46,6 @@ let Home = React.createClass({
             quotesIndex: selectedIndex,
             quotesDirection: e.direction,
         });
-    },
-
-    onMenuToggle() {
-        this.setState({ isMenuOpen: !this.state.isMenuOpen });
-    },
-
-    onMenuToggleEnter() {
-        console.log('onMenuToggleEnter');
-        clearTimeout(this.menuToggleTimeout)
-        this.setState({ isMenuHovered: true });
-    },
-
-    onMenuToggleLeave() {
-        console.log('onMenuToggleLeave');
-        this.menuToggleTimeout = setTimeout(() => {
-            this.setState({
-                isMenuHovered: false,
-            });
-        }, 1500);
-    },
-
-    onMenuEnter() {
-        console.log('onMenuEnter');
-        clearTimeout(this.menuHoverTimeout)
-        this.setState({ isMenuOpen: true });
-    },
-
-    onMenuLeave() {
-        console.log('onMenuLeave');
-        this.menuHoverTimeout = setTimeout(() => {
-            this.setState({
-                isMenuOpen: false,
-            });
-        }, 1500);
     },
 
     screenshotClicked(i) {
@@ -142,83 +90,16 @@ let Home = React.createClass({
         console.log('Home render');
         const { className, styles, styles: { home: ss },
                 i18n, i18n: { strings } } = this.props;
-        // return (
-        //     <div className={ss.navbar}>
-        //         <button className={ss.menuToggle}>
-        //             <Glyphicon glyph="menu-hamburger" />
-        //         </button>
-        //     </div>
-        //
-        // )
-        const { isMenuOpen, isMenuHovered } = this.state;
-        const leftNavBarClass = isMenuOpen
-            ? ss.isOpen : isMenuHovered
-            ? ss.isHovered : '';
-        const createNavItem = (to, icon, text) => (
-            <li>
-                <Link href="#" to={to} spy={true} smooth={true} duration={500}>
-                    <Glyphicon glyph={icon} className={ss.icon} />
-                    { text }
-                </Link>
-            </li>
-        );
 
-        const navItems = [
-            createNavItem('pricing', 'download', 'Pricing'),
-            createNavItem('team', 'user', 'Team'),
-            createNavItem('services', 'ok', 'Features'),
-            createNavItem('screenshots', 'picture', 'Screenshots'),
-            createNavItem('updates', 'cog', 'Updates'),
-            createNavItem('contact', 'envelope', 'Contact'),
-        ];
         return (
-            <div className={`${ss.root} ${className || ''}`}>
-                <div className={ss.navbar}>
-                    <div className={ss.leftSection}>
-                        <div className={ss.menu}>
-                            <Glyphicon
-                                glyph="menu-hamburger"
-                                className={ss.menuToggle}
-                                onClick={this.onMenuToggle}
-                                onMouseEnter={this.onMenuToggleEnter}
-                                onMouseLeave={this.onMenuToggleLeave}
-                            />
-                            <nav
-                                className={`${ss.leftNavbar} ${leftNavBarClass}`}
-                                onMouseEnter={this.onMenuEnter}
-                                onMouseLeave={this.onMenuLeave}
-                            >
-                                <div className={ss.scroller}>
-                                    <ul>
-                                        { navItems }
-                                    </ul>
-                                </div>
-                            </nav>
-
-                        </div>
-                        <a href="/" className={ss.logo} />
-                    </div>
-                    <div className={ss.middleSection}>
-
-                    </div>
-                    <div className={ss.rightSection}>
-                        <Dropdown
-                            className={ss.signInDropdown}
-                            onSelect={this.onSignUpOrVerifyClick}
-                            pullRight
-                        >
-                            <Button onClick={this.onSignInClick}>
-                                Sign in
-                            </Button>
-                            <Dropdown.Toggle />
-                            <Dropdown.Menu>
-                                <MenuItem eventKey="signup">Sign up</MenuItem>
-                                <MenuItem eventKey="verify">Verify registration</MenuItem>
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    </div>
-                </div>
-
+            <Header
+                className={`${ss.root} ${className || ''}`}
+                styles={styles}
+                i18n={i18n}
+                extraItemsLeft={[
+                    <HomeMenu styles={styles} i18n={i18n} />
+                ]}
+            >
                 <section className={ss.intro}>
                     <div className={ss.introMessage}>
                         Insert Animation Here
@@ -730,7 +611,7 @@ let Home = React.createClass({
                     onClose={this.closeLightbox}
                     showThumbnails
                 />
-        </div>
+            </Header>
         );
     },
 });

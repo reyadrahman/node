@@ -184,23 +184,34 @@ Each action is supposed to return JSON data in the following form:
     },
     "msg": {
         "text": "some text message for user",
-        "files": [
-            "http://xxx.com/a.jpg",
-            "http://xxx.com/b.jpg"
-        ],
-        "quickReplies": [
+        "cards": [
             {
-                "text": "option A",
-                "postback": "Select option A",
+                "imageUrl": "http://xxx.com/a.jpg",
                 "title": "title A",
                 "subtitle": "subtitle B",
-                "file": "http://xxx.com/a.jpg"
+                "actions": [
+                    {
+                        "text": "button text",
+                        "type": "postback",
+                        "postback": "button's postback"
+                    },
+                    {
+                        "text": "button text",
+                        "type": "openUrl",
+                        "url": "http://xxx.com/a.jpg"
+                    }
+                ]
+
+            }
+        ],
+        "actions": [
+            {
+                "text": "button X",
+                "postback": "postback X"
             },
             {
-                "text": "option B",
-                "title": "title B",
-                "subtitle": "subtitle B",
-                "file": "http://xxx.com/b.jpg"
+                "text": "button Y",
+                "postback": "postback Z"
             }
         ]
     },
