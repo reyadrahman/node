@@ -222,7 +222,7 @@ Each action is supposed to return JSON data in the following form:
 - `context` is **required** and will be sent directly to Wit.ai
 - `msg` is **optional**. It's just a message that will be sent to the user
 - `msg` must have **at least one** of `text`, `cards` or `actions`
-- In each card, `title`, `subtitle` and `actions` are **optional**. But for compatibility with Telegram.
+- In each card, `title`, `subtitle` and `actions` are **optional**.
 - The `actions` inside each card is shown underneath the card itself, but the `msg.actions` is shown underneath the entire message, usually for simple buttons such as "yes" or "no"
 - In each action (in `msg.cards[x].actions` or `msg.actions`) `postback` and `fallback` are **optional**. `text` is the label of the button shown to the user. `fallback` is the text shown to the user when the chat service doesn't support buttons. If fallback is omitted, the action will not be shown when buttons are not supported. `postback` is the message that will be sent to the server when the user clicks on the button. If `postback` is not provided, it defaults to the value of `text`.
 - `userPrefs` is **optional**. If not provided, the user preferences remain the same. Otherwise, it will replace the old user preferences
