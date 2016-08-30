@@ -30,6 +30,7 @@ USER_POOL_APP_CLIENT_ID=
 GOOGLE_CLOUD_VISION_API_KEY=
 MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
 WIZARD_BOT_WEB_CHAT_SECRET=
+CONTACT_EMAIL=
 CDN=
 PORT=
 ```
@@ -113,6 +114,9 @@ Then go to [AWS IAM Console -> Roles](https://console.aws.amazon.com/iam/home#ro
     ]
 }
 ```
+
+### Amazon Simple Email Service (SES)
+In order to get the contact form to work, you must provide an email address as an environment variable named `CONTACT_EMAIL` and then have it verified in the SES. To verify the email, please go to your [AWS console -> SES](https://console.aws.amazon.com/ses) and in the "Email Addresses" section select "Verify a new email address".
 
 ### AI Actions (Config)
 Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:

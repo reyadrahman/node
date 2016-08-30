@@ -365,18 +365,14 @@ export function toggleFullscreen() {
 }
 
 export function sendEmail(data) {
-    return (dispatch: Function) => {
-        return (
-            aws.sendEmail(data)
-               .then(res => {
-                   console.log('sendEmail, SUCCESS', res);
-                   dispatch(sendEmailSucceeded(res));
-               })
-               .catch(err => {
-                   console.log('sendEmail, FAILURE', err);
-                   dispatch(sendEmailFailed(typeof err === 'string' ? err : 'Failed'));
-               })
-        );
+    return async function(dispatch: Function) {
+        try {
+            await bridge.sendEmail(data);
+            dispatch(sendEmailSucceeded('Message was sent, thanks'));
+        } catch(error) {
+            console.log('ERROR: sendEmail failed: ', error);
+            dispatch(sendEmailFailed(`Sorry, couldn't send your message`));
+        }
     }
 }
 

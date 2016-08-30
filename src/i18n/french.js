@@ -16,6 +16,20 @@ export default {
     },
     home: {
     },
+    homeContactForm: {
+        name: 'FR NAME',
+        namePlaceholde: 'FR Enter name',
+        email: 'FR EMAIL',
+        emailPlaceholder: 'FR Enter email',
+        subject: 'FR Subject',
+        selectSubject: 'FR Select subject',
+        generalCustomerService: 'FR General customer service',
+        suggestions: 'FR Suggestions',
+        other: 'FR Other',
+        message: 'FR Message',
+        messagePlaceholder: 'FR Enter message',
+        send: 'FR SEND MESSAGE',
+    },
     signedInPage: {
         pleaseSignIn: 'Please sign in',
     },

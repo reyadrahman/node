@@ -50,8 +50,7 @@ let Header = React.createClass({
 
     render() {
         const { className, styles, styles: { homeMenu: ss },
-                i18n, i18n: { strings: { homeMenu: strings } },
-                extraItemsLeft, extraItemsRight } = this.props;
+                i18n, i18n: { strings: { homeMenu: strings } } } = this.props;
 
         const { isMenuOpen, isMenuHovered } = this.state;
         const leftNavBarClass = isMenuOpen

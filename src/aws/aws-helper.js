@@ -39,6 +39,7 @@ const s3 = new AWS.S3();
 const lambda = new AWS.Lambda();
 const cognitoIdentity = new AWS.CognitoIdentity();
 const sts = new AWS.STS();
+const ses = new AWS.SES();
 
 export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
 export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
@@ -60,6 +61,7 @@ export const s3PutBucketCors = callbackToPromise(s3.putBucketCors, s3);
 export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
 export const cognitoIdentityGetId = callbackToPromise(cognitoIdentity.getId, cognitoIdentity);
 export const stsGetFederationToken = callbackToPromise(sts.getFederationToken, sts);
+export const sendEmail = callbackToPromise(ses.sendEmail, ses);
 
 
 export function dynamoCleanUpObj(obj: Object) {

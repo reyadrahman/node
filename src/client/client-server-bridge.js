@@ -1,7 +1,7 @@
 /* @flow */
 
 import { fetchjp, fetchg2j } from './client-utils.js';
-import type { DBMessage } from '../misc/types.js';
+import type { DBMessage, ContactFormData } from '../misc/types.js';
 
 export async function addBot(jwtIdToken: string, botName: string, settings) {
     console.log('client-server-bridge addBot:');
@@ -35,4 +35,8 @@ export async function fetchWebChatSessionToken(jwtIdToken?: string)
     console.log('fetchWebChatSessionToken: jwtIdToken: ', jwtIdToken);
     const params = jwtIdToken ? { jwtIdToken } : {};
     return await fetchg2j('/api/fetch-web-chat-session-token', params);
+}
+
+export async function sendEmail(contactFormData: ContactFormData) {
+    return await fetchjp('/api/send-email', { contactFormData })
 }

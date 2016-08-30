@@ -16,6 +16,20 @@ export default {
     },
     home: {
     },
+    homeContactForm: {
+        name: 'NAME',
+        namePlaceholde: 'Enter name',
+        email: 'EMAIL',
+        emailPlaceholder: 'Enter email',
+        subject: 'Subject',
+        selectSubject: 'Select subject',
+        generalCustomerService: 'General customer service',
+        suggestions: 'Suggestions',
+        other: 'Other',
+        message: 'Message',
+        messagePlaceholder: 'Enter message',
+        send: 'SEND MESSAGE',
+    },
     signedInPage: {
         pleaseSignIn: 'Please sign in',
     },

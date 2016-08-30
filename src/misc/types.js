@@ -101,6 +101,13 @@ export type AIActionInfo = {
 // is that it?
 export type UserPrefs = Object;
 
+export type ContactFormData = {
+    name: string,
+    email: string,
+    subject: string,
+    message: string,
+};
+
 export type ServerEnv = {
     NODE_ENV: string,
     PLATFORM: string,
@@ -123,6 +130,7 @@ export type ServerEnv = {
     IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
     IDENTITY_POOL_AUTH_ROLE_ARN: string,
     WIZARD_BOT_WEB_CHAT_SECRET: string,
+    CONTACT_EMAIL: string,
     PORT: string,
     CDN?: string,
     DEBUG?: string,

@@ -482,30 +482,6 @@ $navbarHeight: 50px;
     }
 
     .contact {
-        .contactForm {
-
-            .greyBox {
-                padding: 20px;
-                background: #eee;
-
-                :global(.input-group-addon) {
-                    padding: 0 12px;
-                }
-
-                input, textarea, select {
-                    border-radius: 0;
-
-                    &:focus {
-                        outline: none;
-                        border: 1px solid #666;
-                        box-shadow: none;
-                    }
-                }
-                textarea {
-                    height: 185px;
-                }
-            }
-        }
     }
 
     .purchase {

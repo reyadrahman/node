@@ -2,12 +2,15 @@
 
 import { ENV, request } from './server-utils.js';
 import * as aws from '../aws/aws.js';
+import type { ContactFormData } from '../misc/types.js';
+
 import uuid from 'node-uuid';
 import type { Request, Response } from 'express';
 import express from 'express';
 
 const { AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
-        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, WIZARD_BOT_WEB_CHAT_SECRET } = ENV;
+        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, WIZARD_BOT_WEB_CHAT_SECRET,
+        CONTACT_EMAIL } = ENV;
 
 const routes = express.Router();
 
@@ -54,8 +57,13 @@ routes.use('/', (req, res, next) => {
     }
 });
 
+routes.post('/send-email', (req, res, next) => {
+    sendEmail(req.body.contactFormData)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+});
+
 routes.get('/fetch-bots', (req, res, next) => {
-    console.log('bbbbb');
     if (!req.customData || !req.customData.identityId) {
         return res.status(403).send('Missing JWT');
     }
@@ -104,6 +112,48 @@ routes.get('/fetch-web-chat-session-token', (req, res, next) => {
         .then(x => res.send(x))
         .catch(err => next(err));
 });
+
+async function sendEmail(contactFormData: ContactFormData) {
+    let { email, name, subject, message } = contactFormData;
+    if (!email) {
+        throw new Error('No email provided');
+    }
+
+    if (!message) {
+        throw new Error('Empty message');
+    }
+
+    name = name || email;
+    subject = subject || 'Contact';
+
+    const params = {
+        Destination: {
+            ToAddresses: [
+                CONTACT_EMAIL,
+            ],
+        },
+        Message: {
+            Body: {
+                Text: {
+                    Data: message,
+                    Charset: 'UTF-8',
+                },
+            },
+            Subject: {
+                Data: subject,
+                Charset: 'UTF-8'
+            },
+        },
+        // TODO
+        Source: CONTACT_EMAIL,
+        ReplyToAddresses: [
+            name + '<' + email + '>',
+        ],
+    };
+
+    console.log('sendEmail: ', params);
+    await aws.sendEmail(params);
+}
 
 async function fetchBots(identityId) {
     console.log('fetchBots: ', identityId);

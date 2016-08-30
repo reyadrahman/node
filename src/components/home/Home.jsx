@@ -1,3 +1,8 @@
+import * as actions from '../../actions/actions.js';
+import Header from '../header/Header.jsx';
+import HomeMenu from './HomeMenu.jsx';
+import HomeContactForm from './HomeContactForm.jsx';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
@@ -5,10 +10,6 @@ import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Glyphicon,
          Grid, Col, Row, Panel, Button, Image, Clearfix,
          Carousel, FormGroup, ControlLabel, FormControl,
          InputGroup, Dropdown } from 'react-bootstrap';
-import * as actions from '../../actions/actions.js';
-import Header from '../header/Header.jsx';
-import HomeMenu from './HomeMenu.jsx';
-
 import Lightbox from 'react-images';
 
 
@@ -89,7 +90,7 @@ let Home = React.createClass({
     render() {
         console.log('Home render');
         const { className, styles, styles: { home: ss },
-                i18n, i18n: { strings } } = this.props;
+                i18n, i18n: { strings: { home: strings } } } = this.props;
 
         return (
             <Header
@@ -532,43 +533,7 @@ let Home = React.createClass({
                             Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
                         </p>
                     </div>
-                    <form className={ss.contactForm}>
-                        <Grid>
-                            <Col md={8} mdOffset={2} className={ss.greyBox}>
-                                <Row>
-                                    <Col md={6}>
-                                        <FormGroup controlId="formControlName">
-                                            <ControlLabel>NAME</ControlLabel>
-                                            <FormControl type="text" placeholder="Enter name" />
-                                        </FormGroup>
-                                        <FormGroup controlId="formControlEmail">
-                                            <ControlLabel>EMAIL</ControlLabel>
-                                            <InputGroup>
-                                                <InputGroup.Addon>
-                                                    <Glyphicon glyph="envelope" />
-                                                </InputGroup.Addon>
-                                                <FormControl type="email" placeholder="Enter email" />
-                                            </InputGroup>
-                                        </FormGroup>
-                                        <FormGroup controlId="formControlsSelectMultiple">
-                                            <ControlLabel>Subject</ControlLabel>
-                                            <FormControl componentClass="select" >
-                                                <option value="customer service">General customer service</option>
-                                                <option value="suggestions">Suggestions</option>
-                                                <option value="other">Other</option>
-                                            </FormControl>
-                                        </FormGroup>
-                                    </Col>
-                                    <Col md={6}>
-                                        <FormGroup controlId="formControlTextarea">
-                                            <ControlLabel>Message</ControlLabel>
-                                            <FormControl componentClass="textarea" placeholder="Message" />
-                                        </FormGroup>
-                                    </Col>
-                                </Row>
-                            </Col>
-                        </Grid>
-                    </form>
+                    <HomeContactForm styles={styles} i18n={i18n} />
                 </section>
 
                 <section className={ss.purchase}>

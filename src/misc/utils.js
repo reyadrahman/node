@@ -1,7 +1,6 @@
 /* @flow */
 
 import _ from 'lodash';
-import type { ServerEnv, ClientEnv } from './types.js';
 
 export function toStr(obj: any): string {
     return JSON.stringify(obj, null, ' ');

@@ -14,14 +14,12 @@ import TermsOfUse from './components/termsOfUse/TermsOfUse.jsx'
 import Privacy from './components/privacy/Privacy.jsx'
 
 const Routes = (
-    <Route component={App}>
-        <Route component={PublicPage}>
-            <Route path="/" component={Home} />
-            <Route path="/wizard-bot" component={WebChatPage} />
-            <Route path="/contacts" component={ContactsPage} />
-            <Route path="/terms" component={TermsOfUse} />
-            <Route path="/privacy" component={Privacy} />
-        </Route>
+    <Route path="/" component={App}>
+        <IndexRoute component={Home} />
+        <Route path="/wizard-bot" component={WebChatPage} />
+        <Route path="/contacts" component={ContactsPage} />
+        <Route path="/terms" component={TermsOfUse} />
+        <Route path="/privacy" component={Privacy} />
         <Route component={SignedInPage}>
             <Route path="/account" component={AccountPage} />
             <Route path="/messages(/:conversationId)" component={MessagesPage} />

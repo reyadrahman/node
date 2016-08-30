@@ -14,17 +14,17 @@ let PublicPage = React.createClass({
     },
 
     componentDidMount() {
-        if (!this.isSignedIn()) {
-            this.props.router.push('/');
-            //this.props.openSignin();
-        }
+        // if (!this.isSignedIn()) {
+        //     this.props.router.push('/');
+        //     //this.props.openSignin();
+        // }
     },
 
     componentDidUpdate(oldProps) {
-        if (this.isSignedIn(oldProps) && !this.isSignedIn()) {
-            this.props.router.push('/');
-            //this.props.openSignin();
-        }
+        // if (this.isSignedIn(oldProps) && !this.isSignedIn()) {
+        //     this.props.router.push('/');
+        //     //this.props.openSignin();
+        // }
     },
 
     render() {
@@ -35,7 +35,6 @@ let PublicPage = React.createClass({
         const cs = React.cloneElement(children, {
             i18n,
             styles,
-            // className: ss.content,
         });
 
         return (

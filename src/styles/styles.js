@@ -10,6 +10,7 @@ const styles = {
         languageButton: require('./style-1/language-button.scss'),
         home: require('./style-1/home.scss'),
         homeMenu: require('./style-1/home-menu.scss'),
+        homeContactForm: require('./style-1/home-contact-form.scss'),
         accountPage: require('./style-1/account-page.scss'),
         messagesPage: require('./style-1/messages-page.scss'),
         webChatPage: require('./style-1/web-chat-page.scss'),
