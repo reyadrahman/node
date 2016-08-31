@@ -1,7 +1,7 @@
 /* @flow */
 
 import * as aws from '../../aws/aws.js';
-import { callbackToPromise } from '../../misc/utils.js';
+import { callbackToPromise, toStr } from '../../misc/utils.js';
 import { request, ENV } from '../server-utils.js';
 import ai from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
@@ -38,7 +38,7 @@ export async function _logWebhookMessage(ms: WebhookMessage | Array<WebhookMessa
 export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
     const messages = Array.isArray(ms)
         ? ms : [ms];
-    console.log('_logMessage: ', messages);
+    console.log('_logMessage: ', toStr(messages));
     if (messages.length === 0) return;
 
     await aws.dynamoBatchWrite({
@@ -112,9 +112,10 @@ export async function _attachmentMiddleware(message: WebhookMessage):
         // const bid = botParams.botId;
         const mid = message.id;
         const sid = message.senderId;
+        const t = message.creationTimestamp;
         const extension = format ? '.' + format : '';
         return {
-            urlP: _uploadToS3(`${pid}/${sid}/${mid}_${i}${extension}`, buffer),
+            urlP: _uploadToS3(`${pid}/${sid}/${t}_${i}${extension}`, buffer),
             format,
         };
     });

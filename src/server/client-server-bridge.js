@@ -7,10 +7,11 @@ import type { ContactFormData } from '../misc/types.js';
 import uuid from 'node-uuid';
 import type { Request, Response } from 'express';
 import express from 'express';
+import ciscospark from 'ciscospark';
 
 const { AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
         DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, WIZARD_BOT_WEB_CHAT_SECRET,
-        CONTACT_EMAIL } = ENV;
+        CONTACT_EMAIL, OWN_BASE_URL } = ENV;
 
 const routes = express.Router();
 
@@ -105,6 +106,15 @@ routes.post('/add-bot', (req, res, next) => {
         .then(x => res.send(x))
         .catch(err => next(err));
 });
+
+routes.delete('/remove-bot', (req, res, next) => {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+    // TODO: Once the client supports removing bots, remove the bot from the
+    //       database, remove messages, conversations and cisco spark webhooks
+});
+
 
 routes.get('/fetch-web-chat-session-token', (req, res, next) => {
     const { identityId } = req.customData || {};
@@ -202,13 +212,35 @@ async function fetchMessages(identityId, conversationId) {
 async function addBot(identityId, botName, settings) {
     console.log('addBot: ', identityId, botName, settings);
     const botId = uuid.v1();
+    const ciscosparkWebhookSecret = uuid.v1();
+
+    // register webhook for cisco spark
+    const csClient = ciscospark.init({
+        credentials: {
+            access_token: settings.ciscosparkAccessToken,
+        },
+    });
+    const webhook = await csClient.webhooks.create({
+        name: `deepiks bot (${botName})`,
+        targetUrl: `${OWN_BASE_URL}/webhooks/${identityId}/${botId}/spark`,
+        resource: 'all',
+        event: 'all',
+        secret: ciscosparkWebhookSecret,
+    });
+    const me = await csClient.people.get('me');
+
     await aws.dynamoPut({
         TableName: DB_TABLE_BOTS,
         Item: aws.dynamoCleanUpObj({
             publisherId: identityId,
             botId,
             botName,
-            settings,
+            settings: {
+                ...settings,
+                ciscosparkWebhookSecret,
+                ciscosparkWebhookId: webhook.id,
+                ciscosparkBotPersonId: me.id,
+            },
         })
     });
 }

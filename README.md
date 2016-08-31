@@ -31,6 +31,7 @@ GOOGLE_CLOUD_VISION_API_KEY=
 MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY=
 WIZARD_BOT_WEB_CHAT_SECRET=
 CONTACT_EMAIL=
+OWN_BASE_URL=
 CDN=
 PORT=
 ```
@@ -38,6 +39,8 @@ PORT=
 `NODE_ENV`, `CDN` and `PORT` are **optional**.
 
 `NODE_ENV` can be `production` (default) or `development`.
+
+`OWN_BASE_URL` is the full address of your server (e.g. https://deepiks.io) and is used to, for example, set up webhooks automatically.
 
 ### .test.env file or environment variables in console
 This is mostly the same as `.env` but only used for running the tests (see below). So pick different names for the database tables and s3 buckets as they will be modified. `.test.env` needs the following variables in addition to those of `.env`:

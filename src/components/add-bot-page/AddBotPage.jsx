@@ -10,7 +10,6 @@ let AddBotPage = React.createClass({
         return {
             botName: '',
             ciscosparkAccessToken: '',
-            ciscosparkBotEmail: '',
             messengerPageAccessToken: '',
             messengerAppSecret: '',
             microsoftAppId: '',
@@ -22,21 +21,18 @@ let AddBotPage = React.createClass({
         e.preventDefault();
         const { botName, ...settings } = this.state;
         this.props.addBot(botName, settings).then(() => {
-            this.props.router.push('/bots');
+            this.props.router.push('/account');
         });
     },
     cancel(e) {
         e.preventDefault();
-        this.props.router.push('/bots');
+        this.props.router.push('/account');
     },
     botNameChanged(e) {
         this.setState({ botName: e.target.value });
     },
     ciscosparkAccessTokenChanged(e) {
         this.setState({ ciscosparkAccessToken: e.target.value });
-    },
-    ciscosparkBotEmailChanged(e) {
-        this.setState({ ciscosparkBotEmail: e.target.value });
     },
     messengerPageAccessTokenChanged(e) {
         this.setState({ messengerPageAccessToken: e.target.value });
@@ -95,15 +91,6 @@ let AddBotPage = React.createClass({
                             className={ss.field}
                             value={state.ciscosparkAccessToken}
                             onChange={this.ciscosparkAccessTokenChanged}
-                            styles={styles}
-                        />
-                    </div>
-                    <div className={ss.inputsRow}>
-                        <label>{strings.ciscosparkBotEmail}</label>
-                        <Input
-                            className={ss.field}
-                            value={state.ciscosparkBotEmail}
-                            onChange={this.ciscosparkBotEmailChanged}
                             styles={styles}
                         />
                     </div>

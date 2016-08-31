@@ -132,6 +132,7 @@ export type ServerEnv = {
     WIZARD_BOT_WEB_CHAT_SECRET: string,
     CONTACT_EMAIL: string,
     PORT: string,
+    OWN_BASE_URL: string,
     CDN?: string,
     DEBUG?: string,
 };
