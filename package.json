@@ -51,7 +51,6 @@
     "less-loader": "^2.2.3",
     "lodash": "^4.13.1",
     "morgan": "^1.7.0",
-    "node-cloud-vision-api": "^0.2.0",
     "node-sass": "^3.8.0",
     "node-uuid": "^1.4.7",
     "node-wit": "^4.0.0",

@@ -5,7 +5,6 @@ import type { DBMessage, ResponseMessage, BotParams, ActionRequest,
               ActionResponse, UserPrefs } from '../../misc/types.js';
 import { ENV, request, allEntityValues } from '../server-utils.js';
 import { toStr, catchPromise, callbackToPromise } from '../../misc/utils.js';
-import gotAttachment from './got-attachment-action.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
 import URL from 'url';
@@ -54,7 +53,6 @@ export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) =
                 console.log('sessionId: ', sessionId);
                 return context;
             },
-            gotAttachment,
         },
         logger: new witLog.Logger(witLog.DEBUG)
     });
