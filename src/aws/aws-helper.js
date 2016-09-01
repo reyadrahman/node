@@ -58,11 +58,11 @@ export const s3CreateBucket = callbackToPromise(s3.createBucket, s3);
 export const s3WaitFor = callbackToPromise(s3.waitFor, s3);
 export const s3PutBucketPolicy = callbackToPromise(s3.putBucketPolicy, s3);
 export const s3PutBucketCors = callbackToPromise(s3.putBucketCors, s3);
+export const s3GetSignedUrl = callbackToPromise(s3.getSignedUrl, s3);
 export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
 export const cognitoIdentityGetId = callbackToPromise(cognitoIdentity.getId, cognitoIdentity);
 export const stsGetFederationToken = callbackToPromise(sts.getFederationToken, sts);
 export const sendEmail = callbackToPromise(ses.sendEmail, ses);
-
 
 export function dynamoCleanUpObj(obj: Object) {
     return _.reduce(obj, (acc, v, k) => {

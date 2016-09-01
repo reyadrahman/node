@@ -103,10 +103,7 @@ async function handle(req: Request) {
     console.log('got message: ', message);
 
     const responses = [];
-    await deepiksBot({
-        ...message,
-        sourceBot: 'ciscospark',
-    }, botParams, m => {
+    await deepiksBot(message, botParams, m => {
         responses.push(respondFn(client, roomId, m))
     });
 

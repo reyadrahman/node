@@ -1,7 +1,7 @@
 /* @flow */
 
 import * as aws from '../../aws/aws.js';
-import { callbackToPromise, toStr } from '../../misc/utils.js';
+import { callbackToPromise, toStr, destructureS3Url } from '../../misc/utils.js';
 import { request, ENV } from '../server-utils.js';
 import ai from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
@@ -54,6 +54,50 @@ export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
     });
     console.log('_logMessage end');
 
+}
+
+export function _signS3UrlsMiddleware(respondFn: RespondFn): RespondFn {
+    return response => {
+        _signS3Urls(response)
+            .then(newResponse => {
+                respondFn(newResponse);
+            })
+            .catch(error => {
+                console.error(error);
+            });
+
+    }
+}
+
+export async function _signS3Urls(response: ResponseMessage): Promise<ResponseMessage> {
+    if (typeof response === 'string') {
+        return response;
+    }
+    const clone = { ...response };
+    let cardsP;
+    if (clone.cards) {
+        cardsP = Promise.all(clone.cards.map(async function(c) {
+            const bucketAndKey = destructureS3Url(c.imageUrl);
+            if (!bucketAndKey || bucketAndKey.bucket !== S3_BUCKET_NAME) {
+                return c;
+            }
+
+            const newImageUrl = await aws.s3GetSignedUrl('getObject', {
+                Bucket: bucketAndKey.bucket,
+                Key: bucketAndKey.key,
+                Expires: 60 * 10, // 10 minutes
+            });
+            return {
+                ...c,
+                imageUrl: newImageUrl,
+            };
+        }));
+    }
+
+    if (cardsP) {
+        clone.cards = await cardsP;
+    }
+    return clone;
 }
 
 export async function _uploadToS3(key: string, buffer: Buffer) {
@@ -198,6 +242,8 @@ export async function _route(rawMessage: WebhookMessage,
                              respondFn: RespondFn)
 {
     console.log('route');
+
+    respondFn = _signS3UrlsMiddleware(respondFn);
 
     // [{urlP, buffer, format}]
     const attachments = await _attachmentMiddleware(rawMessage);

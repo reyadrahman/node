@@ -13,7 +13,7 @@ import Cookies from 'js-cookie';
 import type { Component } from 'react';
 import { browserHistory } from 'react-router'
 
-const { PLATFORM } = utils.ENV;
+const { PLATFORM, S3_BUCKET_NAME } = utils.ENV;
 
 // export function changeLocation(location: string) {
 //     return { type: 'LOCATION', location };
@@ -473,7 +473,9 @@ async function signS3UrlsInMesssages(messages: DBMessage[]): Promise<DBMessage[]
         if (clone.cards) {
             cardsP = Promise.all(clone.cards.map(async function(c) {
                 const bucketAndKey = destructureS3Url(c.imageUrl);
-                if (!bucketAndKey) return c;
+                if (!bucketAndKey || bucketAndKey.bucket !== S3_BUCKET_NAME) {
+                    return c;
+                }
 
                 const newImageUrl = await aws.s3GetSignedUrl('getObject', {
                     Bucket: bucketAndKey.bucket,
