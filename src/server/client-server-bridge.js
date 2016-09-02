@@ -121,7 +121,7 @@ routes.post('/send-notification', (req, res, next) => {
         return res.status(403).send('Missing JWT');
     }
     const { identityId } = req.customData;
-    sendNotification(identityId, req.body.botId, req.body.message)
+    sendNotification(identityId, req.body.botId, req.body.message, req.body.categories)
         .then(x => res.send(x))
         .catch(err => next(err));
 });
@@ -255,10 +255,10 @@ async function addBot(identityId, botName, settings) {
     });
 }
 
-async function sendNotification(identityId, botId, message) {
+async function sendNotification(identityId, botId, message, categories) {
     console.log('sendNotification: ', identityId, botId, message);
     const botParams = await aws.getBot(identityId, botId);
-    await channels.sendAll(botParams, message);
+    await channels.sendToMany(botParams, message, categories);
 }
 
 async function fetchWebChatSessionToken(identityId) {

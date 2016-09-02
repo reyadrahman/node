@@ -7,7 +7,7 @@ import * as bridge from '../client/client-server-bridge.js';
 import Signin from '../components/signin/Signin.jsx';
 import Signup from '../components/signup/Signup.jsx';
 import VerifyRegistration from '../components/verify-registration/VerifyRegistration.jsx';
-import type { DBMessage } from '../misc/types.js';
+import type { DBMessage, ResponseMessage } from '../misc/types.js';
 
 import Cookies from 'js-cookie';
 import type { Component } from 'react';
@@ -510,9 +510,13 @@ export function fetchWebChatSessionToken() {
     }
 }
 
-export function sendNotification(botId, message) {
+export function sendNotification(botId: string,
+                                 message: ResponseMessage,
+                                 categories: string[])
+{
     return async function(dispatch: Function) {
         const session = await aws.getCurrentSession();
-        await bridge.sendNotification(session.getIdToken().getJwtToken(), botId, message);
+        await bridge.sendNotification(session.getIdToken().getJwtToken(),
+                                      botId, message, categories);
     }
 }

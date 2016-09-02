@@ -15,13 +15,18 @@ let NotificationsPage = React.createClass({
         return {
             message: '',
             selectedBotId: '',
+            categories: '',
         };
     },
 
     send(e) {
         e.preventDefault();
-        if (this.state.message && this.state.selectedBotId) {
-            this.props.sendNotification(this.state.selectedBotId, this.state.message);
+        const { message, selectedBotId, categories } = this.state;
+        if (message && selectedBotId) {
+            const cats = categories.split(',').map(x => x.trim()).filter(x => x);
+            console.log('NotificationsPage: send: selectedBotId: ', selectedBotId,
+                        ', message: ', message, ', categories: ', cats);
+            this.props.sendNotification(selectedBotId, message, cats);
         }
     },
 
@@ -31,6 +36,10 @@ let NotificationsPage = React.createClass({
 
     onMessageChange(e) {
         this.setState({ message: e.target.value });
+    },
+
+    onCategoriesChange(e) {
+        this.setState({ categories: e.target.value });
     },
 
     componentDidMount() {
@@ -93,6 +102,17 @@ let NotificationsPage = React.createClass({
                     <form className={ss.form}>
                         { botSelect }
                         <FormGroup
+                            controlId="categories"
+                        >
+                            <ControlLabel>Categories (optional)</ControlLabel>
+                            <FormControl
+                                type="text"
+                                value={this.state.categories}
+                                placeholder="List of comma separated categories"
+                                onChange={this.onCategoriesChange}
+                            />
+                        </FormGroup>
+                        <FormGroup
                             controlId="form"
                         >
                             <FormControl
@@ -100,7 +120,7 @@ let NotificationsPage = React.createClass({
                                 value={message}
                                 placeholder="Enter message"
                                 onChange={this.onMessageChange}
-                                />
+                            />
                         </FormGroup>
                         <div className={ss.buttonArea}>
                             <Button

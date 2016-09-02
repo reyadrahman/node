@@ -6,6 +6,8 @@ import * as ms from './ms.js';
 import * as aws from '../../aws/aws.js';
 import type { ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import { ENV } from '../server-utils.js';
+import { toStr } from '../../misc/utils.js';
+import _ from 'lodash';
 
 const { DB_TABLE_CONVERSATIONS } = ENV;
 
@@ -33,16 +35,18 @@ export async function send(botParams: BotParams, conversationId: string,
     throw new Error(`send: unsupported channel ${channel}`);
 }
 
-export async function sendAll(botParams: BotParams, message: ResponseMessage) {
-    console.log('sendAll: botParams: ', botParams, ', message: ', message);
+export async function sendToMany(botParams: BotParams, message: ResponseMessage, categories: string[]) {
+    console.log('sendAll: botParams: ', botParams, ', message: ', message, ', categories: ', categories);
+    // TODO paging
     const qres = await aws.dynamoQuery({
         TableName: DB_TABLE_CONVERSATIONS,
         KeyConditionExpression: 'publisherId = :pid',
-        FilterExpression: 'botId = :bid',
-        ProjectionExpression: 'publisherId, conversationId, channel, channelData',
+        FilterExpression: 'botId = :bid and subscribed <> :s',
+        ProjectionExpression: 'publisherId, conversationId, channel, channelData, subscriptions',
         ExpressionAttributeValues: {
             ':pid': botParams.publisherId,
             ':bid': botParams.botId,
+            ':s': false,
         },
     });
 
@@ -51,7 +55,18 @@ export async function sendAll(botParams: BotParams, message: ResponseMessage) {
         return;
     }
 
-    const sendAllP = await Promise.all(qres.Items.map(
+    let qItems = qres.Items;
+    if (!_.isEmpty(categories)) {
+        const categoriesLC = categories.map(x => x.toLowerCase());
+        const inCategories = x => categoriesLC.find(y => y.toLowerCase);
+        qItems = qItems.filter(
+            x => x.subscriptions && x.subscriptions.some(y => inCategories(y.toLowerCase))
+        );
+    }
+
+    console.log('sendAll: sending to (showing first 10): ', toStr(qItems.slice(0, 10)));
+
+    const sendAllP = await Promise.all(qItems.map(
         x => send(botParams, x.conversationId, x.channel, message, x.channelData)
     ));
 
