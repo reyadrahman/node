@@ -13,6 +13,7 @@ export default {
         messages: 'FR Messages',
         contacts: 'FR Contacts',
         wizardBot: 'FR Wizard Bot',
+        notifications: 'FR Notifications',
     },
     home: {
     },
@@ -50,6 +51,10 @@ export default {
         save: 'FR Save',
         show: 'FR show',
         ok: 'FR OK',
+    },
+    notificationsPage: {
+        fetching: 'FETCHING BOTS',
+        notifications: 'Notifications',
     },
     messagesPage: {
 

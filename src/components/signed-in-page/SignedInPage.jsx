@@ -68,6 +68,12 @@ let SignedInPage = React.createClass({
                 icon: 'comment',
                 value: 'messages',
             },
+            {
+                label: sideMenuStrings.notifications,
+                link: '/notifications',
+                icon: 'comment',
+                value: 'notifications',
+            },
         ];
 
         const menuToggle = (

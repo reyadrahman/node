@@ -166,7 +166,8 @@ export function composeKeys(a: string, b: string): string {
 }
 
 export function decomposeKeys(k: string): Array<string> {
-    return k.split('__');
+    const split = k.split('__');
+    return [split[0], split.slice(1).join('__')];
 }
 
 /*

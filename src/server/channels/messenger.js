@@ -55,7 +55,7 @@ type MessengerReqAttachment = {
     },
 };
 
-async function handle(req: Request, res: Response) {
+async function handleWebhookRequest(req: Request, res: Response) {
     // webhook verification
     if (req.method === 'GET' &&
         req.query['hub.mode'] === 'subscribe' &&
@@ -152,14 +152,15 @@ async function receivedMessage(entry: MessengerReqEntry,
         attachments.filter(x => x.type === 'image')
                    .map(x => ({ imageUrl: x.payload.url }));
 
-    const conversationId = entry.id + '_' + messagingEvent.sender.id;
+    const pageId_senderId = aws.composeKeys(entry.id, messagingEvent.sender.id);
     const message: WebhookMessage = {
         publisherId_conversationId:
-            aws.composeKeys(botParams.publisherId, conversationId),
+            aws.composeKeys(botParams.publisherId, pageId_senderId),
         creationTimestamp: new Date(messagingEvent.timestamp).getTime(),
         id: messagingEvent.message.mid,
         senderId: messagingEvent.sender.id,
-        source: 'messenger',
+        senderIsBot: false,
+        channel: 'messenger',
         text: messagingEvent.message.text,
         cards,
         senderName: `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim(),
@@ -171,29 +172,29 @@ async function receivedMessage(entry: MessengerReqEntry,
     const responses = [];
     setTimeout(() => {
         if (responses.length === 0) {
-            respondFn(botParams, conversationId, messagingEvent.sender.id, {
+            send(botParams, pageId_senderId, {
                 typingOn: true,
-            });
+            }).catch(error => console.error(error));
         }
     }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
 
     await deepiksBot(message, botParams, m => {
-        responses.push(respondFn(botParams, conversationId, messagingEvent.sender.id, m));
+        responses.push(send(botParams, pageId_senderId, m));
     });
-
-
-
 
     await Promise.all(responses);
 }
 
-async function respondFn(botParams: BotParams, conversationId: string,
-                         to: string, message: ResponseMessage)
+export async function send(botParams: BotParams, conversationId: string,
+                           message: ResponseMessage)
 {
-    console.log('respondFn: ', conversationId, to, toStr(message));
+    console.log('send: ', conversationId, toStr(message));
+
+    // conversationId is constructed by aws.composeKeys(pageId, senderId)
+    const [ pageId, to ] = aws.decomposeKeys(conversationId);
 
     if (typeof message === 'string' && message.trim()) {
-        await sendMessage(botParams, {
+        await sendHelper(botParams, {
             recipient: {
                 id: to,
             },
@@ -205,14 +206,13 @@ async function respondFn(botParams: BotParams, conversationId: string,
 
     }
     if (typeof message !== 'object') {
-        console.log('respondFn: message is not an object');
-        return;
+        throw new Error('send: message is not an object');
     }
 
     const { typingOn, text, cards, actions } = message;
 
     if (typingOn) {
-        await sendMessage(botParams, {
+        await sendHelper(botParams, {
             recipient: {
                 id: to,
             },
@@ -242,7 +242,7 @@ async function respondFn(botParams: BotParams, conversationId: string,
                 buttons,
             };
         });
-        await sendMessage(botParams, {
+        await sendHelper(botParams, {
             recipient: {
                 id: to,
             },
@@ -265,7 +265,7 @@ async function respondFn(botParams: BotParams, conversationId: string,
     }));
 
     if (text || quickReplies) {
-        await sendMessage(botParams, {
+        await sendHelper(botParams, {
             recipient: {
                 id: to,
             },
@@ -277,8 +277,8 @@ async function respondFn(botParams: BotParams, conversationId: string,
     }
 }
 
-async function sendMessage(botParams: BotParams, messageData) {
-    console.log('messenger-webhook sendMessage: ',
+async function sendHelper(botParams: BotParams, messageData) {
+    console.log('messenger-webhook sendHelper: ',
         u.inspect(messageData, { depth: null}));
     const r = await request({
         uri: 'https://graph.facebook.com/v2.6/me/messages',
@@ -287,8 +287,8 @@ async function sendMessage(botParams: BotParams, messageData) {
         json: messageData
     });
     if (r.statusCode !== 200) {
-        console.error('Sending message failed with code %s msg %s and body: ',
-                      r.statusCode, r.statusMessage, r.body);
+        throw new Error('Sending message failed with code %s msg %s and body: ',
+                        r.statusCode, r.statusMessage, r.body);
     }
 }
 
@@ -313,9 +313,9 @@ async function getUserProfile(userId, botParams) {
 }
 
 
-export default function(req: Request, res: Response) {
+export function webhook(req: Request, res: Response) {
     console.log('messenger-webhook...');
-    handle(req, res)
+    handleWebhookRequest(req, res)
         .then(() => {
             console.log('Success');
         })

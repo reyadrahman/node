@@ -1,0 +1,31 @@
+.root {
+    min-height: 800px;
+    padding: 80px 50px 30px 50px;
+    color: #666;
+
+    .title {
+        // letter-spacing: 5px
+    }
+
+    .fetchingBots, .emptyBotList {
+        margin: 100px 0 0 0;
+        letter-spacing: 10px;
+    }
+
+    .form {
+        max-width: 500px;
+        margin: 0 auto;
+
+        textarea {
+            height: 400px;
+        }
+
+        .buttonArea {
+            text-align: right;
+
+            button {
+                min-width: 100px;
+            }
+        }
+    }
+}

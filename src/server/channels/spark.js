@@ -2,7 +2,7 @@
 
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import { request } from '../server-utils.js';
-import type { WebhookMessage, ResponseMessage } from '../../misc/types.js';
+import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import { toStr } from '../../misc/utils.js';
 import * as aws from '../../aws/aws.js';
 import URL from 'url';
@@ -25,7 +25,7 @@ type SparkReqBody = {
     }
 }
 
-async function handle(req: Request) {
+async function handleWebhookRequest(req: Request, res: Response) {
     const body: SparkReqBody = (req.body: any);
 
     console.log('------- spark-webhook: req.body: ', toStr(body));
@@ -44,11 +44,11 @@ async function handle(req: Request) {
     const expectedSig = hmac.digest('hex');
     const sig = req.get('X-Spark-Signature');
     if (sig !== expectedSig) {
-        console.error(`ERROR: exprected signatue: ${expectedSig} but received ${sig}`);
+        console.error(`ERROR: exprected signatue: ${expectedSig} but received ${sig || ''}`);
         res.status(403).send('Access denied');
         return;
     }
-    console.log(`X-Spark-Signature successfully verified ${sig}`);
+    console.log(`X-Spark-Signature successfully verified ${sig || ''}`);
 
 
     if (!ciscosparkBotPersonId) {
@@ -95,7 +95,8 @@ async function handle(req: Request) {
         id: rawMessage.id,
         senderId: rawMessage.personId,
         senderName: senderProfile.displayName,
-        source: 'ciscospark',
+        senderIsBot: false,
+        channel: 'ciscospark',
         text: rawMessage.text,
         fetchCardImages,
     };
@@ -104,23 +105,34 @@ async function handle(req: Request) {
 
     const responses = [];
     await deepiksBot(message, botParams, m => {
-        responses.push(respondFn(client, roomId, m))
+        responses.push(send(botParams, roomId, m))
     });
 
     await Promise.all(responses);
 }
 
-async function respondFn(client, roomId, message) {
-    console.log('respondFn sending message: ', message);
+// roomId is the same as conversationId
+export async function send(botParams: BotParams, conversationId: string,
+                           message: ResponseMessage) {
+
+    const { settings: { ciscosparkAccessToken } } = botParams;
+
+    const client = ciscospark.init({
+        credentials: {
+            access_token: ciscosparkAccessToken,
+        },
+    });
+
+    console.log('send sending message: ', message);
     if (typeof message === 'string' && message.trim()) {
         await client.messages.create({
             text: message,
-            roomId,
+            roomId: conversationId,
         });
         return;
     }
     if (typeof message !== 'object') {
-        console.log('respondFn: message is not an object');
+        console.log('send: message is not an object');
         return;
     }
 
@@ -134,12 +146,12 @@ async function respondFn(client, roomId, message) {
             await client.messages.create({
                 text: '',
                 files: [c.imageUrl],
-                roomId,
+                roomId: conversationId,
             });
             const cardText = actionsToStr(c.actions);
             await client.messages.create({
                 text: cardText || '',
-                roomId,
+                roomId: conversationId,
             });
         }
     }
@@ -150,16 +162,16 @@ async function respondFn(client, roomId, message) {
         ).trim();
         await client.messages.create({
             text: textToSend || '',
-            roomId,
+            roomId: conversationId,
         });
     }
 };
 
-export default function(req: Request, res: Response) {
+export function webhook(req: Request, res: Response) {
     // respond immediately
     res.send();
 
-    handle(req)
+    handleWebhookRequest(req, res)
         .then(() => {
             console.log('Success');
         })

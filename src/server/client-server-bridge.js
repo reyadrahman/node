@@ -2,6 +2,7 @@
 
 import { ENV, request } from './server-utils.js';
 import * as aws from '../aws/aws.js';
+import * as channels from './channels/all-channels.js';
 import type { ContactFormData } from '../misc/types.js';
 
 import uuid from 'node-uuid';
@@ -115,6 +116,15 @@ routes.delete('/remove-bot', (req, res, next) => {
     //       database, remove messages, conversations and cisco spark webhooks
 });
 
+routes.post('/send-notification', (req, res, next) => {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+    const { identityId } = req.customData;
+    sendNotification(identityId, req.body.botId, req.body.message)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+});
 
 routes.get('/fetch-web-chat-session-token', (req, res, next) => {
     const { identityId } = req.customData || {};
@@ -243,6 +253,12 @@ async function addBot(identityId, botName, settings) {
             },
         })
     });
+}
+
+async function sendNotification(identityId, botId, message) {
+    console.log('sendNotification: ', identityId, botId, message);
+    const botParams = await aws.getBot(identityId, botId);
+    await channels.sendAll(botParams, message);
 }
 
 async function fetchWebChatSessionToken(identityId) {

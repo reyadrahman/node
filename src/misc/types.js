@@ -16,10 +16,11 @@ export type MessageCard = {
 export type DBMessage = {
     publisherId_conversationId: string,
     creationTimestamp: number,
-    senderName?: string,
+    senderIsBot: boolean,
     senderId: string,
+    channel: string,
+    senderName?: string,
     id?: string,
-    source?: string,
     text?: string,
     cards?: Array<MessageCard>,
     senderProfilePic?: string,
@@ -29,8 +30,9 @@ export type WebhookMessage = {
     publisherId_conversationId: string,
     creationTimestamp: number,
     id: string,
+    channel: string,
+    senderIsBot: boolean,
     senderId: string,
-    source: string,
     senderName?: string,
     text?: string,
     cards?: Array<MessageCard>,
@@ -90,6 +92,10 @@ export type BotParams = {
         ciscosparkBotEmail: string,
         witAccessToken: string,
     },
+};
+
+export type ChannelData = {
+    address: Object, // microsoft bot framework specific
 };
 
 export type AIActionInfo = {

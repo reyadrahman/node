@@ -4,10 +4,12 @@ import * as aws from '../../aws/aws.js';
 import { callbackToPromise, toStr, destructureS3Url } from '../../misc/utils.js';
 import { request, ENV } from '../server-utils.js';
 import ai from './ai.js';
-import type { DBMessage, WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
+import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
+              ChannelData } from '../../misc/types.js';
 import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
+import uuid from 'uuid';
 
 const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = ENV;
 
@@ -213,11 +215,9 @@ export async function _aiRoute(
     return responses;
 }
 
-async function _textMessageRoute(message: WebhookMessage, respondFn: RespondFn) {
-    await _logWebhookMessage(message);
-}
-
-export async function _updateConversationTable(message: DBMessage)
+export async function _updateConversationTable(message: DBMessage,
+                                               botParams: BotParams,
+                                               channelData?: ChannelData)
 {
     console.log('_updateConversationTable');
     const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
@@ -228,10 +228,13 @@ export async function _updateConversationTable(message: DBMessage)
             publisherId,
             conversationId,
         },
-        UpdateExpression: 'SET lastMessage = :lastMessage, lastMessageTimestamp = :lmt',
+        UpdateExpression: 'SET lastMessage = :lastMessage, lastMessageTimestamp = :lmt, channel = :chan, botId = :botId, channelData = :cd',
         ExpressionAttributeValues: {
             ':lastMessage': aws.dynamoCleanUpObj(message),
             ':lmt': message.creationTimestamp,
+            ':chan': message.channel,
+            ':botId': botParams.botId,
+            ':cd': channelData,
         },
     });
     console.log('_updateConversationTable res: ', res);
@@ -239,7 +242,8 @@ export async function _updateConversationTable(message: DBMessage)
 
 export async function _route(rawMessage: WebhookMessage,
                              botParams: BotParams,
-                             respondFn: RespondFn)
+                             respondFn: RespondFn,
+                             channelData?: ChannelData)
 {
     console.log('route');
 
@@ -258,7 +262,7 @@ export async function _route(rawMessage: WebhookMessage,
     // will await later
     const logP = _logMessage(processedMessage);
 
-    await _updateConversationTable(processedMessage);
+    await _updateConversationTable(processedMessage, botParams, channelData);
 
     const aiRouteResponses = await _aiRoute(processedMessage, botParams, respondFn);
 
@@ -270,6 +274,9 @@ export async function _route(rawMessage: WebhookMessage,
         creationTimestamp: nextTimestamp++, // must be unique
         senderId: aws.composeKeys(botParams.publisherId, botParams.botId),
         senderName: botParams.botName,
+        channel: processedMessage.channel,
+        senderIsBot: true,
+        id: uuid.v1(),
         ...(typeof m === 'string' ? {text: m} : m),
     })));
 }
@@ -277,12 +284,13 @@ export async function _route(rawMessage: WebhookMessage,
 
 export default async function deepiksBot(message: WebhookMessage,
                                          botParams: BotParams,
-                                         respondFn: RespondFn)
+                                         respondFn: RespondFn,
+                                         channelData?: ChannelData)
 {
     console.log('deepiksBot');
     if (await _isMessageInDB(message)) {
         console.log(`Message is already in the db. It won't be processed.`)
         return;
     }
-    await _route(message, botParams, respondFn);
+    await _route(message, botParams, respondFn, channelData);
 };

@@ -13,6 +13,7 @@ const styles = {
         homeContactForm: require('./style-1/home-contact-form.scss'),
         accountPage: require('./style-1/account-page.scss'),
         messagesPage: require('./style-1/messages-page.scss'),
+        notificationsPage: require('./style-1/notifications-page.scss'),
         webChatPage: require('./style-1/web-chat-page.scss'),
         conversations: require('./style-1/conversations.scss'),
         messages: require('./style-1/messages.scss'),

@@ -40,3 +40,7 @@ export async function fetchWebChatSessionToken(jwtIdToken?: string)
 export async function sendEmail(contactFormData: ContactFormData) {
     return await fetchjp('/api/send-email', { contactFormData })
 }
+
+export async function sendNotification(jwtIdToken: string, botId: string, message: string) {
+    return await fetchjp('/api/send-notification', { jwtIdToken, botId, message });
+}

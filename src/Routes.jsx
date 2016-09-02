@@ -10,6 +10,7 @@ import AccountPage from './components/account-page/AccountPage.jsx';
 import MessagesPage from './components/messages-page/MessagesPage.jsx';
 import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 import WebChatPage from './components/web-chat-page/WebChatPage.jsx';
+import NotificationsPage from './components/notifications-page/NotificationsPage.jsx';
 import TermsOfUse from './components/termsOfUse/TermsOfUse.jsx'
 import Privacy from './components/privacy/Privacy.jsx'
 
@@ -24,6 +25,7 @@ const Routes = (
             <Route path="/account" component={AccountPage} />
             <Route path="/messages(/:conversationId)" component={MessagesPage} />
             <Route path="/add-bot" component={AddBotPage} />
+            <Route path="/notifications" component={NotificationsPage} />
         </Route>
     </Route>
 );

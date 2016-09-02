@@ -2,31 +2,23 @@
 
 import express from 'express';
 import render from './server-side-rendering.js';
-import sparkWebhook from './spark-webhook/spark-webhook.js';
-import messengerWebhook from './messenger-webhook/messenger-webhook.js';
-import msWebhook from './ms-webhook/ms-webhook.js';
 import bridge from './client-server-bridge.js';
+import { webhooks } from './channels/all-channels.js';
 
 const routes = express.Router();
 
-const serviceHandlers = {
-    spark: sparkWebhook,
-    messenger: messengerWebhook,
-    ms: msWebhook,
-};
-
-routes.use('/webhooks/:publisherId/:botId/:sourceService', (req, res, next) => {
-    const { sourceService } = req.params;
+routes.use('/webhooks/:publisherId/:botId/:channel', (req, res, next) => {
+    const { channel } = req.params;
     console.log('server-routes');
-    console.log('sourceService: ', sourceService);
+    console.log('channel: ', channel);
     console.log('publisherId: ', req.params.publisherId);
     console.log('botId: ', req.params.botId);
 
-    if (!serviceHandlers[sourceService]) {
-        return next(new Error(`Unknown source service: ${sourceService}`));
+    if (!webhooks[channel]) {
+        return next(new Error(`Unknown channel: ${channel}`));
     }
 
-    serviceHandlers[sourceService](req, res);
+    webhooks[channel](req, res);
 });
 
 routes.use('/api', bridge);

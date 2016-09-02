@@ -228,7 +228,7 @@ let AccountPage = React.createClass({
             );
 
         }
-        const emptyBotList = (botGridUi && botGridUi.length === 0) &&
+        const emptyBotList = (botsState && botsState.bots && botsState.bots.length === 0) &&
             <h2 className={ss.emptyBotList}>You don't have any bots yet</h2>;
 
         return (

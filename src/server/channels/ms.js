@@ -3,7 +3,7 @@
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import { callbackToPromise } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
-import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
+import type { WebhookMessage, ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
 import builder from 'botbuilder';
 import type { Request, Response } from 'express';
@@ -13,7 +13,7 @@ import _ from 'lodash';
 
 const MAX_MS_CAROUSEL_ITEM_COUNT = 5;
 
-async function handle(req: Request, res: Response) {
+async function handleWebhookRequest(req: Request, res: Response) {
     console.log('ms-webhook raw req.body: ', inspect(req.body, {depth:null}));
     console.log('ms-webhook raw req.headers: ', inspect(req.headers, {depth:null}));
     const { publisherId, botId } = req.params;
@@ -90,7 +90,8 @@ async function processMessage(session, authRequest, botParams) {
         id: m.address.id,
         senderId: m.user.id,
         senderName,
-        source: m.address.channelId,
+        senderIsBot: false,
+        channel: m.address.channelId,
         text: m.text,
         fetchCardImages,
     };
@@ -104,8 +105,10 @@ async function processMessage(session, authRequest, botParams) {
             session.sendTyping();
         }
     }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
-    await deepiksBot(message, botParams, m => {
-        responses.push(respondFn(session, m));
+    await deepiksBot(message, botParams, x => {
+        responses.push(send(m.address.channelId, x, y => session.send(y), session));
+    }, {
+        address: _.omit(m.address, 'user'),
     });
 
     console.log('ms-webhook: await all responses');
@@ -124,21 +127,25 @@ async function getBinary(requestFn, url) {
     return r.body;
 }
 
-async function respondFn(session, message: ResponseMessage) {
-    console.log('respondFn: ', message);
+export async function send(channel: string, message: ResponseMessage,
+                           sendHelperFn: Function, session?: Object)
+{
+    console.log('send: ', message);
 
     if (typeof message === 'string' && message.trim()) {
-        session.send(message);
+        let resMessage = new builder.Message()
+        resMessage.text(message);
+        sendHelperFn(resMessage);
+        return;
     }
     if (typeof message !== 'object') {
-        console.log('respondFn: message is not an object');
+        console.log('send: message is not an object');
         return;
     }
 
     const { text, cards, actions } = message;
 
-    const { channelId } = session.message.address;
-    const supportsHeroCard = ['telegram', 'skype', 'slack'].includes(channelId);
+    const supportsHeroCard = ['telegram', 'skype', 'slack'].includes(channel);
 
     if (cards) {
         let resAttachments = [];
@@ -170,7 +177,7 @@ async function respondFn(session, message: ResponseMessage) {
             });
         }
 
-        console.log('respondFn: resAttachments: ', resAttachments);
+        console.log('send: resAttachments: ', resAttachments);
 
         let resMessage = new builder.Message(session)
         if (resAttachments.length > 1 &&
@@ -182,7 +189,7 @@ async function respondFn(session, message: ResponseMessage) {
 
         if (resAttachments.length > 0) {
             resMessage.attachments(resAttachments);
-            session.send(resMessage);
+            sendHelperFn(resMessage);
         }
     }
 
@@ -203,17 +210,35 @@ async function respondFn(session, message: ResponseMessage) {
         let resMessage = new builder.Message(session)
         resText && resMessage.text(resText);
         resAttachments.length > 0 && resMessage.attachments(resAttachments);
-        session.send(resMessage);
+        sendHelperFn(resMessage);
     }
 }
 
-export default function(req: Request, res: Response) {
+export async function sendCold(botParams: BotParams, channelData: ChannelData,
+                               message: ResponseMessage)
+{
+    console.log('sendCold: channelData: ', channelData, ', message: ', message);
+
+    const connector = new builder.ChatConnector({
+        appId: botParams.settings.microsoftAppId,
+        appPassword: botParams.settings.microsoftAppPassword,
+    });
+
+    const ubot = new builder.UniversalBot(connector);
+    const sendHelper = m => {
+        ubot.send(m.address(channelData.address));
+    };
+
+    await send(channelData.address.channelId, message, sendHelper);
+}
+
+export function webhook(req: Request, res: Response) {
     if (req.method !== 'POST') {
         res.send();
         return;
     }
 
-    handle(req, res)
+    handleWebhookRequest(req, res)
         .then(() => {
             console.log('Success');
         })

@@ -46,7 +46,7 @@ function createSampleWebhookMessage(): WebhookMessage {
         creationTimestamp: Date.now(),
         id: uuid.v1(),
         senderId: 'somesenderid',
-        source: 'somesource',
+        channel: 'somechan',
         text: 'sometext',
         files: ['fileA', 'fileB'],
     };

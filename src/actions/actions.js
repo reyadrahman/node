@@ -509,3 +509,10 @@ export function fetchWebChatSessionToken() {
         dispatch(setWebChatSessionToken(token));
     }
 }
+
+export function sendNotification(botId, message) {
+    return async function(dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        await bridge.sendNotification(session.getIdToken().getJwtToken(), botId, message);
+    }
+}
