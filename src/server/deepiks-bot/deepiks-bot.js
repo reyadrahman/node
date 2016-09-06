@@ -228,7 +228,8 @@ export async function _updateConversationTable(message: DBMessage,
             publisherId,
             conversationId,
         },
-        UpdateExpression: 'SET lastMessage = :lastMessage, lastMessageTimestamp = :lmt, channel = :chan, botId = :botId, channelData = :cd',
+        UpdateExpression: 'SET lastMessage = :lastMessage, lastMessageTimestamp = :lmt, channel = :chan, botId = :botId ' +
+            (channelData ? ', channelData = :cd' : 'REMOVE channelData'),
         ExpressionAttributeValues: {
             ':lastMessage': aws.dynamoCleanUpObj(message),
             ':lmt': message.creationTimestamp,
