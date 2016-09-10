@@ -3,6 +3,8 @@
 .env
 .test.env
 .tmp
+*.sublime-project
+*.sublime-workspace
 npm-debug.log
 node_modules
 /dist

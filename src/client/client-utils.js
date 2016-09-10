@@ -1,6 +1,6 @@
 /* @flow */
 
-import _ from 'lodash';
+import pick from 'lodash/pick';
 import type { ClientEnv } from '../misc/types.js';
 import { createUrlQuery } from '../misc/utils.js';
 
@@ -38,7 +38,7 @@ export function exitFullscreen() {
     }
 }
 
-export const ENV: ClientEnv = _.pick(process.env, [
+export const ENV: ClientEnv = pick(process.env, [
     'NODE_ENV',
     'PLATFORM',
     'AWS_REGION',
@@ -53,7 +53,6 @@ export const ENV: ClientEnv = _.pick(process.env, [
     'IDENTITY_POOL_AUTH_ROLE_ARN',
     'USER_POOL_ID',
     'USER_POOL_APP_CLIENT_ID',
-    'PUBLIC_PATH',
     'PUBLIC_URL',
     'DEBUG',
 ]);

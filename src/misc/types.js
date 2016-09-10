@@ -150,12 +150,12 @@ export type ClientEnv = {
     DB_TABLE_AI_ACTIONS: string,
     DB_TABLE_USER_PREFS: string,
     S3_BUCKET_NAME: string,
-    PUBLIC_PATH: string,
     PUBLIC_URL: string,
     USER_POOL_ID: string,
     USER_POOL_APP_CLIENT_ID: string,
     IDENTITY_POOL_ID: string,
     IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
     IDENTITY_POOL_AUTH_ROLE_ARN: string,
+    SYSTEM_LANG?: string,
     DEBUG?: string,
 };

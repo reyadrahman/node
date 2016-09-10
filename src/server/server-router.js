@@ -1,11 +1,13 @@
 /* @flow */
 
 import express from 'express';
-import render from './server-side-rendering.js';
+import * as renderer from './server-side-renderer.js';
 import bridge from './client-server-bridge.js';
 import { webhooks } from './channels/all-channels.js';
 
 const routes = express.Router();
+
+routes.use('/api', bridge);
 
 routes.use('/webhooks/:publisherId/:botId/:channel', (req, res, next) => {
     const { channel } = req.params;
@@ -21,21 +23,13 @@ routes.use('/webhooks/:publisherId/:botId/:channel', (req, res, next) => {
     webhooks[channel](req, res);
 });
 
-routes.use('/api', bridge);
+routes.get('/admin', (req, res, next) => {
+});
 
-routes.use('/', (req, res, next) => {
-    console.log('server-router: /');
-
-    //res.render('index');
-
-    console.log('server-router: cookies: ', req.cookies);
-
-    if (req.cookies.loggedIn) {
-        render(false, req, res, next);
-    } else {
-        render(true, req, res, next);
-    }
-
+routes.get('/', (req, res, next) => {
+    const doc = renderer.renderLandingPageApp(req, res, next);
+    console.log('route / sending: ', doc);
+    res.send(doc);
 });
 
 

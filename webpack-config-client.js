@@ -1,7 +1,10 @@
-const path = require('path');
-const webpack = require('webpack');
 const { createBaseConfig, createPublicPathAndUrl } = require('./webpack-config-base.js');
+const path = require('path');
 const _ = require('lodash');
+const webpack = require('webpack');
+const CommonsChunkPlugin = require("webpack/lib/optimize/CommonsChunkPlugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 
 /*
     Environment Variables:
@@ -23,14 +26,12 @@ module.exports = Object.assign({}, baseConfig, {
     resolve: Object.assign({}, baseConfig.resolve, {
         extensions: ['', '.web.js', '.js', '.jsx']
     }),
-    entry: [
-        'babel-polyfill',
-        'whatwg-fetch',
-        './src/client/client.js'
-    ],
+    entry: {
+        landingPage: ['babel-polyfill', 'whatwg-fetch', './src/client/landing-page-entry.js'],
+    },
     output: {
         path: path.join(__dirname, 'dist-client'),
-        filename: 'bundle.js',
+        filename: '[name].js',
         publicPath: PUBLIC_URL,
     },
     node: {
@@ -45,6 +46,28 @@ module.exports = Object.assign({}, baseConfig, {
         ].concat(baseConfig.module.noParse || [])
     }),
     plugins: [
-        new webpack.DefinePlugin({ 'process.env': 'window.process.env' }),
+        new webpack.DefinePlugin({
+            'process.env': 'window.process.env',
+        }),
+        new CopyWebpackPlugin([
+            {
+                from: 'src/public',
+            }
+        ], {
+            ignore: [
+                '.*', // ignore dot files
+            ],
+        }),
+        new webpack.ProvidePlugin({
+            // Make $ and jQuery available in every module without writing require("jquery")
+            $: "jquery",
+            jQuery: "jquery",
+        }),
+        new CommonsChunkPlugin("commons.js"),
     ].concat(baseConfig.plugins),
+
+    externals: {
+        // require("jquery") is external and available on the global var jQuery
+        "jquery": "jQuery",
+    }
 });

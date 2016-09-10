@@ -4,7 +4,8 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const _ = require('lodash');
 const autoprefixer = require('autoprefixer');
 
-const extractCSS = new ExtractTextPlugin('style.css');
+
+const extractCSS = new ExtractTextPlugin('[name].css');
 
 function createPublicPathAndUrl(cdn, timestamp) {
     if (cdn && !timestamp) {
@@ -50,27 +51,38 @@ function createBaseConfig(NODE_ENV) {
                     loader: 'babel',
                     include: path.join(__dirname, 'src'),
                     query: {
-                        presets: ['es2015', 'react', 'stage-0'],
+                        presets: [
+                            'stage-0',
+                        ],
+
                         plugins: [
                             'transform-flow-strip-types',
-                        ].concat(DEV ? [
-                            // 'rewire',
-                            // [
-                            //     "react-transform", {
-                            //         "transforms": [
-                            //             {
-                            //                 "transform": "react-transform-hmr",
-                            //                 // if you use React Native, pass "react-native" instead:
-                            //                 "imports": ["react"],
-                            //                 // this is important for Webpack HMR:
-                            //                 "locals": ["module"]
-                            //             }
-                            //         ]
-                            //         // note: you can put more transforms into array
-                            //         // this is just one of them!
-                            //     }
-                            // ]
-                        ] : [])
+                            // the rest is the same as babel-preset-es2015
+                            // expect for the transform-es2015-modules-commonjs's allowTopLevelThis
+                            ['transform-es2015-template-literals', { loose: false, spec: false }],
+                            'transform-es2015-literals',
+                            'transform-es2015-function-name',
+                            ['transform-es2015-arrow-functions', { spec: false }],
+                            'transform-es2015-block-scoped-functions',
+                            ['transform-es2015-classes', { loose: false }],
+                            'transform-es2015-object-super',
+                            'transform-es2015-shorthand-properties',
+                            'transform-es2015-duplicate-keys',
+                            ['transform-es2015-computed-properties', { loose: false }],
+                            ['transform-es2015-for-of', { loose: false }],
+                            'transform-es2015-sticky-regex',
+                            'transform-es2015-unicode-regex',
+                            'check-es2015-constants',
+                            ['transform-es2015-spread', { loose: false }],
+                            'transform-es2015-parameters',
+                            ['transform-es2015-destructuring', { loose: false }],
+                            'transform-es2015-block-scoping',
+                            'transform-es2015-typeof-symbol',
+                            // alowTopLevelThis is needed for compatibility with old js files that use
+                            // "this" at the top level instead of "window"
+                            ['transform-es2015-modules-commonjs', { loose: false, allowTopLevelThis: true }],
+                            ['transform-regenerator', { async: false, asyncGenerators: false }]
+                        ],
                     },
                 },
                 {
@@ -78,23 +90,18 @@ function createBaseConfig(NODE_ENV) {
                     loader: "json-loader"
                 },
 
+                // {
+                //     test: /\.scss$/,
+                //     loader: extractCSS.extract([
+                //         'css?importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
+                //         'postcss',
+                //         // 'resolve-url',
+                //         'sass?sourceMap'
+                //     ])
+                // },
                 {
-                    // NOTE scss files use modules but css files don't
-                    test: /\.scss$/,
-                    loader: extractCSS.extract([
-                        'css?modules&importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
-                        'postcss',
-                        // 'resolve-url',
-                        'sass?sourceMap'
-                    ])
-                },
-                {
-                    // NOTE scss files use modules but css files don't
                     test: /\.css$/,
-                    loader: extractCSS.extract([
-                        'css?importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
-                        // 'resolve-url',
-                    ])
+                    loader: ExtractTextPlugin.extract("style-loader", "css-loader"),
                 },
                 {
                     test: /\.(png|jpg|mp4|eot|woff|woff2|ttf|svg)/,

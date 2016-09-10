@@ -6,6 +6,13 @@ import request_ from 'request';
 
 export const request = callbackToPromise(request_);
 
+export function sanitizeAndStringifyObj(obj: Object): string {
+    return JSON.stringify(obj)
+        .replace(/<\/script/g, '<\\/script')
+        .replace(/<!--/g, '<\\!--');
+}
+
+
 export const CONSTANTS = {
     AI_ACTION_CACHE_VALID_TIME_S: 10,
     TYPING_INDICATOR_DELAY_S: 2,

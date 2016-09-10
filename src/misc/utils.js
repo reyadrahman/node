@@ -1,7 +1,5 @@
 /* @flow */
 
-import _ from 'lodash';
-
 export function toStr(obj: any): string {
     return JSON.stringify(obj, null, ' ');
 }
@@ -25,43 +23,6 @@ export function simpleTimeFormat(timeRaw: Date | number | string) {
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
     return `${leftPad(time.getDate(), '0', 2)} ${monthNames[time.getMonth()]}`;
-}
-
-export function createUrlQuery(obj: {[key: string]: any}): string {
-    const euc = encodeURIComponent;
-    // $FlowFixMe
-    return _.map(obj, (v, k) => `${euc(k)}=${euc(v)}`)
-            .join('&');
-}
-
-// TODO remove this
-function customEncodeURIComponent(comp) {
-    // return encodeURIComponent(comp).replace(/\./g, '%2E').replace(/%20/g, '.');
-    return encodeURIComponent(comp);
-}
-
-// TODO remove this
-function customDecodeURIComponent(comp) {
-    // return decodeURIComponent(comp.replace(/\./g, '%20'));
-    return decodeURIComponent(comp);
-}
-
-// TODO remove this
-export function searchQueryToPath(query: { searchPhrase: string, filterPhotographer: string }) {
-    const comps = ['search', query.searchPhrase, query.filterPhotographer];
-    const path = comps.filter(x => x).map(customEncodeURIComponent).join('/');
-    return `/${path}`;
-}
-
-// TODO remove this
-export function pathToSearchQuery(path: string) {
-    if (!path) return null;
-    const split = path.split('/').filter(x => x);
-    if (split.length < 1) return null;
-    return {
-        searchPhrase: customDecodeURIComponent(split[0] || ''),
-        filterPhotographer: customDecodeURIComponent(split[1] || ''),
-    };
 }
 
 export function destructureS3Url(url: string): ?{ bucket: string, key: string} {

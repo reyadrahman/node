@@ -48,8 +48,6 @@ app.use(compression());
 
 // view engine setup
 debug('views directory: ', path.join(ROOT_DIR, 'src/views'));
-app.set('views', path.join(ROOT_DIR, 'src/views'));
-// app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
