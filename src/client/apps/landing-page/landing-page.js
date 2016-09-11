@@ -56,14 +56,8 @@ export default class LandingPage extends App<LandingPageAppProps> {
         </a>
         <div id="collapsingNavbar" class="collapse navbar-toggleable-custom" role="tabpanel" aria-labelledby="collapsingNavbar">
           <ul class="nav navbar-nav pull-xs-right">
-            <li class="nav-item nav-item-toggable active">
-              <a class="nav-link" href="./index.html"><small>NEW</small> Slides <span class="sr-only">(current)</span></a>
-            </li>
             <li class="nav-item nav-item-toggable">
-              <a class="nav-link" href="ui-elements.html">UI Kit</a>
-            </li>
-            <li class="nav-item nav-item-toggable">
-              <a class="nav-link" href="https://github.com/tatygrassini/landio-html" target="_blank">GitHub</a>
+              <a class="nav-link" href="/admin">Admin</a>
             </li>
             <li class="nav-item nav-item-toggable hidden-md-up">
               <form class="navbar-form">
