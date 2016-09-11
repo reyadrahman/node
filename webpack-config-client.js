@@ -27,7 +27,8 @@ module.exports = Object.assign({}, baseConfig, {
         extensions: ['', '.web.js', '.js', '.jsx']
     }),
     entry: {
-        landingPage: ['babel-polyfill', 'whatwg-fetch', './src/client/landing-page-entry.js'],
+        landingPage: ['babel-polyfill', 'whatwg-fetch', './src/client/apps/landing-page/landing-page-entry.js'],
+        admin: ['babel-polyfill', 'whatwg-fetch', './src/client/apps/admin/admin-entry.js'],
     },
     output: {
         path: path.join(__dirname, 'dist-client'),
@@ -51,7 +52,12 @@ module.exports = Object.assign({}, baseConfig, {
         }),
         new CopyWebpackPlugin([
             {
-                from: 'src/public',
+                from: 'src/client/apps/landing-page/public',
+                to: 'landing-page',
+            },
+            {
+                from: 'src/client/apps/admin/public',
+                to: 'admin',
             }
         ], {
             ignore: [

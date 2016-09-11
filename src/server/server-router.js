@@ -23,7 +23,10 @@ routes.use('/webhooks/:publisherId/:botId/:channel', (req, res, next) => {
     webhooks[channel](req, res);
 });
 
-routes.get('/admin', (req, res, next) => {
+routes.use('/admin/', (req, res, next) => {
+    const doc = renderer.renderAdminApp(req, res, next);
+    console.log('route /admin/ sending: ', doc);
+    res.send(doc);
 });
 
 routes.get('/', (req, res, next) => {

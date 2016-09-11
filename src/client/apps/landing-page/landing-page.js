@@ -11,11 +11,11 @@ import initLandio from './landio';
 import type { LandingPageAppProps, Action } from './types.js';
 
 import './landing-page.css';
-import '../../../public/css/landio.css';
+import './public/css/landio.css';
 
 const { PUBLIC_URL } = CLIENT_ENV;
 
-export class LandingPage extends App<LandingPageAppProps> {
+export default class LandingPage extends App<LandingPageAppProps> {
     componentDidMount() {
         initLandio();
     }
@@ -83,12 +83,12 @@ export class LandingPage extends App<LandingPageAppProps> {
             </li>
             <li class="nav-item dropdown hidden-sm-down textselect-off">
               <a class="nav-link dropdown-toggle nav-dropdown-user" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <img src="${PUBLIC_URL}img/face5.jpg" height="40" width="40" alt="Avatar" class="img-circle"> <span class="icon-caret-down"></span>
+                <img src="${PUBLIC_URL}/landing-page/img/face5.jpg" height="40" width="40" alt="Avatar" class="img-circle"> <span class="icon-caret-down"></span>
               </a>
               <div class="dropdown-menu dropdown-menu-right dropdown-menu-user dropdown-menu-animated" aria-labelledby="dropdownMenu2">
                 <div class="media">
                   <div class="media-left">
-                    <img src="${PUBLIC_URL}img/face5.jpg" height="60" width="60" alt="Avatar" class="img-circle">
+                    <img src="${PUBLIC_URL}/landing-page/img/face5.jpg" height="60" width="60" alt="Avatar" class="img-circle">
                   </div>
                   <div class="media-body media-middle">
                     <h5 class="media-heading">Joel Fisher</h5>
@@ -110,7 +110,7 @@ export class LandingPage extends App<LandingPageAppProps> {
         <div id="collapsingMobileUser" class="collapse navbar-toggleable-custom dropdown-menu-custom p-x-1 hidden-md-up" role="tabpanel" aria-labelledby="collapsingMobileUser">
           <div class="media m-t-1">
             <div class="media-left">
-              <img src="${PUBLIC_URL}img/face5.jpg" height="60" width="60" alt="Avatar" class="img-circle">
+              <img src="${PUBLIC_URL}landing-page/img/face5.jpg" height="60" width="60" alt="Avatar" class="img-circle">
             </div>
             <div class="media-body media-middle">
               <h5 class="media-heading">Joel Fisher</h5>
@@ -139,21 +139,21 @@ export class LandingPage extends App<LandingPageAppProps> {
         <li data-target="#landioCarousel" data-slide-to="2"></li>
       </ol>
       <div class="carousel-inner" role="listbox">
-        <div class="carousel-item active" style="background-image: url(${PUBLIC_URL}img/bg-header.jpg);">
+        <div class="carousel-item active" style="background-image: url(${PUBLIC_URL}landing-page/img/bg-header.jpg);">
           <div class="carousel-caption">
             <h1 class="display-3">Bootstrap powered slides.</h1>
             <h2 class="m-b-3 hidden-sm-down"><em>Yay, Slides!</em> Create CTA slides with <a href="index.html" class="jumbolink">Land.io</a>.</h2>
             <a class="btn btn-secondary-outline m-b-2" href="http://tympanus.net/codrops/?p=25217" role="button"><span class="icon-sketch"></span>Sketch included</a>
           </div>
         </div>
-        <div class="carousel-item" style="background-image: url(${PUBLIC_URL}img/bg-header-3.jpg);">
+        <div class="carousel-item" style="background-image: url(${PUBLIC_URL}landing-page/img/bg-header-3.jpg);">
           <div class="carousel-caption">
             <h1 class="display-3">Land.io, open source.</h1>
             <h2 class="m-b-3 hidden-sm-down">Includes <strong>all assests</strong> for easy customization.</h2>
             <a class="btn btn-secondary-outline m-b-2" href="http://tympanus.net/codrops/?p=25217" role="button"><span class="icon-sketch"></span>Sketch included</a>
           </div>
         </div>
-        <div class="carousel-item" style="background-image: url(${PUBLIC_URL}img/bg-header-2.jpg);">
+        <div class="carousel-item" style="background-image: url(${PUBLIC_URL}landing-page/img/bg-header-2.jpg);">
           <div class="carousel-caption">
             <h1 class="display-3">Land.io, blissful innovation.</h1>
             <h2 class="m-b-3 hidden-sm-down">Craft your journey, <em>absolutely free</em>, with <a href="ui-elements.html" class="jumbolink">Land.io UI kit</a>.</h2>
@@ -175,7 +175,7 @@ export class LandingPage extends App<LandingPageAppProps> {
       <div class="container">
         <h3 class="wp wp-1">Build your beautiful UI, the way you want it, with Land.io</h3>
         <p class="lead wp wp-2">Craft memorable, emotive experiences with our range of beautiful UI elements.</p>
-        <img src="${PUBLIC_URL}img/mock.png" alt="iPad mock" class="img-fluid wp wp-3">
+        <img src="${PUBLIC_URL}landing-page/img/mock.png" alt="iPad mock" class="img-fluid wp wp-3">
       </div>
     </section>
 
@@ -224,7 +224,7 @@ export class LandingPage extends App<LandingPageAppProps> {
 
     <section class="section-video bg-inverse text-xs-center wp wp-4">
       <h3 class="sr-only">Video</h3>
-      <video id="demo_video" class="video-js vjs-default-skin vjs-big-play-centered" controls poster="${PUBLIC_URL}img/video-poster.jpg" data-setup='{}'>
+      <video id="demo_video" class="video-js vjs-default-skin vjs-big-play-centered" controls poster="${PUBLIC_URL}landing-page/img/video-poster.jpg" data-setup='{}'>
         <source src="http://vjs.zencdn.net/v/oceans.mp4" type='video/mp4'>
         <source src="http://vjs.zencdn.net/v/oceans.webm" type='video/webm'>
       </video>
@@ -315,46 +315,46 @@ export class LandingPage extends App<LandingPageAppProps> {
           <div class="carousel-inner" role="listbox">
             <div class="carousel-item active">
               <blockquote class="blockquote">
-                <img src="${PUBLIC_URL}img/face1.jpg" height="80" width="80" alt="Avatar" class="img-circle">
+                <img src="${PUBLIC_URL}landing-page/img/face1.jpg" height="80" width="80" alt="Avatar" class="img-circle">
                 <p class="h3">Good design at the front-end suggests that everything is in order at the back-end, whether or not that is the case.</p>
                 <footer>Dmitry Fadeyev</footer>
               </blockquote>
             </div>
             <div class="carousel-item">
               <blockquote class="blockquote">
-                <img src="${PUBLIC_URL}img/face2.jpg" height="80" width="80" alt="Avatar" class="img-circle">
+                <img src="${PUBLIC_URL}landing-page/img/face2.jpg" height="80" width="80" alt="Avatar" class="img-circle">
                 <p class="h3">It’s not about knowing all the gimmicks and photo tricks. If you haven’t got the eye, no program will give it to you.</p>
                 <footer>David Carson</footer>
               </blockquote>
             </div>
             <div class="carousel-item">
               <blockquote class="blockquote">
-                <img src="${PUBLIC_URL}img/face3.jpg" height="80" width="80" alt="Avatar" class="img-circle">
+                <img src="${PUBLIC_URL}landing-page/img/face3.jpg" height="80" width="80" alt="Avatar" class="img-circle">
                 <p class="h3">There’s a point when you’re done simplifying. Otherwise, things get really complicated.</p>
                 <footer>Frank Chimero</footer>
               </blockquote>
             </div>
             <div class="carousel-item">
               <blockquote class="blockquote">
-                <img src="${PUBLIC_URL}img/face4.jpg" height="80" width="80" alt="Avatar" class="img-circle">
+                <img src="${PUBLIC_URL}landing-page/img/face4.jpg" height="80" width="80" alt="Avatar" class="img-circle">
                 <p class="h3">Designing for clients that don’t appreciate the value of design is like buying new tires for a rental car.</p>
                 <footer>Joel Fisher</footer>
               </blockquote>
             </div>
             <div class="carousel-item">
               <blockquote class="blockquote">
-                <img src="${PUBLIC_URL}img/face5.jpg" height="80" width="80" alt="Avatar" class="img-circle">
+                <img src="${PUBLIC_URL}landing-page/img/face5.jpg" height="80" width="80" alt="Avatar" class="img-circle">
                 <p class="h3">Every picture owes more to other pictures painted before than it owes to nature.</p>
                 <footer>E.H. Gombrich</footer>
               </blockquote>
             </div>
           </div>
           <ol class="carousel-indicators">
-            <li class="active"><img src="${PUBLIC_URL}img/face1.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="0" class="img-fluid img-circle"></li>
-            <li><img src="${PUBLIC_URL}img/face2.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="1" class="img-fluid img-circle"></li>
-            <li><img src="${PUBLIC_URL}img/face3.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="2" class="img-fluid img-circle"></li>
-            <li><img src="${PUBLIC_URL}img/face4.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="3" class="img-fluid img-circle"></li>
-            <li><img src="${PUBLIC_URL}img/face5.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="4" class="img-fluid img-circle"></li>
+            <li class="active"><img src="${PUBLIC_URL}landing-page/img/face1.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="0" class="img-fluid img-circle"></li>
+            <li><img src="${PUBLIC_URL}landing-page/img/face2.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="1" class="img-fluid img-circle"></li>
+            <li><img src="${PUBLIC_URL}landing-page/img/face3.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="2" class="img-fluid img-circle"></li>
+            <li><img src="${PUBLIC_URL}landing-page/img/face4.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="3" class="img-fluid img-circle"></li>
+            <li><img src="${PUBLIC_URL}landing-page/img/face5.jpg" alt="Navigation avatar" data-target="#carousel-testimonials" data-slide-to="4" class="img-fluid img-circle"></li>
           </ol>
         </div>
       </div>
@@ -497,12 +497,5 @@ export class LandingPage extends App<LandingPageAppProps> {
   </div>
 `
         );
-    }
-}
-
-export function dispatchAction(props: LandingPageAppProps, action: Action) {
-    // example:
-    if (action.type === 'c/update') {
-        props.stateCursor.$assocIn(['a', 'b', 'c'], action.c);
     }
 }

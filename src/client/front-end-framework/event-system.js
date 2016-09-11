@@ -57,6 +57,7 @@ export default class EventSystem {
         const ids = uniq([ ...idsDup, ...wildCardSubIds ]);
 
         console.log('EventSystem publish: unique ids: ', ids);
+        console.log('EventSystem publish: _subs: ', this._subs);
         ids.forEach(id => {
             this._subs[id].fn(eventData, events);
         });
