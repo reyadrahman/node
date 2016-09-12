@@ -28,8 +28,6 @@ import initSbAdmin2 from './sb-admin-2.js';
 import './public/vendor/bootstrap/css/bootstrap.css';
 //MetisMenu CSS
 import './public/vendor/metisMenu/metisMenu.css';
-// Custom CSS
-import './public/css/sb-admin-2.css';
 // Morris Charts CSS
 import './public/vendor/morrisjs/morris.css';
 // Custom Fonts
@@ -40,6 +38,10 @@ import './public/vendor/datatables/datatables-plugins/dataTables.bootstrap.css';
 import './public/vendor/datatables-responsive/dataTables.responsive.css';
 // Social Buttons CSS
 import './public/vendor/bootstrap-social/bootstrap-social.css';
+
+
+// Custom CSS
+import './less/sb-admin-2.less';
 
 const { PUBLIC_URL } = CLIENT_ENV;
 

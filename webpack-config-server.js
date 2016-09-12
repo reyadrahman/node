@@ -60,6 +60,23 @@ module.exports = Object.assign({}, baseConfig, {
         filename: 'bundle.js',
         publicPath: process.env.PUBLIC_URL,
     },
+    module: Object.assign({}, baseConfig.module, {
+        loaders: [
+            {
+                test: /\.scss$/i,
+                loader: 'null',
+            },
+            {
+                test: /\.less$/i,
+                loader: 'null',
+            },
+
+            {
+                test: /\.css$/,
+                loader: 'null',
+            },
+        ].concat(baseConfig.module.loaders),
+    }),
     externals: nodeModules,
     target: 'node',
     node: {

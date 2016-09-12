@@ -4,6 +4,8 @@ const _ = require('lodash');
 const webpack = require('webpack');
 const CommonsChunkPlugin = require("webpack/lib/optimize/CommonsChunkPlugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const autoprefixer = require('autoprefixer');
 
 
 /*
@@ -20,7 +22,6 @@ _.defaults(process.env, { NODE_ENV: 'production' });
 const { NODE_ENV, CDN, TIMESTAMP } = process.env;
 const { PUBLIC_URL } = createPublicPathAndUrl(CDN, TIMESTAMP);
 const baseConfig = createBaseConfig(NODE_ENV);
-
 
 module.exports = Object.assign({}, baseConfig, {
     resolve: Object.assign({}, baseConfig.resolve, {
@@ -42,6 +43,20 @@ module.exports = Object.assign({}, baseConfig, {
         tls: 'empty'
     },
     module: Object.assign({}, baseConfig.module, {
+        loaders: [
+            {
+                test: /\.scss$/i,
+                loader: ExtractTextPlugin.extract(['css', 'postcss', 'sass'])
+            },
+            {
+                test: /\.less$/i,
+                loader: ExtractTextPlugin.extract(['css', 'postcss', 'less'])
+            },
+            {
+                test: /\.css$/,
+                loader: ExtractTextPlugin.extract(['css', 'postcss']),
+            },
+        ].concat(baseConfig.module.loaders),
         noParse: [
             /node_modules\/json-schema\/lib\/validate\.js/,
         ].concat(baseConfig.module.noParse || [])
@@ -69,11 +84,17 @@ module.exports = Object.assign({}, baseConfig, {
             $: "jquery",
             jQuery: "jquery",
         }),
+        new ExtractTextPlugin('[name].css'),
         new CommonsChunkPlugin("commons.js"),
     ].concat(baseConfig.plugins),
 
     externals: {
         // require("jquery") is external and available on the global var jQuery
         "jquery": "jQuery",
+    },
+    postcss: function() {
+        return [autoprefixer({
+            browsers: ['last 3 version'],
+        })];
     }
 });

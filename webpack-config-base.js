@@ -1,11 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const _ = require('lodash');
-const autoprefixer = require('autoprefixer');
 
-
-const extractCSS = new ExtractTextPlugin('[name].css');
 
 function createPublicPathAndUrl(cdn, timestamp) {
     if (cdn && !timestamp) {
@@ -28,7 +24,6 @@ function createBaseConfig(NODE_ENV) {
             modulesDirectories: ['node_modules', 'external_modules'],
         },
         plugins: [
-            extractCSS,
             //new webpack.HotModuleReplacementPlugin(),
             //new webpack.NoErrorsPlugin()
         ].concat(!DEV ? [
@@ -47,7 +42,7 @@ function createBaseConfig(NODE_ENV) {
         module: {
             loaders: [
                 {
-                    test: /\.jsx?$/,
+                    test: /\.js$/,
                     loader: 'babel',
                     include: path.join(__dirname, 'src'),
                     query: {
@@ -87,21 +82,7 @@ function createBaseConfig(NODE_ENV) {
                 },
                 {
                     test: /\.json$/,
-                    loader: "json-loader"
-                },
-
-                // {
-                //     test: /\.scss$/,
-                //     loader: extractCSS.extract([
-                //         'css?importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
-                //         'postcss',
-                //         // 'resolve-url',
-                //         'sass?sourceMap'
-                //     ])
-                // },
-                {
-                    test: /\.css$/,
-                    loader: ExtractTextPlugin.extract("style-loader", "css-loader"),
+                    loader: 'json-loader',
                 },
                 {
                     test: /\.(png|jpg|mp4|eot|woff|woff2|ttf|svg)/,
@@ -114,11 +95,6 @@ function createBaseConfig(NODE_ENV) {
             ],
             */
         },
-        postcss: function() {
-            return [autoprefixer({
-                browsers: ['last 3 version'],
-            })];
-        }
     };
 };
 
