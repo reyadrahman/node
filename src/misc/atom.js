@@ -18,6 +18,9 @@ export class Atom<T> {
 type PathElem = string | number;
 type Path = Array<PathElem>;
 
+/**
+ * holds a path inside an atom along with some convenient functions
+ */
 export class Cursor<T> {
     atom: Atom<T>;
     path: Path
