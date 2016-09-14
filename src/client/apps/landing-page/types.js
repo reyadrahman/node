@@ -8,16 +8,15 @@ export type Action = $Subtype<{
 }>;
 
 export type LandingPageAppState = {
-    a: {
-        b: {
-            c: string,
-        }
+    currentUser: {
+        signedIn: boolean,
+        attributes: {[key: string]: any},
     }
 };
 
 export type LandingPageAppProps = {
     stateCursor: Cursor<LandingPageAppState>,
     eventSystem: EventSystem,
-    dispatchAction: (action: Action) => void,
+    dispatchAction: (action: Action) => Promise<*>,
 };
 

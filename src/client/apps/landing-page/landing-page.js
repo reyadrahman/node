@@ -4,6 +4,7 @@ import EventSystem from '../../front-end-framework/event-system.js';
 import { Cursor } from '../../../misc/atom.js';
 import App from '../../front-end-framework/app.js';
 import { ENV as CLIENT_ENV } from '../../client-utils.js';
+import * as actions from './actions.js';
 
 // this will import ./landio.js on the server and ./landio.web.js on the client
 import initLandio from './landio';
@@ -16,9 +17,7 @@ import './scss/landio.scss';
 const { PUBLIC_URL } = CLIENT_ENV;
 
 export default class LandingPage extends App<LandingPageAppProps> {
-    componentDidMount() {
-        initLandio();
-    }
+    signInErrorMessageTimeout: any;
 
     getScripts(): string[] {
         return [
@@ -33,11 +32,141 @@ export default class LandingPage extends App<LandingPageAppProps> {
         ];
     }
 
+    componentDidMount() {
+        initLandio();
+
+        $('#signInButton').click(() => this.signIn());
+        // on press enter
+        $('#signInModal input').keypress(e => {
+            if (e.which == 13) {
+                this.signIn();
+                return false;
+            }
+        });
+        $('#signOutButton').click(() => this.signOut());
+        this.props.eventSystem.subscribe(x => this.signInFailed(x), 'signInFailed');
+        this.props.eventSystem.subscribe(x => this.signedOut(), 'signedOut');
+    }
+
+    signIn() {
+        const email = $('#signInInputEmail').val().trim();
+        const password = $('#signInInputPassword').val().trim();
+        if (!email || !password) {
+            this.signInFailed({ errorMessage: 'Please enter your email and password'});
+            return;
+        }
+
+        this.props.dispatchAction(actions.signIn(email, password));
+    }
+
+    signInFailed({ errorMessage }) {
+        clearTimeout(this.signInErrorMessageTimeout);
+        $('#signInErrorMessage').html(`Error: ${errorMessage}`).removeClass('hidden-xs-up');
+        this.signInErrorMessageTimeout = setTimeout(() => {
+            $('#signInErrorMessage').addClass('hidden-xs-up').html(``);
+        }, 5000);
+        // TODO timeout
+    }
+
+    signOut() {
+        this.props.dispatchAction(actions.signOut());
+    }
+
+    signedOut() {
+        $('#signInMenuItem, #profileMenuItem').replaceWith(this.renderSignInOrProfile());
+        $('#signInMenuItemMobile, #profileMenuItemMobile').replaceWith(this.renderSignInOrProfileMobile());
+    }
+
+    renderSignInOrProfile() {
+        const {currentUser: { signedIn, attributes } } = this.props.stateCursor.get();
+
+        if (signedIn) {
+            const { given_name, family_name, email } = attributes;
+            const name = `${given_name || ''} ${family_name || ''}`.trim();
+            return `
+                <li class="nav-item dropdown hidden-sm-down textselect-off" id="profileMenuItem">
+                  <a class="nav-link dropdown-toggle" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    ${name}
+                    <span class="icon-caret-down"></span>
+                  </a>
+                  <div class="dropdown-menu dropdown-menu-right dropdown-menu-user dropdown-menu-animated" aria-labelledby="dropdownMenu2">
+                    <div class="media">
+                      ${
+                          ''
+                          // <div class="media-left">
+                          //   <img src="${require('./img/face5.jpg')}" height="60" width="60" alt="Avatar" class="img-circle">
+                          // </div>
+                      }
+                      <div class="media-body media-middle">
+                        <h5 class="media-heading">${name}</h5>
+                        <h6>${email}</h6>
+                      </div>
+                    </div>
+                    <a href="/admin" class="dropdown-item text-uppercase">Admin</a>
+                    <a href="javascript:void(0)" class="dropdown-item text-uppercase" id="signOutButton">Sign out</a>
+                  </div>
+                </li>
+            `;
+        } else {
+            return `
+                <li class="nav-item nav-item-toggable" id="signInMenuItem">
+                  <a class="nav-link" href="javascript:void(0)" data-toggle="modal" data-target="#signInModal">Sign in</a>
+                </li>
+            `;
+        }
+
+    }
+
+    renderSignInOrProfileMobile() {
+        // TODO
+        return ``;
+
+    }
+
+    renderSignInModal() {
+        return `
+            <div class="modal fade" id="signInModal" tabindex="-1" role="dialog" aria-labelledby="signInModalTitle" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="signInModalTitle">Sign in</h4>
+                  </div>
+                  <div class="modal-body">
+                    <form>
+                      <div class="form-group has-icon-left form-control-email">
+                        <label class="sr-only" for="signInInputEmail">Email address</label>
+                        <input type="email" class="form-control form-control-lg" id="signInInputEmail" placeholder="Email address" autocomplete="off">
+                      </div>
+                      <div class="form-group has-icon-left form-control-password">
+                        <label class="sr-only" for="signInInputPassword">Password</label>
+                        <input type="password" class="form-control form-control-lg" id="signInInputPassword" placeholder="Enter your password" autocomplete="off">
+                      </div>
+                      <div class="alert alert-danger hidden-xs-up" id="signInErrorMessage"></div>
+                    </form>
+                  </div>
+                  <div class="modal-footer">
+                    <button id="signInButton" type="button" class="btn btn-primary">Sign in</button>
+                  </div>
+                </div>
+              </div>
+            </div> 
+        `;
+    }
+
     render() {
-        // const state = this.props.stateCursor.get();
+        const signInOrProfile = this.renderSignInOrProfile();
+        const signInOrProfileMobile = this.renderSignInOrProfileMobile();
+        const signInModal = this.renderSignInModal();
+
+
         return (
 `
   <div id="landio">
+
+    ${signInModal}
 
     <!-- Navigation
     ================================================== -->
@@ -56,70 +185,28 @@ export default class LandingPage extends App<LandingPageAppProps> {
         </a>
         <div id="collapsingNavbar" class="collapse navbar-toggleable-custom" role="tabpanel" aria-labelledby="collapsingNavbar">
           <ul class="nav navbar-nav pull-xs-right">
-            <li class="nav-item nav-item-toggable">
-              <a class="nav-link" href="/admin">Admin</a>
-            </li>
-            <li class="nav-item nav-item-toggable hidden-md-up">
-              <form class="navbar-form">
-                <input class="form-control navbar-search-input" type="text" placeholder="Type your search &amp; hit Enter&hellip;">
-              </form>
-            </li>
-            <li class="navbar-divider hidden-sm-down"></li>
-            <li class="nav-item dropdown nav-dropdown-search hidden-sm-down">
-              <a class="nav-link dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="icon-search"></span>
-              </a>
-              <div class="dropdown-menu dropdown-menu-right dropdown-menu-search" aria-labelledby="dropdownMenu1">
-                <form class="navbar-form">
-                  <input class="form-control navbar-search-input" type="text" placeholder="Type your search &amp; hit Enter&hellip;">
-                </form>
-              </div>
-            </li>
+            ${
+            ''/*
+                <li class="nav-item nav-item-toggable">
+                  <a class="nav-link" href="/admin">Admin</a>
+                </li>
+            */
+            }
             <li class="nav-item dropdown hidden-sm-down textselect-off">
-              <a class="nav-link dropdown-toggle nav-dropdown-user" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <img src="${require('./img/face5.jpg')}" height="40" width="40" alt="Avatar" class="img-circle"> <span class="icon-caret-down"></span>
+              <a class="nav-link dropdown-toggle" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                English
+                <span class="icon-caret-down"></span>
               </a>
               <div class="dropdown-menu dropdown-menu-right dropdown-menu-user dropdown-menu-animated" aria-labelledby="dropdownMenu2">
-                <div class="media">
-                  <div class="media-left">
-                    <img src="${PUBLIC_URL}/landing-page/img/face5.jpg" height="60" width="60" alt="Avatar" class="img-circle">
-                  </div>
-                  <div class="media-body media-middle">
-                    <h5 class="media-heading">Joel Fisher</h5>
-                    <h6>hey@joelfisher.com</h6>
-                  </div>
-                </div>
-                <a href="#" class="dropdown-item text-uppercase">View posts</a>
-                <a href="#" class="dropdown-item text-uppercase">Manage groups</a>
-                <a href="#" class="dropdown-item text-uppercase">Subscription &amp; billing</a>
-                <a href="#" class="dropdown-item text-uppercase text-muted">Log out</a>
-                <a href="#" class="btn-circle has-gradient pull-xs-right">
-                  <span class="sr-only">Edit</span>
-                  <span class="icon-edit"></span>
-                </a>
+                <a href="#" class="dropdown-item text-uppercase">English</a>
+                <a href="#" class="dropdown-item text-uppercase">Français</a>
               </div>
-            </li>
+                </li>
+            <li class="navbar-divider hidden-sm-down"></li>
+            ${signInOrProfile}
           </ul>
         </div>
-        <div id="collapsingMobileUser" class="collapse navbar-toggleable-custom dropdown-menu-custom p-x-1 hidden-md-up" role="tabpanel" aria-labelledby="collapsingMobileUser">
-          <div class="media m-t-1">
-            <div class="media-left">
-              <img src="${require('./img/face5.jpg')}" height="60" width="60" alt="Avatar" class="img-circle">
-            </div>
-            <div class="media-body media-middle">
-              <h5 class="media-heading">Joel Fisher</h5>
-              <h6>hey@joelfisher.com</h6>
-            </div>
-          </div>
-          <a href="#" class="dropdown-item text-uppercase">View posts</a>
-          <a href="#" class="dropdown-item text-uppercase">Manage groups</a>
-          <a href="#" class="dropdown-item text-uppercase">Subscription &amp; billing</a>
-          <a href="#" class="dropdown-item text-uppercase text-muted">Log out</a>
-          <a href="#" class="btn-circle has-gradient pull-xs-right m-b-1">
-            <span class="sr-only">Edit</span>
-            <span class="icon-edit"></span>
-          </a>
-        </div>
+        ${signInOrProfileMobile}
       </div>
     </nav>
 

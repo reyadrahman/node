@@ -8,15 +8,16 @@ export type Action = $Subtype<{
 }>;
 
 export type AdminAppState = {
-    location: {
-        path: string,
-    },
+    currentUser: {
+        signedIn: boolean,
+        attributes: {[key: string]: any},
+    }
 };
 
 export type AdminAppProps = {
     stateCursor: Cursor<AdminAppState>,
     eventSystem: EventSystem,
-    dispatchAction: (action: Action) => void,
+    dispatchAction: (action: Action) => Promise<*>,
     history: any, // TODO type of history?
 };
 

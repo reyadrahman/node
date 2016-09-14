@@ -14,6 +14,7 @@ export type Routes = [[string, Class<Component<AdminAppProps>>]];
 
 export default class Router extends Component<AdminAppProps> {
     routes: Routes;
+    historyUnlisten: ?any;
 
     constructor(props: AdminAppProps, routes: Routes) {
         super(props);
@@ -21,8 +22,7 @@ export default class Router extends Component<AdminAppProps> {
     }
 
     route(e) {
-        const pathname = e.target.pathname;
-        this.props.dispatchAction(actions.changeLocation(pathname));
+        this.props.history.push(e.target.pathname);
         e.preventDefault();
     }
 
@@ -30,12 +30,14 @@ export default class Router extends Component<AdminAppProps> {
         super.componentDidMount();
         console.log('router: installing click handler');
         $(document).on('click', '.dynamic-link', e => this.route(e));
-        this.props.eventSystem.subscribe(() => this.rerender(), 'locationChanged');
+        this.historyUnlisten =
+            this.props.history.listen(location => this.rerender());
     }
 
     componentWillUnmount() {
         super.componentWillUnmount();
         $(document).off('click', '.dynamic-link');
+        this.historyUnlisten && this.historyUnlisten();
     }
 
 
@@ -46,18 +48,18 @@ export default class Router extends Component<AdminAppProps> {
     }
 
     render() {
-        const state = this.props.stateCursor.get();
         this.unmountChildren();
 
+        const { pathname } = this.props.history.location;
         const selectedRoute = this.routes.find(x => {
             if (x[0] instanceof RegExp) {
-                return state.path.match(x[0]);
+                return pathname.match(x[0]);
             } else {
-                return state.path === x[0];
+                return pathname === x[0];
             }
         });
         if (!selectedRoute) {
-            throw new Error(`Router: unknown route ${state.path}`);
+            throw new Error(`Router: unknown route ${pathname}`);
         }
         console.log('this.routes', this.routes);
         const child = this.addChild(new selectedRoute[1](this.props));

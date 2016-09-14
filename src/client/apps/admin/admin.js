@@ -46,15 +46,6 @@ import './less/sb-admin-2.less';
 const { PUBLIC_URL } = CLIENT_ENV;
 
 export default class Admin extends App<AdminAppProps> {
-    // constructor() {
-    // }
-
-    componentDidMount() {
-        console.log('Admin: componentDidMount()');
-        super.componentDidMount();
-        initSbAdmin2();
-    }
-
     getScripts(): string[] {
         return [
             `${PUBLIC_URL}admin/vendor/jquery/jquery.min.js`,
@@ -88,15 +79,21 @@ export default class Admin extends App<AdminAppProps> {
         ];
     }
 
+    componentDidMount() {
+        console.log('Admin: componentDidMount()');
+        super.componentDidMount();
+        initSbAdmin2();
+    }
+
     render() {
-        // const state = this.props.stateCursor.get();
+        const state = this.props.stateCursor.get();
+        if (!state.currentUser.signedIn) {
+            return '';
+        }
 
         this.unmountChildren();
 
-        const router = this.addChild(new Router({
-            ...this.props,
-            stateCursor: new Cursor(this.props.stateCursor, 'location'),
-        }, [
+        const router = this.addChild(new Router(this.props, [
             [/^\/admin\/?$/, DashboardPage],
             [/^\/admin\/flot\/?$/, FlotPage],
             [/^\/admin\/morris\/?$/, MorrisPage],

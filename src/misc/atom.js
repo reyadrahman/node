@@ -5,13 +5,14 @@ import ice from 'icepick';
 
 /**
  * Atom holds a reference to a value. The reference can change,
- * but the value itself is assumed to be immutable.
+ * but the value itself is assumed to be immutable and will be frozen
+ * in development mode
  */
 export class Atom<T> {
     value: T;
 
     constructor(value: T) {
-        this.value = value;
+        this.value = ice.freeze(value);
     }
 }
 
