@@ -45,7 +45,7 @@ export default class LandingPage extends App<LandingPageAppProps> {
     <nav class="navbar navbar-dark bg-inverse bg-inverse-custom navbar-fixed-top">
       <div class="container">
         <a class="navbar-brand" href="#">
-          <span class="icon-logo"></span>
+          <span><img src="${require('./img/white-logo.png')}" height="45" alt="logo" class="img-responsive"/></span>
           <span class="sr-only">Land.io</span>
         </a>
         <a class="navbar-toggler hidden-md-up pull-xs-right" data-toggle="collapse" href="#collapsingNavbar" aria-expanded="false" aria-controls="collapsingNavbar">
@@ -126,39 +126,10 @@ export default class LandingPage extends App<LandingPageAppProps> {
     <!-- Hero Section
     ================================================== -->
 
-    <header id="landioCarousel" class="carousel carousel-header slide bg-inverse" data-ride="carousel" data-interval="0" role="banner">
-      <ol class="carousel-indicators">
-        <li data-target="#landioCarousel" data-slide-to="0" class="active"></li>
-        <li data-target="#landioCarousel" data-slide-to="1"></li>
-        <li data-target="#landioCarousel" data-slide-to="2"></li>
-      </ol>
-      <div class="carousel-inner" role="listbox">
-        <div class="carousel-item active" style="background-image: url(${require('./img/bg-header.jpg')});">
-          <div class="carousel-caption">
-            <h1 class="display-3">Bootstrap powered slides.</h1>
-            <h2 class="m-b-3 hidden-sm-down"><em>Yay, Slides!</em> Create CTA slides with <a href="index.html" class="jumbolink">Land.io</a>.</h2>
-            <a class="btn btn-secondary-outline m-b-2" href="http://tympanus.net/codrops/?p=25217" role="button"><span class="icon-sketch"></span>Sketch included</a>
-          </div>
-        </div>
-        <div class="carousel-item" style="background-image: url(${require('./img/bg-header-3.jpg')});">
-          <div class="carousel-caption">
-            <h1 class="display-3">Land.io, open source.</h1>
-            <h2 class="m-b-3 hidden-sm-down">Includes <strong>all assests</strong> for easy customization.</h2>
-            <a class="btn btn-secondary-outline m-b-2" href="http://tympanus.net/codrops/?p=25217" role="button"><span class="icon-sketch"></span>Sketch included</a>
-          </div>
-        </div>
-        <div class="carousel-item" style="background-image: url(${require('./img/bg-header-2.jpg')});">
-          <div class="carousel-caption">
-            <h1 class="display-3">Land.io, blissful innovation.</h1>
-            <h2 class="m-b-3 hidden-sm-down">Craft your journey, <em>absolutely free</em>, with <a href="ui-elements.html" class="jumbolink">Land.io UI kit</a>.</h2>
-            <a class="btn btn-secondary-outline m-b-2" href="http://tympanus.net/codrops/?p=25217" role="button"><span class="icon-sketch"></span>Sketch included</a>
-          </div>
-        </div>
-        <ul class="nav nav-inline social-share">
-          <li class="nav-item"><a class="nav-link" href="#"><span class="icon-twitter"></span> 1024</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><span class="icon-facebook"></span> 562</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><span class="icon-linkedin"></span> 356</a></li>
-        </ul>
+    <header class="jumbotron bg-inverse text-xs-center center-vertically" role="banner">
+      <div class="container">
+        <h1 class="display-3">Deepiks</h1>
+        <h2 class="m-b-3">Subtitle where you can <em>emphasize</em> words.</h2>
       </div>
     </header>
 
