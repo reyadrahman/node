@@ -5,6 +5,7 @@ console.log('======== AWS CLIENT...');
 import { ENV } from '../client/client-utils.js';
 import { callbackToPromise } from '../misc/utils.js';
 import _ from 'lodash';
+import Cookies from 'js-cookie';
 
 const { IDENTITY_POOL_ID, USER_POOL_ID, AWS_REGION,
         IDENTITY_POOL_UNAUTH_ROLE_ARN, IDENTITY_POOL_AUTH_ROLE_ARN,
@@ -166,6 +167,7 @@ export function signIn(email, password) {
                 updateCredentials(session)
                     .then(() => {
                         resolve(session);
+                        Cookies.set('signedIn', 'yes', { expires: 1000, path: '/' });
                     })
                     .catch(error => {
                         reject(error);
@@ -301,6 +303,7 @@ export async function signOut() {
             IdentityPoolId: IDENTITY_POOL_ID,
             // RoleArn: IDENTITY_POOL_UNAUTH_ROLE_ARN,
         });
+        Cookies.remove('signedIn', { path: '/' });
     } catch(error) {}
 }
 

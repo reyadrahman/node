@@ -2,7 +2,6 @@
 
 import * as aws from '../../../aws/aws.js';
 import type { LandingPageAppProps, Action } from './types.js';
-import Cookies from 'js-cookie';
 
 export function signIn(email: string, password: string) {
     return { type: 'signIn', email, password };
@@ -11,7 +10,6 @@ export function signIn(email: string, password: string) {
 async function handleSignIn(props, action) {
     try {
         await aws.signIn(action.email, action.password);
-        Cookies.set('signedIn', 'yes', { expires: 1000, path: '/' });
         // const attributes = await aws.getCurrentUserAttributes();
         // props.stateCursor.$assocIn('currentUser', {
         //     signedIn: true,

@@ -24,14 +24,24 @@ async function main() {
     }
 
     const rootComp = new Admin(props);
-
     const compStr = rootComp.render();
-    console.group();
-    console.log('root comp string: ', compStr);
-    console.groupEnd();
-    const appRootElem = document.getElementById('app-root');
-    appRootElem.innerHTML = compStr;
-
+    const appRootElem = $('#app-root');
+    const appRootOldStr = $('#app-root').html();
+    if (appRootOldStr.trim()) {
+        if (appRootOldStr !== compStr) {
+            console.group();
+            console.error('Client-side rendered element and server-side ' +
+                          'rendered elements are not the same. Will be ' +
+                          'overwritten by the client-side value');
+            console.error('Server-side rendered element: ', appRootOldStr);
+            console.error('Client-side rendered element: ', compStr);
+            console.groupEnd();
+            appRootElem.html(compStr);
+        }
+    } else {
+        appRootElem.html(compStr);
+    }
+    
     rootComp.componentDidMount();
 }
 
