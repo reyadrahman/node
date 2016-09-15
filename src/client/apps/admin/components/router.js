@@ -1,27 +1,39 @@
 /* @flow */
 
-// import EventSystem from '../../front-end-framework/event-system.js';
-// import { Cursor } from '../../../misc/atom.js';
 import Component from '../../../front-end-framework/component.js';
-// import { ENV as CLIENT_ENV } from '../../../client-utils.js';
 import * as actions from '../actions.js';
+import Route from 'route-parser';
 
 import type { AdminAppProps } from '../types.js';
 
-// const { PUBLIC_URL } = CLIENT_ENV;
+export type StringRoutes = [[string, Class<Component<AdminAppProps>>]];
+type Routes = [[Route, Class<Component<AdminAppProps>>]];
 
-export type Routes = [[string, Class<Component<AdminAppProps>>]];
+/**
+ * The constructor takes 2 args: props and routes.
+ * Each route, specifies the route path * (see 'route-parser' package
+ * for details on syntax) and the component that will be drawn when the
+ * route matches.
 
+ * When instantiating the matched route, it passes props (received from
+ * parent) and params (result of 'route-parser' match) to the constructor.
+ * 
+ * Its render method will call the render method of the matched route.
+ *
+ * It also sets up click handlers on <a> tags with '.dynamic-link' class,
+ * to prevent them from refreshing the page and instead dynamically re-route
+ * the components.
+ */
 export default class Router extends Component<AdminAppProps> {
     routes: Routes;
     historyUnlisten: ?any;
 
-    constructor(props: AdminAppProps, routes: Routes) {
+    constructor(props: AdminAppProps, routes: StringRoutes) {
         super(props);
-        this.routes = routes;
+        this.routes = routes.map(([r, c]) => [new Route(r), c]);
     }
 
-    route(e) {
+    route(e: any) {
         this.props.history.push(e.target.pathname);
         e.preventDefault();
     }
@@ -40,30 +52,57 @@ export default class Router extends Component<AdminAppProps> {
         this.historyUnlisten && this.historyUnlisten();
     }
 
+    matchRoute() {
+        const { pathname } = this.props.history.location;
+        const selectedRoute = this.routes.find(([route]) => route.match(pathname));
+        if (!selectedRoute) {
+            console.error(`Router: unknown route ${pathname}`);
+            return null;
+        }
+        const params = selectedRoute[0].match(pathname);
+        return { params, component: selectedRoute[1] };
+    }
 
     rerender() {
         console.log('Router: rerender');
-        $('.router-selected-child').replaceWith(this.render());
-        super.componentDidMount();
+        const route = this.matchRoute();
+
+        if (!route) {
+            $('.router-selected-child').replaceWith(this.notFound());
+            return;
+        }
+
+        const { params, component } = route;
+
+
+        const oldChild = this.getChild('child');
+        if (oldChild.constructor === component && oldChild.routeParamsChanged) {
+            oldChild.routeParamsChanged(params);
+        } else {
+            const compStr = this.renderHelper(params, component);
+            $('.router-selected-child').replaceWith(compStr);
+            this.getChild('child').componentDidMount();
+        }
+    }
+
+    notFound() {
+        // TODO redirect somewhere else
+        return '<div class="router-selected-child" id="page-wrapper"><h1>Page not found</h1></div>'
+    }
+
+    renderHelper(params: Object, component: Class<Component<AdminAppProps>>) {
+        console.log('Router renderHelper: params: ', params, ', component: ', component);
+        this.unmountChild('child');
+        const child = this.addChild(new component(this.props, params), 'child');
+
+        return child.render({ className: 'router-selected-child'});
     }
 
     render() {
-        this.unmountChildren();
-
-        const { pathname } = this.props.history.location;
-        const selectedRoute = this.routes.find(x => {
-            if (x[0] instanceof RegExp) {
-                return pathname.match(x[0]);
-            } else {
-                return pathname === x[0];
-            }
-        });
-        if (!selectedRoute) {
-            throw new Error(`Router: unknown route ${pathname}`);
+        const route = this.matchRoute();
+        if (!route) {
+            return this.notFound();
         }
-        console.log('this.routes', this.routes);
-        const child = this.addChild(new selectedRoute[1](this.props));
-
-        return child.render({ className: 'router-selected-child'});
+        return this.renderHelper(route.params, route.component);
     }
 }

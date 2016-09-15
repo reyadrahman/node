@@ -54,7 +54,9 @@ class AutoRefreshCredential extends AWS.CognitoIdentityCredentials {
         console.log('AutoRefreshCredential refresh');
         this.getSession()
             .then(session => {
+                console.group();
                 console.log('AutoRefreshCredential got session: ', session);
+                console.groupEnd();
                 this.params.Logins[`cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`] =
                     session.getIdToken().getJwtToken();
                 console.log('AutoRefreshCredential params: ', this.params);
@@ -226,7 +228,9 @@ function updateCredentials(session) {
 }
 
 export async function getSession(cognitoUser) {
+    console.group();
     console.log('getSession cognitoUser: ', JSON.stringify(cognitoUser, null, ' '));
+    console.groupEnd();
     // if session is valid
     if (cognitoUser.getSignInUserSession() != null && cognitoUser.getSignInUserSession().isValid()) {
         console.log('getSession: signInUserSession is already valid');

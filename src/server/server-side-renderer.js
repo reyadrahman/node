@@ -41,6 +41,14 @@ export function renderAdminApp(req: Request, res: Response, next: Function): str
         currentUser: {
             signedIn: req.cookies.signedIn,
             attributes: {}, // will be filled by the client
+            conversationsState: {
+                conversations: [],
+                hasFetched: false,
+            },
+            messagesState: {
+                messages: {},
+                hasFetched: false,
+            }
         }
     };
     const props = {
@@ -50,9 +58,7 @@ export function renderAdminApp(req: Request, res: Response, next: Function): str
         // mock dispatchAction
         dispatchAction: action => Promise.resolve(),
         // mock history
-        history: createMemoryHistory({
-            initialEntries: [ req.baseUrl + req.path ],
-        }),
+        history: createMemoryHistory(),
     };
 
     const app = new Admin(props);

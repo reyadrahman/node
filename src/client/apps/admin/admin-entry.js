@@ -26,7 +26,9 @@ async function main() {
     const rootComp = new Admin(props);
 
     const compStr = rootComp.render();
+    console.group();
     console.log('root comp string: ', compStr);
+    console.groupEnd();
     const appRootElem = document.getElementById('app-root');
     appRootElem.innerHTML = compStr;
 

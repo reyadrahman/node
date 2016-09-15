@@ -19,6 +19,7 @@ export default class Layout extends Component<AdminAppProps> {
     }
 
     render(renderProps?: RenderProps) {
+        console.log('Layout render, renderProps: ', renderProps);
         if (!renderProps) {
             throw new Error('Layout: missing renderProps');
         }
@@ -261,6 +262,9 @@ export default class Layout extends Component<AdminAppProps> {
                                         </span>
                                     </div>
                                     <!-- /input-group -->
+                                </li>
+                                <li>
+                                    <a class="dynamic-link" href="/admin/messages"><i class="fa fa-envelope fa-fw"></i> Messages</a>
                                 </li>
                                 <li>
                                     <a class="dynamic-link" href="/admin"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>

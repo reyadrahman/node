@@ -19,6 +19,7 @@ import GridPage from './components/grid-page.js';
 import BlankPage from './components/blank-page.js';
 import Layout from './components/layout.js';
 import Router from './components/router.js';
+import MessagesPage from './components/messages-page.js';
 
 import type { AdminAppProps, Action } from './types.js';
 
@@ -94,18 +95,19 @@ export default class Admin extends App<AdminAppProps> {
         this.unmountChildren();
 
         const router = this.addChild(new Router(this.props, [
-            [/^\/admin\/?$/, DashboardPage],
-            [/^\/admin\/flot\/?$/, FlotPage],
-            [/^\/admin\/morris\/?$/, MorrisPage],
-            [/^\/admin\/tables\/?$/, TablesPage],
-            [/^\/admin\/forms\/?$/, FormsPage],
-            [/^\/admin\/panels-wells\/?$/, PanelWellsPage],
-            [/^\/admin\/buttons\/?$/, ButtonsPage],
-            [/^\/admin\/notifications\/?$/, NotificationsPage],
-            [/^\/admin\/typography\/?$/, TypographyPage],
-            [/^\/admin\/icons\/?$/, IconsPage],
-            [/^\/admin\/grid\/?$/, GridPage],
-            [/^\/admin\/blank\/?$/, BlankPage],
+            ['/admin', DashboardPage],
+            ['/admin/messages(/:conversationId)', MessagesPage],
+            ['/admin/flot', FlotPage],
+            ['/admin/morris', MorrisPage],
+            ['/admin/tables', TablesPage],
+            ['/admin/forms', FormsPage],
+            ['/admin/panels-wells', PanelWellsPage],
+            ['/admin/buttons', ButtonsPage],
+            ['/admin/notifications', NotificationsPage],
+            ['/admin/typography', TypographyPage],
+            ['/admin/icons', IconsPage],
+            ['/admin/grid', GridPage],
+            ['/admin/blank', BlankPage],
         ]), 'router');
 
         const layout = this.addChild(new Layout(this.props), 'layout');

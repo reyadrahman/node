@@ -30,7 +30,9 @@ export default class Component<Props> {
     }
 
     addChild(component: Component<Props>, name?: string = '') {
-        this.children.push({ name, component });
+        console.log('Component addChild: this: ', this, ', component: ', component);
+        this.children = ice.push(this.children, { name, component });
+        // this.children = [{name, component}];
         return component;
     }
 

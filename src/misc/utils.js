@@ -1,5 +1,7 @@
 /* @flow */
 
+import map from 'lodash/map';
+
 export function toStr(obj: any): string {
     return JSON.stringify(obj, null, ' ');
 }
@@ -23,6 +25,13 @@ export function simpleTimeFormat(timeRaw: Date | number | string) {
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
     return `${leftPad(time.getDate(), '0', 2)} ${monthNames[time.getMonth()]}`;
+}
+
+export function createUrlQuery(obj: {[key: string]: any}): string {
+    const euc = encodeURIComponent;
+    // $FlowFixMe
+    return map(obj, (v, k) => `${euc(k)}=${euc(v)}`)
+           .join('&');
 }
 
 export function destructureS3Url(url: string): ?{ bucket: string, key: string} {

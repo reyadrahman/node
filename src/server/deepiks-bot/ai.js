@@ -2,8 +2,8 @@
 
 import * as aws from '../../aws/aws.js';
 import type { DBMessage, ResponseMessage, BotParams, ActionRequest,
-              ActionResponse, UserPrefs } from '../../misc/types.js';
-import { ENV, request, allEntityValues } from '../server-utils.js';
+              ActionResponse, UserPrefs, WitData } from '../../misc/types.js';
+import { ENV, request } from '../server-utils.js';
 import { toStr, catchPromise, callbackToPromise } from '../../misc/utils.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
@@ -11,12 +11,6 @@ import URL from 'url';
 import uuid from 'node-uuid';
 
 const { DB_TABLE_CONVERSATIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME } = ENV;
-
-type WitData = {
-    context: Object,
-    sessionId: string,
-    lastActionPrefix?: string,
-};
 
 type ActionRequestIncomplete = {
     sessionId: string,
