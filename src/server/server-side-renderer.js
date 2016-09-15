@@ -97,9 +97,7 @@ function render(app: App<*>, shouldRender, req, res, appState): string {
                 ${styleSheetsStr}
             </head>
             <body>
-                <div id="app-root">
-                    ${appStr}
-                </div>
+                <div id="app-root">${appStr}</div>
                 <script type="application/json" id="envVars">
                     ${envVarsStr}
                 </script>

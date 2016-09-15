@@ -13,7 +13,9 @@ const autoprefixer = require('autoprefixer');
     process.env takes precedence. Then .env file and finally the default values.
     We don't build the environment variables into webpack's output using
     DefinePlugin. All environment variables will be injected into the client
-    by the server at run time
+    by the server at run time except for process.env.NODE_ENV.
+    process.env.NODE_ENV is special because the UglifyJsPlugin can use it to eliminate
+    a lot of dead code.
 */
 require('dotenv').config({
     silent: true,
@@ -63,6 +65,7 @@ module.exports = Object.assign({}, baseConfig, {
     }),
     plugins: [
         new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
             'process.env': 'window.process.env',
         }),
         new CopyWebpackPlugin([

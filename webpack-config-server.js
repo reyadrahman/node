@@ -20,6 +20,10 @@ fs.readdirSync('node_modules')
 /*
     Environment Variables:
     process.env takes precedence. Then .env file and finally the default values.
+    We insert all environment variable into __ENV_VARS__ which will then
+    be read by the server and assigned to process.env. Except for
+    process.env.NODE_ENV which will be hard coded because UglifyJsPlugin
+    uses it to eliminate dead-code.
 */
 
 const dotEnv = require('dotenv').config({
@@ -84,6 +88,9 @@ module.exports = Object.assign({}, baseConfig, {
         __filename: false,
     },
     plugins: [
-        new webpack.DefinePlugin({ '__ENV_VARS__': JSON.stringify(defs) }),
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+            '__ENV_VARS__': JSON.stringify(defs),
+        }),
     ].concat(baseConfig.plugins),
 });
