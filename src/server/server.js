@@ -4,14 +4,10 @@ console.log('PLATFORM: ', process.env.PLATFORM);
 console.log('NODE_ENV: ', process.env.NODE_ENV);
 console.log('PORT: ', process.env.PORT);
 
-// {
-//     const DEV = process.env.NODE_ENV === 'development';
-//
-//     if (DEV) {
-//         console.log('registering source-map-support');
-//         require('source-map-support').install();
-//     }
-// }
+if (process.env.NODE_ENV === 'development') {
+    console.log('registering source-map-support');
+    require('source-map-support').install();
+}
 
 import express from 'express';
 import path from 'path';
@@ -38,9 +34,9 @@ debug(`running server in ${DEV ? 'development' : 'production'} mode`);
 const app = express();
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
 });
 
 // TODO don't do compression in node.js. Let a reverse proxy take care of compression
@@ -73,7 +69,6 @@ app.use(function(req, res, next) {
 });
 
 // error handlers
-
 
 app.use(function(err, req, res, next) {
     debug(err);

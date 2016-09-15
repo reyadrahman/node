@@ -25,6 +25,8 @@ const { NODE_ENV, CDN, TIMESTAMP } = process.env;
 const { PUBLIC_URL } = createPublicPathAndUrl(CDN, TIMESTAMP);
 const baseConfig = createBaseConfig(NODE_ENV);
 
+const DEV = NODE_ENV === 'development';
+
 module.exports = Object.assign({}, baseConfig, {
     resolve: Object.assign({}, baseConfig.resolve, {
         extensions: ['', '.web.js', '.js', '.jsx']
@@ -48,15 +50,21 @@ module.exports = Object.assign({}, baseConfig, {
         loaders: [
             {
                 test: /\.scss$/i,
-                loader: ExtractTextPlugin.extract(['css', 'postcss', 'sass'])
+                loader: DEV
+                    ? ExtractTextPlugin.extract(['css?sourceMap', 'postcss', 'sass?sourceMap'])
+                    : ExtractTextPlugin.extract(['css', 'postcss', 'sass']),
             },
             {
                 test: /\.less$/i,
-                loader: ExtractTextPlugin.extract(['css', 'postcss', 'less'])
+                loader: DEV
+                    ? ExtractTextPlugin.extract(['css?sourceMap', 'postcss', 'less?sourceMap'])
+                    : ExtractTextPlugin.extract(['css', 'postcss', 'less']),
             },
             {
                 test: /\.css$/,
-                loader: ExtractTextPlugin.extract(['css', 'postcss']),
+                loader: DEV
+                    ? ExtractTextPlugin.extract(['css?sourceMap', 'postcss?sourceMap=inline'])
+                    : ExtractTextPlugin.extract(['css', 'postcss']),
             },
         ].concat(baseConfig.module.loaders),
         noParse: [
