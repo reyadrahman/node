@@ -3,23 +3,32 @@ import { appState as initAppState } from '../../preamble.js';
 import Admin from './admin.js';
 import EventSystem from '../../front-end-framework/event-system.js';
 import { Cursor } from '../../../misc/atom.js';
-import { dispatchAction } from './actions.js';
+import { dispatchAction, initUserFromCache } from './actions.js';
+import * as actions from './actions.js';
 import ice from 'icepick';
 import { createBrowserHistory } from 'history';
 
 
-function main() {
+async function main() {
     const props = {
-        stateCursor: new Cursor(ice.freeze(initAppState)),
+        stateCursor: new Cursor(initAppState),
         eventSystem: new EventSystem(),
         dispatchAction: action => dispatchAction(props, action),
         history: createBrowserHistory(),
     };
 
+    try {
+        await props.dispatchAction(initUserFromCache());
+    } catch(error) {
+        window.location = '/';
+    }
+
     const rootComp = new Admin(props);
 
     const compStr = rootComp.render();
+    console.group();
     console.log('root comp string: ', compStr);
+    console.groupEnd();
     const appRootElem = document.getElementById('app-root');
     appRootElem.innerHTML = compStr;
 

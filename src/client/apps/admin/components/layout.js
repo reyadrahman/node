@@ -1,20 +1,25 @@
 /* @flow */
 
-// import EventSystem from '../../front-end-framework/event-system.js';
-// import { Cursor } from '../../../misc/atom.js';
 import Component from '../../../front-end-framework/app.js';
-// import { ENV as CLIENT_ENV } from '../../client-utils.js';
+import * as actions from '../actions';
 
 import type { AdminAppProps, Action } from '../types.js';
-
-// const { PUBLIC_URL } = CLIENT_ENV;
 
 type RenderProps = {
     contentComponent: Component<AdminAppProps>;
 };
 
 export default class Layout extends Component<AdminAppProps> {
+    componentDidMount() {
+        $('#signOutButton').click(() => this.signOut());
+    }
+
+    signOut() {
+        this.props.dispatchAction(actions.signOut());
+    }
+
     render(renderProps?: RenderProps) {
+        console.log('Layout render, renderProps: ', renderProps);
         if (!renderProps) {
             throw new Error('Layout: missing renderProps');
         }
@@ -232,12 +237,10 @@ export default class Layout extends Component<AdminAppProps> {
                                 <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
                             </a>
                             <ul class="dropdown-menu dropdown-user">
-                                <li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>
-                                </li>
-                                <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
+                                <li><a class="dynamic-link" href="#"><i class="fa fa-user fa-fw"></i> Account</a>
                                 </li>
                                 <li class="divider"></li>
-                                <li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                                <li><a href="javascript:void(0)" id="signOutButton"><i class="fa fa-sign-out fa-fw"></i> Sign out</a>
                                 </li>
                             </ul>
                             <!-- /.dropdown-user -->
@@ -259,6 +262,9 @@ export default class Layout extends Component<AdminAppProps> {
                                         </span>
                                     </div>
                                     <!-- /input-group -->
+                                </li>
+                                <li>
+                                    <a class="dynamic-link" href="/admin/messages"><i class="fa fa-envelope fa-fw"></i> Messages</a>
                                 </li>
                                 <li>
                                     <a class="dynamic-link" href="/admin"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>

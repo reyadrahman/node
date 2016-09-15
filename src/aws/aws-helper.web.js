@@ -54,7 +54,9 @@ class AutoRefreshCredential extends AWS.CognitoIdentityCredentials {
         console.log('AutoRefreshCredential refresh');
         this.getSession()
             .then(session => {
+                console.group();
                 console.log('AutoRefreshCredential got session: ', session);
+                console.groupEnd();
                 this.params.Logins[`cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`] =
                     session.getIdToken().getJwtToken();
                 console.log('AutoRefreshCredential params: ', this.params);
@@ -91,7 +93,7 @@ var poolData = {
 var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 
 
-export function signup(data) {
+export function signUp(data) {
     return new Promise((resolve, reject) => {
         let attributeList = [];
         let dataEmail = {
@@ -144,7 +146,7 @@ export function verifyRegistration(username, code) {
     });
 }
 
-export function signin({email, password}) {
+export function signIn(email, password) {
     return new Promise((resolve, reject) => {
         let authenticationData = {
             Username: email,
@@ -226,7 +228,9 @@ function updateCredentials(session) {
 }
 
 export async function getSession(cognitoUser) {
+    console.group();
     console.log('getSession cognitoUser: ', JSON.stringify(cognitoUser, null, ' '));
+    console.groupEnd();
     // if session is valid
     if (cognitoUser.getSignInUserSession() != null && cognitoUser.getSignInUserSession().isValid()) {
         console.log('getSession: signInUserSession is already valid');
@@ -281,29 +285,23 @@ export async function getCurrentUser() {
     return cognitoUser;
 }
 
-export function getCurrentUserAttributes() {
-    return getCurrentUser().then(cognitoUser => {
-        return new Promise((resolve, reject) => {
-            cognitoUser.getUserAttributes(function(err, res) {
-                if (err) {
-                    return reject(err);
-                }
-                console.log('getCurrentUserAttributes: ', res);
-                console.log('getCurrentUserAttributes map: ', res.map(x => [x.getName(), x.getValue()]));
-                console.log('getCurrentUserAttributes fromPairs: ', _.fromPairs(res.map(x => [x.getName(), x.getValue()])));
-                resolve(_.fromPairs(res.map(x => [x.getName(), x.getValue()])));
-            });
-        });
-    });
+export async function getCurrentUserAttributes() {
+    const cognitoUser = await getCurrentUser();
+    const getAttrs = callbackToPromise(cognitoUser.getUserAttributes, cognitoUser);
+    const res = await getAttrs();
+    console.log('getCurrentUserAttributes: ', res);
+    return _.fromPairs(res.map(x => [ x.getName(), x.getValue() ]));
 }
 
-export async function signout() {
-    const cognitoUser = await getCurrentUser();
-    cognitoUser.signOut();
-    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-        IdentityPoolId: IDENTITY_POOL_ID,
-        // RoleArn: IDENTITY_POOL_UNAUTH_ROLE_ARN,
-    });
+export async function signOut() {
+    try {
+        const cognitoUser = await getCurrentUser();
+        cognitoUser.signOut();
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: IDENTITY_POOL_ID,
+            // RoleArn: IDENTITY_POOL_UNAUTH_ROLE_ARN,
+        });
+    } catch(error) {}
 }
 
 export async function s3GetSignedUrl(operation, params) {

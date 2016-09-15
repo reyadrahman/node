@@ -1,5 +1,22 @@
 /* @flow */
 
+export type Conversation = {
+    botId: string,
+    channel: string,
+    conversationId: string,
+    lastMessage: DBMessage,
+    lastMessageTimestamp: number,
+    publisherId: string,
+    witData: WitData
+};
+
+export type WitData = {
+    context: Object,
+    sessionId: string,
+    lastActionPrefix?: string,
+};
+
+
 export type MessageAction = {
     text: string,
     postback?: string,

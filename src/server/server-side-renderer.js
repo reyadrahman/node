@@ -18,38 +18,54 @@ const routes = express.Router();
 const { PUBLIC_URL } = CLIENT_ENV;
 
 export function renderLandingPageApp(req: Request, res: Response, next: Function): string {
+    const state = {
+        currentUser: {
+            signedIn: req.cookies.signedIn,
+            attributes: {}, // will be filled by the client
+        }
+    };
     const props = {
-        stateCursor: new Cursor(ice.freeze({
-            // example state:
-            a: { b: { c: 'booooo' } },
-        })),
+        stateCursor: new Cursor(state),
         // TODO use a mock EventSystem
         eventSystem: new EventSystem(),
-        dispatchAction: action => {},
+        // mock dispatchAction
+        dispatchAction: action => Promise.resolve(),
     };
 
     const app = new LandingPage(props);
-    return render(app, props.stateCursor.get(), true, req, res);
+    return render(app, !req.cookies.signedIn, req, res, props.stateCursor.get());
 }
 
 export function renderAdminApp(req: Request, res: Response, next: Function): string {
-    const props = {
-        stateCursor: new Cursor(ice.freeze({
-            location: {
-                path: req.baseUrl + req.path,
+    const state = {
+        currentUser: {
+            signedIn: req.cookies.signedIn,
+            attributes: {}, // will be filled by the client
+            conversationsState: {
+                conversations: [],
+                hasFetched: false,
+            },
+            messagesState: {
+                messages: {},
+                hasFetched: false,
             }
-        })),
+        }
+    };
+    const props = {
+        stateCursor: new Cursor(state),
         // TODO use a mock EventSystem
         eventSystem: new EventSystem(),
-        dispatchAction: action => {},
+        // mock dispatchAction
+        dispatchAction: action => Promise.resolve(),
+        // mock history
         history: createMemoryHistory(),
     };
 
     const app = new Admin(props);
-    return render(app, props.stateCursor.get(), false, req, res);
+    return render(app, false, req, res, props.stateCursor.get());
 }
 
-function render(app: App<*>, appState, shouldRender, req, res): string {
+function render(app: App<*>, shouldRender, req, res, appState): string {
 
     const systemLang = req.acceptsLanguages(languages);
     console.log('render: systemLang: ', systemLang);
@@ -60,19 +76,15 @@ function render(app: App<*>, appState, shouldRender, req, res): string {
         SYSTEM_LANG: systemLang,
     };
     const envVarsStr = sanitizeAndStringifyObj(envVars);
-
     const appStateStr = sanitizeAndStringifyObj(appState);
-
     const styleSheets = app.getStyleSheets();
     const styleSheetsStr = styleSheets.map(
         x => `<link rel="stylesheet" type="text/css" href="${x}" />`
     ).join('\n');
-
     const scripts = app.getScripts();
     const scriptsStr = scripts.map(
         x => `<script src="${x}"></script>`
     ).join('\n');
-
     const title = app.getTitle();
     const appStr = shouldRender ? app.render() : '';
 

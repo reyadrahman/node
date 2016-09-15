@@ -16,6 +16,7 @@ type RenderProps = {
 
 export default class DashboardPage extends Component<AdminAppProps> {
     componentDidMount() {
+        console.log('DashboardPage componentDidMount');
         super.componentDidMount();
         initMorrisData();
     }

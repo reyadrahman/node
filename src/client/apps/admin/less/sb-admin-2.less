@@ -3,8 +3,8 @@
 
 // Global Styles
 
-body {
-    background-color: @gray-lightest;
+html, body, #app-root, #wrapper {
+    height: 100%;
 }
 
 // Wrappers
@@ -15,22 +15,38 @@ body {
 
 #page-wrapper {
     padding: 0 15px;
-    min-height: 568px;
     background-color: white;
+    position: absolute; 
+    left: 0;
+    right: 0;
+    top: 51px;
+    bottom: 0;
 }
 
 @media(min-width:768px) {
     #page-wrapper {
-        position: inherit;
         margin: 0 0 0 250px;
         padding: 0 30px;
         border-left: 1px solid darken(@gray-lightest, 6.5%);
+
     }
 }
 
 // Navigation
 
 // --Topbar
+
+.navbar {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+.navbar-header {
+    z-index: 10;
+    position: relative; 
+}
 
 .navbar-top-links {
     margin-right: 0;
@@ -103,6 +119,9 @@ body {
     padding: 15px;
 }
 
+.sidebar ul li:first-child {
+    border-top: 1px solid darken(@gray-lightest, 6.5%);
+}
 .sidebar ul li {
     border-bottom: 1px solid darken(@gray-lightest, 6.5%);
     a {
@@ -143,6 +162,20 @@ body {
         position: absolute;
         width: 250px;
         margin-top: 51px;
+        // workaround a bug in less
+        height: ~"calc(100vh - 51px)";
+        overflow-y: scroll;
+
+/*
+        z-index: 1;
+        padding-top: 51px;
+        position: fixed;
+        width: 250px;
+        top: 0;
+        bottom: 0; 
+        left: 0;
+        background-color: @gray-lightest;
+*/
     }
 
     .navbar-top-links .dropdown-messages,
