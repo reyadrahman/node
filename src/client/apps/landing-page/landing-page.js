@@ -192,16 +192,6 @@ export default class LandingPage extends App<LandingPageAppProps> {
                 </li>
             */
             }
-            <li class="nav-item dropdown hidden-sm-down textselect-off">
-              <a class="nav-link dropdown-toggle" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                English
-                <span class="icon-caret-down"></span>
-              </a>
-              <div class="dropdown-menu dropdown-menu-right dropdown-menu-user dropdown-menu-animated" aria-labelledby="dropdownMenu2">
-                <a href="#" class="dropdown-item text-uppercase">English</a>
-                <a href="#" class="dropdown-item text-uppercase">Français</a>
-              </div>
-                </li>
             <li class="navbar-divider hidden-sm-down"></li>
             ${signInOrProfile}
           </ul>
