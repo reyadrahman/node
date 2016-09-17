@@ -81,6 +81,7 @@ export const ENV: ClientEnv = pick(process.env, [
     'DB_TABLE_MESSAGES',
     'DB_TABLE_AI_ACTIONS',
     'DB_TABLE_USER_PREFS',
+    'DB_TABLE_PUBLISHER_SETTINGS',
     'S3_BUCKET_NAME',
     'IDENTITY_POOL_ID',
     'IDENTITY_POOL_UNAUTH_ROLE_ARN',

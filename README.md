@@ -21,6 +21,7 @@ DB_TABLE_CONVERSATIONS=
 DB_TABLE_MESSAGES=
 DB_TABLE_AI_ACTIONS=
 DB_TABLE_USER_PREFS=
+DB_TABLE_PUBLISHER_SETTINGS=,
 S3_BUCKET_NAME=
 IDENTITY_POOL_ID=
 IDENTITY_POOL_UNAUTH_ROLE_ARN=
@@ -30,6 +31,7 @@ USER_POOL_APP_CLIENT_ID=
 WIZARD_BOT_WEB_CHAT_SECRET=
 CONTACT_EMAIL=
 OWN_BASE_URL=
+CALL_SERVER_LAMBDA_SECRET=
 CDN=
 PORT=
 ```
@@ -39,6 +41,8 @@ PORT=
 `NODE_ENV` can be `production` (default) or `development`.
 
 `OWN_BASE_URL` is the full address of your server (e.g. https://deepiks.io) and is used to, for example, set up webhooks automatically.
+
+`CALL_SERVER_LAMBDA_SECRET` should be a random string that matches the secret defined in the lambda which calls the server for regular updates. This lambda should call this server at `https://YOUR_DOMAIN/run-periodic-tasks`
 
 ### .test.env file or environment variables in console
 This is mostly the same as `.env` but only used for running the tests (see below). So pick different names for the database tables and s3 buckets as they will be modified. `.test.env` needs the following variables in addition to those of `.env`:

@@ -1,7 +1,7 @@
 /* @flow */
 
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import { callbackToPromise } from '../../misc/utils.js';
+import { callbackToPromise, waitForAll } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
@@ -112,7 +112,7 @@ async function processMessage(session, authRequest, botParams) {
     });
 
     console.log('ms-webhook: await all responses');
-    await Promise.all(responses);
+    await waitForAll(responses);
 };
 
 async function getBinary(requestFn, url) {

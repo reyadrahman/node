@@ -6,6 +6,14 @@ export function toStr(obj: any): string {
     return JSON.stringify(obj, null, ' ');
 }
 
+/**
+ * splitOmitWhitespace(' , a ,, ', ',') will return ['a']
+ * @return {[type]} [description]
+ */
+export function splitOmitWhitespace(str: string, sep: string): string {
+    return str.split(sep).map(x => x.trim()).filter(Boolean);
+}
+
 export function leftPad(x: string | number, pad: string, n: number): string {
     const str = String(x);
     return pad.repeat(Math.max(0, n - str.length)) + str;
@@ -39,6 +47,25 @@ export function destructureS3Url(url: string): ?{ bucket: string, key: string} {
               url.match(/https:\/\/s3\.amazonaws.com\/(.*?)\/(.*)/);
     if (!res) return null;
     return { bucket: decodeURIComponent(res[1]), key: decodeURIComponent(res[2]) };
+}
+
+/**
+ * This is like Promise.all except it never rejects. It returns
+ * an array of {v: <VALUE>, e: <ERROR>}
+ */
+export async function waitForAll(promises: Promise<*>[]): Promise<*> {
+    return await Promise.all(promises.map(x => x.then(
+        v => ({v}),
+        e => {
+            console.error(e);
+            return {e};
+        }
+    )));
+}
+
+export async function waitForAllOmitErrors(promises: Promise<*>[]): Promise<*> {
+    const ret = await waitForAll(promises);
+    return ret.filter(x => !x.e).map(x => x.v);
 }
 
 export function callbackToPromise(f: Function, context?: Object) {

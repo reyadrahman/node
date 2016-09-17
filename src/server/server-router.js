@@ -4,6 +4,7 @@ import express from 'express';
 import * as renderer from './server-side-renderer.js';
 import bridge from './client-server-bridge.js';
 import { webhooks } from './channels/all-channels.js';
+import { feedsPeriodicUpdate } from './periodic-tasks.js';
 
 const routes = express.Router();
 
@@ -21,6 +22,10 @@ routes.use('/webhooks/:publisherId/:botId/:channel', (req, res, next) => {
     }
 
     webhooks[channel](req, res);
+});
+
+routes.post('/run-periodic-tasks', (req, res, next) => {
+    feedsPeriodicUpdate(req, res);
 });
 
 routes.use('/admin/', (req, res, next) => {

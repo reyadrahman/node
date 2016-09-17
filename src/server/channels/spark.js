@@ -3,7 +3,7 @@
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import { request } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
-import { toStr } from '../../misc/utils.js';
+import { toStr, waitForAll } from '../../misc/utils.js';
 import * as aws from '../../aws/aws.js';
 import URL from 'url';
 import ciscospark from 'ciscospark';
@@ -108,7 +108,7 @@ async function handleWebhookRequest(req: Request, res: Response) {
         responses.push(send(botParams, roomId, m))
     });
 
-    await Promise.all(responses);
+    await waitForAll(responses);
 }
 
 // roomId is the same as conversationId

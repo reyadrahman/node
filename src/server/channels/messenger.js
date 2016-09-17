@@ -1,7 +1,7 @@
 /* @flow */
 
 import { request, ENV, CONSTANTS } from '../server-utils.js';
-import { toStr } from '../../misc/utils.js';
+import { toStr, waitForAll } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
@@ -182,7 +182,7 @@ async function receivedMessage(entry: MessengerReqEntry,
         responses.push(send(botParams, pageId_senderId, m));
     });
 
-    await Promise.all(responses);
+    await waitForAll(responses);
 }
 
 export async function send(botParams: BotParams, conversationId: string,

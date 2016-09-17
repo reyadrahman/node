@@ -142,6 +142,7 @@ export type ServerEnv = {
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
     DB_TABLE_USER_PREFS: string,
+    DB_TABLE_PUBLISHER_SETTINGS: string,
     S3_BUCKET_NAME: string,
     PUBLIC_PATH: string,
     PUBLIC_URL: string,
@@ -154,6 +155,7 @@ export type ServerEnv = {
     CONTACT_EMAIL: string,
     PORT: string,
     OWN_BASE_URL: string,
+    CALL_SERVER_LAMBDA_SECRET: string,
     CDN?: string,
     DEBUG?: string,
 };
@@ -166,6 +168,7 @@ export type ClientEnv = {
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
     DB_TABLE_USER_PREFS: string,
+    DB_TABLE_PUBLISHER_SETTINGS: string,
     S3_BUCKET_NAME: string,
     PUBLIC_URL: string,
     USER_POOL_ID: string,

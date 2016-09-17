@@ -4,6 +4,7 @@ import * as spark from './spark.js';
 import * as messenger from './messenger.js';
 import * as ms from './ms.js';
 import * as aws from '../../aws/aws.js';
+import { waitForAll } from '../../misc/utils.js';
 import type { ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import { ENV } from '../server-utils.js';
 import { toStr } from '../../misc/utils.js';
@@ -35,7 +36,7 @@ export async function send(botParams: BotParams, conversationId: string,
     throw new Error(`send: unsupported channel ${channel}`);
 }
 
-export async function sendToMany(botParams: BotParams, message: ResponseMessage, categories: string[]) {
+export async function sendToMany(botParams: BotParams, message: ResponseMessage, categories?: string[]) {
     console.log('sendAll: botParams: ', botParams, ', message: ', message, ', categories: ', categories);
     // TODO paging
     const qres = await aws.dynamoQuery({
@@ -50,13 +51,15 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
         },
     });
 
+    console.log('sendToMany, got qres');
+
     if (qres.Count === 0) {
         console.log('sendAll: no conversation found')
         return;
     }
 
     let qItems = qres.Items;
-    if (!_.isEmpty(categories)) {
+    if (categories && categories.length > 0) {
         const categoriesLC = categories.map(x => x.toLowerCase());
         const inCategories = x => categoriesLC.find(y => y.toLowerCase);
         qItems = qItems.filter(
@@ -66,7 +69,7 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
 
     console.log('sendAll: sending to (showing first 10): ', toStr(qItems.slice(0, 10)));
 
-    const sendAllP = await Promise.all(qItems.map(
+    await waitForAll(qItems.map(
         x => send(botParams, x.conversationId, x.channel, message, x.channelData)
     ));
 

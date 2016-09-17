@@ -76,7 +76,7 @@ function createBaseConfig(NODE_ENV) {
                             // alowTopLevelThis is needed for compatibility with old js files that use
                             // "this" at the top level instead of "window"
                             ['transform-es2015-modules-commonjs', { loose: false, allowTopLevelThis: true }],
-                            'transform-regenerator'
+                            ['transform-regenerator', { async: false, asyncGenerators: false }],
                         ],
                     },
                 },
