@@ -13,7 +13,7 @@ import './plugins/jquery.waypoints.js';
 import './plugins/jquery.placeholder.js';
 
 // // Video JS
-import 'expose?videojs!./plugins/video.js';
+// import 'expose?videojs!./plugins/video.js';
 
 // // Vimeo modal autoplay
 import './plugins/jquery.vimeo.api.js';
@@ -104,27 +104,27 @@ function navSearch() {
   });
 }
 
-function htmlVideo() {
-  videojs("demo_video", {
-    controlBar: {
-      timeDivider: false,
-      fullscreenToggle: false,
-      playToggle: false,
-      remainingTimeDisplay: false
-    },
-    "height": "auto",
-    "width": "auto"
-  }).ready(function() {
-    var myPlayer = this;
-    var aspectRatio = 5 / 12; // aspect ratio 12:5 (video frame 960x400)
-    function resizeVideoJS() {
-        var width = document.getElementById(myPlayer.id()).parentElement.offsetWidth;
-        myPlayer.width(width).height(width * aspectRatio);
-    }
-    resizeVideoJS();
-    window.onresize = resizeVideoJS;
-  });
-}
+// function htmlVideo() {
+//   videojs("demo_video", {
+//     controlBar: {
+//       timeDivider: false,
+//       fullscreenToggle: false,
+//       playToggle: false,
+//       remainingTimeDisplay: false
+//     },
+//     "height": "auto",
+//     "width": "auto"
+//   }).ready(function() {
+//     var myPlayer = this;
+//     var aspectRatio = 5 / 12; // aspect ratio 12:5 (video frame 960x400)
+//     function resizeVideoJS() {
+//         var width = document.getElementById(myPlayer.id()).parentElement.offsetWidth;
+//         myPlayer.width(width).height(width * aspectRatio);
+//     }
+//     resizeVideoJS();
+//     window.onresize = resizeVideoJS;
+//   });
+// }
 
 function scrollToTop() {
   $('.scroll-top').on( 'click', function() {
@@ -170,44 +170,44 @@ function donutChart() {
   //   }
 }
 
-function videoModal() {
+// function videoModal() {
 
-  // VIMEO
+//   // VIMEO
 
-  $('#videoModal').on('shown.bs.modal', function () {
-    $("#vimeo-play").vimeo("play");
-  });
+//   $('#videoModal').on('shown.bs.modal', function () {
+//     $("#vimeo-play").vimeo("play");
+//   });
 
-  $('#videoModal').on('hidden.bs.modal', function () {
-    $("#vimeo-play").vimeo("pause");
-  });
+//   $('#videoModal').on('hidden.bs.modal', function () {
+//     $("#vimeo-play").vimeo("pause");
+//   });
 
-  // YOUTUBE
+//   // YOUTUBE
 
-  $('#youtube-trigger').click(function () {
+//   $('#youtube-trigger').click(function () {
 
-    var videoSRC     = $(this).attr("data-video"),
-        videoSRCauto = videoSRC + "?autoplay=1&html5=1&rel=0&showinfo=0";
+//     var videoSRC     = $(this).attr("data-video"),
+//         videoSRCauto = videoSRC + "?autoplay=1&html5=1&rel=0&showinfo=0";
 
-    $('#youtubeModal').on('shown.bs.modal', function () {
-      $('#youtube-play').attr('src', videoSRCauto);
-    });
+//     $('#youtubeModal').on('shown.bs.modal', function () {
+//       $('#youtube-play').attr('src', videoSRCauto);
+//     });
 
-    $('#youtubeModal').on('hidden.bs.modal', function () {
-      $('#youtube-play').attr('src', videoSRC);
-    });
+//     $('#youtubeModal').on('hidden.bs.modal', function () {
+//       $('#youtube-play').attr('src', videoSRC);
+//     });
 
-  });
-}
+//   });
+// }
 
 export default function init() {
   onScrollAnimations();
   inputPlaceholders();
   navMobileCollapse();
   navSearch();
-  htmlVideo();
+  // htmlVideo();
   scrollToTop();
   donutChart();
-  videoModal();
+  // videoModal();
 }
 

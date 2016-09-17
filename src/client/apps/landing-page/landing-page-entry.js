@@ -16,7 +16,9 @@ async function main() {
 
     try {
         await props.dispatchAction(initUserFromCache());
-    } catch(error) {}
+    } catch(error) {
+        console.log(error);
+    }
 
     const rootComp = new LandingPage(props);
 
