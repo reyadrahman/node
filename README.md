@@ -21,7 +21,7 @@ DB_TABLE_CONVERSATIONS=
 DB_TABLE_MESSAGES=
 DB_TABLE_AI_ACTIONS=
 DB_TABLE_USER_PREFS=
-DB_TABLE_PUBLISHER_SETTINGS=,
+DB_TABLE_PUBLISHER_SETTINGS=
 S3_BUCKET_NAME=
 IDENTITY_POOL_ID=
 IDENTITY_POOL_UNAUTH_ROLE_ARN=
@@ -301,9 +301,11 @@ eb open
 
 ## Setting Up Webhooks
 ### Spark
-The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/spark
+The "add bot" page of the website should do this automatically.
+
+In case you want to do it manually, the webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/spark
 Where `SOME_DOMAIN`, `PUBLISHER_ID` and `BOT_ID` must be replaced with appropriate values.
-Use SparkWebHookManager to set up webhooks.
+Use "SparkWebHookManager" from "https://github.com/deepiksdev/bash" to set up webhooks.
 
 ### Messenger
 The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/messenger
@@ -330,6 +332,13 @@ Then go to [my bots](https://dev.botframework.com/bots?id=botframework) and unde
 Currently Skype and Slack are supported.
 
 ## Development
+### Building
+We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule, because it is not available in npm. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
+```
+git submodule update --init
+```
+You also need to run the above command after `git pull` if the submodule has been modified.
+
 ### Tests
 Make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for real use.
 
@@ -353,12 +362,14 @@ Terminal C:
 npm run run-server
 ```
 
-The first 2 commands, will automatically rebuild on every change (except changes to `.env`). After a rebuild you must kill the server (terminal C) and run it again.
+The first 2 commands, will automatically rebuild on every change (**except changes to `.env`**). After a rebuild you must kill the server (terminal C) and run it again.
 
 You can also use `npm test -- --watch` to automatically re-run all tests on every change.
 
 ### AWS-SDK
-The server uses the aws-sdk package from npm. But the client uses a custom built library reduced to only the services we need on the client. Here is how you can build the custom library:
+The server uses the aws-sdk package from npm. But the client uses a custom built library reduced to only the services we need on the client. The custom built library is already part of the source code, but if you want to re-build it and update it please follow these instructions.
+
+Here is how you can build the custom library:
 ``` sh
 git clone https://github.com/aws/aws-sdk-js.git
 git checkout v2.4.14
