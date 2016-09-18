@@ -508,7 +508,22 @@ OK, let examine `component.js` first:
 
 ##### Component
 
-Each component receives some properties in its constructor, which is saved in `this.props`. Each app can define its own property type. Each component can pass properties down to its children.
+Each component receives 2 parameters in its constructor, which are saved in `this.context` and `this.props` respectively. Each app can define its own context and props types. Here is the constructor of `Component`:
+```js
+class Component<Context, Props> {
+    context: Context;
+    props: Props;
+
+    constructor(context: Context, props: Props = {}) {
+        this.context = context;
+        this.props = props;
+    }
+
+    /*...*/
+}
+```
+- context: this is an object that will simply be passed down. You probably don't need to change it anywhere other that the entry files (i.e. `src/client/apps/landing-page/landing-page-entry.js` and `src/client/apps/admin/admin-entry.js`). For example context can allow every component to have access to the latest application state, the event system, history and be able to dispatch actions when something needs to change.
+- props: while context is supposed to be passed down to every component in the hierarchy, props are more specific. Each component may take a different type of props and may or may not pass parts of it to its children.
 
 Each component has a `render` method which returns a string. This is the HTML string of the component. It also has 2 other methods `componentDidMount` and `componentWillUnmount` (inspired by React.js). These 2 methods are called when the components are mounted to or unmounted from the DOM. This is a good opportunity to bind click handler to your DOM elements for example or clean up any handlers before being unmounted from DOM.
 
@@ -536,7 +551,7 @@ Please see `src/client-front-end-framework/component.js` for the full API.
 ##### App
 Let's look at `src/client-front-end-framework/app.js` next:
 ```js
-class App<Props> extends Component<Props> {
+class App extends Component {
     getStyleSheets(): string[]
     getScripts(): string[]
     getTitle(): string
@@ -544,7 +559,7 @@ class App<Props> extends Component<Props> {
 ```
 `App` is just a `Component` with a few extra functions. It can return a title for the page, a list of scripts and a list of style sheets to be injected into the HTML. This is done on the server-side. For example if you have:
 ```js
-class App<Props> extends Component<Props> {
+class App extends Component {
     getStyleSheets(): string[] {
         return ['a.css', 'b.css'];
     }
