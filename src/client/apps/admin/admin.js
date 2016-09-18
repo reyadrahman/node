@@ -5,7 +5,7 @@ import { Cursor } from '../../../misc/atom.js';
 import App from '../../front-end-framework/app.js';
 import Component from '../../front-end-framework/component.js';
 import { ENV as CLIENT_ENV } from '../../client-utils.js';
-import DashboardPage from './components/dashboard-page.js';
+import TestPage from './components/test-page.js';
 import FlotPage from './components/flot-page.js';
 import MorrisPage from './components/morris-page.js';
 import TablesPage from './components/tables-page.js';
@@ -136,7 +136,8 @@ export default class Admin extends App<AdminAppContext, null> {
 
         const router = this.addChild(new Router(this.context, {
             routes: [
-                [ '/admin',                            DashboardPage ],
+                [ '/admin',                            TestPage ],
+                [ '/admin/test',                            TestPage ],
                 [ '/admin/messages(/:conversationId)', MessagesPage ],
                 [ '/admin/feeds',                      FeedsPage ],
                 [ '/admin/flot',                       FlotPage ],
