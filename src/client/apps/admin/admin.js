@@ -10,7 +10,7 @@ import FlotPage from './components/flot-page.js';
 import MorrisPage from './components/morris-page.js';
 import TablesPage from './components/tables-page.js';
 import FormsPage from './components/forms-page.js';
-import PanelWellsPage from './components/panel-wells-page.js';
+import AccountPage from './components/account-page.js';
 import ButtonsPage from './components/buttons-page.js';
 import NotificationsPage from './components/notifications-page.js';
 import TypographyPage from './components/typography-page.js';
@@ -143,7 +143,7 @@ export default class Admin extends App<AdminAppContext, null> {
                 [ '/admin/morris',                     MorrisPage ],
                 [ '/admin/tables',                     TablesPage ],
                 [ '/admin/forms',                      FormsPage ],
-                [ '/admin/panels-wells',               PanelWellsPage ],
+                [ '/admin/account',               AccountPage ],
                 [ '/admin/buttons',                    ButtonsPage ],
                 [ '/admin/notifications',              NotificationsPage ],
                 [ '/admin/typography',                 TypographyPage ],
