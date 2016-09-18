@@ -95,19 +95,19 @@ export default class Admin extends App<AdminAppProps> {
         this.unmountChildren();
 
         const router = this.addChild(new Router(this.props, [
-            ['/admin', DashboardPage],
-            ['/admin/messages(/:conversationId)', MessagesPage],
-            ['/admin/flot', FlotPage],
-            ['/admin/morris', MorrisPage],
-            ['/admin/tables', TablesPage],
-            ['/admin/forms', FormsPage],
-            ['/admin/panels-wells', PanelWellsPage],
-            ['/admin/buttons', ButtonsPage],
-            ['/admin/notifications', NotificationsPage],
-            ['/admin/typography', TypographyPage],
-            ['/admin/icons', IconsPage],
-            ['/admin/grid', GridPage],
-            ['/admin/blank', BlankPage],
+            [ '/admin',                            DashboardPage ],
+            [ '/admin/messages(/:conversationId)', MessagesPage ],
+            [ '/admin/flot',                       FlotPage ],
+            [ '/admin/morris',                     MorrisPage ],
+            [ '/admin/tables',                     TablesPage ],
+            [ '/admin/forms',                      FormsPage ],
+            [ '/admin/panels-wells',               PanelWellsPage ],
+            [ '/admin/buttons',                    ButtonsPage ],
+            [ '/admin/notifications',              NotificationsPage ],
+            [ '/admin/typography',                 TypographyPage ],
+            [ '/admin/icons',                      IconsPage ],
+            [ '/admin/grid',                       GridPage ],
+            [ '/admin/blank',                      BlankPage ],
         ]), 'router');
 
         const layout = this.addChild(new Layout(this.props), 'layout');

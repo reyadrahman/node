@@ -6,49 +6,26 @@ import { toStr, splitOmitWhitespace, waitForAll, waitForAllOmitErrors,
          callbackToPromise } from '../misc/utils.js';
 import _ from 'lodash';
 import FeedParser from 'feedparser';
-import type { ResponseMessage, BotParams } from '../misc/types.js';
+import type { ResponseMessage, BotParams, FeedConfig } from '../misc/types.js';
 // the name request is usually used for { request } from './server-utils.js'
 import request_ from 'request';
 import Twit from 'twit';
+import type { Request, Response } from 'express';
 
-const { DB_TABLE_PUBLISHER_SETTINGS, CALL_SERVER_LAMBDA_SECRET } = ENV;
-
-type FeedConfig = FeedConfigTwitter | FeedConfigRss;
-
-type FeedConfigTwitter = {
-    type: 'twitter',
-    botId: string,
-    twitterScreenName: string,
-    lastPublishTimestamp: number,
-    publishTimePattern: string,
-    categories?: string[],
-};
-
-type FeedConfigRss = {
-    type: 'rss',
-    botId: string,
-    rssUrl: string,
-    lastPublishTimestamp: number,
-    publishTimePattern: string,
-    categories?: string[],
-};
+const { CALL_SERVER_LAMBDA_SECRET, DB_TABLE_BOTS } = ENV;
 
 type BotFeed = {
-    publisherId: string,
-    botId: string,
     categories?: string[],
     messages: ResponseMessage[],
 };
 
 type ProcessFeedConfigsRes = {
+    botParams: BotParams,
     botFeeds: BotFeed[],
-    publisherId: string,
     feedConfigs: FeedConfig[],
 };
 
-type BotParamsAccumulator = { [key: string]: BotParams };
-
-export function feedsPeriodicUpdate(req, res) {
+export function feedsPeriodicUpdate(req: Request, res: Response) {
     const reqSecret = req.header('CALL_SERVER_LAMBDA_SECRET');
     if (reqSecret !== CALL_SERVER_LAMBDA_SECRET) {
         console.log('feedsPeriodicUpdate: secret header does not match: ', reqSecret);
@@ -63,29 +40,27 @@ export function feedsPeriodicUpdate(req, res) {
 }
 
 async function feedsPeriodicUpdateHelper() {
-    const feedsScanRes = await aws.dynamoScan({
-        TableName: DB_TABLE_PUBLISHER_SETTINGS,
+    const botsScanRes = await aws.dynamoScan({
+        TableName: DB_TABLE_BOTS,
     });
 
-    console.log('feedsPeriodicUpdateHelper feedsScanRes: ', feedsScanRes);
+    console.log('feedsPeriodicUpdateHelper botsScanRes: ', botsScanRes);
 
-    if (feedsScanRes.Count === 0) return;
+    if (botsScanRes.Count === 0) return;
 
-    const publishersSettings = feedsScanRes.Items.filter(x => !_.isEmpty(x.feeds));
-    const botParamsAccumulator = {}; // index by publisherId__botId
-    const processFeedConfigsResults = await waitForAllOmitErrors(publishersSettings.map(
-        settings => processFeedConfigs(settings.publisherId, settings.feeds, botParamsAccumulator)
-    ));
-    console.log('feedsPeriodicUpdateHelper processFeedConfigsResults: ', toStr(processFeedConfigsResults));
+    const botsWithFeeds = botsScanRes.Items.filter(x => !_.isEmpty(x.feeds));
+    const processFeedConfigsResults =
+        await waitForAllOmitErrors(botsWithFeeds.map(processFeedConfigs));
+    const validProcessFeedConfigsResults = processFeedConfigsResults.filter(Boolean);
+    console.log('feedsPeriodicUpdateHelper validProcessFeedConfigsResults: ',
+        toStr(validProcessFeedConfigsResults));
 
-    // now publish feed
+    // now publish feeds
     let sendPromises = [];
-    processFeedConfigsResults.forEach(
-        ({ botFeeds }) => botFeeds.forEach(
+    validProcessFeedConfigsResults.forEach(
+        ({ botFeeds, botParams }) => botFeeds.forEach(
             botFeed => botFeed.messages.forEach(
                 message => {
-                    const botParams = botParamsAccumulator[botFeed.publisherId + '__' + botFeed.botId];
-                    if (!botParams) return;
                     sendPromises.push(sendToMany(botParams, message, botFeed.categories));
                 }
             )
@@ -94,11 +69,12 @@ async function feedsPeriodicUpdateHelper() {
 
 
     // update DB
-    const updateDBPromises = processFeedConfigsResults.map(
-        ({ botFeeds, feedConfigs, publisherId }) => aws.dynamoUpdate({
-            TableName: DB_TABLE_PUBLISHER_SETTINGS,
+    const updateDBPromises = validProcessFeedConfigsResults.map(
+        ({ botFeeds, feedConfigs, botParams }) => aws.dynamoUpdate({
+            TableName: DB_TABLE_BOTS,
             Key: {
-                publisherId,
+                publisherId: botParams.publisherId,
+                botId: botParams.botId,
             },
             UpdateExpression: 'SET feeds = :feeds',
             ExpressionAttributeValues: {
@@ -112,9 +88,9 @@ async function feedsPeriodicUpdateHelper() {
     await waitForAll(updateDBPromises);
 }
 
-async function processFeedConfigs(publisherId: string, feedConfigs: FeedConfig[],
-                                  botParamsAccumulator: BotParamsAccumulator)
-    : Promise<ProcessFeedConfigsRes>
+// TODO redo return type
+async function processFeedConfigs(botParams: BotParams)
+    : Promise<?ProcessFeedConfigsRes>
 {
     // Date.now()+1000 to avoid millisecond differences
     const now = new Date(Date.now()+1000);
@@ -127,55 +103,47 @@ async function processFeedConfigs(publisherId: string, feedConfigs: FeedConfig[]
 
     const botFeeds = [];
     const newFeedConfigs = [];
-    for (let i=0; i<feedConfigs.length; i++) {
-        const feedConfig = feedConfigs[i];
+    for (let i=0; i<botParams.feeds.length; i++) {
+        const feedConfig = botParams.feeds[i];
         const match = feedConfig.publishTimePattern.match(cronRegexp);
+        let newFeedConfig = feedConfig;
         if (match && hours === Number(match[1])) {
             try {
-                let botFeed = await processFeedConfig(publisherId, feedConfig, botParamsAccumulator);
-                const newFeedConfig = {
-                    ...feedConfig,
-                    lastPublishTimestamp: nowTimestamp,
-                };
-                botFeeds.push(botFeed);
-                newFeedConfigs.push(newFeedConfig);
+                let botFeed = await processFeedConfig(botParams, feedConfig);
+                if (!_.isEmpty(botFeed.messages)) {
+                    newFeedConfig = {
+                        ...newFeedConfig,
+                        lastPublishTimestamp: nowTimestamp,
+                    };
+                    botFeeds.push(botFeed);
+                }
             } catch(error) {
                 console.log('processFeedConfigs error while calling processFeedConfig: ', error);
-                newFeedConfigs.push(feedConfig);
             }
-        } else {
-            newFeedConfigs.push(feedConfig);
         }
+        newFeedConfigs.push(newFeedConfig);
     }
 
-    return { publisherId, botFeeds, feedConfigs: newFeedConfigs };
+    return _.isEmpty(botFeeds) ? null : {
+        botParams,
+        botFeeds,
+        feedConfigs: newFeedConfigs,
+    };
 }
 
-async function processFeedConfig(publisherId: string, feedConfig: FeedConfig,
-                                 botParamsAccumulator: BotParamsAccumulator)
+async function processFeedConfig(botParams: BotParams, feedConfig: FeedConfig)
     : Promise<BotFeed>
 {
-    console.log('processFeedConfig: publisherId: ', publisherId, ', feedConfig: ', feedConfig);
+    console.log('processFeedConfig: botParams: ', botParams, ', feedConfig: ', feedConfig);
     if (feedConfig.type === 'twitter') {
-        return await processTwitterFeedConfig(publisherId, feedConfig, botParamsAccumulator);
+        return await processTwitterFeedConfig(botParams, feedConfig);
     } else if (feedConfig.type === 'rss') {
-        return await processRssFeedConfig(publisherId, feedConfig, botParamsAccumulator);
+        return await processRssFeedConfig(botParams, feedConfig);
     }
     throw new Error(`processFeed: unknown feed type ${feedConfig.type}`);
 }
 
-async function processTwitterFeedConfig(publisherId, feedConfig, botParamsAccumulator): Promise<BotFeed> {
-    const botParamsKey = publisherId + '__' + feedConfig.botId;
-    let botParams = botParamsAccumulator[botParamsKey];
-    if (!botParams) {
-        botParams = botParamsAccumulator[botParamsKey]
-                  = await aws.getBot(publisherId, feedConfig.botId);
-    }
-    if (!botParams) {
-        throw new Error(`processRssFeedConfig: failed to getBot with id ${feedConfig.botId}`);
-        return;
-    }
-
+async function processTwitterFeedConfig(botParams, feedConfig): Promise<BotFeed> {
     const twitClient = new Twit({
         consumer_key: botParams.settings.twitterConsumerKey,
         consumer_secret: botParams.settings.twitterConsumerSecret,
@@ -188,8 +156,6 @@ async function processTwitterFeedConfig(publisherId, feedConfig, botParamsAccumu
         count: 10,
     });
 
-    console.log('tweets: ', tweets);
-
     const lpt = feedConfig.lastPublishTimestamp;
     // filter unread items
     const unreadTweets = tweets.filter(
@@ -201,14 +167,12 @@ async function processTwitterFeedConfig(publisherId, feedConfig, botParamsAccumu
     }));
 
     return {
-        publisherId,
-        botId: feedConfig.botId,
         categories: feedConfig.categories,
         messages,
     };
 }
 
-function processRssFeedConfig(publisherId, feedConfig, botParamsAccumulator): Promise<BotFeed> {
+function processRssFeedConfig(botParams, feedConfig): Promise<BotFeed> {
     return new Promise((resolve, reject) => {
         console.log('processRssFeed');
         const req = request_(feedConfig.rssUrl);
@@ -254,28 +218,10 @@ function processRssFeedConfig(publisherId, feedConfig, botParamsAccumulator): Pr
                 };
             });
 
-            const ret = {
-                publisherId,
-                botId: feedConfig.botId,
+            return resolve({
                 categories: feedConfig.categories,
                 messages,
-            };
-
-            const botParamsKey = publisherId + '__' + feedConfig.botId;
-            let botParams = botParamsAccumulator[botParamsKey];
-            if (botParams) {
-                return resolve(ret);
-            }
-
-            aws.getBot(publisherId, feedConfig.botId)
-                .then(botParams => {
-                    botParamsAccumulator[botParamsKey] = botParams;
-                    resolve(ret);
-                })
-                .catch(error => {
-                    console.error('processRssFeedConfig: failed to getBot with id ', feedConfig.botId, error);
-                    resolve(ret);
-                });
+            });
         });
     });
 }

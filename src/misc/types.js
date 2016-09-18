@@ -97,6 +97,25 @@ export type ActionResponse = {
     userPrefs?: Object,
 };
 
+
+export type FeedConfig = FeedConfigTwitter | FeedConfigRss;
+
+export type FeedConfigTwitter = {
+    type: 'twitter',
+    twitterScreenName: string,
+    lastPublishTimestamp: number,
+    publishTimePattern: string,
+    categories?: string[],
+};
+
+export type FeedConfigRss = {
+    type: 'rss',
+    rssUrl: string,
+    lastPublishTimestamp: number,
+    publishTimePattern: string,
+    categories?: string[],
+};
+
 export type BotParams = {
     botId: string,
     botName: string,
@@ -108,7 +127,10 @@ export type BotParams = {
         microsoftAppPassword: string,
         ciscosparkBotEmail: string,
         witAccessToken: string,
+        twitterConsumerKey: string,
+        twitterConsumerSecret: string,
     },
+    feeds: FeedConfig[],
 };
 
 export type ChannelData = {
@@ -142,7 +164,6 @@ export type ServerEnv = {
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
     DB_TABLE_USER_PREFS: string,
-    DB_TABLE_PUBLISHER_SETTINGS: string,
     S3_BUCKET_NAME: string,
     PUBLIC_PATH: string,
     PUBLIC_URL: string,
@@ -168,7 +189,6 @@ export type ClientEnv = {
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
     DB_TABLE_USER_PREFS: string,
-    DB_TABLE_PUBLISHER_SETTINGS: string,
     S3_BUCKET_NAME: string,
     PUBLIC_URL: string,
     USER_POOL_ID: string,
