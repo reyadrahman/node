@@ -2,31 +2,85 @@
 
 import Component from '../../../front-end-framework/app.js';
 import * as actions from '../actions';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 
-import type { AdminAppProps, Action } from '../types.js';
+import isEmpty from 'lodash/isEmpty';
 
-type RenderProps = {
-    contentComponent: Component<AdminAppProps>;
+type Props = {
+    contentComponent: Component<AdminAppContext, *>;
 };
 
-export default class Layout extends Component<AdminAppProps> {
+export default class Layout extends Component<AdminAppContext, Props> {
     componentDidMount() {
+        this.context.dispatchAction(actions.fetchBots());
+        this.context.eventSystem.subscribe(() => this.rerenderBotsUi(), ['fetchedBots', 'selectedBot']);
+
+        const self = this;
         $('#signOutButton').click(() => this.signOut());
+        $(document).on('click', '#headerBotsUi a', function() {
+            const botId = $(this).data('bot-id');
+            if (botId) {
+                self.context.dispatchAction(actions.selectBot(botId));
+            }
+            return false;
+        })
+    }
+
+    rerenderBotsUi() {
+        $('#headerBotsUi').replaceWith(this.renderBotsUi());
+    }
+
+    renderBotsUi() {
+        const { botsState, selectedBotId } = this.context.stateCursor.get().currentUser;
+
+        if (!botsState.hasFetched) {
+            return `
+                <li class="dropdown disabled" id="headerBotsUi">
+                    <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Fetching bots... <span class="caret"></span></a>
+                </li>
+            `;
+        }
+
+        if (isEmpty(botsState.bots)) {
+            return `
+                <li id="headerBotsUi">
+                    <a href="javascript:void(0)">Add a new bot</a>
+                </li>
+            `;
+        }
+
+        const botListUi = botsState.bots.map(
+            b => `<li><a href="javascript:void(0)" data-bot-id="${b.botId}">${b.botName}</a></li>`
+        ).join('\n');
+        const selectedBot = botsState.bots.find(x => x.botId === selectedBotId);
+
+        return `
+            <li class="dropdown" id="headerBotsUi">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                    ${selectedBot.botName} <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" >
+                    ${ botListUi }
+                    <li role="separator" class="divider"></li>
+                    <li><a href="javascript:void(0)">Add a new bot</a></li>
+                </ul>
+            </li>
+        `;
     }
 
     signOut() {
-        this.props.dispatchAction(actions.signOut());
+        this.context.dispatchAction(actions.signOut());
     }
 
-    render(renderProps?: RenderProps) {
-        console.log('Layout render, renderProps: ', renderProps);
-        if (!renderProps) {
-            throw new Error('Layout: missing renderProps');
-        }
-        const { contentComponent } = renderProps;
+    render() {
+        console.log('Layout render');
+        const { contentComponent } = this.props;
         // const state = this.props.stateCursor.get();
+
+        const botsUi = this.renderBotsUi();
+
         return (`
-            <div id="wrapper">
+            <div id="layout-root">
 
                 <!-- Navigation -->
                 <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
@@ -40,7 +94,9 @@ export default class Layout extends Component<AdminAppProps> {
                         <a class="navbar-brand" href="/">SB Admin v2.0</a>
                     </div>
                     <!-- /.navbar-header -->
-
+                    <ul class="nav navbar-nav">
+                        ${ botsUi }
+                    </ul>
                     <ul class="nav navbar-top-links navbar-right">
                         <li class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#">
@@ -267,6 +323,9 @@ export default class Layout extends Component<AdminAppProps> {
                                     <a class="dynamic-link" href="/admin/messages"><i class="fa fa-envelope fa-fw"></i> Messages</a>
                                 </li>
                                 <li>
+                                    <a class="dynamic-link" href="/admin/feeds"><i class="fa fa-envelope fa-fw"></i> Feeds</a>
+                                </li>
+                                <li>
                                     <a class="dynamic-link" href="/admin"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
                                 </li>
                                 <li>
@@ -361,10 +420,11 @@ export default class Layout extends Component<AdminAppProps> {
                 </nav>
 
                 <!-- Page Content -->
-                ${ contentComponent.render() }
+                <div class="set-min-height-for-page-wrapper">
+                    ${ contentComponent.render() }
+                </div>
 
             </div>
-            <!-- /#wrapper -->
         `);
     }
 }

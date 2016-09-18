@@ -2,40 +2,33 @@
 
 import Component from '../../../front-end-framework/component.js';
 import { simpleTimeFormat } from '../../../../misc/utils.js';
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext } from '../types.js';
+import type { DBMessage, MessageAction, MessageCard } from '../../../../misc/types.js';
 import * as actions from '../actions.js';
 
-type Params = {
+type Props = {
     conversationId?: string,
 };
 
 const defaultAvatarUrl = require('./default-avatar.jpg');
 
-export default class Messages extends Component<AdminAppProps> {
-    params: Object;
-
-    constructor(props: AdminAppProps, params: Params) {
-        super(props);
-        console.log('Messages params: ', params);
-        this.params = params;
-    }
-
+export default class Messages extends Component<AdminAppContext, Props> {
     componentDidMount() {
-        if (this.params.conversationId) {
-            this.props.dispatchAction(actions.fetchMessages(this.params.conversationId));
+        if (this.props.conversationId) {
+            this.context.dispatchAction(actions.fetchMessages(this.props.conversationId));
         }
-        this.props.eventSystem.subscribe(() => this.rerender(),
+        this.context.eventSystem.subscribe(() => this.rerender(),
             ['fetchedMessages', 'fetchingMessages', 'fetchedConversations']);
     }
 
     conversationIdChanged(conversationId?: string) {
         console.log('Messages conversationIdChanged: ', conversationId);
-        this.params = {
-            ...this.params,
+        this.props = {
+            ...this.props,
             conversationId,
         };
-        if (this.params.conversationId) {
-            this.props.dispatchAction(actions.fetchMessages(this.params.conversationId));
+        if (this.props.conversationId) {
+            this.context.dispatchAction(actions.fetchMessages(this.props.conversationId));
         }
     }
 
@@ -45,7 +38,7 @@ export default class Messages extends Component<AdminAppProps> {
         super.componentDidMount();
     }
 
-    renderMessage(m) {
+    renderMessage(m: DBMessage) {
         const profilePic = m.senderProfilePic || defaultAvatarUrl;
         const profilePicStyle = `background-image: url(${profilePic});`
         const cards = this.renderCards(m.cards);
@@ -70,7 +63,7 @@ export default class Messages extends Component<AdminAppProps> {
         `;                
     }
 
-    renderActions(actions) {
+    renderActions(actions: MessageAction[]) {
         if (!actions || actions.length === 0) return '';
 
         const actionsUi = actions.map(x => `
@@ -86,7 +79,7 @@ export default class Messages extends Component<AdminAppProps> {
         `; 
     }
 
-    renderCards(cards) {
+    renderCards(cards: MessageCard[]) {
         if (!cards || cards.length === 0) return '';
 
         const cardsUi = cards.map(x => {
@@ -117,7 +110,7 @@ export default class Messages extends Component<AdminAppProps> {
     }
 
     render() {
-        const currentUser = this.props.stateCursor.get().currentUser;
+        const currentUser = this.context.stateCursor.get().currentUser;
         const ms = currentUser.messagesState;
         const cs = currentUser.conversationsState;
         // console.log('s: ', s);
@@ -131,8 +124,8 @@ export default class Messages extends Component<AdminAppProps> {
             return wrap(`<div class="noConversationsFound">no conversation found</div>`);
         }
 
-        console.log('***** cs.hasFetched: ', cs.hasFetched, ', conversationId: ', this.params.conversationId);
-        if (cs.hasFetched && !this.params.conversationId) {
+        console.log('***** cs.hasFetched: ', cs.hasFetched, ', conversationId: ', this.props.conversationId);
+        if (cs.hasFetched && !this.props.conversationId) {
             return wrap(`<div class="selectConversation">Please select a conversation</div>`);
         }
 
@@ -140,7 +133,7 @@ export default class Messages extends Component<AdminAppProps> {
             return wrap(`<div class="wait">•••</div>`);
         }
 
-        const messages = ms.messages[this.params.conversationId];
+        const messages = ms.messages[this.props.conversationId];
         if (ms.hasFetched && (!messages || messages.length === 0)) {
             return wrap(`<div class="noMessagesFound">No messages found</div>`);
         }

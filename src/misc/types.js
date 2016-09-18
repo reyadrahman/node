@@ -40,6 +40,7 @@ export type DBMessage = {
     id?: string,
     text?: string,
     cards?: Array<MessageCard>,
+    actions?: Array<MessageAction>,
     senderProfilePic?: string,
 };
 
@@ -102,6 +103,8 @@ export type FeedConfig = FeedConfigTwitter | FeedConfigRss;
 
 export type FeedConfigTwitter = {
     type: 'twitter',
+    feedId: string,
+    feedName: string,
     twitterScreenName: string,
     lastPublishTimestamp: number,
     publishTimePattern: string,
@@ -110,6 +113,8 @@ export type FeedConfigTwitter = {
 
 export type FeedConfigRss = {
     type: 'rss',
+    feedId: string,
+    feedName: string,
     rssUrl: string,
     lastPublishTimestamp: number,
     publishTimePattern: string,

@@ -3,17 +3,18 @@
 
 // Global Styles
 
-html, body, #app-root, #wrapper {
+html, body, #app-root, #layout-root {
     height: 100%;
 }
 
 // Wrappers
 
-#wrapper {
+#layout-root {
     width: 100%;
 }
 
-#page-wrapper {
+.page-wrapper {
+    min-height: inherit;
     padding: 0 15px;
     background-color: white;
     position: absolute; 
@@ -24,12 +25,18 @@ html, body, #app-root, #wrapper {
 }
 
 @media(min-width:768px) {
-    #page-wrapper {
+    .page-wrapper {
         margin: 0 0 0 250px;
         padding: 0 30px;
         border-left: 1px solid darken(@gray-lightest, 6.5%);
 
     }
+}
+
+// Header
+
+.page-header {
+    text-align: center;
 }
 
 // Navigation

@@ -1,0 +1,57 @@
+
+#feeds-page {
+    position: relative;
+
+    .fa-twitter {
+        color: #00aced;
+    }
+
+    .fa-rss {
+        color: rgb(255, 102, 0);
+    }
+
+    .wait, please-add-a-bot {
+        top: 50%;
+        left: 50%;
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-size: 40px;
+        color: #aaa;
+        letter-spacing: 10px;
+    }
+
+    .active-feeds-panel {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .feeds-table {
+        th,td {
+            padding: 8px 20px;
+        }
+        th,td:nth-child(4) {
+            text-align: right
+        }
+    }
+
+    .feeds-table.no-feeds-found {
+        text-align: center;
+        font-size: 30px;
+        color: #aaa;
+        letter-spacing: 10px;
+        padding: 50px 0;
+    }
+
+    #add-feed-button {
+        display: block;
+        margin: 20px auto;
+        padding: 15px 70px; 
+    }
+
+    #add-new-feed-modal {
+        .publish-time-select {
+            display: inline-block;
+            margin-left: 10px;
+        }
+    }
+}

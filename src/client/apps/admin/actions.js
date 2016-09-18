@@ -1,11 +1,13 @@
 /* @flow */
 
-import type { AdminAppProps, Action } from './types.js';
-import type { DBMessage } from '../../../misc/types.js';
 import { ENV as CLIENT_ENV } from '../../client-utils.js';
 import { destructureS3Url } from '../../../misc/utils.js';
 import * as aws from '../../../aws/aws.js';
 import * as bridge from '../../client-server-bridge.js';
+import initAppState from './init-app-state.js';
+import type { AdminAppContext, Action } from './types.js';
+import type { DBMessage, FeedConfig } from '../../../misc/types.js';
+import isEmpty from 'lodash/isEmpty';
 
 const { S3_BUCKET_NAME } = CLIENT_ENV;
 
@@ -13,34 +15,16 @@ export function initUserFromCache() {
     return { type: 'initUserFromCache' };
 }
 
-async function handleInitUserFromCache(props, action) {
+async function handleInitUserFromCache(context, action) {
     try {
         const attributes = await aws.getCurrentUserAttributes();
-        props.stateCursor.$assocIn('currentUser', {
+        context.stateCursor.$assocIn('currentUser', {
+            ...initAppState.currentUser,
             signedIn: true,
             attributes,
-            conversationsState: {
-                conversations: [],
-                hasFetched: false,
-            },
-            messagesState: {
-                messages: {},
-                hasFetched: false,
-            }
         });
     } catch(error) {
-        props.stateCursor.$assocIn('currentUser', {
-            signedIn: false,
-            attributes: {},
-            conversationsState: {
-                conversations: [],
-                hasFetched: false,
-            },
-            messagesState: {
-                messages: {},
-                hasFetched: false,
-            }
-        });
+        context.stateCursor.$assocIn('currentUser', initAppState.currentUser);
         throw error;
     }
 }
@@ -49,7 +33,7 @@ export function signOut() {
     return { type: 'signOut' };
 }
 
-async function handleSignOut(props, action) {
+async function handleSignOut(context, action) {
     await aws.signOut();
     window.location = '/';
 }
@@ -58,26 +42,24 @@ export function fetchConversations() {
     return { type: 'fetchConversations' };
 }
 
-async function handleFetchConversations(props, action) {
-    props.stateCursor.$assocIn(['currentUser', 'conversationsState', 'isFetching'], true);
+async function handleFetchConversations(context, action) {
+    context.stateCursor.$assocIn(['currentUser', 'conversationsState', 'isFetching'], true);
     try {
         const session = await aws.getCurrentSession();
         const conversations = await bridge.fetchConversations(
             session.getIdToken().getJwtToken()
         );
-        props.stateCursor.$assocIn(['currentUser', 'conversationsState'], {
+        context.stateCursor.$assocIn(['currentUser', 'conversationsState'], {
             hasFetched: true,
             conversations: conversations || [],
         });
-        props.eventSystem.publish('fetchedConversations');
+        context.eventSystem.publish('fetchedConversations');
 
     } catch(error) {
-        props.stateCursor.$assocIn(['currentUser', 'conversationsState'], {
-            hasFetched: false,
-            conversations: [],
-        });
+        context.stateCursor.$assocIn(['currentUser', 'conversationsState'],
+            initAppState.currentUser.conversationsState);
         console.error(error);
-        props.eventSystem.publish('fetchingConversationsFailed', 'Could not fetch conversations');
+        context.eventSystem.publish('fetchingConversationsFailed', 'Could not fetch conversations');
     }
 }
 
@@ -85,14 +67,14 @@ export function fetchMessages(conversationId: string) {
     return { type: 'fetchMessages', conversationId };
 }
 
-async function handleFetchMessages(props, action) {
+async function handleFetchMessages(context, action) {
     const { conversationId } = action;
     console.log('action: fetchMessages');
-    props.stateCursor.$assocIn(['currentUser', 'messagesState'], {
+    context.stateCursor.$assocIn(['currentUser', 'messagesState'], {
         hasFetched: false,
         messages: [],
     });
-    props.eventSystem.publish('fetchingMessages');
+    context.eventSystem.publish('fetchingMessages');
     try {
         const session = await aws.getCurrentSession();
         const messages = await bridge.fetchMessages(
@@ -102,20 +84,18 @@ async function handleFetchMessages(props, action) {
         console.log('handleFetchMessages before signing: ', messages);
         const messagesWithSignedUrls = await signS3UrlsInMesssages(messages);
         console.log('handleFetchMessages after signing: ', messagesWithSignedUrls);
-        props.stateCursor.$assocIn(['currentUser', 'messagesState'], {
+        context.stateCursor.$assocIn(['currentUser', 'messagesState'], {
             hasFetched: true,
             messages: {
                 [conversationId]: messagesWithSignedUrls,
             },
         });
-        props.eventSystem.publish('fetchedMessages');
+        context.eventSystem.publish('fetchedMessages');
     } catch(error) {
-        props.stateCursor.$assocIn(['currentUser', 'messagesState'], {
-            hasFetched: false,
-            messages: {},
-        });
+        context.stateCursor.$assocIn(['currentUser', 'messagesState'],
+            initAppState.currentUser.messagesState);
         console.error(error);
-        props.eventSystem.publish('fetchingMessagesFailed', 'Could not fetch conversations');
+        context.eventSystem.publish('fetchingMessagesFailed', 'Could not fetch conversations');
     }
 
 }
@@ -151,9 +131,52 @@ async function signS3UrlsInMesssages(messages: DBMessage[]): Promise<DBMessage[]
 }
 
 
-export async function dispatchAction(props: AdminAppProps, action: Action) {
+export function fetchBots() {
+    return { type: 'fetchBots' };
+}
+
+async function handleFetchBots(context, action) {
+    try {
+        const session = await aws.getCurrentSession();
+        const bots = await bridge.fetchBots(
+            session.getIdToken().getJwtToken()
+        );
+        context.stateCursor.$assocIn(['currentUser', 'botsState'], {
+            bots,
+            hasFetched: true,
+        });
+        if (!context.stateCursor.getIn(['currentUser', 'selectedBotId']) && !isEmpty(bots)) {
+            context.stateCursor.$assocIn(['currentUser', 'selectedBotId'], bots[0].botId);
+        }
+        context.eventSystem.publish('fetchedBots');
+    } catch(error) {
+        console.error('Error while fetching bots: ', error);
+        context.stateCursor.$assocIn(['currentUser', 'botsState'],
+            initAppState.currentUser.botsState);
+    }
+}
+
+export function selectBot(botId: string) {
+    return { type: 'selectBot', botId };
+}
+
+function handleSelectBot(context, action) {
+    context.stateCursor.$assocIn(['currentUser', 'selectedBotId'], action.botId);
+    context.eventSystem.publish('selectedBot');
+}
+
+export function addBotFeed(botId: string, feedConfig: FeedConfig) {
+    return { type: 'addBotFeed', botId, feedConfig };
+}
+
+async function handleAddBotFeed(context, action) {
+    const session = await aws.getCurrentSession();
+    await bridge.addBotFeed(session.getIdToken().getJwtToken(), action.botId, action.feedConfig);
+}
+
+export async function dispatchAction(context: AdminAppContext, action: Action) {
     console.log('--------- dispatchAction action: ', action);
-    const beforeState = props.stateCursor.get();
+    const beforeState = context.stateCursor.get();
     const t = action.type;
     let handler;
 
@@ -165,6 +188,12 @@ export async function dispatchAction(props: AdminAppProps, action: Action) {
         handler = handleFetchConversations;
     } else if (t === 'fetchMessages') {
         handler = handleFetchMessages;
+    } else if (t === 'fetchBots') {
+        handler = handleFetchBots;
+    } else if (t === 'selectBot') {
+        handler = handleSelectBot;
+    } else if (t === 'addBotFeed') {
+        handler = handleAddBotFeed;
     } else {
         console.error(`Unknown action type ${t}`);
         return;
@@ -172,11 +201,11 @@ export async function dispatchAction(props: AdminAppProps, action: Action) {
 
     try {
         console.log('--------- dispatchAction before state: ', beforeState);
-        const res = handler(props, action);
+        const res = handler(context, action);
         if (res instanceof Promise) {
             await res;
         }
-        console.log('--------- dispatchAction after state: ', props.stateCursor.get());
+        console.log('--------- dispatchAction after state: ', context.stateCursor.get());
     } catch(error) {
         console.log('--------- dispatchAction failed: ', error);
         throw error;

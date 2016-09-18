@@ -2,16 +2,18 @@
 
 import ice from 'icepick';
 
-export default class Component<Props> {
+export default class Component<Context, Props> {
+    context: Context;
     props: Props;
-    children: Array<{ name: string, component: Component<Props> }>;
+    children: Array<{ name: string, component: Component<Context, any> }>;
 
-    constructor(props: Props) {
+    constructor(context: Context, props: Props = {}) {
+        this.context = context;
         this.props = props;
         this.children = [];
     }
 
-    render(options?: Object) {
+    render() {
         throw new Error('Forgot to implement render method?');
     }
 
@@ -29,7 +31,9 @@ export default class Component<Props> {
         })
     }
 
-    addChild(component: Component<Props>, name?: string = '') {
+    addChild(component: Component<Context, any>, name?: string = '')
+        : Component<Context, any>
+    {
         console.log('Component addChild: this: ', this, ', component: ', component);
         this.children = ice.push(this.children, { name, component });
         // this.children = [{name, component}];

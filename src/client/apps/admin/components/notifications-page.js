@@ -1,13 +1,9 @@
 /* @flow */
 
 import Component from '../../../front-end-framework/component.js';
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 
-type RenderProps = {
-    className: string,
-};
-
-export default class NotificationsPage extends Component<AdminAppProps> {
+export default class NotificationsPage extends Component<AdminAppContext, AdminAppSubPageProps> {
     componentDidMount() {
         super.componentDidMount();
         // tooltip demo
@@ -19,15 +15,11 @@ export default class NotificationsPage extends Component<AdminAppProps> {
         $("[data-toggle=popover]").popover();
     }
 
-    render(renderProps?: RenderProps) {
-        if (!renderProps) {
-            throw new Error('NotificationsPage: missing renderProps');
-        }
-        const { className } = renderProps;
-        // const state = this.props.stateCursor.get();
+    render() {
+        const { className } = this.props;
 
         return (`
-            <div id="page-wrapper" class="${className}">
+            <div id="notifications-page" class="${className} page-wrapper">
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">Notifications</h1>
@@ -170,7 +162,6 @@ export default class NotificationsPage extends Component<AdminAppProps> {
                 </div>
                 <!-- /.row -->
             </div>
-            <!-- /#page-wrapper -->
         `);
     }
 }

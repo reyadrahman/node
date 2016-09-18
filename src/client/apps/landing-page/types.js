@@ -14,7 +14,7 @@ export type LandingPageAppState = {
     }
 };
 
-export type LandingPageAppProps = {
+export type LandingPageAppContext = {
     stateCursor: Cursor<LandingPageAppState>,
     eventSystem: EventSystem,
     dispatchAction: (action: Action) => Promise<*>,

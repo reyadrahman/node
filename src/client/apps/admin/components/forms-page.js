@@ -1,26 +1,19 @@
 /* @flow */
 
 import Component from '../../../front-end-framework/component.js';
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 
-type RenderProps = {
-    className: string,
-};
 
-export default class FormsPage extends Component<AdminAppProps> {
+export default class FormsPage extends Component<AdminAppContext, AdminAppSubPageProps> {
     componentDidMount() {
         super.componentDidMount();
     }
 
-    render(renderProps?: RenderProps) {
-        if (!renderProps) {
-            throw new Error('FormsPage: missing renderProps');
-        }
-        const { className } = renderProps;
-        // const state = this.props.stateCursor.get();
+    render() {
+        const { className } = this.props;
 
-        return (`
-            <div id="page-wrapper" class="${className}">
+        return `
+            <div id="forms-page" class="${className} page-wrapper">
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">Forms</h1>
@@ -222,7 +215,6 @@ export default class FormsPage extends Component<AdminAppProps> {
                 </div>
                 <!-- /.row -->
             </div>
-            <!-- /#page-wrapper -->
-        `);
+        `;
     }
 }

@@ -1,31 +1,24 @@
 /* @flow */
 
 import Component from '../../../front-end-framework/component.js';
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 import { ENV as CLIENT_ENV } from '../../../client-utils.js';
 
 import initFlowData from './flot-data.js';
 
-type RenderProps = {
-    className: string,
-};
-
 const { PUBLIC_URL } = CLIENT_ENV;
 
-export default class FlotPage extends Component<AdminAppProps> {
+export default class FlotPage extends Component<AdminAppContext, AdminAppSubPageProps> {
     componentDidMount() {
         super.componentDidMount();
         initFlowData();
     }
 
-    render(renderProps?: RenderProps) {
-        if (!renderProps) {
-            throw new Error('Layout: missing renderProps');
-        }
-        const { className } = renderProps;
+    render() {
+        const { className } = this.props;
 
         return (`
-            <div id="page-wrapper" class="${className}">
+            <div id="flot-page" class="${className} page-wrapper">
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">Flot</h1>
@@ -132,7 +125,6 @@ export default class FlotPage extends Component<AdminAppProps> {
                 </div>
                 <!-- /.row -->
             </div>
-            <!-- /#page-wrapper -->
         `);
     }
 }

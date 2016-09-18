@@ -1,7 +1,7 @@
 /* @flow */
 
 import { fetchjp, fetchg2j } from './client-utils.js';
-import type { DBMessage, ContactFormData } from '../misc/types.js';
+import type { DBMessage, ContactFormData, FeedConfig } from '../misc/types.js';
 
 export async function addBot(jwtIdToken: string, botName: string, settings) {
     console.log('client-server-bridge addBot:');
@@ -47,4 +47,8 @@ export async function sendNotification(jwtIdToken: string,
                                        categories: string[])
 {
     return await fetchjp('/api/send-notification', { jwtIdToken, botId, message, categories });
+}
+
+export async function addBotFeed(jwtIdToken: string, botId: string, feedConfig: FeedConfig) {
+    return await fetchjp('/api/add-bot-feed', { jwtIdToken, botId, feedConfig });
 }

@@ -1,27 +1,20 @@
 /* @flow */
 
 import Component from '../../../front-end-framework/component.js';
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 import initMorrisData from './morris-data.js';
 
-type RenderProps = {
-    className: string,
-};
-
-export default class MorrisPage extends Component<AdminAppProps> {
+export default class MorrisPage extends Component<AdminAppContext, AdminAppSubPageProps> {
     componentDidMount() {
         super.componentDidMount();
         initMorrisData();
     }
 
-    render(renderProps?: RenderProps) {
-        if (!renderProps) {
-            throw new Error('Layout: missing renderProps');
-        }
-        const { className } = renderProps;
+    render() {
+        const { className } = this.props;
 
         return (`
-            <div id="page-wrapper" class="${className}">
+            <div id="morris-page" class="${className} page-wrapper">
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">Morris.js Charts</h1>
@@ -104,7 +97,6 @@ export default class MorrisPage extends Component<AdminAppProps> {
                 </div>
                 <!-- /.row -->
             </div>
-            <!-- /#page-wrapper -->
         `);
     }
 }

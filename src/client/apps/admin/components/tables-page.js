@@ -1,26 +1,14 @@
 /* @flow */
 
 import Component from '../../../front-end-framework/component.js';
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 
-type RenderProps = {
-    className: string,
-};
-
-export default class TablesPage extends Component<AdminAppProps> {
-    componentDidMount() {
-        super.componentDidMount();
-    }
-
-    render(renderProps?: RenderProps) {
-        if (!renderProps) {
-            throw new Error('TablesPage: missing renderProps');
-        }
-        const { className } = renderProps;
-        // const state = this.props.stateCursor.get();
+export default class TablesPage extends Component<AdminAppContext, AdminAppSubPageProps> {
+    render() {
+        const { className } = this.props;
 
         return (`
-            <div id="page-wrapper" class="${className}">
+            <div id="tables-page" class="${className} page-wrapper">
                 <div class="row">
                 <div class="col-lg-12">
                     <h1 class="page-header">Tables</h1>
@@ -755,7 +743,6 @@ export default class TablesPage extends Component<AdminAppProps> {
                 </div>
                 <!-- /.row -->
             </div>
-            <!-- /#page-wrapper -->
         `);
     }
 }

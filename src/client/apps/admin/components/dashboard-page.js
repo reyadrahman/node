@@ -5,31 +5,23 @@
 import Component from '../../../front-end-framework/component.js';
 // import { ENV as CLIENT_ENV } from '../../../client-utils.js';
 
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 import initMorrisData from './morris-data.js';
 
 // const { PUBLIC_URL } = CLIENT_ENV;
 
-type RenderProps = {
-    className: string,
-};
-
-export default class DashboardPage extends Component<AdminAppProps> {
+export default class DashboardPage extends Component<AdminAppContext, AdminAppSubPageProps> {
     componentDidMount() {
         console.log('DashboardPage componentDidMount');
         super.componentDidMount();
         initMorrisData();
     }
 
-    render(renderProps?: RenderProps) {
-        if (!renderProps) {
-            throw new Error('DashboardPage: missing renderProps');
-        }
-        const { className } = renderProps;
-        // const state = this.props.stateCursor.get();
+    render() {
+        const { className } = this.props;
 
         return (`
-            <div id="page-wrapper" class="${className}">
+            <div id="dashboard-page" class="${className} page-wrapper">
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">Dashboard</h1>
@@ -569,7 +561,6 @@ export default class DashboardPage extends Component<AdminAppProps> {
                 </div>
                 <!-- /.row -->
             </div>
-            <!-- /#page-wrapper -->
         `);
     }
 }

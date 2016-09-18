@@ -2,7 +2,7 @@
 
 import Component from './component.js';
 
-export default class App<Props> extends Component<Props> {
+export default class App<Context, Props> extends Component<Context, Props> {
     getStyleSheets(): string[] {
         return [];
     }

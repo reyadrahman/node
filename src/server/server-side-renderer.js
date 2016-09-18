@@ -4,6 +4,7 @@ import { languages } from '../client/i18n/translations.js';
 import { ENV as CLIENT_ENV } from '../client/client-utils.js';
 import LandingPage from '../client/apps/landing-page/landing-page.js';
 import Admin from '../client/apps/admin/admin.js';
+import initAdminAppState from '../client/apps/admin/init-app-state.js';
 import EventSystem from '../client/front-end-framework/event-system.js';
 import type App from '../client/front-end-framework/app.js';
 import { Cursor } from '../misc/atom.js';
@@ -24,7 +25,7 @@ export function renderLandingPageApp(req: Request, res: Response, next: Function
             attributes: {}, // will be filled by the client
         }
     };
-    const props = {
+    const context = {
         stateCursor: new Cursor(state),
         // TODO use a mock EventSystem
         eventSystem: new EventSystem(),
@@ -32,27 +33,13 @@ export function renderLandingPageApp(req: Request, res: Response, next: Function
         dispatchAction: action => Promise.resolve(),
     };
 
-    const app = new LandingPage(props);
-    return render(app, !req.cookies.signedIn, req, res, props.stateCursor.get());
+    const app = new LandingPage(context);
+    return render(app, !req.cookies.signedIn, req, res, context.stateCursor.get());
 }
 
 export function renderAdminApp(req: Request, res: Response, next: Function): string {
-    const state = {
-        currentUser: {
-            signedIn: req.cookies.signedIn,
-            attributes: {}, // will be filled by the client
-            conversationsState: {
-                conversations: [],
-                hasFetched: false,
-            },
-            messagesState: {
-                messages: {},
-                hasFetched: false,
-            }
-        }
-    };
-    const props = {
-        stateCursor: new Cursor(state),
+    const context = {
+        stateCursor: new Cursor(initAdminAppState),
         // TODO use a mock EventSystem
         eventSystem: new EventSystem(),
         // mock dispatchAction
@@ -61,11 +48,11 @@ export function renderAdminApp(req: Request, res: Response, next: Function): str
         history: createMemoryHistory(),
     };
 
-    const app = new Admin(props);
-    return render(app, false, req, res, props.stateCursor.get());
+    const app = new Admin(context);
+    return render(app, false, req, res, {});
 }
 
-function render(app: App<*>, shouldRender, req, res, appState): string {
+function render(app: App<*, *>, shouldRender, req, res, appState): string {
 
     const systemLang = req.acceptsLanguages(languages);
     console.log('render: systemLang: ', systemLang);

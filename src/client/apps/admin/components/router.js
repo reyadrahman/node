@@ -4,18 +4,23 @@ import Component from '../../../front-end-framework/component.js';
 import * as actions from '../actions.js';
 import Route from 'route-parser';
 
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 
-export type StringRoutes = [[string, Class<Component<AdminAppProps>>]];
-type Routes = [[Route, Class<Component<AdminAppProps>>]];
+
+export type StringRoutes = [[string, Class<Component<AdminAppContext, *>>]];
+type Routes = [[Route, Class<Component<AdminAppContext, *>>]];
+
+type Props = {
+    routes: StringRoutes,
+};
 
 /**
- * The constructor takes 2 args: props and routes.
+ * The props of the constructor expects a route item.
  * Each route, specifies the route path * (see 'route-parser' package
  * for details on syntax) and the component that will be drawn when the
  * route matches.
 
- * When instantiating the matched route, it passes props (received from
+ * When instantiating the matched route, it passes context and props (received from
  * parent) and params (result of 'route-parser' match) to the constructor.
  * 
  * Its render method will call the render method of the matched route.
@@ -24,17 +29,17 @@ type Routes = [[Route, Class<Component<AdminAppProps>>]];
  * to prevent them from refreshing the page and instead dynamically re-route
  * the components.
  */
-export default class Router extends Component<AdminAppProps> {
+export default class Router extends Component<AdminAppContext, Props> {
     routes: Routes;
     historyUnlisten: ?any;
 
-    constructor(props: AdminAppProps, routes: StringRoutes) {
-        super(props);
-        this.routes = routes.map(([r, c]) => [new Route(r), c]);
+    constructor(context: AdminAppContext, props: Props) {
+        super(context, props);
+        this.routes = props.routes.map(([r, c]) => [new Route(r), c]);
     }
 
     route(e: any) {
-        this.props.history.push(e.target.pathname);
+        this.context.history.push(e.target.pathname);
         e.preventDefault();
     }
 
@@ -43,7 +48,7 @@ export default class Router extends Component<AdminAppProps> {
         console.log('router: installing click handler');
         $(document).on('click', '.dynamic-link', e => this.route(e));
         this.historyUnlisten =
-            this.props.history.listen(location => this.rerender());
+            this.context.history.listen(location => this.rerender());
     }
 
     componentWillUnmount() {
@@ -53,7 +58,7 @@ export default class Router extends Component<AdminAppProps> {
     }
 
     matchRoute() {
-        const { pathname } = this.props.history.location;
+        const { pathname } = this.context.history.location;
         const selectedRoute = this.routes.find(([route]) => route.match(pathname));
         if (!selectedRoute) {
             console.error(`Router: unknown route ${pathname}`);
@@ -66,43 +71,36 @@ export default class Router extends Component<AdminAppProps> {
     rerender() {
         console.log('Router: rerender');
         const route = this.matchRoute();
+        const { params, component } = route;
+        const oldChild = this.getChild('child');
 
-        if (!route) {
-            $('.router-selected-child').replaceWith(this.notFound());
+        if (route && oldChild && oldChild.constructor === component && oldChild.routeParamsChanged) {
+            oldChild.routeParamsChanged(params);
             return;
         }
 
-        const { params, component } = route;
-
-
-        const oldChild = this.getChild('child');
-        if (oldChild.constructor === component && oldChild.routeParamsChanged) {
-            oldChild.routeParamsChanged(params);
-        } else {
-            const compStr = this.renderHelper(params, component);
-            $('.router-selected-child').replaceWith(compStr);
-            this.getChild('child').componentDidMount();
-        }
+        const compStr = this.render();
+        $('.router-selected-child').replaceWith(compStr);
+        this.getChild('child').componentDidMount();
     }
 
     notFound() {
         // TODO redirect somewhere else
-        return '<div class="router-selected-child" id="page-wrapper"><h1>Page not found</h1></div>'
-    }
-
-    renderHelper(params: Object, component: Class<Component<AdminAppProps>>) {
-        console.log('Router renderHelper: params: ', params, ', component: ', component);
-        this.unmountChild('child');
-        const child = this.addChild(new component(this.props, params), 'child');
-
-        return child.render({ className: 'router-selected-child'});
+        return '<div class="router-selected-child page-wrapper"><h1>Page not found</h1></div>'
     }
 
     render() {
+        this.unmountChild('child');
         const route = this.matchRoute();
         if (!route) {
             return this.notFound();
         }
-        return this.renderHelper(route.params, route.component);
+        const { params, component } = route;
+        const props = {
+            params,
+            className: 'router-selected-child',
+        };
+        const child = this.addChild(new component(this.context, props), 'child');
+        return child.render();
     }
 }

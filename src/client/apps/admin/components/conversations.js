@@ -2,46 +2,40 @@
 
 import Component from '../../../front-end-framework/component.js';
 import { simpleTimeFormat } from '../../../../misc/utils.js';
-import type { AdminAppProps } from '../types.js';
+import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 import * as actions from '../actions.js';
 
-type Params = {
+type Props = AdminAppSubPageProps & {
     conversationId?: string,
     onConversationSelected?: Function,
 };
 
 const defaultAvatarUrl = require('./default-avatar.jpg');
 
-export default class Conversations extends Component<AdminAppProps> {
-    params: Object;
-
-    constructor(props: AdminAppProps, params: Params) {
-        super(props);
-        console.log('Conversations params: ', params);
-        this.params = params;
-    }
-
+export default class Conversations extends Component<AdminAppContext, Props> {
     componentDidMount() {
-        this.props.dispatchAction(actions.fetchConversations());
-        this.props.eventSystem.subscribe(() => this.rerender(), 'fetchedConversations');
+        this.context.dispatchAction(actions.fetchConversations());
+        this.context.eventSystem.subscribe(() => this.rerender(), 'fetchedConversations');
         const self = this;
         $(document).on('click', '#conversations .conversation', function() {
             const conversationId = $(this).data('conversation-id');
             console.log('conversation selected: ', conversationId);
-            const cb = self.params.onConversationSelected;
+            const cb = self.props.onConversationSelected;
             cb && cb(conversationId);
             return false;
         });
     }
 
     conversationIdChanged(conversationId?: string) {
-        const oldParams = this.params;
-        this.params = {
-            ...oldParams,
+        const oldProps = this.props;
+        this.props = {
+            ...oldProps,
             conversationId,
         };
         $(`#conversations .conversation.selected`).removeClass('selected');
-        $(`#conversations .conversation[data-conversation-id='${conversationId}']`).addClass('selected');
+        if (conversationId) {
+            $(`#conversations .conversation[data-conversation-id='${conversationId}']`).addClass('selected');
+        }
     }
 
     rerender() {
@@ -57,7 +51,7 @@ export default class Conversations extends Component<AdminAppProps> {
         if (text.length > 20) {
             text = text.substr(0, 17) + '...';
         }
-        let extraClass = c.conversationId === this.params.conversationId
+        let extraClass = c.conversationId === this.props.conversationId
             ? 'selected' : '';
 
         return `
@@ -79,9 +73,9 @@ export default class Conversations extends Component<AdminAppProps> {
     }
 
     render() {
-        const s = this.props.stateCursor.get().currentUser.conversationsState;
+        const s = this.context.stateCursor.get().currentUser.conversationsState;
         // console.log('s: ', s);
-        // console.log('this.props.stateCursor.get(): ', this.props.stateCursor.get());
+        // console.log('this.context.stateCursor.get(): ', this.context.stateCursor.get());
 
         this.unmountChildren();
 

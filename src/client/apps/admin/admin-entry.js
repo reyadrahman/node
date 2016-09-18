@@ -1,30 +1,34 @@
 /* @flow */
-import { appState as initAppState } from '../../preamble.js';
+import { appState as initAppStateFromServer } from '../../preamble.js';
 import Admin from './admin.js';
+import initAppState from './init-app-state.js';
 import EventSystem from '../../front-end-framework/event-system.js';
 import { Cursor } from '../../../misc/atom.js';
 import { dispatchAction, initUserFromCache } from './actions.js';
 import * as actions from './actions.js';
 import { overwriteIntoDOM } from '../../client-utils.js';
+import type { AdminAppContext } from './types';
 import ice from 'icepick';
 import { createBrowserHistory } from 'history';
+import isEmpty from 'lodash/isEmpty';
 
 
 async function main() {
-    const props = {
-        stateCursor: new Cursor(initAppState),
+    const appState = isEmpty(initAppStateFromServer) ? initAppState : initAppStateFromServer;
+    const context: AdminAppContext = {
+        stateCursor: new Cursor(appState),
         eventSystem: new EventSystem(),
-        dispatchAction: action => dispatchAction(props, action),
+        dispatchAction: action => dispatchAction(context, action),
         history: createBrowserHistory(),
     };
 
     try {
-        await props.dispatchAction(initUserFromCache());
+        await context.dispatchAction(initUserFromCache());
     } catch(error) {
         window.location = '/';
     }
 
-    const rootComp = new Admin(props);
+    const rootComp = new Admin(context);
     const compStr = rootComp.render();
     overwriteIntoDOM(compStr, document.getElementById('app-root'), true);
     rootComp.componentDidMount();

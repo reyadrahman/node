@@ -1,7 +1,7 @@
 /* @flow */
 
 import type { Cursor } from '../../../misc/atom.js';
-import type { Conversation, DBMessage } from '../../../misc/types.js';
+import type { Conversation, DBMessage, BotParams } from '../../../misc/types.js';
 import type EventSystem from '../../front-end-framework/event-system.js';
 
 export type Action = $Subtype<{
@@ -19,14 +19,23 @@ export type AdminAppState = {
         messagesState: {
             messages: {[key: string]: DBMessage[]},
             hasFetched: boolean,
-        }
+        },
+        botsState: {
+            bots: BotParams[],
+            hasFetched: boolean,
+        },
+        selectedBotId: ?string,
     },
 };
 
-export type AdminAppProps = {
+export type AdminAppContext = {
     stateCursor: Cursor<AdminAppState>,
     eventSystem: EventSystem,
     dispatchAction: (action: Action) => Promise<*>,
     history: any, // TODO type of history?
+};
+
+export type AdminAppSubPageProps = {
+    className: string,
 };
 

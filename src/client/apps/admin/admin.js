@@ -17,13 +17,12 @@ import TypographyPage from './components/typography-page.js';
 import IconsPage from './components/icons-page.js';
 import GridPage from './components/grid-page.js';
 import BlankPage from './components/blank-page.js';
+import MessagesPage from './components/messages-page.js';
+import FeedsPage from './components/feeds-page.js';
 import Layout from './components/layout.js';
 import Router from './components/router.js';
-import MessagesPage from './components/messages-page.js';
 
-import type { AdminAppProps, Action } from './types.js';
-
-import initSbAdmin2 from './sb-admin-2.js';
+import type { AdminAppContext, Action } from './types.js';
 
 // Bootstrap Core CSS
 import './public/vendor/bootstrap/css/bootstrap.css';
@@ -46,7 +45,7 @@ import './less/sb-admin-2.less';
 
 const { PUBLIC_URL } = CLIENT_ENV;
 
-export default class Admin extends App<AdminAppProps> {
+export default class Admin extends App<AdminAppContext, null> {
     getScripts(): string[] {
         return [
             `${PUBLIC_URL}admin/vendor/jquery/jquery.min.js`,
@@ -83,36 +82,82 @@ export default class Admin extends App<AdminAppProps> {
     componentDidMount() {
         console.log('Admin: componentDidMount()');
         super.componentDidMount();
-        initSbAdmin2();
+
+        $('#side-menu').metisMenu();
+        this.onMountAndResize();
+        $(window).bind("resize", () => this.onMountAndResize());
+
+        // var url = window.location;
+        // var element = $('ul.nav a').filter(function() {
+        //     return this.href == url;
+        // }).addClass('active').parent().parent().addClass('in').parent();
+        // var element = $('ul.nav a').filter(function() {
+        //     return this.href == url;
+        // }).addClass('active').parent();
+
+        // while (true) {
+        //     if (element.is('li')) {
+        //         element = element.parent().addClass('in').parent();
+        //     } else {
+        //         break;
+        //     }
+        // }
+    }
+
+    onMountAndResize() {
+        // Loads the correct sidebar on window load,
+        // collapses the sidebar on window resize.
+        // Sets the min-height of .set-min-height-for-page-wrapper to window size
+
+        var topOffset = 50;
+        var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+        if (width < 768) {
+            $('div.navbar-collapse').addClass('collapse');
+            topOffset = 100; // 2-row-menu
+        } else {
+            $('div.navbar-collapse').removeClass('collapse');
+        }
+
+        var height = ((window.innerHeight > 0) ? window.innerHeight : screen.height) - 1;
+        height = height - topOffset;
+        if (height < 1) height = 1;
+        if (height > topOffset) {
+            $(".set-min-height-for-page-wrapper").css("min-height", (height) + "px");
+        }
     }
 
     render() {
-        const state = this.props.stateCursor.get();
+        const state = this.context.stateCursor.get();
         if (!state.currentUser.signedIn) {
             return '';
         }
 
         this.unmountChildren();
 
-        const router = this.addChild(new Router(this.props, [
-            [ '/admin',                            DashboardPage ],
-            [ '/admin/messages(/:conversationId)', MessagesPage ],
-            [ '/admin/flot',                       FlotPage ],
-            [ '/admin/morris',                     MorrisPage ],
-            [ '/admin/tables',                     TablesPage ],
-            [ '/admin/forms',                      FormsPage ],
-            [ '/admin/panels-wells',               PanelWellsPage ],
-            [ '/admin/buttons',                    ButtonsPage ],
-            [ '/admin/notifications',              NotificationsPage ],
-            [ '/admin/typography',                 TypographyPage ],
-            [ '/admin/icons',                      IconsPage ],
-            [ '/admin/grid',                       GridPage ],
-            [ '/admin/blank',                      BlankPage ],
-        ]), 'router');
+        const router = this.addChild(new Router(this.context, {
+            routes: [
+                [ '/admin',                            DashboardPage ],
+                [ '/admin/messages(/:conversationId)', MessagesPage ],
+                [ '/admin/feeds',                      FeedsPage ],
+                [ '/admin/flot',                       FlotPage ],
+                [ '/admin/morris',                     MorrisPage ],
+                [ '/admin/tables',                     TablesPage ],
+                [ '/admin/forms',                      FormsPage ],
+                [ '/admin/panels-wells',               PanelWellsPage ],
+                [ '/admin/buttons',                    ButtonsPage ],
+                [ '/admin/notifications',              NotificationsPage ],
+                [ '/admin/typography',                 TypographyPage ],
+                [ '/admin/icons',                      IconsPage ],
+                [ '/admin/grid',                       GridPage ],
+                [ '/admin/blank',                      BlankPage ],
+            ],
+        }), 'router');
 
-        const layout = this.addChild(new Layout(this.props), 'layout');
+        const layout = this.addChild(new Layout(this.context, {
+            contentComponent: router,
+        }), 'layout');
 
-        return layout.render({ contentComponent: router });
+        return layout.render();
     }
 }
 

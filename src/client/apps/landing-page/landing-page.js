@@ -9,14 +9,14 @@ import * as actions from './actions.js';
 // this will import ./landio.js on the server and ./landio.web.js on the client
 import initLandio from './landio';
 
-import type { LandingPageAppProps, Action } from './types.js';
+import type { LandingPageAppContext, Action } from './types.js';
 
 import './scss/landing-page.scss';
 import './scss/landio.scss';
 
 const { PUBLIC_URL } = CLIENT_ENV;
 
-export default class LandingPage extends App<LandingPageAppProps> {
+export default class LandingPage extends App<LandingPageAppContext, null> {
     signInErrorMessageTimeout: any;
 
     getScripts(): string[] {
@@ -44,8 +44,8 @@ export default class LandingPage extends App<LandingPageAppProps> {
             }
         });
         $('#signOutButton').click(() => this.signOut());
-        this.props.eventSystem.subscribe(x => this.signInFailed(x), 'signInFailed');
-        this.props.eventSystem.subscribe(x => this.signedOut(), 'signedOut');
+        this.context.eventSystem.subscribe(x => this.signInFailed(x), 'signInFailed');
+        this.context.eventSystem.subscribe(x => this.signedOut(), 'signedOut');
     }
 
     signIn() {
@@ -56,7 +56,7 @@ export default class LandingPage extends App<LandingPageAppProps> {
             return;
         }
 
-        this.props.dispatchAction(actions.signIn(email, password));
+        this.context.dispatchAction(actions.signIn(email, password));
     }
 
     signInFailed({ errorMessage }) {
@@ -69,7 +69,7 @@ export default class LandingPage extends App<LandingPageAppProps> {
     }
 
     signOut() {
-        this.props.dispatchAction(actions.signOut());
+        this.context.dispatchAction(actions.signOut());
     }
 
     signedOut() {
@@ -78,7 +78,7 @@ export default class LandingPage extends App<LandingPageAppProps> {
     }
 
     renderSignInOrProfile() {
-        const {currentUser: { signedIn, attributes } } = this.props.stateCursor.get();
+        const {currentUser: { signedIn, attributes } } = this.context.stateCursor.get();
 
         if (signedIn) {
             const { given_name, family_name, email } = attributes;
@@ -192,7 +192,6 @@ export default class LandingPage extends App<LandingPageAppProps> {
                 </li>
             */
             }
-            <li class="navbar-divider hidden-sm-down"></li>
             ${signInOrProfile}
           </ul>
         </div>

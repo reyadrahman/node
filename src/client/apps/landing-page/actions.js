@@ -1,26 +1,26 @@
 /* @flow */
 
 import * as aws from '../../../aws/aws.js';
-import type { LandingPageAppProps, Action } from './types.js';
+import type { LandingPageAppContext, Action } from './types.js';
 
 export function signIn(email: string, password: string) {
     return { type: 'signIn', email, password };
 }
 
-async function handleSignIn(props, action) {
+async function handleSignIn(context, action) {
     try {
         await aws.signIn(action.email, action.password);
         // const attributes = await aws.getCurrentUserAttributes();
-        // props.stateCursor.$assocIn('currentUser', {
+        // context.stateCursor.$assocIn('currentUser', {
         //     signedIn: true,
         //     attributes,
         // });
         window.location = '/admin';
     } catch(error) {
-        props.stateCursor.$assocIn('currentUser', {
+        context.stateCursor.$assocIn('currentUser', {
             signedIn: false,
         });
-        props.eventSystem.publish('signInFailed', {
+        context.eventSystem.publish('signInFailed', {
             errorMessage: error.message,
         });
         throw error;
@@ -31,28 +31,28 @@ export function signOut() {
     return { type: 'signOut' };
 }
 
-async function handleSignOut(props, action) {
+async function handleSignOut(context, action) {
     await aws.signOut();
-    props.stateCursor.$assocIn('currentUser', {
+    context.stateCursor.$assocIn('currentUser', {
         signedIn: false,
         attributes: {},
     });
-    props.eventSystem.publish('signedOut');
+    context.eventSystem.publish('signedOut');
 }
 
 export function initUserFromCache() {
     return { type: 'initUserFromCache' };
 }
 
-async function handleInitUserFromCache(props, action) {
+async function handleInitUserFromCache(context, action) {
     try {
         const attributes = await aws.getCurrentUserAttributes();
-        props.stateCursor.$assocIn('currentUser', {
+        context.stateCursor.$assocIn('currentUser', {
             signedIn: true,
             attributes,
         });
     } catch(error) {
-        props.stateCursor.$assocIn('currentUser', {
+        context.stateCursor.$assocIn('currentUser', {
             signedIn: false,
             attributes: {},
         });
@@ -60,9 +60,9 @@ async function handleInitUserFromCache(props, action) {
 }
 
 
-export async function dispatchAction(props: LandingPageAppProps, action: Action) {
+export async function dispatchAction(context: LandingPageAppContext, action: Action) {
     console.log('--------- dispatchAction action: ', action);
-    const beforeState = props.stateCursor.get();
+    const beforeState = context.stateCursor.get();
     const t = action.type;
     let handler;
 
@@ -79,11 +79,11 @@ export async function dispatchAction(props: LandingPageAppProps, action: Action)
 
     try {
         console.log('--------- dispatchAction before state: ', beforeState);
-        const res = handler(props, action);
+        const res = handler(context, action);
         if (res instanceof Promise) {
             await res;
         }
-        console.log('--------- dispatchAction after state: ', props.stateCursor.get());
+        console.log('--------- dispatchAction after state: ', context.stateCursor.get());
     } catch(error) {
         console.log('--------- dispatchAction failed: ', error);
         throw error;
