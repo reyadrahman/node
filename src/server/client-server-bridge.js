@@ -207,7 +207,7 @@ async function fetchConversations(identityId) {
         ExpressionAttributeValues: {
             ':pid': identityId,
         },
-        // Limit: 50,
+        Limit: 50,
         ScanIndexForward: false,
     });
 
@@ -216,6 +216,7 @@ async function fetchConversations(identityId) {
 }
 
 async function fetchMessages(identityId, conversationId) {
+    console.log("from table");
     console.log('fetchMessages: ', identityId);
     const qres = await aws.dynamoQuery({
         TableName: DB_TABLE_MESSAGES,
