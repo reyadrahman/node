@@ -215,6 +215,9 @@ export async function _aiRoute(
     return responses;
 }
 
+/**
+ * updates the conversation table, creating a new item if necessary
+ */
 export async function _updateConversationTable(message: DBMessage,
                                                botParams: BotParams,
                                                channelData?: ChannelData)

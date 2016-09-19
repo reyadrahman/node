@@ -3,6 +3,7 @@
 import type { Cursor } from '../../../misc/atom.js';
 import type { Conversation, DBMessage, BotParams } from '../../../misc/types.js';
 import type EventSystem from '../../front-end-framework/event-system.js';
+import type { BrowserHistory } from '../types.js';
 
 export type Action = $Subtype<{
     type: string,
@@ -32,7 +33,7 @@ export type AdminAppContext = {
     stateCursor: Cursor<AdminAppState>,
     eventSystem: EventSystem,
     dispatchAction: (action: Action) => Promise<*>,
-    history: any, // TODO type of history?
+    history: BrowserHistory,
 };
 
 export type AdminAppSubPageProps = {

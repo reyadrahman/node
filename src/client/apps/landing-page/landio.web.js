@@ -21,69 +21,22 @@ import './plugins/jquery.vimeo.api.js';
 // // Donut Chart
 import './plugins/chart.js';
 
-function onScrollAnimations() {
-  $('.wp-1').waypoint(function() {
-    $('.wp-1').addClass('animated fadeInUp');
-  }, {
-    offset: '75%'
-  });
-  $('.wp-2').waypoint(function() {
-    $('.wp-2').addClass('animated fadeInUp');
-  }, {
-    offset: '75%'
-  });
-  $('.wp-3').waypoint(function() {
-    $('.wp-3').addClass('animated fadeInUp');
-  }, {
-    offset: '75%'
-  });
-  $('.wp-4').waypoint(function() {
-    $('.wp-4').addClass('animated fadeIn');
-  }, {
-    offset: '75%'
-  });
-  $('.wp-5').waypoint(function() {
-    $('.wp-5').addClass('animated fadeInRight');
-  }, {
-    offset: '50%'
-  });
-  $('.wp-6').waypoint(function() {
-    $('.wp-6').addClass('animated fadeInLeft');
-  }, {
-    offset: '50%'
-  });
-  $('.wp-7').waypoint(function() {
-    $('.wp-7').addClass('animated fadeInUp');
-  }, {
-    offset: '60%'
-  });
-  $('.wp-8').waypoint(function() {
-    $('.wp-8').addClass('animated fadeInUp');
-  }, {
-    offset: '60%'
-  });
-}
-
-function inputPlaceholders() {
-  $('input, textarea').placeholder();
-}
-
 function navMobileCollapse() {
   // avoid having both mobile navs opened at the same time
-  $('#collapsingMobileUser').on('show.bs.collapse', function () {
+  $(document).on('#collapsingMobileUser show.bs.collapse', function () {
     $('#collapsingNavbar').removeClass('in');
     $('[data-target="#collapsingNavbar"]').attr('aria-expanded', 'false');
   });
-  $('#collapsingNavbar').on('show.bs.collapse', function () {
+  $(document).on('#collapsingNavbar show.bs.collapse', function () {
     $('#collapsingMobileUser').removeClass('in');
     $('[data-target="#collapsingMobileUser"]').attr('aria-expanded', 'false');
   });
   // dark navbar
-  $('#collapsingMobileUserInverse').on('show.bs.collapse', function () {
+  $(document).on('#collapsingMobileUserInverse show.bs.collapse', function () {
     $('#collapsingNavbarInverse').removeClass('in');
     $('[data-target="#collapsingNavbarInverse"]').attr('aria-expanded', 'false');
   });
-  $('#collapsingNavbarInverse').on('show.bs.collapse', function () {
+  $(document).on('#collapsingNavbarInverse show.bs.collapse', function () {
     $('#collapsingMobileUserInverse').removeClass('in');
     $('[data-target="#collapsingMobileUserInverse"]').attr('aria-expanded', 'false');
   });
@@ -91,15 +44,15 @@ function navMobileCollapse() {
 
 function navSearch() {
   // hide first nav items when search is opened
-  $('.nav-dropdown-search').on('show.bs.dropdown', function () {
+  $(document).on('.nav-dropdown-search show.bs.dropdown', function () {
     $(this).siblings().not('.navbar-nav .dropdown').addClass('sr-only');
   })
   // cursor focus
-  $('.nav-dropdown-search').on('shown.bs.dropdown', function () {
+  $(document).on('.nav-dropdown-search shown.bs.dropdown', function () {
     $('.navbar-search-input').focus();
   });
   // show all nav items when search is closed
-  $('.nav-dropdown-search').on('hide.bs.dropdown', function () {
+  $(document).on('.nav-dropdown-search hide.bs.dropdown', function () {
     $(this).siblings().removeClass('sr-only');
   });
 }
@@ -174,11 +127,11 @@ function donutChart() {
 
 //   // VIMEO
 
-//   $('#videoModal').on('shown.bs.modal', function () {
+//   $(document).on('#videoModal shown.bs.modal', function () {
 //     $("#vimeo-play").vimeo("play");
 //   });
 
-//   $('#videoModal').on('hidden.bs.modal', function () {
+//   $(document).on('#videoModal hidden.bs.modal', function () {
 //     $("#vimeo-play").vimeo("pause");
 //   });
 
@@ -189,11 +142,11 @@ function donutChart() {
 //     var videoSRC     = $(this).attr("data-video"),
 //         videoSRCauto = videoSRC + "?autoplay=1&html5=1&rel=0&showinfo=0";
 
-//     $('#youtubeModal').on('shown.bs.modal', function () {
+//     $(document).on('#youtubeModal shown.bs.modal', function () {
 //       $('#youtube-play').attr('src', videoSRCauto);
 //     });
 
-//     $('#youtubeModal').on('hidden.bs.modal', function () {
+//     $(document).on('#youtubeModal hidden.bs.modal', function () {
 //       $('#youtube-play').attr('src', videoSRC);
 //     });
 
@@ -201,8 +154,6 @@ function donutChart() {
 // }
 
 export default function init() {
-  onScrollAnimations();
-  inputPlaceholders();
   navMobileCollapse();
   navSearch();
   // htmlVideo();

@@ -12,8 +12,11 @@ import ice from 'icepick';
 import { createBrowserHistory } from 'history';
 import isEmpty from 'lodash/isEmpty';
 
+function main() {
+    mainAsync().catch(error => console.error(error));
+}
 
-async function main() {
+async function mainAsync() {
     const appState = isEmpty(initAppStateFromServer) ? initAppState : initAppStateFromServer;
     const context: AdminAppContext = {
         stateCursor: new Cursor(appState),

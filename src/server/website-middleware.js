@@ -13,12 +13,32 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import ice from 'icepick';
 import { createMemoryHistory } from 'history';
+import Route from 'route-parser';
 
 const routes = express.Router();
 
 const { PUBLIC_URL } = CLIENT_ENV;
 
-export function renderLandingPageApp(req: Request, res: Response, next: Function): string {
+export default function websiteMiddleware(req: Request, res: Response, next: Function) {
+    let pathname = req.baseUrl + req.path;
+    pathname = pathname.endsWith('/') && pathname !== '/'
+        ? pathname.substr(0, pathname.length-1)
+        : pathname;
+    console.log('websiteMiddleware: req.baseUrl: ', req.baseUrl, ', req.path: ', req.path, ', pathname: ', pathname);
+    const testRoutes = routes => routes
+        .map(x => new Route(x[0]))
+        .find(x => x.match(pathname))
+
+    if (testRoutes(Admin.getRoutes())) {
+        handleAdminApp(req, res, next, pathname);
+    } else if (testRoutes(LandingPage.getRoutes())) {
+        handleLandingPageApp(req, res, next, pathname);
+    } else {
+        next();
+    }
+}
+
+function handleLandingPageApp(req: Request, res: Response, next: Function, pathname: string) {
     const state = {
         currentUser: {
             signedIn: req.cookies.signedIn,
@@ -31,13 +51,17 @@ export function renderLandingPageApp(req: Request, res: Response, next: Function
         eventSystem: new EventSystem(),
         // mock dispatchAction
         dispatchAction: action => Promise.resolve(),
+        history: createMemoryHistory({
+            initialEntries: [ pathname ],
+        }),
     };
 
     const app = new LandingPage(context);
-    return render(app, !req.cookies.signedIn, req, res, context.stateCursor.get());
+    handleCommon(app, !req.cookies.signedIn, req, res, context.stateCursor.get());
+    // handleCommon(app, false, req, res, {});
 }
 
-export function renderAdminApp(req: Request, res: Response, next: Function): string {
+function handleAdminApp(req: Request, res: Response, next: Function, pathname: string) {
     const context = {
         stateCursor: new Cursor(initAdminAppState),
         // TODO use a mock EventSystem
@@ -45,14 +69,16 @@ export function renderAdminApp(req: Request, res: Response, next: Function): str
         // mock dispatchAction
         dispatchAction: action => Promise.resolve(),
         // mock history
-        history: createMemoryHistory(),
+        history: createMemoryHistory({
+            initialEntries: [ pathname ],
+        }),
     };
 
     const app = new Admin(context);
-    return render(app, false, req, res, {});
+    handleCommon(app, false, req, res, {});
 }
 
-function render(app: App<*, *>, shouldRender, req, res, appState): string {
+function handleCommon(app: App<*, *>, shouldRender, req, res, appState) {
 
     const systemLang = req.acceptsLanguages(languages);
     console.log('render: systemLang: ', systemLang);
@@ -64,18 +90,18 @@ function render(app: App<*, *>, shouldRender, req, res, appState): string {
     };
     const envVarsStr = sanitizeAndStringifyObj(envVars);
     const appStateStr = sanitizeAndStringifyObj(appState);
-    const styleSheets = app.getStyleSheets();
+    const styleSheets = app.constructor.getStyleSheets();
     const styleSheetsStr = styleSheets.map(
         x => `<link rel="stylesheet" type="text/css" href="${x}" />`
     ).join('\n');
-    const scripts = app.getScripts();
+    const scripts = app.constructor.getScripts();
     const scriptsStr = scripts.map(
         x => `<script src="${x}"></script>`
     ).join('\n');
-    const title = app.getTitle();
+    const title = app.constructor.getTitle();
     const appStr = shouldRender ? app.render() : '';
 
-    return (
+    res.send(
         `<!doctype html>
         <html>
             <head>

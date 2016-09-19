@@ -7,12 +7,18 @@ import { Cursor } from '../../../misc/atom.js';
 import { overwriteIntoDOM } from '../../client-utils.js';
 import type { LandingPageAppContext } from './types';
 import ice from 'icepick';
+import { createBrowserHistory } from 'history';
 
-async function main() {
+function main() {
+    mainAsync().catch(error => console.error(error));
+}
+
+async function mainAsync() {
     const context: LandingPageAppContext = {
         stateCursor: new Cursor(ice.freeze(initAppState)),
         eventSystem: new EventSystem(),
         dispatchAction: action => dispatchAction(context, action),
+        history: createBrowserHistory(),
     };
 
     try {

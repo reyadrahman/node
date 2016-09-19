@@ -1,10 +1,10 @@
 /* @flow */
 
 import express from 'express';
-import * as renderer from './server-side-renderer.js';
 import bridge from './client-server-bridge.js';
 import { webhooks } from './channels/all-channels.js';
 import { feedsPeriodicUpdate } from './periodic-tasks.js';
+import websiteMiddleware from './website-middleware.js';
 
 const routes = express.Router();
 
@@ -28,17 +28,6 @@ routes.post('/run-periodic-tasks', (req, res, next) => {
     feedsPeriodicUpdate(req, res);
 });
 
-routes.use('/admin/', (req, res, next) => {
-    const doc = renderer.renderAdminApp(req, res, next);
-    console.log('route /admin/ sending: ', doc);
-    res.send(doc);
-});
-
-routes.get('/', (req, res, next) => {
-    const doc = renderer.renderLandingPageApp(req, res, next);
-    console.log('route / sending: ', doc);
-    res.send(doc);
-});
-
+routes.use('/', websiteMiddleware);
 
 export default routes;

@@ -3,15 +3,19 @@
 import Component from './component.js';
 
 export default class App<Context, Props> extends Component<Context, Props> {
-    getStyleSheets(): string[] {
+    static getStyleSheets(): string[] {
         return [];
     }
 
-    getScripts(): string[] {
+    static getScripts(): string[] {
         return [];
     }
 
-    getTitle(): string {
+    static getTitle(): string {
         return 'Deepiks Bot Platform';
+    }
+
+    static getRoutes(route: string): boolean {
+
     }
 }

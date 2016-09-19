@@ -20,7 +20,7 @@ import BlankPage from './components/blank-page.js';
 import MessagesPage from './components/messages-page.js';
 import FeedsPage from './components/feeds-page.js';
 import Layout from './components/layout.js';
-import Router from './components/router.js';
+import Router from '../../common-components/router.js';
 
 import type { AdminAppContext, Action } from './types.js';
 
@@ -46,7 +46,7 @@ import './less/sb-admin-2.less';
 const { PUBLIC_URL } = CLIENT_ENV;
 
 export default class Admin extends App<AdminAppContext, null> {
-    getScripts(): string[] {
+    static getScripts(): string[] {
         return [
             `${PUBLIC_URL}admin/vendor/jquery/jquery.min.js`,
             `${PUBLIC_URL}admin/vendor/bootstrap/js/bootstrap.min.js`,
@@ -73,9 +73,29 @@ export default class Admin extends App<AdminAppContext, null> {
         ];
     }
 
-    getStyleSheets(): string[] {
+    static getStyleSheets(): string[] {
         return [
             `${PUBLIC_URL}admin.css`,
+        ];
+    }
+
+    static getRoutes() {
+        return [
+            [ '/admin',                            TestPage          ],
+            [ '/admin/test',                       TestPage          ],
+            [ '/admin/messages(/:conversationId)', MessagesPage      ],
+            [ '/admin/feeds',                      FeedsPage         ],
+            [ '/admin/flot',                       FlotPage          ],
+            [ '/admin/morris',                     MorrisPage        ],
+            [ '/admin/tables',                     TablesPage        ],
+            [ '/admin/forms',                      FormsPage         ],
+            [ '/admin/account',                    AccountPage       ],
+            [ '/admin/buttons',                    ButtonsPage       ],
+            [ '/admin/notifications',              NotificationsPage ],
+            [ '/admin/typography',                 TypographyPage    ],
+            [ '/admin/icons',                      IconsPage         ],
+            [ '/admin/grid',                       GridPage          ],
+            [ '/admin/blank',                      BlankPage         ],
         ];
     }
 
@@ -135,23 +155,7 @@ export default class Admin extends App<AdminAppContext, null> {
         this.unmountChildren();
 
         const router = this.addChild(new Router(this.context, {
-            routes: [
-                [ '/admin',                            TestPage ],
-                [ '/admin/test',                            TestPage ],
-                [ '/admin/messages(/:conversationId)', MessagesPage ],
-                [ '/admin/feeds',                      FeedsPage ],
-                [ '/admin/flot',                       FlotPage ],
-                [ '/admin/morris',                     MorrisPage ],
-                [ '/admin/tables',                     TablesPage ],
-                [ '/admin/forms',                      FormsPage ],
-                [ '/admin/account',               AccountPage ],
-                [ '/admin/buttons',                    ButtonsPage ],
-                [ '/admin/notifications',              NotificationsPage ],
-                [ '/admin/typography',                 TypographyPage ],
-                [ '/admin/icons',                      IconsPage ],
-                [ '/admin/grid',                       GridPage ],
-                [ '/admin/blank',                      BlankPage ],
-            ],
+            routes: Admin.getRoutes(),
         }), 'router');
 
         const layout = this.addChild(new Layout(this.context, {

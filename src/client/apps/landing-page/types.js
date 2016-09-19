@@ -20,3 +20,6 @@ export type LandingPageAppContext = {
     dispatchAction: (action: Action) => Promise<*>,
 };
 
+export type LandingPageAppSubPageProps = {
+    className: string,
+};

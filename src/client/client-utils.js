@@ -51,11 +51,11 @@ export function overwriteIntoDOM(inputHtml: string, domElem: HTMLElement,
                                  warnInDevMode: boolean = false)
 {
     const elem = $(domElem);
-    const oldHtml = $('#app-root').html();
+    const oldHtml = $('#app-root').html().trim();
     if (/\S/.test(oldHtml)) {
         // some strings change after they've been insterted into html
         // for exampl &amp;times; becomes ×
-        const newHtml = $('<div></div>').html(inputHtml).html();
+        const newHtml = $('<div></div>').html(inputHtml).html().trim();
         if (oldHtml !== newHtml) {
             if (process.env.NODE_ENV === 'development' && warnInDevMode) {
                 const differ = new Diff();
