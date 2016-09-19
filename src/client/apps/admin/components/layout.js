@@ -136,16 +136,13 @@ export default class Layout extends Component<AdminAppContext, Props> {
                                     <a class="dynamic-link" href="/admin/messages"><i class="fa fa-comments fa-fw"></i> Messages</a>
                                 </li>
                                 <li>
-                                    <a class="dynamic-link" href="/admin/feeds"><i class="fa fa-rss fa-fw"></i> Feeds</a>
-                                </li>
-                                <li>
-                                    <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Charts<span class="fa arrow"></span></a>
+                                    <a href="#"><i class="fa fa-cog fa-fw"></i> Settings<span class="fa arrow"></span></a>
                                     <ul class="nav nav-second-level">
                                         <li>
-                                            <a class="dynamic-link" href="/admin/flot">Flot Charts</a>
+                                            <a class="dynamic-link" href="/admin/general">General</a>
                                         </li>
                                         <li>
-                                            <a class="dynamic-link" href="/admin/morris">Morris.js Charts</a>
+                                            <a class="dynamic-link" href="/admin/feeds">Feeds</a>
                                         </li>
                                     </ul>
                                     <!-- /.nav-second-level -->
