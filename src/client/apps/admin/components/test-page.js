@@ -23,6 +23,8 @@ export default class TestPage extends Component<AdminAppContext, AdminAppSubPage
                             <div class="panel-body">
                                 <h3>Testing the bot</h3>
                                 <p>This page will contain a web version of the bot, as specified on <a href="https://github.com/deepiksdev/node/issues/45">Github</a> </p>
+                                <p>Below is an example using the Microsoft bot framework which we consider not satisfactory </p>
+                                <iframe src="https://webchat.botframework.com/embed/deepiks?s=B3lvwUz4p0Q.cwA.-YA.toIk9HIRPR2aBTvrdCb5YYX9xcoHd18ibusSV29lyeg" style="height: 502px; max-height: 502px; width:100%"></iframe>
  
                             </div>
                         </div>

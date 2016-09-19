@@ -133,13 +133,10 @@ export default class Layout extends Component<AdminAppContext, Props> {
                                     <a class="dynamic-link" href="/admin/test"><i class="fa fa-play-circle fa-fw"></i> Test</a>
                                 </li>
                                 <li>
-                                    <a class="dynamic-link" href="/admin/messages"><i class="fa fa-envelope fa-fw"></i> Messages</a>
+                                    <a class="dynamic-link" href="/admin/messages"><i class="fa fa-comments fa-fw"></i> Messages</a>
                                 </li>
                                 <li>
                                     <a class="dynamic-link" href="/admin/feeds"><i class="fa fa-rss fa-fw"></i> Feeds</a>
-                                </li>
-                                <li>
-                                    <a class="dynamic-link" href="/admin/test"><i class="fa fa-play-circle fa-fw"></i> Test</a>
                                 </li>
                                 <li>
                                     <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Charts<span class="fa arrow"></span></a>
