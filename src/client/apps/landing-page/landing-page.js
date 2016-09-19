@@ -216,7 +216,7 @@ export default class LandingPage extends App<LandingPageAppContext, null> {
       <div class="container">
         <h3 class="wp wp-1">Build your beautiful UI, the way you want it, with Land.io</h3>
         <p class="lead wp wp-2">Craft memorable, emotive experiences with our range of beautiful UI elements.</p>
-        <img src="${require('./img/mock.png')}" alt="iPad mock" class="img-fluid wp wp-3">
+        <img src="${require('./img/mock.jpg')}" alt="iPad mock" class="img-fluid wp wp-3">
       </div>
     </section>
 
