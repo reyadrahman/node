@@ -5,7 +5,6 @@ import { simpleTimeFormat } from '../../../../misc/utils.js';
 import type { AdminAppContext } from '../types.js';
 import type { DBMessage, MessageAction, MessageCard } from '../../../../misc/types.js';
 import * as actions from '../actions.js';
-import {Layout} from './layout.js';
 
 type Props = {
     conversationId?: string,
@@ -19,7 +18,7 @@ export default class Messages extends Component<AdminAppContext, Props> {
             this.context.dispatchAction(actions.fetchMessages(this.props.conversationId));
         }
         this.context.eventSystem.subscribe(() => this.rerender(),
-            ['fetchedMessages', 'fetchingMessages', 'fetchedConversations','selectedBot']);
+            ['fetchedMessages', 'fetchingMessages', 'fetchedConversations']);
     }
 
     conversationIdChanged(conversationId?: string) {
@@ -133,26 +132,15 @@ export default class Messages extends Component<AdminAppContext, Props> {
         if (!ms.hasFetched) {
             return wrap(`<div class="wait">•••</div>`);
         }
-        const { selectedBotId } = this.context.stateCursor.get().currentUser;
-        
+
         const messages = ms.messages[this.props.conversationId];
-        var filtered_messages=[];
-        var i=0;
-        messages.forEach(function(result,index){
-            var pub_botids =(String(result.senderId)).split(":");
-            var botId = (String(pub_botids)).split("__");
-            if(!result.senderIsBot || (result.senderIsBot && botId[1] ==  String(selectedBotId))) {
-              filtered_messages.push(result);
-            }    
-        });
-      
-        if (ms.hasFetched && (!filtered_messages || messages.length === 0)) {
+        if (ms.hasFetched && (!messages || messages.length === 0)) {
             return wrap(`<div class="noMessagesFound">No messages found</div>`);
         }
 
         // need to reverse it, because we are using flex-direction: column-reverse
         // to display messages
-        const messagesRev = filtered_messages.slice().reverse();
+        const messagesRev = messages.slice().reverse();
 
         const messagesUi = messagesRev
             .map(x => this.renderMessage(x))

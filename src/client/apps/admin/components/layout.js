@@ -6,11 +6,9 @@ import type { AdminAppContext, AdminAppSubPageProps } from '../types.js';
 
 import isEmpty from 'lodash/isEmpty';
 
-
 type Props = {
     contentComponent: Component<AdminAppContext, *>;
 };
-
 
 export default class Layout extends Component<AdminAppContext, Props> {
     componentDidMount() {

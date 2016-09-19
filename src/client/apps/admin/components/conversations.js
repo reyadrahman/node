@@ -68,9 +68,6 @@ export default class Conversations extends Component<AdminAppContext, Props> {
                 <div class="date">
                     ${ simpleTimeFormat(c.lastMessage.creationTimestamp) }
                 </div>
-                <div class="channel">
-                ${ c.lastMessage.channel}
-                </div>
             </div>
         `;
     }

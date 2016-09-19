@@ -12,6 +12,6 @@ export default class App<Context, Props> extends Component<Context, Props> {
     }
 
     getTitle(): string {
-        return 'Title';
+        return 'Deepiks Bot Platform';
     }
 }
