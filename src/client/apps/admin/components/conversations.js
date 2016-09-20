@@ -14,7 +14,9 @@ const defaultAvatarUrl = require('./default-avatar.jpg');
 
 export default class Conversations extends Component<AdminAppContext, Props> {
     componentDidMount() {
-        this.context.dispatchAction(actions.fetchConversations());
+        this.context.eventSystem.subscribe(() => {
+            this.context.dispatchAction(actions.fetchConversations());
+        }, 'selectedBot');
         this.context.eventSystem.subscribe(() => this.rerender(), 'fetchedConversations');
         const self = this;
         $(document).on('click', '#conversations .conversation', function() {
@@ -24,6 +26,10 @@ export default class Conversations extends Component<AdminAppContext, Props> {
             cb && cb(conversationId);
             return false;
         });
+
+        $(document).on('keyup', '#conversations-search', () => {
+            this.rerender();
+        })
     }
 
     conversationIdChanged(conversationId?: string) {
@@ -40,7 +46,7 @@ export default class Conversations extends Component<AdminAppContext, Props> {
 
     rerender() {
         console.log('Conversations rerender');
-        $('#conversations').replaceWith(this.render());
+        $('#conversations .content').replaceWith(this.render(false));
         super.componentDidMount();
     }
 
@@ -64,6 +70,9 @@ export default class Conversations extends Component<AdminAppContext, Props> {
                     <div class="text">
                         ${ text }
                     </div>
+                    <div class="channel">
+                        via ${ c.channel }
+                    </div>
                 </div>
                 <div class="date">
                     ${ simpleTimeFormat(c.lastMessage.creationTimestamp) }
@@ -72,24 +81,55 @@ export default class Conversations extends Component<AdminAppContext, Props> {
         `;
     }
 
-    render() {
+    render(wrap) {
         const s = this.context.stateCursor.get().currentUser.conversationsState;
         // console.log('s: ', s);
         // console.log('this.context.stateCursor.get(): ', this.context.stateCursor.get());
 
         this.unmountChildren();
 
-        const wrap = x => `<div class="conversations" id="conversations">${x}</div>`;
+        const wrapper = x => {
+            if (wrap === false) {
+                return `<div class="content">${x}</div>`;
+            }
+
+            return `<div class="conversations" id="conversations">
+                        <div class="input-group custom-search-form">
+                            <input id="conversations-search" name="conversations-search" 
+                                type="text" class="form-control" 
+                                placeholder="Search..."
+                                >
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="content">${x}</div>
+                    </div>`;
+        };
+
 
         if (!s.hasFetched || s.conversations.length === 0) {
-            return wrap(`<div class="wait">•••</div>`);
+            return wrapper(`<div class="wait">•••</div>`);
         }
 
-        const convsUi = s.conversations
+        let search = $('#conversations-search').val().toLowerCase();
+
+        let conversations = s.conversations;
+
+        if (search) {
+            conversations = conversations.filter(
+                conversation => conversation.lastMessage.senderName.toLowerCase().indexOf(search) > -1 ||
+                conversation.lastMessage.text.toLowerCase().indexOf(search) > -1
+            )
+        }
+
+        const convsUi = conversations
             .map(x => this.renderConversation(x))
             .join('\n');
 
-        return wrap(convsUi);
+        return wrapper(convsUi);
     }
 }
 

@@ -47,7 +47,8 @@ async function handleFetchConversations(context, action) {
     try {
         const session = await aws.getCurrentSession();
         const conversations = await bridge.fetchConversations(
-            session.getIdToken().getJwtToken()
+            session.getIdToken().getJwtToken(),
+            context.stateCursor.get().currentUser.selectedBotId
         );
         context.stateCursor.$assocIn(['currentUser', 'conversationsState'], {
             hasFetched: true,
@@ -146,7 +147,7 @@ async function handleFetchBots(context, action) {
             hasFetched: true,
         });
         if (!context.stateCursor.getIn(['currentUser', 'selectedBotId']) && !isEmpty(bots)) {
-            context.stateCursor.$assocIn(['currentUser', 'selectedBotId'], bots[0].botId);
+            handleSelectBot(context, selectBot(bots[0].botId));
         }
         context.eventSystem.publish('fetchedBots');
     } catch(error) {
