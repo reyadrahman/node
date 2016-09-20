@@ -14,6 +14,7 @@ const defaultAvatarUrl = require('./default-avatar.jpg');
 
 export default class Conversations extends Component<AdminAppContext, Props> {
     componentDidMount() {
+        this.context.dispatchAction(actions.fetchConversations());
         this.context.eventSystem.subscribe(() => {
             this.context.dispatchAction(actions.fetchConversations());
         }, 'selectedBot');
@@ -81,7 +82,7 @@ export default class Conversations extends Component<AdminAppContext, Props> {
         `;
     }
 
-    render(wrap) {
+    render(wrap: boolean = true) {
         const s = this.context.stateCursor.get().currentUser.conversationsState;
         // console.log('s: ', s);
         // console.log('this.context.stateCursor.get(): ', this.context.stateCursor.get());

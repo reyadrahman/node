@@ -43,6 +43,8 @@ export function fetchConversations() {
 }
 
 async function handleFetchConversations(context, action) {
+    if (!context.stateCursor.get().currentUser.selectedBotId) {return;}
+
     context.stateCursor.$assocIn(['currentUser', 'conversationsState', 'isFetching'], true);
     try {
         const session = await aws.getCurrentSession();
