@@ -42,7 +42,7 @@
                         .name {
                             color: #fff;
                         }
-                        .text {
+                        .text, .channel {
                             color: #ddd;
                         }
                     }
@@ -81,6 +81,13 @@
                         margin: 0px 0 0 10px;
                         color: #888;
                     }
+                    .channel {
+                        font-size: 12px;
+                        font-weight: normal;
+                        font-style: italic;
+                        text-align: right;
+                        color: #888;
+                    }
                 }
 
                 .date {
@@ -91,7 +98,7 @@
                     color: #888;
                 }
             }
- 
+
         }
         .messages {
             flex: 1 0 0;
@@ -176,7 +183,7 @@
                     }
 
                     .cardsRoot {
-                        white-space: nowrap; 
+                        white-space: nowrap;
                         overflow-x: scroll;
                         overflow-y: auto;
                         max-width: 50vw;
@@ -222,7 +229,7 @@
                         }
                     }
                 }
-                
+
                 .date {
                     position: absolute;
                     right: 20px;
