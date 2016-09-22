@@ -3,7 +3,7 @@
 import { ENV, request } from './server-utils.js';
 import * as aws from '../aws/aws.js';
 import * as channels from './channels/all-channels.js';
-import type { ContactFormData } from '../misc/types.js';
+import type { ContactFormData, FeedConfig } from '../misc/types.js';
 
 import uuid from 'node-uuid';
 import type { Request, Response } from 'express';
@@ -11,8 +11,8 @@ import express from 'express';
 import ciscospark from 'ciscospark';
 
 const { AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
-        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, WIZARD_BOT_WEB_CHAT_SECRET,
-        CONTACT_EMAIL, OWN_BASE_URL } = ENV;
+        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, CONTACT_EMAIL,
+        OWN_BASE_URL } = ENV;
 
 const routes = express.Router();
 
@@ -116,19 +116,22 @@ routes.delete('/remove-bot', (req, res, next) => {
     //       database, remove messages, conversations and cisco spark webhooks
 });
 
+routes.post('/add-bot-feed', (req, res, next) => {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+    const { identityId } = req.customData;
+    addBotFeed(identityId, req.body.botId, req.body.feedConfig)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+});
+
 routes.post('/send-notification', (req, res, next) => {
     if (!req.customData || !req.customData.identityId) {
         return res.status(403).send('Missing JWT');
     }
     const { identityId } = req.customData;
     sendNotification(identityId, req.body.botId, req.body.message, req.body.categories)
-        .then(x => res.send(x))
-        .catch(err => next(err));
-});
-
-routes.get('/fetch-web-chat-session-token', (req, res, next) => {
-    const { identityId } = req.customData || {};
-    fetchWebChatSessionToken(identityId)
         .then(x => res.send(x))
         .catch(err => next(err));
 });
@@ -255,38 +258,30 @@ async function addBot(identityId, botName, settings) {
     });
 }
 
+async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
+    const feedConfigWithId = {
+        ...feedConfig,
+        feedId: uuid.v1(),
+    };
+    await aws.dynamoUpdate({
+        TableName: DB_TABLE_BOTS,
+        Key: {
+            publisherId: identityId,
+            botId,
+        },
+        UpdateExpression: 'SET feeds = list_append(if_not_exists(feeds, :emptyList), :newFeed)',
+        ExpressionAttributeValues: {
+            ':emptyList': [],
+            ':newFeed': [feedConfigWithId],
+        },
+    });
+}
+
+
 async function sendNotification(identityId, botId, message, categories) {
     console.log('sendNotification: ', identityId, botId, message);
     const botParams = await aws.getBot(identityId, botId);
     await channels.sendToMany(botParams, message, categories);
 }
-
-async function fetchWebChatSessionToken(identityId) {
-    console.log('fetchWebChatSessionToken: ', identityId);
-    if (identityId) {
-        // TODO get token from database if available
-        // otherwise get a new one and store in database
-    }
-    return await fetchWebChatSessionTokenHelper();
-}
-
-// returns JSON of token
-async function fetchWebChatSessionTokenHelper() {
-    const reqData = {
-        uri: 'https://webchat.botframework.com/api/tokens',
-        headers: {
-            Authorization: `BotConnector ${WIZARD_BOT_WEB_CHAT_SECRET}`,
-        },
-    };
-    console.log('reqData: ', reqData);
-    const res = await request(reqData);
-    if (res.statusCode !== 200) {
-        throw new Error(`fetchWebChatSessionTokenHelper failed with status code ` +
-                        `${res.statusCode} and status message ${res.statusMessage}`);
-    }
-    console.log('fetchWebChatSessionToken got token: ', res.body);
-    return res.body;
-}
-
 
 export default routes;
