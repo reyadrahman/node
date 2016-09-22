@@ -58,6 +58,19 @@ export type WebhookMessage = {
     senderProfilePic?: string,
 };
 
+export type WebchannelMessage = {
+    id: string,
+    sender: string, // Storing 'bot' or 'user' to handle at the right place
+    publisherId: string,
+    botId: string,
+    data: {
+        conversationId: string,
+        senderId: string,
+        text: string,
+        timestamp: number,
+    }
+}
+
 export type ResponseMessage = string | {
     text?: string,
     cards?: Array<MessageCard>,

@@ -16,6 +16,7 @@ export const webhooks = {
     messenger: messenger.webhook,
     spark: spark.webhook,
     ms: ms.webhook,
+    // web.webhook not here, handled with websocket
 };
 
 export async function send(botParams: BotParams, conversationId: string,
