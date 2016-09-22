@@ -20,6 +20,11 @@ import compression from 'compression';
 import router from './server-router.js';
 import { initResources } from '../aws/aws.js';
 import { ENV } from './server-utils.js';
+import { Server as WebSocketServer } from 'ws';
+import { initializeRoutes } from './server-router.js';
+import { WebReqBody } from '../misc/types.js';
+import { websocketMessage } from './channels/web.js';
+import uuid from 'node-uuid';
 const debug = require('debug')('app:server');
 
 const ROOT_DIR = path.join(__dirname, '../');
@@ -58,7 +63,22 @@ app.use(cookieParser());
 app.use(`${PUBLIC_PATH}`, express.static(path.join(ROOT_DIR, 'dist-client'),
     DEV ? {} : { maxage: '1d' }));
 
-app.use('/', router);
+
+const wss = initializeRoutes(app);
+
+wss.on('connection', function(ws) {
+  console.log('Conversation on web channel initialized (server side).');
+});
+
+wss.on('message', function incoming(message: WebReqBody) {
+  if (message.sender === 'user') {
+    websocketMessage(message, wss);
+  }
+});
+
+wss.on('close', function close() {
+  console.log('Conversation on web channel ended (server side).');
+})
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
