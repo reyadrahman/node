@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Input, Button, ButtonArea, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
@@ -40,14 +40,12 @@ let AccountPage = React.createClass({
     },
 
     showBot(bot) {
-        const { setModalComponent, closeModal } = this.props;
         const close = e => {
             e.preventDefault();
-            closeModal();
+            this.props.closeModal();
         };
-        setModalComponent(
-            props => <BotDetails bot={bot} {...props} onRequestClose={close} />
-        );
+
+        this.props.setModal(props => <BotDetails bot={bot} {...props} onRequestClose={close} />);
     },
 
     profileAttributeChanged(e, field) {
@@ -80,8 +78,8 @@ let AccountPage = React.createClass({
     },
 
     componentDidMount() {
-        const { currentUser: cu, fetchBots } = this.props;
-        if (cu) {
+        const { currentUser, fetchBots } = this.props;
+        if (currentUser.signedIn) {
             fetchBots();
         }
     },
@@ -93,15 +91,13 @@ let AccountPage = React.createClass({
     render() {
         const { className, currentUser, i18n: { strings: { accountPage: strings } },
         } = this.props;
-        if (!currentUser || !currentUser.attributes) {
+
+        if (!currentUser.signedIn) {
             return null;
         }
 
         const { userAttrs, newPassword, oldPassword } = this.state;
-
-        const successMessage = currentUser.updateUserAttrsAndPassSuccessMessage;
-        const errorMessage = currentUser.updateUserAttrsAndPassErrorMessage;
-
+        const { successMessage, errorMessage } = currentUser.updateAttrsAndPassState;
         const profileInfoUi = (
             <Form
                 className="profile-form"
@@ -176,16 +172,12 @@ let AccountPage = React.createClass({
         );
 
 
-
-
-        const botsState = currentUser && currentUser.botsState;
-
-        const fetchingBots = botsState && botsState.isFetchingBotsState &&
-            // TODO Multi ling
+        const { hasFetched, bots } = currentUser.botsState;
+        const fetchingBots = !hasFetched &&
             <h2 className="fetching-bots">{strings.fetching}</h2>;
+
         let botGridUi;
-        if (botsState && botsState.bots) {
-            const { bots } = botsState;
+        if (!_.isEmpty(bots)) {
             botGridUi = (
                 <div className="bot-grid">
                     <div className="header-row">
@@ -220,7 +212,7 @@ let AccountPage = React.createClass({
             );
 
         }
-        const emptyBotList = (botsState && botsState.bots && botsState.bots.length === 0) &&
+        const emptyBotList = hasFetched && _.isEmpty(bots) &&
             <h2 className="empty-bot-list">You don't have any bots yet</h2>;
 
         return (
@@ -258,8 +250,8 @@ AccountPage = connect(
     {
         fetchBots: actions.fetchBots,
         updateUserAttrsAndPass: actions.updateUserAttrsAndPass,
-        setModalComponent: actions.setModalComponent,
         closeModal: actions.closeModal,
+        setModal: actions.setModal,
     }
 )(AccountPage);
 

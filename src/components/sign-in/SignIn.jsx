@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Glyphicon } from 'react-bootstrap';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 
 let SignIn = React.createClass({
 

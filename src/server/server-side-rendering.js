@@ -1,12 +1,13 @@
 import Html from '../components/html/Html.jsx';
-import * as reducers from '../reducers/reducers.js';
 import Routes from '../Routes.jsx';
 import { languages } from '../i18n/translations.js';
 import { ENV as CLIENT_ENV } from '../client/client-utils.js';
+import initAppState from '../app-state/init-app-state.js';
+import * as reducers from '../app-state/reducers.js';
 import acceptLanguage from 'accept-language';
 import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'
-import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware, combineReducers } from 'redux';
 import { Provider } from 'react-redux';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
@@ -50,14 +51,12 @@ function renderTemplate(req, res, next, envVars) {
 
     } else {
         console.log('rendering template.');
-        const initAppState = { systemLang };
-        const store = createStore(combineReducers(reducers), initAppState);
-
         const html = ReactDOM.renderToStaticMarkup(
             <Html
                 body=""
-                initAppState={store.getState()}
+                initAppState={{}}
                 envVars={envVars}
+                systemLang={systemLang}
             />
         );
         const doc = '<!doctype html>\n' + html;
@@ -70,9 +69,13 @@ function renderFull(req, res, next, renderProps, envVars) {
     console.log('renderFull. req.url: ', req.url, 'req.cookies: ', req.cookies);
     let systemLang = acceptLanguage.get(req.headers['accept-language']);
     let lang = req.cookies.language || systemLang;
+    const appState = {
+        ...initAppState,
+        lang,
+    };
 
-    const initAppState = { lang, systemLang };
-    const store = createStore(combineReducers(reducers), initAppState,
+    const store = createStore(combineReducers(reducers),
+                              appState,
                               applyMiddleware(
                                   thunkMiddleware,
                                   loggerMiddleware));
@@ -90,6 +93,7 @@ function renderFull(req, res, next, renderProps, envVars) {
                 body={body}
                 initAppState={store.getState()}
                 envVars={envVars}
+                systemLang={systemLang}
             />
         );
         let doc = '<!doctype html>\n' + html;

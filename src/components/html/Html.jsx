@@ -12,10 +12,15 @@ const Html = React.createClass({
                    .replace(/<!--/g, '<\\!--');
     },
 
+    getSystemLang() {
+        const l = this.props.systemLang || '';
+        return l.match(/(\w*)/)[1];
+    },
+
     render() {
         const styleURL = `${PUBLIC_URL}main.css`;
         const scriptURL = `${PUBLIC_URL}main.js`;
-        const { initAppState, envVars } = this.props;
+        const { initAppState, envVars, systemLang } = this.props;
         return (
             <html>
                 <head>
@@ -25,7 +30,7 @@ const Html = React.createClass({
                     <link rel="stylesheet" type="text/css" href={styleURL} />
                     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/1.0.10/cookieconsent.min.js"></script>
                 </head>
-                <body>
+                <body data-system-lang={this.getSystemLang()}>
                     <div id="reactUI" dangerouslySetInnerHTML={{ __html: this.props.body }} />
                     <script type="application/json" id="initAppState"
                         dangerouslySetInnerHTML={{

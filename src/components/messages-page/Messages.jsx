@@ -1,6 +1,7 @@
 /* @flow */
 
 import React from 'react';
+import _ from 'lodash';
 
 import { simpleTimeFormat } from '../../misc/utils.js';
 // $FlowFixMe
@@ -8,9 +9,13 @@ import defaultAvatarUrl from '../../public/avatar.jpg';
 
 let Messages = React.createClass({
     render() {
-        const { className, selectedConversationId, currentUser, noConversationsFound,
-                isFetchingConversationsState, i18n: { strings: { messages: strings } }
+        const { className, selectedConversationId,
+                currentUser: { conversationsState, messagesState },
+                i18n: { strings: { messages: strings } }
               } = this.props;
+
+        const noConversationsFound =
+            conversationsState.hasFetched && _.isEmpty(conversationsState.conversations);
 
         if (noConversationsFound) {
             return (
@@ -22,10 +27,7 @@ let Messages = React.createClass({
             );
         }
 
-        const { messagesCacheState: mcs } = currentUser;
-        const mc = mcs && mcs.messagesCache;
-
-        if (!isFetchingConversationsState && !selectedConversationId) {
+        if (conversationsState.hasFetched && !selectedConversationId) {
             return (
                 <div className={`messages-comp ${className || ''}`}>
                     <div className="select-conversation">
@@ -35,8 +37,7 @@ let Messages = React.createClass({
             );
         }
 
-        if (isFetchingConversationsState || !mc || !mc[selectedConversationId] ||
-            mcs.isFetchingMessagesCacheState)
+        if (!conversationsState.hasFetched || !messagesState.hasFetched)
         {
             return (
                 <div className={`messages-comp ${className || ''}`}>
@@ -46,12 +47,9 @@ let Messages = React.createClass({
         }
 
 
-
-
-
         // need to reverse it, because we are using flex-direction: column-reverse
         // to display messages
-        const messages = mc[selectedConversationId].slice().reverse();
+        const messages = messagesState.messages.slice().reverse();
 
         const messagesUi = messages.map(
             x => <Message message={x} />

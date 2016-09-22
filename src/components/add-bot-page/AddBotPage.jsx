@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Input, Button, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
 
@@ -51,10 +51,6 @@ let AddBotPage = React.createClass({
     },
 
     componentWillMount() {
-        // TODO
-        // if (this.props.errorMessage || this.props.successMessage) {
-        //     this.props.clearContactsMessages();
-        // }
     },
 
     render() {

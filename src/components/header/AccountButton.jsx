@@ -1,4 +1,4 @@
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';

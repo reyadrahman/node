@@ -1,4 +1,4 @@
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 import Header from '../header/Header.jsx';
 import HomeMenu from './HomeMenu.jsx';
 import HomeContactForm from './HomeContactForm.jsx';

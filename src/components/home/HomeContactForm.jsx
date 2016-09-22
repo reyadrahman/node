@@ -1,4 +1,4 @@
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 
 import React from 'react';
 import ReactDOM from 'react-dom';

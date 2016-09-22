@@ -1,7 +1,7 @@
 import React from 'react';
 // import { Form, Input, Button, ButtonArea, TextArea, SuccessMessage,
 //          ErrorMessage } from '../form/Form.jsx';
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 // import { Title } from '../modal-box-1/ModalBox1.jsx';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
@@ -43,30 +43,29 @@ let NotificationsPage = React.createClass({
     },
 
     componentDidMount() {
-        const { currentUser: cu, fetchBots } = this.props;
-        if (cu) {
+        const { currentUser, fetchBots } = this.props;
+        if (currentUser) {
             fetchBots();
         }
     },
 
     render() {
-        const { className, currentUser, i18n: { strings: { notificationsPage: strings } },
+        const { className, currentUser: { signedIn, botsState },
+                i18n: { strings: { notificationsPage: strings } },
         } = this.props;
-        if (!currentUser || !currentUser.attributes) {
+
+        if (!signedIn) {
             return null;
         }
 
         const { message, selectedBotId } = this.state;
 
-        const botsState = currentUser && currentUser.botsState;
-
-        const fetchingBots = botsState && botsState.isFetchingBotsState &&
+        const fetchingBots = !botsState.hasFetched &&
             <h2 className="fetching-bots">{strings.fetching}</h2>;
 
-        const botsAreReady = botsState && botsState.bots && botsState.bots.length > 0;
+        const botsAreReady = !_.isEmpty(botsState.bots);
         let botSelect;
         if (botsAreReady) {
-            const { bots } = botsState;
             botSelect = (
                 <FormGroup controlId="formControlsSelect">
                     <ControlLabel>Select Bot</ControlLabel>
@@ -77,7 +76,7 @@ let NotificationsPage = React.createClass({
                     >
                     <option value="" disabled selected>select</option>
                         {
-                            bots.map(b => {
+                            botsState.bots.map(b => {
                                 return <option value={b.botId}>{b.botName}</option>
                             })
                         }
@@ -87,7 +86,7 @@ let NotificationsPage = React.createClass({
 
         }
 
-        const emptyBotList = (botsState && botsState.bots && botsState.bots.length === 0) &&
+        const emptyBotList = botsState.hasFetched && _.isEmpty(botsState.bots) &&
             <h2 className="empty-bot-list">You don't have any bots yet</h2>;
 
         return (

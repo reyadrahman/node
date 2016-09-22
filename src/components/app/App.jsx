@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import translations from '../../i18n/translations.js';
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 import * as utils from '../../client/client-utils.js';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 

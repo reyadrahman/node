@@ -1,6 +1,7 @@
 /* @flow */
 
 import React from 'react';
+import _ from 'lodash';
 
 import { simpleTimeFormat } from '../../misc/utils.js';
 // $FlowFixMe
@@ -18,7 +19,7 @@ let Conversations = React.createClass({
               } = this.props;
 
         const { conversationsState: cs } = currentUser;
-        if (!cs || !cs.conversations || cs.conversations.length === 0 || cs.isFetchingConversationsState) {
+        if (!cs.hasFetched || _.isEmpty(cs.conversations)) {
             return (
                 <div className={`conversations-comp ${className || ''}`}>
                     <div className="wait">•••</div>
@@ -26,9 +27,7 @@ let Conversations = React.createClass({
             );
         }
 
-        const { conversations: convs } = cs;
-
-        const convsUi = convs.map((x, i) => {
+        const convsUi = cs.conversations.map((x, i) => {
             const profilePic = x.lastMessage.senderProfilePic || defaultAvatarUrl;
             const profilePicStyle = {
                 backgroundImage: `url(${profilePic})`,

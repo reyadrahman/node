@@ -1,4 +1,4 @@
-import * as actions from '../../actions/actions.js';
+import * as actions from '../../app-state/actions.js';
 import Flag from '../flag/Flag.jsx';
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
@@ -6,7 +6,7 @@ import { Glyphicon, DropdownButton, MenuItem } from 'react-bootstrap';
 
 let LanguageButton = React.createClass({
     onMenuSelect(eventKey) {
-        this.props.changeLang(eventKey);
+        this.props.setLanguage(eventKey);
     },
 
     render() {
@@ -45,9 +45,9 @@ let LanguageButton = React.createClass({
 });
 
 LanguageButton = connect(
-    state => ({ }),
+    null,
     {
-        changeLang: actions.changeLang
+        setLanguage: actions.setLanguage,
     }
 )(LanguageButton);
 
