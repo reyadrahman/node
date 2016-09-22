@@ -1,10 +1,10 @@
 /* @flow */
 
 import express from 'express';
+import render from './server-side-rendering.js';
 import bridge from './client-server-bridge.js';
 import { webhooks } from './channels/all-channels.js';
 import { feedsPeriodicUpdate } from './periodic-tasks.js';
-import websiteMiddleware from './website-middleware.js';
 
 const routes = express.Router();
 
@@ -28,6 +28,10 @@ routes.post('/run-periodic-tasks', (req, res, next) => {
     feedsPeriodicUpdate(req, res);
 });
 
-routes.use('/', websiteMiddleware);
+routes.use('/', (req, res, next) => {
+    console.log('server-router: /, cookies: ', req.cookies);
+    render(!req.cookies.signedIn, req, res, next);
+});
+
 
 export default routes;

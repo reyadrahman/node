@@ -1,0 +1,174 @@
+$submitButtonWidth: 200px;
+
+@mixin account-page-section {
+    background: #fff;
+    padding: 30px 0 0 0;
+    margin-bottom: 30px;
+    margin: 0 auto 30px auto;
+    max-width: 800px;
+    border: 2px solid #e4e4e4;
+}
+
+.account-page-comp {
+    min-height: 800px;
+    padding: 80px 50px 30px 50px;
+
+    & .title {
+        font-size: 20px;
+        color: rgb(70, 70, 70);
+        letter-spacing: 5px
+    }
+
+    .profile-section {
+        @include account-page-section;
+
+        .profile-form {
+            display: flex;
+            flex-flow: column;
+            align-items: center;
+            // max-width: 700px;
+
+            .inputs-row {
+                width: 100%;
+                // max-width: 700px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 10px 0;
+                padding: 0 50px;
+
+                label {
+                    flex: 0 0 auto;
+                    width: 150px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #6f6f6f;
+                }
+                .field {
+                    flex: 1 0 auto;
+                }
+            }
+
+            .profile-info-button-area {
+                width: 100%;
+                margin-top: 30px;
+                .profile-info-save-button {
+                    width: $submitButtonWidth;
+                }
+            }
+        }
+    }
+
+    .bot-section {
+        @include account-page-section;
+
+        .bot-grid {
+            $border: 1px solid #cecece;
+            margin: 50px auto 20px auto;
+            width: calc(100% - 30px);
+            border: $border;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+
+            & > div { // row
+                display: flex;
+
+                & > div { // cell
+                    padding: 10px;
+                }
+
+                & > div:not(:last-child) {
+                    border-right: $border;
+                }
+
+                & > div:nth-child(1) {
+                    flex: 1 0 0;
+                }
+                & > div:nth-child(2) {
+                    flex: 0 0 200px;
+                }
+                & > div:nth-child(3) {
+                    flex: 0 0 200px;
+                }
+            }
+
+            & > div:not(:last-child) { // except last row
+                border-bottom: $border;
+            }
+
+            .header-row {
+                font-weight: bold;
+                color: #5d5d5d;
+                background: #fefffb;
+
+                .name-h-cell {
+                    // width: 200px;
+                }
+                .type-h-cell {
+                    width: 200px;
+                }
+                .webhook-urls-h-cell {
+                    width: 200px;
+                }
+            }
+
+            .contentRow {
+                &:nth-child(odd) {
+                    background: #fdfdfd;
+                }
+                &:nth-child(even) {
+                    background: #f3f3f3;
+                }
+                .name-cell {
+
+                }
+                .type-cell {
+
+                }
+                .webhook-urls-cell {
+
+                    .show-bot {
+
+                    }
+                }
+            }
+        }
+
+        .empty-bot-list {
+            margin: 70px 0 70px 0;
+        }
+        .fetching-bots {
+            margin: 70px 0 70px 0;
+            color: #a7a7a7;
+        }
+
+        .add-bot-form {
+            width: 100%;
+
+            .add-bot-button {
+                width: $submitButtonWidth;
+            }
+        }
+    }
+}
+
+.bot-webhook-url-list {
+    .channel {
+        margin: 30px;
+
+        .channel-name {
+            color: #656565;
+            margin: 5px 10px;
+        }
+        .channel-webhook-url {
+            background: #d6dde7;
+            padding: 10px;
+            border-radius: 0px;
+            font-size: 12px;
+            border-left: 5px solid #9cb4c5;
+            color: #305d8c;
+        }
+    }
+}

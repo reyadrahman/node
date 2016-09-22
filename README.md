@@ -30,7 +30,6 @@ USER_POOL_APP_CLIENT_ID=
 WIZARD_BOT_WEB_CHAT_SECRET=
 CONTACT_EMAIL=
 OWN_BASE_URL=
-CALL_SERVER_LAMBDA_SECRET=
 CDN=
 PORT=
 ```
@@ -40,8 +39,6 @@ PORT=
 `NODE_ENV` can be `production` (default) or `development`.
 
 `OWN_BASE_URL` is the full address of your server (e.g. https://deepiks.io) and is used to, for example, set up webhooks automatically.
-
-`CALL_SERVER_LAMBDA_SECRET` should be a random string that matches the secret defined in the lambda which calls the server for regular updates. This lambda should call this server at `https://YOUR_DOMAIN/run-periodic-tasks`
 
 ### .test.env file or environment variables in console
 This is mostly the same as `.env` but only used for running the tests (see below). So pick different names for the database tables and s3 buckets as they will be modified. `.test.env` needs the following variables in addition to those of `.env`:
@@ -300,11 +297,9 @@ eb open
 
 ## Setting Up Webhooks
 ### Spark
-The "add bot" page of the website should do this automatically.
-
-In case you want to do it manually, the webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/spark
+The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/spark
 Where `SOME_DOMAIN`, `PUBLISHER_ID` and `BOT_ID` must be replaced with appropriate values.
-Use "SparkWebHookManager" from "https://github.com/deepiksdev/bash" to set up webhooks.
+Use SparkWebHookManager to set up webhooks.
 
 ### Messenger
 The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/messenger
@@ -331,13 +326,6 @@ Then go to [my bots](https://dev.botframework.com/bots?id=botframework) and unde
 Currently Skype and Slack are supported.
 
 ## Development
-### Building
-We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule, because it is not available in npm. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
-```
-git submodule update --init
-```
-You also need to run the above command after `git pull` if the submodule has been modified.
-
 ### Tests
 Make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for real use.
 
@@ -361,14 +349,12 @@ Terminal C:
 npm run run-server
 ```
 
-The first 2 commands, will automatically rebuild on every change (**except changes to `.env`**). After a rebuild you must kill the server (terminal C) and run it again.
+The first 2 commands, will automatically rebuild on every change (except changes to `.env`). After a rebuild you must kill the server (terminal C) and run it again.
 
 You can also use `npm test -- --watch` to automatically re-run all tests on every change.
 
 ### AWS-SDK
-The server uses the aws-sdk package from npm. But the client uses a custom built library reduced to only the services we need on the client. The custom built library is already part of the source code, but if you want to re-build it and update it please follow these instructions.
-
-Here is how you can build the custom library:
+The server uses the aws-sdk package from npm. But the client uses a custom built library reduced to only the services we need on the client. Here is how you can build the custom library:
 ``` sh
 git clone https://github.com/aws/aws-sdk-js.git
 git checkout v2.4.14
@@ -380,321 +366,6 @@ mv aws-sdk.min.js /DEEPIKS_ROOT/external_modules/aws-sdk.min.js
 Where `DEEPIKS_ROOT` is the root directory of this repository.
 
 For more information see [aws-sdk-js's docs](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/browser-building.html).
-
-### Front-End Architecture
-
-**NOTE: "template"/"website template" shouldn't be confused with "template system/engine". The former is just a website that we use as a starting point, and the latter is a method of inserting some values inside a string (usually a HTML string)**
- 
-#### Goals and Challenges
-
-Originally we were using React.js, but decided not to continue with it. The reason is that we are trying not to write everything from scratch and most of the templates we wanted to use were incompatible with React.js. For example most templates manipulate the DOM directly, which could conflict with React.js, since it assumes ownership of the DOM.
-
-We need a solution with the following goals:
-
-- very easy to learn
-- easy to use with other templates and libraries including jQuery and Bootstrap; so no virtual DOM like React.js
-- template system + component system; so we can reuse components as opposed to duplicating code in every page. Without this we would need to duplicate the entire website for each language we want to support and duplicating the common components (e.g. header, menu etc) for each page of those websites and keep all of that in sync manually. This is why we don't simply server `.html` files
-- HTML sanitization; avoid cross-site scripting (XSS) attacks the template system should allow sanitization easily
-- server-side rendering at least for public pages; necessary for search engine optimization (SEO)
-- multi-lingual
-- JS and CSS bundling and minification; it's best to avoid including 10s of script and style sheet tags in each page. This is particularly important for mobile
-- CSS autoprefixer; support a range of browsers and their different versions
-- SCSS or Less; these are what most templates use and therefore should be supported
-- single-page app (SPA); it would be very nice to have a dynamic website where every action, including navigation to other pages, doesn't cause a browser refresh
-- CDN; would be nice to be able to route all resources through CDN, in particular AWS CloudFront
-- ES6 + js modules; would be nice to have
-
-One problem that we face is that we may want to use 2 different templates for the website. For example the landing page is using a different template than the admin page. These templates are completely incompatible with each other and their dependencies clash. One of them is using jQuery 2 and Bootstrap 4 whereas the other jQuery 3 and Bootstrap 3. They both include their libraries as `<script>` tags inside HTML in global context, so there could be name clashes as well. The point is they cannot both be part of the same single-page app.
-
-The solution is to separate them into 2 different single-page apps to make sure the isolation protects against any clashes. But at the same time we'd like to share as much code between them as possible to avoid unnecessary duplications (e.g. the front-end framework, AWS Cognito, client <-> node communication, utilities etc). As with a lot of the points above, Webpack is particularly useful here. So let's examine Webpack's configurations next.
-
-#### Webpack
-
-The command `npm run build-client` uses `webpack-config-client.js` and `npm run build-server` uses `webpack-config-server.js` as their Webpack config. They both share some config in `webpack-config-base.js`.
-
-These config files, specify 2 single-page apps named `landingPage` and `admin`. The entry file of `landingPage` is `./src/client/apps/landing-page/landing-page-entry.js` and the entry file of `admin` is `./src/client/apps/admin/admin-entry.js`.
-
-When you run `npm run build-client`, webpack bundles the entry files and everything imported inside them **recursively** and produces the following files:
-
-- `dist-client/commons.js`: js code that is common between the two apps
-- `dist-client/landingPage.js`: js code only used in `landingPage` app
-- `dist-client/landingPage.css`: css code for `landingPage.css`
-- `dist-client/landingPage/`: the content of `./src/client/apps/landing-page/public/` copied as it is
-- `dist-client/admin.js`: js code only used in `admin` app
-- `dist-client/admin.css`: css code for `admin.css`
-- `dist-client/admin/`: the content of `./src/client/apps/admin/public/` copied as it is
-
-The server serves all files in `dist-client` at `http://DOMAIN/dist/`. But in order to support CDN, if you want to add a url to your HTML, use `require`. For example:
-
-``` js
-class MyComponent extends Component {
-    render() {
-        const imageUrl = require('./img/myimage.jpg');
-        return `<img src="${imageUrl}" />` 
-    }
-}
-```
-
-Webpack will automatically copy `./img/myimage.jpg` (its path is relative to the js file) into `dist-client` and the `require` call will return the appropriate URL. The URL could be a CDN if it is set up, or a local URL.
-
-As you saw you can use `require` to get the proper URL for any file **that already exists**. Alternatively you could put any file you want in the `public` directory of your app (e.g. `./src/client/apps/landing-page/public/`) and refer to it like this:
-
-```
-import { ENV } from '../../client-utils'; // this is located in src/client/
-const imageUrl = `${ENV.PUBLIC_URL}public/img/myimage.jpg`;
-``` 
-
-An example taken from `./src/client/apps/landing-page/landing-page.js`:
-```js
-import { ENV } from '../../client-utils.js';
-
-const PUBLIC_URL = ENV.PUBLIC_URL;
-
-import './scss/landing-page.scss';
-import './scss/landio.scss';
-
-export default class LandingPage extends App {
-    getScripts(): string[] {
-        return [
-            'https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js',
-            `${PUBLIC_URL}landingPage.js`,
-        ];
-    }
-
-    getStyleSheets(): string[] {
-        return [
-            `${PUBLIC_URL}landingPage.css`,
-        ];
-    }
-
-}
-```
-
-In this example `${PUBLIC_URL}landingPage.js` and `${PUBLIC_URL}landingPage.css` are paths to files that **will later be generated by webpack**. You can see that we imported 2 SCSS files `import './scss/landing-page.scss'` and `import './scss/landio.scss'`. Webpack will automatically compile them to CSS, bundle them up and put them inside `dist-client/landingPage.css`. **Same goes for any other CSS/LESS/SCSS files imported by any of the dependencies of this file. Moreover, Webpack will look inside all the imported CSS/LESS/SCSS files and fixes all the URLs to resources used inside them (image, fonts etc.) so that they can be routed through CDN as well. It then copies those resource files into `dist-client` to be served by the server.**
-
-Additionally all CSS files are processed through [autoprefixer](https://github.com/postcss/autoprefixer) to support older browser versions. For example it automatically turns
-``` css
-.example {
-    display: flex;
-}
-```
-into:
-``` css
-.example {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-}
-```
-
-In conclusion, you can import a mix of SCSS, LESS or CSS files from anywhere you want, and they will all get converted, minified, auto-prefixed and bundled up into a single CSS file; which you then inject into the `<head>` of the HTML by returning it from `getStyleSheets` method of you `App` (as shown above).
-
-This is particularly useful because the landing page app uses SCSS and the admin app uses LESS.
-
-
-#### Front-End Framework
-
-The front-end framework is in `src/client/front-end-framework/`. This is not much of a framework really, more like a very small library.
-
-As explained in "Goals and Challenges" section, we want:
-
-1. a template system
-2. to be able to have a modern dynamic website where every action including page navigation doesn't require a page refresh and connecting to the server. This means that the template system should work on the client as well as the server.
-3. the template system should allow HTML sanitization to avoid XSS attacks
-
-Using javascript's own [ES6 template literals](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Template_literals), would satisfy all requirements. It's lightweight, fast, easy to use and runs on both the server and the client and using the [tagged template literals](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Template_literals#Tagged_template_literals) feature we can also support HTML sanitization easily.
-
-OK, let examine `component.js` first:
-
-##### Component
-
-Each component receives 2 parameters in its constructor, which are saved in `this.context` and `this.props` respectively. Each app can define its own context and props types. Here is the constructor of `Component`:
-```js
-class Component<Context, Props> {
-    context: Context;
-    props: Props;
-
-    constructor(context: Context, props: Props = {}) {
-        this.context = context;
-        this.props = props;
-    }
-
-    /*...*/
-}
-```
-- context: this is an object that will simply be passed down. You probably don't need to change it anywhere other that the entry files (i.e. `src/client/apps/landing-page/landing-page-entry.js` and `src/client/apps/admin/admin-entry.js`). For example context can allow every component to have access to the latest application state, the event system, history and be able to dispatch actions when something needs to change.
-- props: while context is supposed to be passed down to every component in the hierarchy, props are more specific. Each component may take a different type of props and may or may not pass parts of it to its children.
-
-Each component has a `render` method which returns a string. This is the HTML string of the component. It also has 2 other methods `componentDidMount` and `componentWillUnmount` (inspired by React.js). These 2 methods are called when the components are mounted to or unmounted from the DOM. This is a good opportunity to bind click handler to your DOM elements for example or clean up any handlers before being unmounted from DOM.
-
-In order to add a child, use the `addChild` method. For example:
-```js
-class MyComponent extends Component {
-    render() {
-        const firstChild = this.addChild(new SomeComponent(/*...*/));
-        const firstChild = this.addChild(new SomeComponent(/*...*/));
-
-        return `
-            <div>
-                ${ firstChild }
-                ${ secondChild }
-            </div>
-        `;
-    }
-}
-```
-
-the default `componentDidMount` and `componentWillUnmount` implementation will call the same method on the children recursively. If you want to re-render a component, call `unmountChildren` first.
-
-Please see `src/client-front-end-framework/component.js` for the full API.
-
-##### App
-Let's look at `src/client-front-end-framework/app.js` next:
-```js
-class App extends Component {
-    getStyleSheets(): string[]
-    getScripts(): string[]
-    getTitle(): string
-}
-```
-`App` is just a `Component` with a few extra functions. It can return a title for the page, a list of scripts and a list of style sheets to be injected into the HTML. This is done on the server-side. For example if you have:
-```js
-class App extends Component {
-    getStyleSheets(): string[] {
-        return ['a.css', 'b.css'];
-    }
-    getScripts(): string[] {
-        return ['a.js', 'b.js'];
-    }
-    getTitle(): string {
-        return 'My Title'
-    }
-    render(): string {
-        return '<h1>content</h1>'
-    }
-}
-```
-then then HTML will look something like:
-```html
-<!doctype html>
-<html>
-    <head>
-        <meta charSet="utf-8" />
-        <title>My Title</title>
-        <link rel="stylesheet" type="text/css" href="/dist/a.css" />
-        <link rel="stylesheet" type="text/css" href="/dist/b.css" />
-    </head>
-    <body>
-        <div id="app-root">
-            <h1>content</h1>
-        </div>
-        <script src="dist/commons.js"></script>
-        <script src="dist/a.js"></script>
-        <script src="dist/b.js"></script>
-    </body>
-</html>
-```
-
-Currently there are only 2 apps: `admin` and `landingPage`.
-
-##### Event System
-Let's look at `src/client-front-end-framework/event-system.js` next. It has 3 main methods:
-```js
-subscribe(fn: (eventData: any, events: string[]) => void,
-          eventOrEvents?: string | string[] = '*'): string
-unsubscribe(id: string)
-publish(eventOrEvents: string | string[], eventData: any)
-```
-This is just a sub/pub system. You can [un]subscribe and publish events from components and/or actions. Components can easily talk to each other using this event system. It's best to create an `EventSystem` in the entry file (e.g. `src/client/apps/admin/admin-entry.js`) and pass it down to children.
-
-An example of how to use the event system:
-
-```js
-class MyComponent extends Component {
-    render() {
-        return `<h1 id="myid">${this.props.someValue}</h1>`
-    }
-
-    rerender() {
-        $('#myid').replaceWith(this.render());
-    }
-
-    componentDidMount() {
-        this.props.eventSystem.subscribe(() => this.rerender(), 'someEvent');
-    }
-}
-```
-
-Now from anywhere inside your app, if you publish `someEvent` by calling`eventSystem.publish('someEvent')`, the component above will automatically re-render itself.
-
-##### Multilingual (internationalization or i18n)
-Using the tools above it's now pretty easy to create a multi-lingual website. Just pass down an object filled with translations down to every child. For example you could have something like this in the entry file:
-```js
-// entry file:
-
-const translations = {
-    fr: {
-        myComponent: {
-            title: 'title in French',
-        }
-    },
-    en: {
-        myComponent: {
-            title: 'title in English',
-        }
-    }
-};
-
-function createI18n(lang) {
-    return {
-        lang, 
-        strings: translations[lang],
-    };
-}
-
-const props = {
-    i18n: createI18n('en'),
-    eventSystem: new EventSystem(),
-};
-
-const myApp = new MyApp(props);
-renderAppIntoDOM(props);
-
-props.eventSystem.subscribe(handleLanguageChange, 'languageChanged');
-
-function handleLanguageChange(lang) {
-    renderAppIntoDOM({
-        ...props,
-        i18n: createI18n(lang),
-    });
-}
-
-function renderAppIntoDOM(props) {
-    //...
-}
-
-```
-
-later in some `Component` down the hierarchy:
-```js
-class MyComponent extends Component {
-    render() {
-        const title = this.props.i18n.strings.myComponent.title;
-        return `<h1>${title}</h1>`
-    }
-}
-```
-
-Now if you publish 'languageChnaged' to the event system, the entire app will automatically re-render without having to refresh the page or anything else. 
-
-Just like that we have a dynamic, multi-lingual website. No need to maintain a separate websites or redirecting users to different pages for each language.
-
-Remembering user's choice requires a little help from the server.
-
-##### HTML Sanitization
-TODO
-
-Will use [tagged template literals](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Template_literals#Tagged_template_literals) to implement this.
 
 ## TODO
 Customize icons using Fontello to include only the used icons.

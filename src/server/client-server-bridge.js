@@ -3,7 +3,7 @@
 import { ENV, request } from './server-utils.js';
 import * as aws from '../aws/aws.js';
 import * as channels from './channels/all-channels.js';
-import type { ContactFormData, FeedConfig } from '../misc/types.js';
+import type { ContactFormData } from '../misc/types.js';
 
 import uuid from 'node-uuid';
 import type { Request, Response } from 'express';
@@ -81,7 +81,7 @@ routes.get('/fetch-conversations', (req, res, next) => {
         return res.status(403).send('Missing JWT');
     }
     const { identityId } = req.customData;
-    fetchConversations(identityId, req.query.botId)
+    fetchConversations(identityId)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -114,16 +114,6 @@ routes.delete('/remove-bot', (req, res, next) => {
     }
     // TODO: Once the client supports removing bots, remove the bot from the
     //       database, remove messages, conversations and cisco spark webhooks
-});
-
-routes.post('/add-bot-feed', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
-    const { identityId } = req.customData;
-    addBotFeed(identityId, req.body.botId, req.body.feedConfig)
-        .then(x => res.send(x))
-        .catch(err => next(err));
 });
 
 routes.post('/send-notification', (req, res, next) => {
@@ -198,21 +188,20 @@ async function fetchBots(identityId) {
     return qres.Items || [];
 }
 
-async function fetchConversations(identityId, botId) {
-    console.log('fetchConversations: identityId=', identityId, 'botId=', botId);
+async function fetchConversations(identityId) {
+    console.log('fetchConversations: ', identityId);
     const qres = await aws.dynamoQuery({
-        TableName:                 DB_TABLE_CONVERSATIONS,
-        IndexName:                 'byLastMessageTimestamp',
-        KeyConditionExpression:    'publisherId = :pid',
-        FilterExpression:          'botId = :bid',
+        TableName: DB_TABLE_CONVERSATIONS,
+        IndexName: 'byLastMessageTimestamp',
+        KeyConditionExpression: 'publisherId = :pid',
         ExpressionAttributeValues: {
             ':pid': identityId,
-            ':bid': botId
         },
         // Limit: 50,
-        ScanIndexForward:          false,
+        ScanIndexForward: false,
     });
 
+    console.log('qres: ', qres);
     return qres.Items || [];
 }
 
@@ -263,25 +252,6 @@ async function addBot(identityId, botName, settings) {
                 ciscosparkBotPersonId: me.id,
             },
         })
-    });
-}
-
-async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
-    const feedConfigWithId = {
-        ...feedConfig,
-        feedId: uuid.v1(),
-    };
-    await aws.dynamoUpdate({
-        TableName: DB_TABLE_BOTS,
-        Key: {
-            publisherId: identityId,
-            botId,
-        },
-        UpdateExpression: 'SET feeds = list_append(if_not_exists(feeds, :emptyList), :newFeed)',
-        ExpressionAttributeValues: {
-            ':emptyList': [],
-            ':newFeed': [feedConfigWithId],
-        },
     });
 }
 

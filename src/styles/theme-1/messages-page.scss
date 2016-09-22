@@ -1,0 +1,39 @@
+.messages-page-comp {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-content: center;
+    padding: 80px 50px 30px 50px;
+
+    .please-sign-in {
+        top: 50%;
+        left: 50%;
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-size: 30px;
+        color: #aaa;
+        letter-spacing: 10px;
+    }
+
+    .title {
+        font-size: 20px;
+        color: rgb(70, 70, 70);
+        letter-spacing: 5px;
+    }
+
+    .left-right-split {
+        flex: 1 0 0;
+        display: flex;
+
+        .conversations {
+            flex: 0 0 auto;
+            width: 300px;
+        }
+        .messages {
+            flex: 1 0 0;
+        }
+    }
+}

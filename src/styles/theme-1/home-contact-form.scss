@@ -1,0 +1,48 @@
+.home-contact-form-comp {
+
+    .grey-box {
+        padding: 20px;
+        background: #eee;
+
+        .input-group-addon {
+            padding: 0 12px;
+        }
+
+        input, textarea, select {
+            border-radius: 0;
+
+            &:focus {
+                outline: none;
+                border: 1px solid #666;
+                box-shadow: none;
+            }
+        }
+        textarea {
+            height: 185px;
+        }
+
+        .error-message {
+            color: #e80303;
+        }
+
+        .success-message {
+            color: #53aa1c;
+        }
+
+        .send-col {
+            text-align: right;
+            background: none;
+            button {
+                background: none;
+                color: #666;
+                &:hover {
+                    background: rgba(0, 0, 0, 0.05);
+                }
+
+                &:focus {
+                    outline: none;
+                }
+            }
+        }
+    }
+}

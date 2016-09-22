@@ -1,0 +1,17 @@
+.inputs-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    padding: 0 50px;
+
+    label {
+        flex: 0 0 auto;
+        width: 200px;
+        font-size: 14px;
+        color: rgb(60, 60, 60);
+    }
+    .field {
+        flex: 1 0 auto;
+    }
+}

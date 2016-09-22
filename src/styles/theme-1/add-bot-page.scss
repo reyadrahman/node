@@ -1,0 +1,51 @@
+.add-bot-page-comp {
+    padding: 50px;
+    // display: flex;
+    // align-items: center;
+    // flex-direction: column;
+
+    .title {
+        letter-spacing: 4px;
+        font-weight: 100;
+        padding: 0 40px;
+        text-align: center;
+    }
+
+    .form {
+        max-width: 900px;
+        margin: 0 auto;
+
+        .inputsRow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 0 50px;
+
+            label {
+                flex: 0 0 auto;
+                width: 300px;
+                font-size: 14px;
+                color: rgb(60, 60, 60);
+            }
+            .field {
+                flex: 1 0 auto;
+            }
+        }
+
+        .buttonArea {
+            text-align: right;
+            padding: 0px 50px 50px 50px;
+
+            .addBotButton {
+                width: 180px;
+            }
+        }
+        .messages {
+            margin: 50px 0 0 0;
+            .success {
+                color: rgb(39, 197, 39);
+            }
+        }
+    }
+}

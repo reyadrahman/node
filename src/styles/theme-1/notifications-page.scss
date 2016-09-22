@@ -1,0 +1,31 @@
+.notifications-page-comp {
+    min-height: 800px;
+    padding: 80px 50px 30px 50px;
+    color: #666;
+
+    .title {
+        // letter-spacing: 5px
+    }
+
+    .fetching-bots, .empty-bot-list {
+        margin: 100px 0 0 0;
+        letter-spacing: 10px;
+    }
+
+    .send-notifications-form {
+        max-width: 500px;
+        margin: 0 auto;
+
+        textarea {
+            height: 400px;
+        }
+
+        .button-area {
+            text-align: right;
+
+            button {
+                min-width: 100px;
+            }
+        }
+    }
+}

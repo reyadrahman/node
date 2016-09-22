@@ -94,19 +94,19 @@ var poolData = {
 var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 
 
-export function signUp(data) {
+export function signUp(firstName, lastName, email, password) {
     return new Promise((resolve, reject) => {
         let attributeList = [];
         let dataEmail = {
             Name : 'email',
-            Value : data.email,
+            Value : email,
         };
         let attributeEmail = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataEmail);
         attributeList.push(attributeEmail);
 
         let dataGivenName = {
             Name : 'given_name',
-            Value : data.firstName,
+            Value : firstName,
         };
         let attributeGivenName = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataGivenName);
         attributeList.push(attributeGivenName);
@@ -114,7 +114,7 @@ export function signUp(data) {
 
         let dataFamilyName = {
             Name : 'family_name',
-            Value : data.lastName,
+            Value : lastName,
         };
         let attributeFamilyName = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataFamilyName);
         attributeList.push(attributeFamilyName);
@@ -127,7 +127,7 @@ export function signUp(data) {
             }
         };
 
-        userPool.signUp(data.email, data.password, attributeList,
+        userPool.signUp(email, password, attributeList,
                         null, responseHandler);
 
     });

@@ -2,7 +2,6 @@ const path = require('path');
 const webpack = require('webpack');
 const _ = require('lodash');
 
-
 function createPublicPathAndUrl(cdn, timestamp) {
     if (cdn && !timestamp) {
         console.error('Please use the scripts/build.sh to build when using CDN.');
@@ -41,48 +40,36 @@ function createBaseConfig(NODE_ENV) {
         module: {
             loaders: [
                 {
-                    test: /\.js$/,
+                    test: /\.jsx?$/,
                     loader: 'babel',
                     include: path.join(__dirname, 'src'),
                     query: {
-                        presets: [
-                            'stage-0',
-                        ],
-
+                        presets: ['es2015', 'react', 'stage-0'],
                         plugins: [
                             'transform-flow-strip-types',
-                            // the rest is the same as babel-preset-es2015 except
-                            // for the config of transform-es2015-modules-commonjs
-                            // and transform-regenerator
-                            ['transform-es2015-template-literals', { loose: false, spec: false }],
-                            'transform-es2015-literals',
-                            'transform-es2015-function-name',
-                            ['transform-es2015-arrow-functions', { spec: false }],
-                            'transform-es2015-block-scoped-functions',
-                            ['transform-es2015-classes', { loose: false }],
-                            'transform-es2015-object-super',
-                            'transform-es2015-shorthand-properties',
-                            'transform-es2015-duplicate-keys',
-                            ['transform-es2015-computed-properties', { loose: false }],
-                            ['transform-es2015-for-of', { loose: false }],
-                            'transform-es2015-sticky-regex',
-                            'transform-es2015-unicode-regex',
-                            'check-es2015-constants',
-                            ['transform-es2015-spread', { loose: false }],
-                            'transform-es2015-parameters',
-                            ['transform-es2015-destructuring', { loose: false }],
-                            'transform-es2015-block-scoping',
-                            'transform-es2015-typeof-symbol',
-                            // alowTopLevelThis is needed for compatibility with old js files that use
-                            // "this" at the top level instead of "window"
-                            ['transform-es2015-modules-commonjs', { loose: false, allowTopLevelThis: true }],
-                            ['transform-regenerator', { async: false, asyncGenerators: false }],
-                        ],
+                        ].concat(DEV ? [
+                            // 'rewire',
+                            // [
+                            //     "react-transform", {
+                            //         "transforms": [
+                            //             {
+                            //                 "transform": "react-transform-hmr",
+                            //                 // if you use React Native, pass "react-native" instead:
+                            //                 "imports": ["react"],
+                            //                 // this is important for Webpack HMR:
+                            //                 "locals": ["module"]
+                            //             }
+                            //         ]
+                            //         // note: you can put more transforms into array
+                            //         // this is just one of them!
+                            //     }
+                            // ]
+                        ] : [])
                     },
                 },
                 {
                     test: /\.json$/,
-                    loader: 'json-loader',
+                    loader: "json-loader",
                 },
                 {
                     test: /\.(png|jpg|mp4|eot|woff|woff2|ttf|svg)/,

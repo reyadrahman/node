@@ -1,12 +1,8 @@
 /* @flow */
 
-import pick from 'lodash/pick';
+import _ from 'lodash';
 import type { ClientEnv } from '../misc/types.js';
 import { createUrlQuery } from '../misc/utils.js';
-
-if (process.env.NODE_ENV === 'development') {
-    var Diff = require('text-diff');
-}
 
 export function isFullscreen() {
     return Boolean(document && (
@@ -42,37 +38,7 @@ export function exitFullscreen() {
     }
 }
 
-/**
- * Writes html string into domElem. If domElem is not empty,
- * it checks if the content is different. If different, it will
- * overwrite it and warn if warnInDevMode is true.
- */
-export function overwriteIntoDOM(inputHtml: string, domElem: HTMLElement,
-                                 warnInDevMode: boolean = false)
-{
-    const elem = $(domElem);
-    const oldHtml = $('#app-root').html().trim();
-    if (/\S/.test(oldHtml)) {
-        // some strings change after they've been insterted into html
-        // for exampl &amp;times; becomes ×
-        const newHtml = $('<div></div>').html(inputHtml).html().trim();
-        if (oldHtml !== newHtml) {
-            if (process.env.NODE_ENV === 'development' && warnInDevMode) {
-                const differ = new Diff();
-                const diff = differ.main(oldHtml, newHtml);
-
-                console.group();
-                console.error('overwriteIntoDOM will overwrite non-empty DOM element. The diff is:', diff);
-                console.groupEnd();
-            }
-            elem.html(inputHtml);
-        }
-    } else {
-        elem.html(inputHtml);
-    }
-}
-
-export const ENV: ClientEnv = pick(process.env, [
+export const ENV: ClientEnv = _.pick(process.env, [
     'NODE_ENV',
     'PLATFORM',
     'AWS_REGION',
@@ -87,6 +53,7 @@ export const ENV: ClientEnv = pick(process.env, [
     'IDENTITY_POOL_AUTH_ROLE_ARN',
     'USER_POOL_ID',
     'USER_POOL_APP_CLIENT_ID',
+    'PUBLIC_PATH',
     'PUBLIC_URL',
     'DEBUG',
 ]);

@@ -1,12 +1,9 @@
-const { createBaseConfig, createPublicPathAndUrl } = require('./webpack-config-base.js');
 const path = require('path');
-const _ = require('lodash');
 const webpack = require('webpack');
-const CommonsChunkPlugin = require("webpack/lib/optimize/CommonsChunkPlugin");
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { createBaseConfig, createPublicPathAndUrl } = require('./webpack-config-base.js');
+const _ = require('lodash');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const autoprefixer = require('autoprefixer');
-
 
 /*
     Environment Variables:
@@ -32,8 +29,7 @@ module.exports = Object.assign({}, baseConfig, {
         extensions: ['', '.web.js', '.js', '.jsx']
     }),
     entry: {
-        landingPage: ['babel-polyfill', 'whatwg-fetch', './src/client/apps/landing-page/landing-page-entry.js'],
-        admin: ['babel-polyfill', 'whatwg-fetch', './src/client/apps/admin/admin-entry.js'],
+        main: ['babel-polyfill', 'whatwg-fetch', './src/client/client.js'],
     },
     output: {
         path: path.join(__dirname, 'dist-client'),
@@ -76,33 +72,14 @@ module.exports = Object.assign({}, baseConfig, {
             'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
             'process.env': 'window.process.env',
         }),
-        new CopyWebpackPlugin([
-            {
-                from: 'src/client/apps/landing-page/public',
-                to: 'landing-page',
-            },
-            {
-                from: 'src/client/apps/admin/public',
-                to: 'admin',
-            }
-        ], {
-            ignore: [
-                '.*', // ignore dot files
-            ],
-        }),
-        new webpack.ProvidePlugin({
-            // Make $ and jQuery available in every module without writing require("jquery")
-            $: "jquery",
-            jQuery: "jquery",
-        }),
+        // new webpack.ProvidePlugin({
+        //     // Make $ and jQuery available in every module without writing require("jquery")
+        //     $: "jquery",
+        //     jQuery: "jquery",
+        // }),
         new ExtractTextPlugin('[name].css'),
-        new CommonsChunkPlugin("commons.js"),
     ].concat(baseConfig.plugins),
-
-    externals: {
-        // require("jquery") is external and available on the global var jQuery
-        "jquery": "jQuery",
-    },
+    
     postcss: function() {
         return [autoprefixer({
             browsers: ['last 3 version'],

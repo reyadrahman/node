@@ -3,10 +3,10 @@
 .env
 .test.env
 .tmp
-*.sublime-project
-*.sublime-workspace
 npm-debug.log
 node_modules
+*.sublime-project
+*.sublime-workspace
 /dist
 /dist-client
 /dist-server
@@ -21,3 +21,4 @@ node_modules
 !.ebextensions/00.config
 
 amazon-cognito-identity-js/
+/deepiks.sublime-project

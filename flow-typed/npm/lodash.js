@@ -53,7 +53,4 @@ declare module "lodash" {
   declare function omitBy<T>(obj: {[key:string]: T}, f: (x: string) => boolean): {[key:string]: T};
   declare function pick<T>(obj: {[key:string]: T}, vs: T | Array<T>) : {[key:string]: T};
   declare function pickBy<T>(obj: {[key:string]: T}, f: (x: string) => boolean): {[key:string]: T};
-
-  declare function get(object: ?any, path?: ?Array<string>|string, defaultValue?: any): any;
-
 }
