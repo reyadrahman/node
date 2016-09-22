@@ -81,7 +81,7 @@ routes.get('/fetch-conversations', (req, res, next) => {
         return res.status(403).send('Missing JWT');
     }
     const { identityId } = req.customData;
-    fetchConversations(identityId)
+    fetchConversations(identityId, req.query.botId)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -188,20 +188,21 @@ async function fetchBots(identityId) {
     return qres.Items || [];
 }
 
-async function fetchConversations(identityId) {
-    console.log('fetchConversations: ', identityId);
+async function fetchConversations(identityId, botId) {
+    console.log('fetchConversations: identityId=', identityId, 'botId=', botId);
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_CONVERSATIONS,
-        IndexName: 'byLastMessageTimestamp',
-        KeyConditionExpression: 'publisherId = :pid',
+        TableName:                 DB_TABLE_CONVERSATIONS,
+        IndexName:                 'byLastMessageTimestamp',
+        KeyConditionExpression:    'publisherId = :pid',
+        FilterExpression:          botId ? 'botId = :bid' : undefined,
         ExpressionAttributeValues: {
             ':pid': identityId,
+            ':bid': botId || undefined
         },
         // Limit: 50,
-        ScanIndexForward: false,
+        ScanIndexForward:          false,
     });
 
-    console.log('qres: ', qres);
     return qres.Items || [];
 }
 

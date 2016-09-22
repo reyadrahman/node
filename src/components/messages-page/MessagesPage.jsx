@@ -31,7 +31,7 @@ let MessagesPage = React.createClass({
             return;
         }
         if (!currentUser.conversationsState.hasFetched) {
-            fetchConversations();
+            fetchConversations(currentUser.selectedBotId);
         }
         if (params.conversationId) {
             fetchMessages(params.conversationId);

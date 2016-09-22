@@ -205,13 +205,14 @@ export function fetchBots() {
     }
 }
 
-export function fetchConversations() {
+export function fetchConversations(botId) {
     return async function(dispatch: Function) {
         dispatch({ type: 'currentUser/resetConversationsState' });
         try {
             const session = await aws.getCurrentSession();
             const conversations = await bridge.fetchConversations(
-                session.getIdToken().getJwtToken()
+                session.getIdToken().getJwtToken(),
+                botId
             );
             dispatch({
                 type: 'currentUser/setConversationsState',
