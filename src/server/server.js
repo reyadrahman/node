@@ -17,11 +17,10 @@ import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import http from 'http';
 import compression from 'compression';
-import router from './server-router.js';
 import { initResources } from '../aws/aws.js';
 import { ENV } from './server-utils.js';
 import { Server as WebSocketServer } from 'ws';
-import { initializeRoutes } from './server-router.js';
+import initializeRoutes from './server-router.js';
 import { WebReqBody } from '../misc/types.js';
 import { websocketMessage } from './channels/web.js';
 import uuid from 'node-uuid';
@@ -37,6 +36,7 @@ const DEV = NODE_ENV === 'development';
 debug(`running server in ${DEV ? 'development' : 'production'} mode`);
 
 const app = express();
+const server = http.createServer(app);
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -44,14 +44,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// TODO don't do compression in node.js. Let a reverse proxy take care of compression
 app.use(compression());
 
 // view engine setup
 debug('views directory: ', path.join(ROOT_DIR, 'src/views'));
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('short'));
 // save raw body and then parse as json
 app.use(bodyParser.json({
@@ -59,26 +56,10 @@ app.use(bodyParser.json({
 }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-//app.use(express.static(path.join(__dirname, 'public')));
-app.use(`${PUBLIC_PATH}`, express.static(path.join(ROOT_DIR, 'dist-client'),
+app.use(PUBLIC_PATH, express.static(path.join(ROOT_DIR, 'dist-client'),
     DEV ? {} : { maxage: '1d' }));
 
-
-const wss = initializeRoutes(app);
-
-wss.on('connection', function(ws) {
-  console.log('Conversation on web channel initialized (server side).');
-});
-
-wss.on('message', function incoming(message: WebReqBody) {
-  if (message.sender === 'user') {
-    websocketMessage(message, wss);
-  }
-});
-
-wss.on('close', function close() {
-  console.log('Conversation on web channel ended (server side).');
-})
+app.use(initializeRoutes(server));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -95,8 +76,6 @@ app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.send(`Error ${err.status || 500}\n\n${err.message || ''}`);
 });
-
-const server = http.createServer(app);
 
 debug('Initializing resources...');
 initResources(5, 5).then(() => {

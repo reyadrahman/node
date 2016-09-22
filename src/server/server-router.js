@@ -7,7 +7,7 @@ import { webhooks } from './channels/all-channels.js';
 import { feedsPeriodicUpdate } from './periodic-tasks.js';
 import { Server as WebSocketServer } from 'ws';
 
-export function initializeRoutes(app) {
+export default function initializeRoutes(server) {
     const routes = express.Router();
 
     routes.use('/api', bridge);
@@ -35,5 +35,23 @@ export function initializeRoutes(app) {
         render(!req.cookies.signedIn, req, res, next);
     });
 
-    return new WebSocketServer({ server: app });
+/*
+    const wss = new WebSocketServer({ server });
+
+    wss.on('connection', function(ws) {
+      console.log('Conversation on web channel initialized (server side).');
+    });
+
+    wss.on('message', function incoming(message: WebReqBody) {
+      if (message.sender === 'user') {
+        websocketMessage(message, wss);
+      }
+    });
+
+    wss.on('close', function close() {
+      console.log('Conversation on web channel ended (server side).');
+    })
+*/
+
+    return routes;
 }
