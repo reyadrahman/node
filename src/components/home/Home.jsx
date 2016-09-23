@@ -2,6 +2,7 @@ import * as actions from '../../app-state/actions.js';
 import Header from '../header/Header.jsx';
 import HomeMenu from './HomeMenu.jsx';
 import HomeContactForm from './HomeContactForm.jsx';
+import Chat from '../webchat/Chat.jsx';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -105,6 +106,7 @@ let Home = React.createClass({
                         Insert Animation Here
                     </div>
                 </section>
+                <Chat />
 
                 <section id="pricing" className="pricing">
                     <div className="section-heading">

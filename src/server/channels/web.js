@@ -12,8 +12,10 @@ import u from 'util';
 import crypto from 'crypto';
 import { Server as WebSocketServer } from 'ws';
 
+const conversationIdToWebsocket = {};
+
 async function handleWebsocketMessage(
-    messageReceived: WebchannelMessage, wss: WebSocketServer)
+    messageReceived: WebchannelMessage, ws: WebSocketServer)
 {
     //Retrieve bot
     const { publisherId, botId } = messageReceived;
@@ -21,6 +23,9 @@ async function handleWebsocketMessage(
 
     //Retrieve message data
     const { conversationId, senderId, text, timestamp } = messageReceived.data;
+
+    //Store the websocket server for the conversationId
+    conversationIdToWebsocket[conversationId] = ws;
 
     const message: WebhookMessage = {
         publisherId_conversationId: aws.composeKeys(botParams.publisherId, message.id),
@@ -43,9 +48,9 @@ async function handleWebsocketMessage(
 }
 
 export async function send(botParams: BotParams, conversationId: string,
-    wss: WebSocketServer, message: ResponseMessage)
+    message: ResponseMessage)
 {
-    wss.send(message);
+    conversationIdToWebsocket[conversationId].send(message);
 }
 
 export function websocketMessage(messageReceived: WebchannelMessage,
