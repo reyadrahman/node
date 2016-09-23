@@ -102,10 +102,65 @@ let Home = React.createClass({
                 />
                 <section className="intro">
                     <div className="intro-message">
-                       Hi. We are a universal bot platform powered by AI.
+                       { strings.baseline }
                     </div>
                 </section>
 
+               <section id="services" className="services">
+                    <div className="section-heading">
+                        <h1>The Power of SmartAdmin</h1>
+                        <p>
+                            Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
+                        </p>
+                    </div>
+                    <Grid>
+                        <Col sm={3} md={3} className="service">
+                            <div className="service-icon">
+                                <Glyphicon glyph="text-background" />
+                            </div>
+                            <div className="description">
+                                <h5>Localization</h5>
+                                <p>
+                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
+                                </p>
+                            </div>
+                        </Col>
+                        <Col sm={3} md={3} className="service">
+                            <div className="service-icon">
+                                <Glyphicon glyph="briefcase" />
+                            </div>
+                            <div className="description">
+                                <h5>Compact</h5>
+                                <p>
+                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
+                                </p>
+                            </div>
+                        </Col>
+                        <Clearfix visibleSmBlock />
+                        <Col sm={3} md={3} className="service">
+                            <div className="service-icon">
+                                <Glyphicon glyph="cog" />
+                            </div>
+                            <div className="description">
+                                <h5>State of the Art</h5>
+                                <p>
+                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
+                                </p>
+                            </div>
+                        </Col>
+                        <Col sm={3} md={3} className="service">
+                            <div className="service-icon">
+                                <Glyphicon glyph="cloud" />
+                            </div>
+                            <div className="description">
+                                <h5>Cloud System</h5>
+                                <p>
+                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
+                                </p>
+                            </div>
+                        </Col>
+                    </Grid>
+                </section>
                 <section id="pricing" className="pricing">
                     <div className="section-heading">
                         <h1>Our Deals</h1>
@@ -305,91 +360,9 @@ let Home = React.createClass({
                                 </div>
                             </div>
                         </Col>
-                        <Clearfix visibleSmBlock />
-                        <Col xs={12} sm={6} md={3}>
-                            <div className="team-member">
-                                <div className="name">
-                                    Lucy
-                                </div>
-                                <div className="subtitle">
-                                    Engineer
-                                </div>
-                                <div className="avatar">
-                                    <Image src={avatar3Url} responsive />
-                                </div>
-                            </div>
-                        </Col>
-                        <Col xs={12} sm={6} md={3}>
-                            <div className="team-member">
-                                <div className="name">
-                                    Jane
-                                </div>
-                                <div className="subtitle">
-                                    Marketing
-                                </div>
-                                <div className="avatar">
-                                    <Image src={avatar4Url} responsive />
-                                </div>
-                            </div>
-                        </Col>
                     </Grid>
                 </section>
-                <section id="services" className="services">
-                    <div className="section-heading">
-                        <h1>The Power of SmartAdmin</h1>
-                        <p>
-                            Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
-                        </p>
-                    </div>
-                    <Grid>
-                        <Col sm={3} md={3} className="service">
-                            <div className="service-icon">
-                                <Glyphicon glyph="text-background" />
-                            </div>
-                            <div className="description">
-                                <h5>Localization</h5>
-                                <p>
-                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
-                                </p>
-                            </div>
-                        </Col>
-                        <Col sm={3} md={3} className="service">
-                            <div className="service-icon">
-                                <Glyphicon glyph="briefcase" />
-                            </div>
-                            <div className="description">
-                                <h5>Compact</h5>
-                                <p>
-                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
-                                </p>
-                            </div>
-                        </Col>
-                        <Clearfix visibleSmBlock />
-                        <Col sm={3} md={3} className="service">
-                            <div className="service-icon">
-                                <Glyphicon glyph="cog" />
-                            </div>
-                            <div className="description">
-                                <h5>State of the Art</h5>
-                                <p>
-                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
-                                </p>
-                            </div>
-                        </Col>
-                        <Col sm={3} md={3} className="service">
-                            <div className="service-icon">
-                                <Glyphicon glyph="cloud" />
-                            </div>
-                            <div className="description">
-                                <h5>Cloud System</h5>
-                                <p>
-                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
-                                </p>
-                            </div>
-                        </Col>
-                    </Grid>
-                </section>
-
+ 
                 <section id="screenshots" className="screenshots">
                     <div className="section-heading">
                         <h1>Screenshots</h1>
@@ -511,7 +484,7 @@ let Home = React.createClass({
                         onSelect={this.quotesOnSelect}
                         className="carousel" controls={false} slide={false}>
                         <Carousel.Item className="carousel-item">
-                            <p>Nulla vitae elit libero, a pharetra augue mollis interdum.</p>
+                            <p><i>Artificial Intelligence (AI)-powered bots will become the next interface, shaping our interactions with the applications and devices we rely on.</i> Satya Nadella, CEO, Microsoft.</p>
                             <img src={avatarUrl} className="avatar" />
                         </Carousel.Item>
                         <Carousel.Item className="carousel-item">
@@ -519,7 +492,8 @@ let Home = React.createClass({
                             <img src={avatarUrl} className="avatar" />
                         </Carousel.Item>
                         <Carousel.Item className="carousel-item">
-                            <p>Praesent commodo cursus magna, vel scelerisque nisl consectetur.</p>
+                            <p>							<i>Chatbots will be one of the primary ways to interface with a lot of digital services.</i> 	Larry Ellison, Executive Chairman and CTO, Oracle Corporation. </p>
+
                             <img src={avatarUrl} className="avatar" />
                         </Carousel.Item>
                     </Carousel>
@@ -529,32 +503,16 @@ let Home = React.createClass({
                     <div className="section-heading">
                         <h1>Get in touch</h1>
                         <p>
-                            Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
-                        </p>
+							<i>No one wants to have to install a new app for every business or service that they want to interact with. We think that you should just be able to message a business in the same way that you message a friend.</i> Mark Zuckerberg, CEO, Facebook. </p>
                     </div>
                     <HomeContactForm i18n={i18n} />
                 </section>
 
-                <section className="purchase">
-                    <div className="purchase-bg" />
-                    <div className="section-heading">
-                        <h1>We Always Try to Create a Difference</h1>
-                        <p>
-                            Thanks for your purchase!
-                        </p>
-                        <Button bsSize="large" className="purchase-button">
-                            PURCHASE
-                        </Button>
-                    </div>
-                </section>
                 <footer>
                     <div className="footer-content">
                         <h2>About us</h2>
                         <p>
                             Fusce gravida tortor felis, ac dictum risus sagittis id.
-                        </p>
-                        <p>
-                            Donec volutpat, mi vel egestas eleifend, dolor arcu iaculis nunc. Fusce gravida tortor felis, ac dictum risus sagittis id. Morbi posuere justo eleifend libero ultricies ultrices.
                         </p>
                         <a href="#">LEARN MORE</a>
                     </div>

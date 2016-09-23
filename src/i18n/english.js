@@ -16,6 +16,7 @@ export default {
         notifications: 'Notifications',
     },
     home: {
+    	baseline: 'Hi. We are a premium bot platform.',
     },
     homeContactForm: {
         name: 'NAME',

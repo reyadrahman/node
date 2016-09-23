@@ -16,6 +16,7 @@ export default {
         notifications: 'FR Notifications',
     },
     home: {
+    	baseline: 'Bonjour. Nous sommes une plate-forme de bots premium.',
     },
     homeContactForm: {
         name: 'FR NAME',
