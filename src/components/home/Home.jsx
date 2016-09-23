@@ -108,54 +108,54 @@ let Home = React.createClass({
 
                <section id="services" className="services">
                     <div className="section-heading">
-                        <h1>The Power of SmartAdmin</h1>
+                        <h1>{ strings.services_h }</h1>
                         <p>
-                            Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
+                            { strings.services_t }
                         </p>
                     </div>
                     <Grid>
                         <Col sm={3} md={3} className="service">
                             <div className="service-icon">
-                                <Glyphicon glyph="text-background" />
+                                <Glyphicon glyph="globe" />
                             </div>
                             <div className="description">
-                                <h5>Localization</h5>
+                                <h5>{ strings.universal_h }</h5>
                                 <p>
-                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
+                                    { strings.universal_t }
                                 </p>
                             </div>
                         </Col>
                         <Col sm={3} md={3} className="service">
                             <div className="service-icon">
-                                <Glyphicon glyph="briefcase" />
+                                <Glyphicon glyph="bell" />
                             </div>
                             <div className="description">
-                                <h5>Compact</h5>
+                                <h5>{ strings.notifications_h }</h5>
                                 <p>
-                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
+                                    { strings.notifications_t }
                                 </p>
                             </div>
                         </Col>
                         <Clearfix visibleSmBlock />
                         <Col sm={3} md={3} className="service">
                             <div className="service-icon">
-                                <Glyphicon glyph="cog" />
+                                <Glyphicon glyph="stats" />
                             </div>
                             <div className="description">
-                                <h5>State of the Art</h5>
+                                <h5>{ strings.tracking_h }</h5>
                                 <p>
-                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
+                                    { strings.tracking_t }
                                 </p>
                             </div>
                         </Col>
                         <Col sm={3} md={3} className="service">
                             <div className="service-icon">
-                                <Glyphicon glyph="cloud" />
+                                <Glyphicon glyph="user" />
                             </div>
                             <div className="description">
-                                <h5>Cloud System</h5>
+                                <h5>{ strings.ai_h }</h5>
                                 <p>
-                                    Vestibulum tincidunt enim in pharetra malesuada. Duis semper magna metus electram accommodare.
+                                    { strings.ai_t }
                                 </p>
                             </div>
                         </Col>
@@ -163,10 +163,7 @@ let Home = React.createClass({
                 </section>
                 <section id="pricing" className="pricing">
                     <div className="section-heading">
-                        <h1>Our Deals</h1>
-                        <p>
-                            Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
-                        </p>
+                        <h1>{ strings.pricing}</h1>
                     </div>
 
 
@@ -176,35 +173,35 @@ let Home = React.createClass({
                             <Panel
                                 className="pricing-panel"
                                 bsStyle="success"
-                                header={'Lite version'}
+                                header={'Personnal'}
                                 footer={
-                                    <Button bsStyle="primary" bsSize="large" block>Download <span>now!</span></Button>
+                                    <Button bsStyle="primary" bsSize="large" block>Test</Button>
                                 }
                             >
                                 <div className="price">
-                                    <strong>FREE</strong>
+                                    <strong>{ strings.price_1}</strong>
                                 </div>
                                 <ul className="feature-list">
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> 2 years access <strong> to all storage locations</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_1_1}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Unlimited</strong> storage
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_1_2}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> Limited <strong> download quota</strong>
+                                        <Glyphicon glyph="remove" className="text-danger" /> { strings.feature_1_3}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Smart File Storage</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_1_4}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> All time <strong> updates</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_1_5}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="remove" className="text-danger" /> <strong>Unlimited</strong> access to all files
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_1_6}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="remove" className="text-danger" /> <strong>Allowed</strong> to be exclusing per sale
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_1_7}
                                     </li>
                                 </ul>
                             </Panel>
@@ -213,35 +210,35 @@ let Home = React.createClass({
                             <Panel
                                 className="pricing-panel"
                                 bsStyle="success"
-                                header={'Personal Project'}
+                                header={'Business'}
                                 footer={
-                                    <Button bsStyle="primary" bsSize="large" block>Purchase <span>via paypal</span></Button>
+                                    <Button bsStyle="primary" bsSize="large" block>Contact</Button>
                                 }
                             >
                                 <div className="price">
                                     $99<span className="subscript">/mo</span>
                                 </div>
                                 <ul className="feature-list">
-                                    <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> 2 years access <strong> to all storage locations</strong>
+                                  <li>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_2_1}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Unlimited</strong> storage
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_2_2}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> Limited <strong> download quota</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_2_3}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Smart File Storage</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_2_4}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> All time <strong> updates</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_2_5}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="remove" className="text-danger" /> <strong>Unlimited</strong> access to all files
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_2_6}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="remove" className="text-danger" /> <strong>Allowed</strong> to be exclusing per sale
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_2_7}
                                     </li>
                                 </ul>
                             </Panel>
@@ -252,37 +249,36 @@ let Home = React.createClass({
                                 className="pricing-panel"
                                 bsStyle="primary"
                                 header={[
-                                    <img src={ribbonUrl} className="ribbon" />,
-                                    'Developer Bundle'
+                                    'Reseller'
                                 ]}
                                 footer={
-                                    <Button bsStyle="primary" bsSize="large" block>Purchase <span>via paypal</span></Button>
+                                    <Button bsStyle="primary" bsSize="large" block>Contact</Button>
                                 }
                             >
                                 <div className="price">
                                     $350<span className="subscript">/mo</span>
                                 </div>
                                 <ul className="feature-list">
-                                    <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> 2 years access <strong> to all storage locations</strong>
+                                 <li>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_3_1}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Unlimited</strong> storage
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_3_2}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> Limited <strong> download quota</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_3_3}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Smart File Storage</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_3_4}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> All time <strong> updates</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_3_5}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="remove" className="text-danger" /> <strong>Unlimited</strong> access to all files
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_3_6}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="remove" className="text-danger" /> <strong>Allowed</strong> to be exclusing per sale
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_3_7}
                                     </li>
                                 </ul>
                             </Panel>
@@ -291,35 +287,33 @@ let Home = React.createClass({
                             <Panel
                                 className="pricing-panel"
                                 bsStyle="danger"
-                                header={'Premium Package'}
+                                header={'Enterprise'}
                                 footer={
-                                    <Button bsStyle="primary" bsSize="large" block>Purchase <span>via paypal</span></Button>
+                                    <Button bsStyle="primary" bsSize="large" block>Contact</Button>
                                 }
                             >
-                                <div className="price">
-                                    $999<span className="subscript">/mo</span>
-                                </div>
+                                <div className="price">{ strings.price_4}</div>
                                 <ul className="feature-list">
-                                    <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> 2 years access <strong> to all storage locations</strong>
+                                  <li>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_4_1}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Unlimited</strong> storage
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_4_2}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> Limited <strong> download quota</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_4_3}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Smart File Storage</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_4_4}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> All time <strong> updates</strong>
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_4_5}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Unlimited</strong> access to all files
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_4_6}
                                     </li>
                                     <li>
-                                        <Glyphicon glyph="ok" className="text-success" /> <strong>Allowed</strong> to be exclusing per sale
+                                        <Glyphicon glyph="ok" className="text-success" /> { strings.feature_4_7}
                                     </li>
                                 </ul>
                             </Panel>
@@ -328,19 +322,19 @@ let Home = React.createClass({
                 </section>
                 <section id="team" className="team">
                     <div className="section-heading">
-                        <h1>Deepiks Team</h1>
+                        <h1>{ strings.team_h}</h1>
                         <p>
-                            Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
+                           { strings.team_t}
                         </p>
                     </div>
                     <Grid>
                         <Col xs={12} sm={6} md={3}>
                             <div className="team-member">
                                 <div className="name">
-                                    Emmanuel
+                                    Emmanuel Prat
                                 </div>
                                 <div className="subtitle">
-                                    CEO
+                                    CEO & CTO
                                 </div>
                                 <div className="avatar">
                                     <Image src={avatar1Url} responsive />
@@ -350,10 +344,10 @@ let Home = React.createClass({
                         <Col xs={12} sm={6} md={3}>
                             <div className="team-member">
                                 <div className="name">
-                                    Sean
+                                    Bruno Génuit
                                 </div>
                                 <div className="subtitle">
-                                    Engineer
+                                    COO
                                 </div>
                                 <div className="avatar">
                                     <Image src={avatar2Url} responsive />
@@ -365,9 +359,9 @@ let Home = React.createClass({
  
                 <section id="screenshots" className="screenshots">
                     <div className="section-heading">
-                        <h1>Screenshots</h1>
+                        <h1>{ strings.screenshots_h}</h1>
                         <p>
-                            Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
+                            { strings.screenshots_t}
                         </p>
                     </div>
 
@@ -385,9 +379,9 @@ let Home = React.createClass({
 
                 <section id="updates" className="updates">
                     <div className="section-heading">
-                        <h1>Updates</h1>
+                        <h1>{ strings.timeline_h}</h1>
                         <p>
-                            Lorem ipsum dolor sit amet, no nisl mentitum recusabo per, vim at blandit qualisque dissentiunt. Diam efficiantur conclusionemque ut has
+                            { strings.timeline_t}
                         </p>
                     </div>
 
@@ -395,13 +389,13 @@ let Home = React.createClass({
                         <article className="timeline-entry">
 
                             <div className="timeline-entry-inner">
-                                <time className="timeline-time" dateTime="2014-01-10T03:45"><span>03:45 AM</span> <span>Today</span></time>
+                                <time className="timeline-time" dateTime="2014-01-10T03:45"><span>{ strings.timeline_5_d}</span> <span></span></time>
 
                                 <div className="timeline-icon bg-success" />
 
                                 <div className="timeline-label">
-                                    <h2><a href="#">SmartAdmin:</a> <span>Patch was released today</span></h2>
-                                    <p>Tolerably earnestly middleton extremely distrusts she boy now not. Add and offered prepare how cordial two promise. Greatly who affixed suppose but enquire compact prepare all put. Added forth chief trees but rooms think may.</p>
+                                    <h2>{ strings.timeline_5_h}</h2>
+                                    <p>{ strings.timeline_5_t}</p>
                                 </div>
                             </div>
 
@@ -409,15 +403,15 @@ let Home = React.createClass({
                         <article className="timeline-entry left-aligned">
 
                             <div className="timeline-entry-inner">
-                                <time className="timeline-time" dateTime="2014-01-10T03:45"><span>03:45 AM</span> <span>4 weeks ago</span></time>
+                                <time className="timeline-time" dateTime="2014-01-10T03:45"><span>{ strings.timeline_4_d}</span> <span></span></time>
 
                                 <div className="timeline-icon bg-secondary">
                                 </div>
 
                                 <div className="timeline-label">
-                                    <h2><a href="#">SmartAdmin goes public!</a></h2>
-                                    <p>Yahoo buys a share in <strong>SmartAdmin</strong></p>
-                                </div>
+                                    <h2>{ strings.timeline_4_h}</h2>
+                                    <p>{ strings.timeline_4_t}</p>
+                                 </div>
                             </div>
 
                         </article>
@@ -426,16 +420,14 @@ let Home = React.createClass({
                         <article className="timeline-entry">
 
                             <div className="timeline-entry-inner">
-                                <time className="timeline-time" dateTime="2014-01-09T13:22"><span>03:45 AM</span> <span>3 months ago</span></time>
+                                <time className="timeline-time" dateTime="2014-01-09T13:22"><span>{ strings.timeline_3_d}</span> <span></span></time>
 
                                 <div className="timeline-icon bg-info">
                                 </div>
 
                                 <div className="timeline-label">
-                                    <h2><a href="#">SmartAdmin Convention</a> <span>checked in at</span> <a href="#">Laborator</a></h2>
-
-                                    <blockquote>Place was booked till 3 am</blockquote>
-
+                                    <h2>{ strings.timeline_3_h}</h2>
+                                    <p>{ strings.timeline_3_t}</p>
                                     <img src={mapUrl} alt="map" className="img-responsive" />
                                 </div>
                             </div>
@@ -445,16 +437,15 @@ let Home = React.createClass({
                         <article className="timeline-entry left-aligned">
 
                             <div className="timeline-entry-inner">
-                                <time className="timeline-time" dateTime="2014-01-10T03:45"><span>03:45 AM</span> <span>8 months ago</span></time>
+                                <time className="timeline-time" dateTime="2014-01-10T03:45"><span>{ strings.timeline_2_d}</span> <span></span></time>
 
                                 <div className="timeline-icon bg-warning">
                                 </div>
 
                                 <div className="timeline-label">
-                                    <h2><a href="#">We have lift off!</a></h2>
-
-                                    <blockquote>SmartAdmin Launched with grace and beauty</blockquote>
-
+                                    <h2>{ strings.timeline_2_h}</h2>
+                                    <p>{ strings.timeline_2_t}</p>
+ 
                                 </div>
                             </div>
 
@@ -501,21 +492,14 @@ let Home = React.createClass({
 
                 <section id="contact" className="contact">
                     <div className="section-heading">
-                        <h1>Get in touch</h1>
-                        <p>
-							<i>No one wants to have to install a new app for every business or service that they want to interact with. We think that you should just be able to message a business in the same way that you message a friend.</i> Mark Zuckerberg, CEO, Facebook. </p>
+                        <h1>{ strings.contact_h}</h1>
+                        <p>{ strings.contact_t}</p>
                     </div>
                     <HomeContactForm i18n={i18n} />
                 </section>
 
                 <footer>
-                    <div className="footer-content">
-                        <h2>About us</h2>
-                        <p>
-                            Fusce gravida tortor felis, ac dictum risus sagittis id.
-                        </p>
-                        <a href="#">LEARN MORE</a>
-                    </div>
+
                     <div className="bottom-footer">
                         Copyright © 2015 - Deepiks
                     </div>
