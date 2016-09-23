@@ -65,7 +65,7 @@ let Header = React.createClass({
         );
 
         const navItems = [
-            createNavItem('pricing', 'download', 'Pricing'),
+            createNavItem('pricing', 'euro', 'Pricing'),
             createNavItem('team', 'user', 'Team'),
             createNavItem('services', 'ok', 'Features'),
             createNavItem('screenshots', 'picture', 'Screenshots'),

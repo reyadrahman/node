@@ -102,7 +102,7 @@ let Home = React.createClass({
                 />
                 <section className="intro">
                     <div className="intro-message">
-                        Insert Animation Here
+                       Hi. We are a universal bot platform powered by AI.
                     </div>
                 </section>
 
