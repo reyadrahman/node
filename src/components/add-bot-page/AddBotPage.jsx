@@ -15,9 +15,12 @@ let AddBotPage = React.createClass({
             microsoftAppId: '',
             microsoftAppPassword: '',
             witAccessToken: '',
+            twitterConsumerKey: '',
+            twitterConsumerSecret: '',
         };
     },
     addBot(e) {
+        console.log('AddBotPage: addBot');
         e.preventDefault();
         const { botName, ...settings } = this.state;
         this.props.addBot(botName, settings).then(() => {
@@ -25,8 +28,9 @@ let AddBotPage = React.createClass({
         });
     },
     cancel(e) {
+        console.log('AddBotPage: cancel');
         e.preventDefault();
-        this.props.router.push('/account');
+        this.props.router.goBack();
     },
     botNameChanged(e) {
         this.setState({ botName: e.target.value });
@@ -48,6 +52,12 @@ let AddBotPage = React.createClass({
     },
     witAccessTokenChanged(e) {
         this.setState({ witAccessToken: e.target.value });
+    },
+    twitterConsumerKeyChanged(e) {
+        this.setState({ twitterConsumerKey: e.target.value });
+    },
+    twitterConsumerSecretChanged(e) {
+        this.setState({ twitterConsumerSecret: e.target.value });
     },
 
     componentWillMount() {
@@ -124,6 +134,22 @@ let AddBotPage = React.createClass({
                             className="field"
                             value={state.witAccessToken}
                             onChange={this.witAccessTokenChanged}
+                        />
+                    </div>
+                    <div className="inputs-row">
+                        <label>{strings.twitterConsumerKey}</label>
+                        <Input
+                            className="field"
+                            value={state.twitterConsumerKey}
+                            onChange={this.twitterConsumerKeyChanged}
+                        />
+                    </div>
+                    <div className="inputs-row">
+                        <label>{strings.twitterConsumerSecret}</label>
+                        <Input
+                            className="field"
+                            value={state.twitterConsumerSecret}
+                            onChange={this.twitterConsumerSecretChanged}
                         />
                     </div>
                     <div className="messages">

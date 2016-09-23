@@ -51,10 +51,11 @@ export const TextArea = ({ className, ...others }) => (
 );
 
 
-export const Button = ({ label, className, type }) => (
+export const Button = ({ label, className, type, ...others }) => (
     <button
-        type={type}
+        type={type || 'button'}
         className={`button ${className || ''} ${type === 'submit' ? 'submit' : ''}`}
+        {...others}
     >
         {label}
     </button>

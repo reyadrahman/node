@@ -31,6 +31,10 @@ export function toggleSideMenu() {
     return { type: 'ui/toggleSideMenu' };
 }
 
+export function selectBot(botId) {
+    return { type: 'currentUser/selectBot', botId };
+}
+
 // ==================================================
 // Thunks
 // ==================================================
@@ -190,12 +194,12 @@ export function addBot(botName: string, data) {
 }
 
 export function fetchBots() {
-    return async function(dispatch: Function) {
+    return async function(dispatch: Function, getState: Function) {
         dispatch({ type: 'currentUser/resetBotsState' });
         try {
             const session = await aws.getCurrentSession();
             const bots = await bridge.fetchBots(session.getIdToken().getJwtToken());
-            dispatch({ type: 'currentUser/setBotsState', bots });
+            dispatch({ type: 'currentUser/setBotsAndUpdateSelectedBotId', bots });
         } catch(err) {
             dispatch({
                 type: 'currentUser/fetchBotsFailed',

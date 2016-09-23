@@ -11,8 +11,7 @@ export default {
     sideMenu: {
         account: 'FR Account',
         messages: 'FR Messages',
-        contacts: 'FR Contacts',
-        wizardBot: 'FR Wizard Bot',
+        feeds: 'FR Feeds',
         notifications: 'FR Notifications',
     },
     home: {
@@ -32,7 +31,9 @@ export default {
         send: 'FR SEND MESSAGE',
     },
     signedInPage: {
-        pleaseSignIn: 'Please sign in',
+        pleaseSignIn: 'FR Please sign in',
+        fetchingBots: 'FR fetching bots...',
+        newBot: 'FR Create new bot',
     },
     accountPage: {
         title: 'FR Account',
@@ -59,6 +60,32 @@ export default {
     messagesPage: {
 
     },
+    feedsPage: {
+        feeds: 'FR Feeds',
+        feedName: 'FR Feed Name',
+        source: 'FR Source',
+        categories: 'FR Categories',
+        scheduledEveryDayAt: 'FR Scheduled every day at',
+        newFeed: 'FR Create new feed',
+        newBot: 'FR Create new bot',
+        fetchingFeeds: 'FR Fetching feeds...',
+        noBots: 'FR You don\'t have any bots',
+        noFeeds: 'FR You don\'t have any feeds yet',
+    },
+    newFeed: {
+        create: 'FR Create',
+        newFeedTitle: 'FR New Feed',
+        feedName: 'FR Feed name',
+        feedNamePlaceholder: 'FR Enter feed name',
+        categories: 'FR Categories',
+        categoriesPlaceholder: 'FR Enter categories separated by comma',
+        source: 'FR Source',
+        publishHourLabel: 'FR Publish every day at ',
+        create: 'FR Create',
+        twitterScreenName: '@screenName',
+        rssUrl: 'https://example.com/rss-feed',
+        requiredField: 'FR required field',
+    },
     addBot: {
         title: 'FR Add bot',
         botName: 'FR name',
@@ -71,6 +98,8 @@ export default {
         microsoftAppId: 'FR Microsoft app ID',
         microsoftAppPassword: 'FR Microsoft app password',
         witAccessToken: 'FR Wit access token',
+        twitterConsumerKey: 'FR Twitter consumer key',
+        twitterConsumerSecret: 'FR Twitter consumer secret',
     },
     signUp: {
         title: 'French Sign Up',

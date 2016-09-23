@@ -96,7 +96,7 @@ let Home = React.createClass({
                 <Header
                     className={`home-comp ${className || ''}`}
                     i18n={i18n}
-                    extraItemsLeft={[
+                    leftItemsBeforeLogo={[
                         <HomeMenu i18n={i18n} />
                     ]}
                 />

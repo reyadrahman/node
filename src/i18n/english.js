@@ -11,8 +11,7 @@ export default {
     sideMenu: {
         account: 'Account',
         messages: 'Messages',
-        contacts: 'Contacts',
-        wizardBot: 'Wizard Bot',
+        feeds: 'Feeds',
         notifications: 'Notifications',
     },
     home: {
@@ -33,6 +32,8 @@ export default {
     },
     signedInPage: {
         pleaseSignIn: 'Please sign in',
+        fetchingBots: 'fetching bots...',
+        newBot: 'Create new bot',
     },
     accountPage: {
         title: 'Account',
@@ -59,6 +60,32 @@ export default {
     messagesPage: {
 
     },
+    feedsPage: {
+        feeds: 'Feeds',
+        feedName: 'Feed Name',
+        source: 'Source',
+        categories: 'Categories',
+        scheduledEveryDayAt: 'Scheduled every day at',
+        newFeed: 'Create new feed',
+        newBot: 'Create new bot',
+        fetchingFeeds: 'Fetching feeds...',
+        noBots: 'You don\'t have any bots',
+        noFeeds: 'You don\'t have any feeds yet',
+    },
+    newFeed: {
+        create: 'Create',
+        newFeedTitle: 'New Feed',
+        feedName: 'Feed name',
+        feedNamePlaceholder: 'Enter feed name',
+        categories: 'Categories',
+        categoriesPlaceholder: 'Enter categories separated by comma',
+        source: 'Source',
+        publishHourLabel: 'Publish every day at ',
+        create: 'Create',
+        twitterScreenName: '@screenName',
+        rssUrl: 'https://example.com/rss-feed',
+        requiredField: 'required field',
+    },
     addBot: {
         title: 'Add bot',
         botName: 'name',
@@ -71,6 +98,8 @@ export default {
         microsoftAppId: 'Microsoft app ID',
         microsoftAppPassword: 'Microsoft app password',
         witAccessToken: 'Wit access token',
+        twitterConsumerKey: 'Twitter consumer key',
+        twitterConsumerSecret: 'Twitter consumer secret',
     },
     signUp: {
         title: 'Sign Up',

@@ -79,14 +79,24 @@ export function currentUser(state = initAppState.currentUser, action) {
                 errorMessage: action.errorMessage,
             },
         }
-    } else if (action.type === 'currentUser/setBotsState') {
+    } else if (action.type === 'currentUser/setBotsAndUpdateSelectedBotId') {
+        let { selectedBotId } = state;
+        if (!selectedBotId || !action.bots.find(x => x.botId === selectedBotId)) {
+            selectedBotId = action.bots[0] && action.bots[0].botId || '';
+        }
         return {
             ...state,
             botsState: {
                 hasFetched: true,
                 bots: action.bots,
                 errorMessage: '',
-            }
+            },
+            selectedBotId,
+        };
+    } else if (action.type === 'currentUser/selectBot') {
+        return {
+            ...state,
+            selectedBotId: action.botId,
         };
     } else if (action.type === 'currentUser/resetConversationsState') {
         return {

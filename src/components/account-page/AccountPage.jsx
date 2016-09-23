@@ -20,13 +20,7 @@ let AccountPage = React.createClass({
             isUserAttrsDirty: false,
         };
     },
-    // send(e) {
-    //     e.preventDefault();
-    //     // TODO
-    // },
-    // botNameChanged(e) {
-    //     this.setState({ botName: e.target.value });
-    // },
+
     addBot(e) {
         e.preventDefault();
         this.props.router.push('/add-bot');
@@ -77,20 +71,19 @@ let AccountPage = React.createClass({
         }
     },
 
-    componentDidMount() {
-        const { currentUser, fetchBots } = this.props;
-        if (currentUser.signedIn) {
-            fetchBots();
-        }
-    },
+    // componentDidMount() {
+    //     const { currentUser, fetchBots } = this.props;
+    //     if (currentUser.signedIn && currentUser.botsState.bots) {
+    //         fetchBots();
+    //     }
+    // },
 
     componentDidUpdate() {
         // TODO
     },
 
     render() {
-        const { className, currentUser, i18n: { strings: { accountPage: strings } },
-        } = this.props;
+        const { className, currentUser, i18n: { strings: { accountPage: strings } } } = this.props;
 
         if (!currentUser.signedIn) {
             return null;
@@ -248,7 +241,7 @@ AccountPage = connect(
         currentUser: state.currentUser,
     }),
     {
-        fetchBots: actions.fetchBots,
+        // fetchBots: actions.fetchBots,
         updateUserAttrsAndPass: actions.updateUserAttrsAndPass,
         closeModal: actions.closeModal,
         setModal: actions.setModal,
