@@ -52,6 +52,9 @@ let Conversations = React.createClass({
                         <div className="text">
                             { text }
                         </div>
+                        <div className="text-right">
+                            <small>via</small> <b>{ x.channel }</b>
+                        </div>
                     </div>
                     <div className="date">
                         { simpleTimeFormat(x.lastMessage.creationTimestamp) }
