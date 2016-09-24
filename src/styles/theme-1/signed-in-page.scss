@@ -20,6 +20,43 @@
                 box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
             }
         }
+
+        .bot-selector-fetching {
+            padding: 0 40px;
+            color: #888;
+        }
+
+        .bot-selector-new-bot {
+            color: #666;
+            padding: 0 40px;
+            height: 100%;
+            border: 0;
+            background-color: rgba(0,0,0,0.03);
+            &:hover {
+                background-color: #dbdbdb;
+            }
+            &:focus {
+                outline: none;
+                background-color: #dbdbdb;
+            }
+        }
+
+        .bot-selector-dropdown {
+            height: 100%;
+            button {
+                padding: 0 40px;
+                height: 100%;
+                border-radius: 0;
+                border: 0;
+                background-color: transparent;
+                &:hover {
+                    background-color: #dbdbdb;
+                }
+                .caret {
+                    margin-left: 10px;
+                }
+            }
+        }
     }
 
     .signed-in-page-content {

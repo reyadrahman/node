@@ -5,7 +5,7 @@
     right: 0px;
     bottom: 0px;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 3000;
+    z-index: 500;
 }
 
 .modal-content {
@@ -20,10 +20,10 @@
     border: 1px solid rgba(0,0,0,.2);
     border-radius: 3px;
 
-    overflow: auto;
+    overflow: visible;
     outline: none;
     -webkit-overflow-scrolling: touch;
-    z-index: 4000;
+    z-index: 600;
 
 
     .close-button {

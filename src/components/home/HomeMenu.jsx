@@ -65,11 +65,11 @@ let Header = React.createClass({
         );
 
         const navItems = [
-            createNavItem('pricing', 'download', 'Pricing'),
-            createNavItem('team', 'user', 'Team'),
             createNavItem('services', 'ok', 'Features'),
-            createNavItem('screenshots', 'picture', 'Screenshots'),
-            createNavItem('updates', 'cog', 'Updates'),
+            createNavItem('pricing', 'euro', 'Pricing'),
+            createNavItem('team', 'user', 'Team'),
+            createNavItem('screenshots', 'globe', 'Channels'),
+            createNavItem('updates', 'tasks', 'Timeline'),
             createNavItem('contact', 'envelope', 'Contact'),
         ];
 

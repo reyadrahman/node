@@ -7,7 +7,7 @@ import * as bridge from '../client/client-server-bridge.js';
 import SignIn from '../components/sign-in/SignIn.jsx';
 import SignUp from '../components/sign-up/SignUp.jsx';
 import VerifyRegistration from '../components/verify-registration/VerifyRegistration.jsx';
-import type { DBMessage, ResponseMessage } from '../misc/types.js';
+import type { DBMessage, ResponseMessage, FeedConfig } from '../misc/types.js';
 
 import type { Component } from 'react';
 import { browserHistory } from 'react-router'
@@ -29,6 +29,10 @@ export function setLanguage(lang) {
 
 export function toggleSideMenu() {
     return { type: 'ui/toggleSideMenu' };
+}
+
+export function selectBot(botId) {
+    return { type: 'currentUser/selectBot', botId };
 }
 
 // ==================================================
@@ -190,12 +194,12 @@ export function addBot(botName: string, data) {
 }
 
 export function fetchBots() {
-    return async function(dispatch: Function) {
+    return async function(dispatch: Function, getState: Function) {
         dispatch({ type: 'currentUser/resetBotsState' });
         try {
             const session = await aws.getCurrentSession();
             const bots = await bridge.fetchBots(session.getIdToken().getJwtToken());
-            dispatch({ type: 'currentUser/setBotsState', bots });
+            dispatch({ type: 'currentUser/setBotsAndUpdateSelectedBotId', bots });
         } catch(err) {
             dispatch({
                 type: 'currentUser/fetchBotsFailed',
@@ -295,3 +299,17 @@ export function sendNotification(botId: string,
                                       botId, message, categories);
     }
 }
+
+export function addBotFeed(botId: string, feedConfig: FeedConfig) {
+    return async function(dispatch: Function) {
+        try {
+            const session = await aws.getCurrentSession();
+            await bridge.addBotFeed(session.getIdToken().getJwtToken(), botId, feedConfig);
+        } catch(error) {
+            console.error(error);
+            // TODO show error message to user
+        }
+        dispatch(fetchBots());
+    };
+}
+

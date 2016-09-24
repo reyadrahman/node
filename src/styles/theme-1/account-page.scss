@@ -13,12 +13,6 @@ $submitButtonWidth: 200px;
     min-height: 800px;
     padding: 80px 50px 30px 50px;
 
-    & .title {
-        font-size: 20px;
-        color: rgb(70, 70, 70);
-        letter-spacing: 5px
-    }
-
     .profile-section {
         @include account-page-section;
 

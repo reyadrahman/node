@@ -14,7 +14,8 @@ const initAppState = {
         errorMessage: '',
     },
     currentUser: {
-        isSignedIn: false,
+        signedIn: false,
+        selectedBotId: '',
         attrs: {},
         botsState: {
             hasFetched: false,
