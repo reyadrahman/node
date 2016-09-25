@@ -1,6 +1,5 @@
 .conversations-comp {
     border: 1px solid #dcdcdc;
-    overflow-y: scroll;
     position: relative;
 
     .wait {
@@ -13,6 +12,10 @@
         letter-spacing: 10px;
     }
 
+    .conversations {
+        overflow-y: scroll;
+        height: 560px;
+    }
 
     .conversation {
         display: flex;
@@ -63,6 +66,8 @@
                 font-size: 14px;
                 font-weight: bold;
                 margin: 5px 0 0 10px;
+                width: 150px;
+                word-break: break-all;
             }
             .text {
                 font-size: 13px;

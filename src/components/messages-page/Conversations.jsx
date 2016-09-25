@@ -10,7 +10,12 @@ import defaultAvatarUrl from '../../public/avatar.jpg';
 let Conversations = React.createClass({
     getInitialState() {
         return {
+            searchFilter: ''
         };
+    },
+
+    onFilterChange: function (event) {
+        this.setState({searchFilter: event.target.value});
     },
 
     render() {
@@ -27,7 +32,20 @@ let Conversations = React.createClass({
             );
         }
 
-        const convsUi = cs.conversations.map((x, i) => {
+        let searchFilter  = this.state.searchFilter;
+        let conversations = cs.conversations;
+
+        if (searchFilter) {
+            conversations = conversations.filter(
+                conversation => conversation.lastMessage &&
+                (
+                    (conversation.lastMessage.senderName || '').toLowerCase().indexOf(searchFilter) > -1 ||
+                    (conversation.lastMessage.text || '').toLowerCase().indexOf(searchFilter) > -1
+                )
+            );
+        }
+
+        const convsUi = conversations.map((x, i) => {
             const profilePic = x.lastMessage.senderProfilePic || defaultAvatarUrl;
             const profilePicStyle = {
                 backgroundImage: `url(${profilePic})`,
@@ -66,7 +84,11 @@ let Conversations = React.createClass({
 
         return (
             <div className={`conversations-comp ${className || ''}`}>
-                { convsUi }
+                <input type="text" name="filter" className="form-control search" value={ searchFilter }
+                       onChange={this.onFilterChange}/>
+                <div className="conversations">
+                    { convsUi }
+                </div>
             </div>
         );
     }
