@@ -29,6 +29,7 @@ const Html = React.createClass({
                     <meta name="description" content={this.props.description} />
                     <link rel="stylesheet" type="text/css" href={styleURL} />
                     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/1.0.10/cookieconsent.min.js"></script>
+                    <script src="https://use.fontawesome.com/882b83f637.js"></script>
                 </head>
                 <body data-system-lang={this.getSystemLang()}>
                     <div id="reactUI" dangerouslySetInnerHTML={{ __html: this.props.body }} />

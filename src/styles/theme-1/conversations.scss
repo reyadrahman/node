@@ -2,6 +2,10 @@
     border: 1px solid #dcdcdc;
     position: relative;
 
+    .input-group-addon {
+        font-size: 13px;
+    }
+
     .wait {
         top: 50%;
         left: 50%;
@@ -13,6 +17,7 @@
     }
 
     .conversations {
+        margin-top: 5px;
         overflow-y: scroll;
         height: 550px;
     }

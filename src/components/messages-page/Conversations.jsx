@@ -27,7 +27,7 @@ let Conversations = React.createClass({
         if (!cs.hasFetched || _.isEmpty(cs.conversations)) {
             return (
                 <div className={`conversations-comp ${className || ''}`}>
-                    <div className="wait">•••</div>
+                    <div className="wait"><i className="fa fa-spin fa-spinner fa-2x"></i></div>
                 </div>
             );
         }
@@ -84,10 +84,13 @@ let Conversations = React.createClass({
 
         return (
             <div className={`conversations-comp ${className || ''}`}>
-                <input type="text" name="filter"
-                       className="form-control search" value={ searchFilter }
-                       onChange={this.onFilterChange}
-                       placeholder="Search..."/>
+                <div className="input-group">
+                    <input type="text" name="filter"
+                           className="form-control" value={ searchFilter }
+                           onChange={this.onFilterChange}
+                           placeholder="Search..."/>
+                    <div className="input-group-addon"><i className="fa fa-search"></i></div>
+                </div>
                 <div className="conversations">
                     { convsUi }
                 </div>
