@@ -178,7 +178,7 @@ AddBotPage = connect(
     state => ({
         currentUser: state.currentUser,
         successMessage: state.addBotSuccessMessage,
-        successMessage: state.addBotErrorMessage,
+        errorMessage: state.addBotErrorMessage,
     }),
     {
         addBot: actions.addBot,

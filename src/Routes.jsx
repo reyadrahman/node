@@ -18,7 +18,7 @@ const Routes = (
         <Route path="/privacy" component={Privacy} />
         <Route component={SignedInPage}>
             <Route path="/account" component={AccountPage} />
-            <Route path="/messages(/:conversationId)" component={MessagesPage} />
+            <Route path="/messages(/:selectedBotId)(/:conversationId)" component={MessagesPage} />
             <Route path="/feeds" component={FeedsPage} />
             <Route path="/add-bot" component={AddBotPage} />
             <Route path="/notifications" component={NotificationsPage} />

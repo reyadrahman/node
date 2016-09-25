@@ -22,7 +22,7 @@ let MessagesPage = React.createClass({
     // },
 
     conversationSelected(conversationId) {
-        this.props.router.push(`/messages/${conversationId}`)
+        this.props.router.push(`/messages/${this.props.currentUser.selectedBotId}/${conversationId}`)
     },
 
     componentDidMount() {
@@ -30,9 +30,15 @@ let MessagesPage = React.createClass({
         if (!currentUser.signedIn) {
             return;
         }
-        if (!currentUser.conversationsState.hasFetched) {
-            fetchConversations();
+
+        if (params.selectedBotId && params.selectedBotId !== currentUser.selectedBotId) {
+            this.props.selectBot(params.selectedBotId);
         }
+
+        if (currentUser.selectedBotId) {
+            fetchConversations(currentUser.selectedBotId);
+        }
+
         if (params.conversationId) {
             fetchMessages(params.conversationId);
         }
@@ -43,11 +49,21 @@ let MessagesPage = React.createClass({
         if (!currentUser.signedIn) {
             return;
         }
+
+        if (params.selectedBotId != currentUser.selectedBotId) {
+            this.props.router.push(`/messages/${currentUser.selectedBotId}`);
+        }
+
+        if (currentUser.selectedBotId != oldProps.currentUser.selectedBotId) {
+            fetchConversations(currentUser.selectedBotId);
+        }
+
         if (params.conversationId && params.conversationId !== oldProps.params.conversationId) {
             fetchMessages(params.conversationId);
         }
+
         if (currentUser.attributes.sub !== oldProps.currentUser.attributes.sub) {
-            fetchConversations();
+            fetchConversations(currentUser.selectedBotId);
             console.log('MessagesPage componentDidUpdate params.conversationId', params.conversationId);
             if (params.conversationId) {
                 fetchMessages(params.conversationId);
@@ -90,8 +106,9 @@ MessagesPage = connect(
         currentUser: state.currentUser,
     }),
     {
+        selectBot:          actions.selectBot,
         fetchConversations: actions.fetchConversations,
-        fetchMessages: actions.fetchMessages,
+        fetchMessages:      actions.fetchMessages,
     }
 )(MessagesPage);
 

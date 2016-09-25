@@ -1,6 +1,8 @@
 /* @flow */
 
 import map from 'lodash/map';
+import omitBy from 'lodash/omitBy';
+import isUndefined from 'lodash/isUndefined';
 
 export function toStr(obj: any): string {
     return JSON.stringify(obj, null, ' ');
@@ -35,10 +37,17 @@ export function simpleTimeFormat(timeRaw: Date | number | string) {
     return `${leftPad(time.getDate(), '0', 2)} ${monthNames[time.getMonth()]}`;
 }
 
+/**
+ * Converts key-value map into query string.
+ * Omits keys with undefined values.
+ *
+ * @param {object.<string, any>} obj
+ * @returns {string}
+ */
 export function createUrlQuery(obj: {[key: string]: any}): string {
     const euc = encodeURIComponent;
     // $FlowFixMe
-    return map(obj, (v, k) => `${euc(k)}=${euc(v)}`)
+    return map(omitBy(obj, (value, key) => isUndefined(value)), (v, k) => `${euc(k)}=${euc(v)}`)
            .join('&');
 }
 
