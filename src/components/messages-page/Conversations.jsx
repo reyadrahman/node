@@ -84,8 +84,10 @@ let Conversations = React.createClass({
 
         return (
             <div className={`conversations-comp ${className || ''}`}>
-                <input type="text" name="filter" className="form-control search" value={ searchFilter }
-                       onChange={this.onFilterChange}/>
+                <input type="text" name="filter"
+                       className="form-control search" value={ searchFilter }
+                       onChange={this.onFilterChange}
+                       placeholder="Search..."/>
                 <div className="conversations">
                     { convsUi }
                 </div>
