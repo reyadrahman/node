@@ -199,5 +199,11 @@ export default {
         email: 'Email address fr',
         subject: 'Subject fr',
         message: 'Votre message...',
-    }
+    },
+    privacyPage: {
+        privacy: 'FR Privacy',
+    },
+    termsOfUsePage: {
+        termsOfUse: 'FR Terms of Use',
+    },
 };

@@ -8,14 +8,14 @@ import MessagesPage from './components/messages-page/MessagesPage.jsx';
 import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 import FeedsPage from './components/feeds-page/FeedsPage.jsx';
 import NotificationsPage from './components/notifications-page/NotificationsPage.jsx';
-import TermsOfUse from './components/termsOfUse/TermsOfUse.jsx'
-import Privacy from './components/privacy/Privacy.jsx'
+import TermsOfUsePage from './components/terms-of-use-page/TermsOfUsePage.jsx'
+import PrivacyPage from './components/privacy-page/PrivacyPage.jsx'
 
 const Routes = (
     <Route path="/" component={App}>
         <IndexRoute component={Home} />
-        <Route path="/terms" component={TermsOfUse} />
-        <Route path="/privacy" component={Privacy} />
+        <Route path="/terms" component={TermsOfUsePage} />
+        <Route path="/privacy" component={PrivacyPage} />
         <Route component={SignedInPage}>
             <Route path="/account" component={AccountPage} />
             <Route path="/messages(/:selectedBotId)(/:conversationId)" component={MessagesPage} />

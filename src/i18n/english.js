@@ -201,4 +201,10 @@ export default {
         subject: 'Subject',
         message: 'Your message...',
     },
+    privacyPage: {
+        privacy: 'Privacy',
+    },
+    termsOfUsePage: {
+        termsOfUse: 'Terms of Use',
+    },
 };

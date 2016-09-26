@@ -21,6 +21,8 @@
 @import './contacts-page.scss';
 @import './form.scss';
 @import './feeds-page.scss';
+@import './terms-of-use-page.scss';
+@import './privacy-page.scss';
 
 body, html {
     padding: 0;
@@ -47,6 +49,8 @@ h1, h2, h3, h4, h5 {
     font-weight: normal;
     text-align: center;
     font-weight: 300;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 h5 {
