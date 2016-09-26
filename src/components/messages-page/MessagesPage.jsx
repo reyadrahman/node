@@ -50,7 +50,7 @@ let MessagesPage = React.createClass({
             return;
         }
 
-        if (params.selectedBotId != currentUser.selectedBotId) {
+        if (currentUser.selectedBotId && params.selectedBotId != currentUser.selectedBotId) {
             this.props.router.push(`/messages/${currentUser.selectedBotId}`);
         }
 

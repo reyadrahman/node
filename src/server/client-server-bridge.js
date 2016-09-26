@@ -219,7 +219,7 @@ async function fetchMessages(identityId, conversationId) {
         },
     });
 
-    console.log('qres: ', qres);
+    // console.log('qres: ', qres);
     return qres.Items || [];
 }
 
