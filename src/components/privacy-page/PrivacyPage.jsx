@@ -11,14 +11,14 @@ const PrivacyPage = React.createClass({
                 <Header i18n={i18n} />
                 <div className="content">
 <h1>Statement of Rights and Responsibilities</h1>
-<p><em>Date of Last Revision: September 26, 2015</em></p>
+<p><em>Date of Last Revision: September 26, 2016</em></p>
 <p></p>
 <p>This Statement of Rights and Responsibilities ("Statement," "Terms," or "SRR") derives from the Deepiks Principles, and is our terms of service that governs our relationship with users and others who interact with Deepiks, as well as Deepiks brands, products and services, which we call the “Deepiks Services” or “Services”. By using or accessing the Deepiks Services, you agree to this Statement, as updated from time to time in accordance with Section 7 below. </p>
 <h2>1- Privacy</h2>
 <p>Your privacy is very important to us. We designed this Policy to make important disclosures about how you can use Deepiks and how we collect and can use your content and information. We encourage you to read this Policy, and to use it to help you make informed decisions. </p>
 <p> </p>
 <h2>2- Sharing Your Content and Information</h2>
-<p>You own all of the content and information you post on Deepiks</p>
+<p>You own all of the content and information you post on Deepiks.</p>
 <p>When you delete  content, it is deleted in a manner similar to emptying the recycle bin on a computer. However, you understand that removed content may persist in backup copies for a reasonable period of time (but will not be available to others).</p>
 <p>When you publish content or information using the Public setting, it means that you are allowing everyone, including people off of Deepiks, to access and use that information, and to associate it with you (i.e., your name and profile picture).</p>
 <p>We always appreciate your feedback or other suggestions about Deepiks, but you understand that we may use your feedback or suggestions without any obligation to compensate you for them (just as you have no obligation to offer them).</p>

@@ -24,11 +24,15 @@ let Conversations = React.createClass({
               } = this.props;
 
         const { conversationsState: cs } = currentUser;
-        if (!cs.hasFetched || _.isEmpty(cs.conversations)) {
+        if (!cs.hasFetched) {
             return (
                 <div className={`conversations-comp ${className || ''}`}>
                     <div className="wait"><i className="fa fa-spin fa-spinner fa-2x"></i></div>
                 </div>
+            );
+        } else if (_.isEmpty(cs.conversations)) {
+            return (
+                <div></div>
             );
         }
 
