@@ -34,6 +34,24 @@ export async function _isMessageInDB(message: WebhookMessage) {
     return qres.Count > 0;
 }
 
+export async function logResponseMessage(ms: ResponseMessage | Array<ResponseMessage>,
+                                         botParams: BotParams, conversationId: string,
+                                         channel: string)
+{
+    const messages = Array.isArray(ms)
+        ? ms : [ms];
+
+    await _logMessage(messages.map(m => ({
+        publisherId_conversationId: aws.composeKeys(botParams.publisherId, conversationId),
+        senderId: aws.composeKeys(botParams.publisherId, botParams.botId),
+        senderName: botParams.botName,
+        channel: channel,
+        senderIsBot: true,
+        id: uuid.v1(),
+        ...m,
+    })));
+}
+
 export async function _logWebhookMessage(ms: WebhookMessage | Array<WebhookMessage>) {
     await _logMessage((ms: any));
 }
@@ -43,17 +61,22 @@ export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
     console.log('_logMessage: ', toStr(messages));
     if (messages.length === 0) return;
 
-    await aws.dynamoBatchWrite({
-        RequestItems: {
-            [DB_TABLE_MESSAGES]: messages.map(x => {
-                return {
-                    PutRequest: {
-                        Item: aws.dynamoCleanUpObj(x),
-                    },
-                };
-            })
-        }
-    });
+    // dynamodb batch write limit is 25
+    const chunks = _.chunk(messages, 25);
+    for (let i=0; i<chunks.length; i++) {
+        const chunk = chunks[i];
+        await aws.dynamoBatchWrite({
+            RequestItems: {
+                [DB_TABLE_MESSAGES]: chunk.map(x => {
+                    return {
+                        PutRequest: {
+                            Item: aws.dynamoCleanUpObj(x),
+                        },
+                    };
+                })
+            }
+        });
+    }
     console.log('_logMessage end');
 
 }
@@ -72,9 +95,6 @@ export function _signS3UrlsMiddleware(respondFn: RespondFn): RespondFn {
 }
 
 export async function _signS3Urls(response: ResponseMessage): Promise<ResponseMessage> {
-    if (typeof response === 'string') {
-        return response;
-    }
     const clone = { ...response };
     let cardsP;
     if (clone.cards) {
@@ -208,7 +228,7 @@ export async function _aiRoute(
         });
     } catch(err) {
         console.error(err);
-        const m = 'Sorry, there seems to be a problem...';
+        const m = { text: 'Sorry, there seems to be a problem...' };
         respondFn(m);
         responses.push(m);
     }
@@ -272,17 +292,8 @@ export async function _route(rawMessage: WebhookMessage,
 
     await logP;
 
-    let nextTimestamp = processedMessage.creationTimestamp + 1;
-    await _logMessage(aiRouteResponses.map(m => ({
-        publisherId_conversationId: processedMessage.publisherId_conversationId,
-        creationTimestamp: nextTimestamp++, // must be unique
-        senderId: aws.composeKeys(botParams.publisherId, botParams.botId),
-        senderName: botParams.botName,
-        channel: processedMessage.channel,
-        senderIsBot: true,
-        id: uuid.v1(),
-        ...(typeof m === 'string' ? {text: m} : m),
-    })));
+    const [, conversationId] = aws.decomposeKeys(processedMessage.publisherId_conversationId);
+    await logResponseMessage(aiRouteResponses, botParams, conversationId, processedMessage.channel);
 }
 
 

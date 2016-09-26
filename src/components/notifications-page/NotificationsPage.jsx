@@ -26,7 +26,8 @@ let NotificationsPage = React.createClass({
             const cats = categories.split(',').map(x => x.trim()).filter(x => x);
             console.log('NotificationsPage: send: selectedBotId: ', selectedBotId,
                         ', message: ', message, ', categories: ', cats);
-            this.props.sendNotification(selectedBotId, message, cats);
+            const msg = { text: message };
+            this.props.sendNotification(selectedBotId, msg, cats);
         }
     },
 

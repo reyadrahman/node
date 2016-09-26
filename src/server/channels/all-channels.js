@@ -8,6 +8,9 @@ import { waitForAll } from '../../misc/utils.js';
 import type { ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import { ENV } from '../server-utils.js';
 import { toStr } from '../../misc/utils.js';
+// TODO remove dependency on deepiks-bot
+//      instead take a callback for logging
+import { logResponseMessage } from '../deepiks-bot/deepiks-bot.js';
 import _ from 'lodash';
 
 const { DB_TABLE_CONVERSATIONS } = ENV;
@@ -24,17 +27,19 @@ export async function send(botParams: BotParams, conversationId: string,
                            channelData?: ChannelData)
 {
     if (channel === 'messenger') {
-        return messenger.send(botParams, conversationId, message);
+        await messenger.send(botParams, conversationId, message);
     } else if (channel === 'ciscospark') {
-        return spark.send(botParams, conversationId, message);
+        await spark.send(botParams, conversationId, message);
     } else if (['skype', 'slack', 'telegram', 'webchat'].includes(channel)) {
         if (!channelData) {
             throw new Error('send: channelData is missing');
         }
-        return ms.sendCold(botParams, channelData, message);
+        await ms.sendCold(botParams, channelData, message);
+    } else {
+        throw new Error(`send: unsupported channel ${channel}`);
     }
 
-    throw new Error(`send: unsupported channel ${channel}`);
+    await logResponseMessage(message, botParams, conversationId, channel);
 }
 
 export async function sendToMany(botParams: BotParams, message: ResponseMessage, categories?: string[]) {
@@ -74,5 +79,5 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
         x => send(botParams, x.conversationId, x.channel, message, x.channelData)
     ));
 
-    console.log('sendAll: successfully send all messages');
+    console.log('sendAll: sent all messages');
 }

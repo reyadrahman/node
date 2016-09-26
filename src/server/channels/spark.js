@@ -124,18 +124,6 @@ export async function send(botParams: BotParams, conversationId: string,
     });
 
     console.log('send sending message: ', message);
-    if (typeof message === 'string' && message.trim()) {
-        await client.messages.create({
-            text: removeMarkdown(message),
-            roomId: conversationId,
-        });
-        return;
-    }
-    if (typeof message !== 'object') {
-        console.log('send: message is not an object');
-        return;
-    }
-
     const actionsToStr = xs =>
         (xs || []).filter(x => x.fallback).map(x => x.fallback).join(', ');
     // ciscospark can only send 1 file at a time

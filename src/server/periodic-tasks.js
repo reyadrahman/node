@@ -88,7 +88,6 @@ async function feedsPeriodicUpdateHelper() {
     await waitForAll(updateDBPromises);
 }
 
-// TODO redo return type
 async function processFeedConfigs(botParams: BotParams)
     : Promise<?ProcessFeedConfigsRes>
 {
@@ -103,18 +102,33 @@ async function processFeedConfigs(botParams: BotParams)
 
     const botFeeds = [];
     const newFeedConfigs = [];
+    let lastCreationTimestamp = 0;
     for (let i=0; i<botParams.feeds.length; i++) {
         const feedConfig = botParams.feeds[i];
         const match = feedConfig.publishTimePattern.match(cronRegexp);
         let newFeedConfig = feedConfig;
         if (match && hours === Number(match[1])) {
             try {
-                let botFeed = await processFeedConfig(botParams, feedConfig);
+                const botFeed = await processFeedConfig(botParams, feedConfig);
                 if (!_.isEmpty(botFeed.messages)) {
                     newFeedConfig = {
                         ...newFeedConfig,
                         lastPublishTimestamp: nowTimestamp,
                     };
+                    /*
+                        In the database, messages are indexed by the hashkey
+                        `publisherId_conversationId` and sort key
+                        `creationTimestamp`. The following ensures that the
+                        combination of the two is unique.
+                     */
+                    botFeed.messages.forEach(m => {
+                        if (m.creationTimestamp <= lastCreationTimestamp) {
+                            m.creationTimestamp = lastCreationTimestamp;
+                        } else {
+                            lastCreationTimestamp = m.creationTimestamp;
+                        }
+                        lastCreationTimestamp += 1;
+                    });
                     botFeeds.push(botFeed);
                 }
             } catch(error) {
@@ -162,8 +176,10 @@ async function processTwitterFeedConfig(botParams, feedConfig): Promise<BotFeed>
         x => new Date(x.created_at).getTime() > lpt
     );
     console.log('unreadTweets: ', unreadTweets);
+    const now = Date.now();
     const messages = unreadTweets.map(x => ({
-        text: x.text
+        text: x.text,
+        creationTimestamp: now,
     }));
 
     return {
@@ -211,10 +227,12 @@ function processRssFeedConfig(botParams, feedConfig): Promise<BotFeed> {
             const rssItems = accumulator.filter(
                 x => !x.pubDate || new Date(x.pubDate).getTime() > lpt
             );
+            const now = Date.now();
             const messages = rssItems.map(x => {
                 const { title = '', description = '', link = '' } = x;
                 return {
                     text: `${title}\n\n${description}\n\n${link}`.trim(),
+                    creationTimestamp: now,
                 };
             });
 

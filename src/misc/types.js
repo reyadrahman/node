@@ -76,6 +76,7 @@ export type ResponseMessage = string | {
     cards?: Array<MessageCard>,
     actions?: Array<MessageAction>,
     typingOn?: boolean,
+    creationTimestamp?: number,
 };
 
 export type ActionRequest = {

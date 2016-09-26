@@ -282,7 +282,11 @@ async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
 async function sendNotification(identityId, botId, message, categories) {
     console.log('sendNotification: ', identityId, botId, message);
     const botParams = await aws.getBot(identityId, botId);
-    await channels.sendToMany(botParams, message, categories);
+    const msg = {
+        ...message,
+        creationTimestamp: Date.now(),
+    };
+    await channels.sendToMany(botParams, msg, categories);
 }
 
 export default routes;

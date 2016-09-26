@@ -192,23 +192,6 @@ export async function send(botParams: BotParams, conversationId: string,
 
     // conversationId is constructed by aws.composeKeys(pageId, senderId)
     const [ pageId, to ] = aws.decomposeKeys(conversationId);
-
-    if (typeof message === 'string' && message.trim()) {
-        await sendHelper(botParams, {
-            recipient: {
-                id: to,
-            },
-            message: {
-                text: removeMarkdown(message),
-            }
-        });
-        return;
-
-    }
-    if (typeof message !== 'object') {
-        throw new Error('send: message is not an object');
-    }
-
     const { typingOn, text, cards, actions } = message;
 
     if (typingOn) {

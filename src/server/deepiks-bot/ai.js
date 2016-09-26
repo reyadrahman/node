@@ -37,6 +37,7 @@ export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) =
                 respondFn({
                     text: response.text,
                     actions: response.actions,
+                    creationTimestamp: Date.now(),
                 });
             },
             merge: async function({entities, context, message, sessionId}) {
@@ -166,7 +167,10 @@ export async function _runActionsHelper(client: Wit,
             : userPrefs;
 
         if (actionRes.msg) {
-            client.config.respondFn(actionRes.msg);
+            client.config.respondFn({
+                ...actionRes.msg,
+                creationTimestamp: Date.now(),
+            });
         }
         const newConverseData = await client.converse(newWitData.sessionId, null, {
             ...newWitData.context,

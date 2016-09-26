@@ -132,19 +132,7 @@ export async function send(channel: string, message: ResponseMessage,
 {
     console.log('send: ', message);
 
-    if (typeof message === 'string' && message.trim()) {
-        let resMessage = new builder.Message()
-        resMessage.text(message);
-        sendHelperFn(resMessage);
-        return;
-    }
-    if (typeof message !== 'object') {
-        console.log('send: message is not an object');
-        return;
-    }
-
     const { text, cards, actions } = message;
-
     const supportsHeroCard = ['telegram', 'skype', 'slack'].includes(channel);
 
     if (cards) {
