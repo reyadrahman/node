@@ -15,7 +15,7 @@ export default {
         notifications: 'FR Notifications',
     },
     home: {
-    	baseline: 'Bonjour. Nous sommes une plate-forme de bots premium.',
+    	baseline: 'Bonjour. Nous sommes une plate-forme de bots motorisés par l\'IA.',
     	services_h: 'Premium Bot Platform',
         services_t : 'Our platform provides a wide range of features that are simple and ready to use',
     	universal_h: 'Universal',
@@ -25,7 +25,7 @@ export default {
 		tracking_h : 'Tracking',
 		tracking_t : 'Track the usage of your bot, and results of surveys delivered to your users',
         ai_h : 'Artificial Intelligence',
-        ai_t : 'Make your bots really smart with AI powered skills',
+        ai_t : 'Your bot will become smarter over time. You can train it continuously, and let it learn from the data it collects. ',
         pricing: 'Pricing',
         price_1: 'FREE',
         price_2: '',
