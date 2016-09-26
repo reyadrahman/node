@@ -18,7 +18,7 @@ const PrivacyPage = React.createClass({
 <p>Your privacy is very important to us. We designed this Policy to make important disclosures about how you can use Deepiks and how we collect and can use your content and information. We encourage you to read this Policy, and to use it to help you make informed decisions. </p>
 <p> </p>
 <h2>2- Sharing Your Content and Information</h2>
-<p>You own all of the content and information you post on Deepiks</p>
+<p>You own all of the content and information you post on Deepiks.</p>
 <p>When you delete  content, it is deleted in a manner similar to emptying the recycle bin on a computer. However, you understand that removed content may persist in backup copies for a reasonable period of time (but will not be available to others).</p>
 <p>When you publish content or information using the Public setting, it means that you are allowing everyone, including people off of Deepiks, to access and use that information, and to associate it with you (i.e., your name and profile picture).</p>
 <p>We always appreciate your feedback or other suggestions about Deepiks, but you understand that we may use your feedback or suggestions without any obligation to compensate you for them (just as you have no obligation to offer them).</p>
