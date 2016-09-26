@@ -11,7 +11,7 @@ const PrivacyPage = React.createClass({
                 <Header i18n={i18n} />
                 <div className="content">
 <h1>Statement of Rights and Responsibilities</h1>
-<p><em>Date of Last Revision: September 26, 2015</em></p>
+<p><em>Date of Last Revision: September 26, 2016</em></p>
 <p></p>
 <p>This Statement of Rights and Responsibilities ("Statement," "Terms," or "SRR") derives from the Deepiks Principles, and is our terms of service that governs our relationship with users and others who interact with Deepiks, as well as Deepiks brands, products and services, which we call the “Deepiks Services” or “Services”. By using or accessing the Deepiks Services, you agree to this Statement, as updated from time to time in accordance with Section 7 below. </p>
 <h2>1- Privacy</h2>
