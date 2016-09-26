@@ -134,7 +134,7 @@ export async function send(channel: string, message: ResponseMessage,
 
     if (typeof message === 'string' && message.trim()) {
         let resMessage = new builder.Message()
-        resMessage.text(message);
+        resMessage.text(doubleNewLine(message));
         sendHelperFn(resMessage);
         return;
     }
@@ -208,10 +208,14 @@ export async function send(channel: string, message: ResponseMessage,
         }
 
         let resMessage = new builder.Message(session)
-        resText && resMessage.text(resText);
+        resText && resMessage.text(doubleNewLine(resText));
         resAttachments.length > 0 && resMessage.attachments(resAttachments);
         sendHelperFn(resMessage);
     }
+}
+
+function doubleNewLine(text) {
+    return text.replace(/\n/g, '\n\n');
 }
 
 export async function sendCold(botParams: BotParams, channelData: ChannelData,
