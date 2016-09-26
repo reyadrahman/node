@@ -4,7 +4,6 @@ import { languages } from '../i18n/translations.js';
 import { ENV as CLIENT_ENV } from '../client/client-utils.js';
 import initAppState from '../app-state/init-app-state.js';
 import * as reducers from '../app-state/reducers.js';
-import acceptLanguage from 'accept-language';
 import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'
 import { createStore, applyMiddleware, combineReducers } from 'redux';
@@ -13,7 +12,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/server';
 import { RouterContext, match } from 'react-router';
 
-acceptLanguage.languages(languages);
 
 const loggerMiddleware = createLogger();
 
@@ -33,17 +31,18 @@ export default function render(full, req, res, next) {
                 ...CLIENT_ENV,
                 PLATFORM: 'browser',
             };
+            const systemLang = req.acceptsLanguages(...languages);
+            console.log('systemLang: ', systemLang);
             if (full) {
-                renderFull(req, res, next, renderProps, envVars);
+                renderFull(req, res, next, renderProps, envVars, systemLang);
             } else {
-                renderTemplate(req, res, next, envVars);
+                renderTemplate(req, res, next, envVars, systemLang);
             }
         }
     });
 }
 
-function renderTemplate(req, res, next, envVars) {
-    const systemLang = acceptLanguage.get(req.headers['accept-language']);
+function renderTemplate(req, res, next, envVars, systemLang) {
 
     if (templateCache[systemLang]) {
         console.log('serving template from cache');
@@ -65,9 +64,8 @@ function renderTemplate(req, res, next, envVars) {
     }
 }
 
-function renderFull(req, res, next, renderProps, envVars) {
+function renderFull(req, res, next, renderProps, envVars, systemLang) {
     console.log('renderFull. req.url: ', req.url, 'req.cookies: ', req.cookies);
-    let systemLang = acceptLanguage.get(req.headers['accept-language']);
     let lang = req.cookies.language || systemLang;
     const appState = {
         ...initAppState,

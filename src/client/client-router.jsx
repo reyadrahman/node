@@ -27,7 +27,7 @@ let initAndRender = userAttributes => {
     if (!appState.lang) {
         appState = {
             ...appState,
-            lang: Cookies.get('language') || initAppState.systemLang || languages[0],
+            lang: Cookies.get('language') || systemLang || languages[0],
         };
     }
 

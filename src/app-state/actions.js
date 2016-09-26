@@ -23,10 +23,6 @@ export function setModal(modalComponent) {
     return { type: 'ui/setModal', modalComponent };
 }
 
-export function setLanguage(lang) {
-    return { type: 'lang/set', lang };
-}
-
 export function toggleSideMenu() {
     return { type: 'ui/toggleSideMenu' };
 }
@@ -64,7 +60,7 @@ export function openVerifyRegistration(email?: string, password?: string) {
     }
 }
 
-export function changeLang(lang: string) {
+export function setLanguage(lang: string) {
     return (dispatch: Function) => {
         dispatch({
             type: 'lang/set',

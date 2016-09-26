@@ -14,7 +14,6 @@
     "test": "mocha-webpack --colors --webpack-config webpack-config-test.js \"src/**/*.test.js\""
   },
   "dependencies": {
-    "accept-language": "^2.0.16",
     "aws-sdk": "^2.4.0",
     "babel": "^6.5.2",
     "babel-core": "^6.10.4",
