@@ -1,7 +1,10 @@
 .conversations-comp {
     border: 1px solid #dcdcdc;
-    overflow-y: scroll;
     position: relative;
+
+    .input-group-addon {
+        font-size: 13px;
+    }
 
     .wait {
         top: 50%;
@@ -13,6 +16,11 @@
         letter-spacing: 10px;
     }
 
+    .conversations {
+        margin-top: 5px;
+        overflow-y: scroll;
+        height: 550px;
+    }
 
     .conversation {
         display: flex;
@@ -63,6 +71,8 @@
                 font-size: 14px;
                 font-weight: bold;
                 margin: 5px 0 0 10px;
+                width: 150px;
+                word-break: break-all;
             }
             .text {
                 font-size: 13px;

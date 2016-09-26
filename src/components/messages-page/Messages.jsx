@@ -41,7 +41,7 @@ let Messages = React.createClass({
         {
             return (
                 <div className={`messages-comp ${className || ''}`}>
-                    <div className="wait">•••</div>
+                    <div className="wait"><i className="fa fa-spin fa-spinner fa-2x"></i></div>
                 </div>
             );
         }
