@@ -126,7 +126,7 @@ export async function send(botParams: BotParams, conversationId: string,
     console.log('send sending message: ', message);
     if (typeof message === 'string' && message.trim()) {
         await client.messages.create({
-            text: message,
+            text: removeMarkdown(message),
             roomId: conversationId,
         });
         return;
@@ -150,7 +150,7 @@ export async function send(botParams: BotParams, conversationId: string,
             });
             const cardText = actionsToStr(c.actions);
             await client.messages.create({
-                text: cardText || '',
+                text: removeMarkdown(cardText || ''),
                 roomId: conversationId,
             });
         }
@@ -161,11 +161,15 @@ export async function send(botParams: BotParams, conversationId: string,
             (text || '') + '\n' + actionsToStr(actions)
         ).trim();
         await client.messages.create({
-            text: textToSend || '',
+            text: removeMarkdown(textToSend || ''),
             roomId: conversationId,
         });
     }
 };
+
+function removeMarkdown(text) {
+    return text.replace(/\n\n/g, '\n');
+}
 
 export function webhook(req: Request, res: Response) {
     // respond immediately

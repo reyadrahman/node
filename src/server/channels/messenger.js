@@ -199,7 +199,7 @@ export async function send(botParams: BotParams, conversationId: string,
                 id: to,
             },
             message: {
-                text: message,
+                text: removeMarkdown(message),
             }
         });
         return;
@@ -270,7 +270,7 @@ export async function send(botParams: BotParams, conversationId: string,
                 id: to,
             },
             message: {
-                text: text || ' ', // text cannot be empty when using quick_replies
+                text: removeMarkdown(text || ' '), // text cannot be empty when using quick_replies
                 quick_replies: quickReplies,
             }
         });
@@ -290,6 +290,10 @@ async function sendHelper(botParams: BotParams, messageData) {
         throw new Error('Sending message failed with code %s msg %s and body: ',
                         r.statusCode, r.statusMessage, r.body);
     }
+}
+
+function removeMarkdown(text) {
+    return text.replace(/\n\n/g, '\n');
 }
 
 async function getUserProfile(userId, botParams) {
