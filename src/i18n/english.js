@@ -15,7 +15,7 @@ export default {
         notifications: 'Notifications',
     },
     home: {
-    	baseline: 'Hi. We are a premium bot platform.',
+    	baseline: 'Hi. We are a smart chatbot platform.',
     	services_h: 'Premium Bot Platform',
         services_t : 'Our platform provides a wide range of features that are simple and ready to use',
     	universal_h: 'Universal',
@@ -25,7 +25,7 @@ export default {
 		tracking_h : 'Tracking',
 		tracking_t : 'Track the usage of your bot, and results of surveys delivered to your users',
         ai_h : 'Artificial Intelligence',
-        ai_t : 'Make your bots really smart with AI powered skills',
+        ai_t : 'Your bot will become smarter over time. Train it or let it learn from data it collects. ',
         pricing: 'Pricing',
         price_1: 'FREE',
         price_2: '',

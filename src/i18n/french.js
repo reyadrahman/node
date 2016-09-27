@@ -15,7 +15,7 @@ export default {
         notifications: 'FR Notifications',
     },
     home: {
-    	baseline: 'Bonjour. Nous sommes une plate-forme de bots motorisés par l\'IA.',
+    	baseline: 'Bonjour. Nous sommes une plate-forme de chatbots intelligents.',
     	services_h: 'Premium Bot Platform',
         services_t : 'Our platform provides a wide range of features that are simple and ready to use',
     	universal_h: 'Universal',
