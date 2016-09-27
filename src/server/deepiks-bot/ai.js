@@ -10,7 +10,8 @@ import _ from 'lodash';
 import URL from 'url';
 import uuid from 'node-uuid';
 
-const { DB_TABLE_CONVERSATIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME } = ENV;
+const { DB_TABLE_CONVERSATIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME,
+        DB_TABLE_SCHEDULED_TASKS } = ENV;
 
 type ActionRequestIncomplete = {
     sessionId: string,
@@ -117,16 +118,26 @@ export async function _runActionsHelper(client: Wit,
     };
 
     if (converseData.type === 'msg') {
-        const qrs = converseData.quickreplies;
-        const response = {
-            text: converseData.msg,
-            actions:  qrs && qrs.map(
-                x => ({ text: x, fallback: x })
-            ),
-        };
-        const invalidContext = await client.config.actions.send(requestData, response);
-        if (invalidContext) {
-            throw new Error('Cannot update context after \'send\' action');
+        // check for inline commands inside the message
+        // e.g. "<[DELAY:60]> some message"
+        const inlineCommandRegExpMatch = (converseData.msg || '').match(/^\s*<\[(.*?)\]>\s*(.*)/);
+        if (inlineCommandRegExpMatch) {
+            const [ publisherId, conversationId ] =
+                aws.decomposeKeys(originalMessage.publisherId_conversationId);
+            await handleInlineCommandFromWit(inlineCommandRegExpMatch[1], inlineCommandRegExpMatch[2],
+                                             publisherId, botParams.botId, conversationId);
+        } else {
+            const qrs = converseData.quickreplies;
+            const response = {
+                text: converseData.msg,
+                actions:  qrs && qrs.map(
+                    x => ({ text: x, fallback: x })
+                ),
+            };
+            const invalidContext = await client.config.actions.send(requestData, response);
+            if (invalidContext) {
+                throw new Error('Cannot update context after \'send\' action');
+            }
         }
         const newConverseData = await client.converse(witData.sessionId, null, {
             ...witData.context,
@@ -261,6 +272,36 @@ export async function _runAction(actionName: string,
     }
 
     throw new Error(`Unknown action: ${toStr(action)}`);
+}
+
+async function handleInlineCommandFromWit(commandRaw: string, message: string,
+                                          publisherId: string, botId: string,
+                                          conversationId: string)
+{
+    if (!message) return;
+
+    const commands = commandRaw.split(';').map(
+        command => command.split(':').map(x => x.trim().toLowerCase())
+    );
+
+    console.log('handleInlineCommandFromWit commands: ', commands);
+
+    const delayCommand = commands.find(x => x[0] === 'delay' && Number(x[1]));
+    if (delayCommand) {
+        const scheduleTimestamp = Date.now() + Number(delayCommand[1]) * 1000 * 60;
+        await aws.dynamoPut({
+            TableName: DB_TABLE_SCHEDULED_TASKS,
+            Item: {
+                dummy: '.',
+                scheduleTimestamp_taskId: aws.composeKeys(scheduleTimestamp, uuid.v1()),
+                publisherId: publisherId,
+                botId,
+                conversationId,
+                message,
+                type: 'message',
+            }
+        });
+    }
 }
 
 export function _generateS3Policy(publisherId: string, senderId: string): string {

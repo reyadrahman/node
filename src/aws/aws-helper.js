@@ -6,14 +6,14 @@ console.log('======== AWS SERVER');
 import AWS from 'aws-sdk';
 import { callbackToPromise } from '../misc/utils.js';
 import { ENV, CONSTANTS, request } from '../server/server-utils.js';
-import type { BotParams, AIActionInfo } from '../misc/types.js';
+import type { BotParams, AIActionInfo, Conversation } from '../misc/types.js';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
 
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
         DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
-        DB_TABLE_AI_ACTIONS, DB_TABLE_USER_PREFS, 
+        DB_TABLE_AI_ACTIONS, DB_TABLE_USER_PREFS, DB_TABLE_SCHEDULED_TASKS,
         S3_BUCKET_NAME, IDENTITY_POOL_ID, USER_POOL_ID} = ENV;
 
 // this is used to verify signatures for user pool's JWT
@@ -78,6 +78,7 @@ export function dynamoCleanUpObj(obj: Object) {
 }
 
 export async function getBot(publisherId: string, botId: string): Promise<BotParams> {
+    console.log('getBot publisherId: ', publisherId, ', botId: ', botId);
     const qres = await dynamoQuery({
         TableName: DB_TABLE_BOTS,
         KeyConditionExpression: 'publisherId = :publisherId and botId = :botId',
@@ -88,6 +89,25 @@ export async function getBot(publisherId: string, botId: string): Promise<BotPar
     });
     if (qres.Count === 0) {
         throw new Error(`Cannot find bot with id ${botId}`);
+    }
+
+    return qres.Items[0];
+}
+
+export async function getConversation(publisherId: string, conversationId: string)
+: Promise<Conversation>
+{
+    console.log('getConversation publisherId: ', publisherId, ', conversationId: ', conversationId);
+    const qres = await dynamoQuery({
+        TableName: DB_TABLE_CONVERSATIONS,
+        KeyConditionExpression: 'publisherId = :publisherId and conversationId = :conversationId',
+        ExpressionAttributeValues: {
+            ':publisherId': publisherId,
+            ':conversationId': conversationId,
+        },
+    });
+    if (qres.Count === 0) {
+        throw new Error(`Cannot find conversation with id ${conversationId}`);
     }
 
     return qres.Items[0];
@@ -301,6 +321,26 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(DB_TABLE_USER_PREFS);
+    }
+    if (!tables.includes(DB_TABLE_SCHEDULED_TASKS)) {
+        console.log('creating table: DB_TABLE_SCHEDULED_TASKS');
+        const tableParams = {
+            TableName : DB_TABLE_SCHEDULED_TASKS,
+            KeySchema: [
+                { AttributeName: 'dummy', KeyType: 'HASH' },
+                { AttributeName: 'scheduleTimestamp_taskId', KeyType: 'RANGE' }
+            ],
+            AttributeDefinitions: [
+                { AttributeName: 'dummy', AttributeType: 'S' },
+                { AttributeName: 'scheduleTimestamp_taskId', AttributeType: 'S' },
+            ],
+            ProvisionedThroughput: {
+                ReadCapacityUnits: readCapacityUnits,
+                WriteCapacityUnits: writeCapacityUnits,
+            }
+        };
+        const res = await dynamoCreateTable(tableParams);
+        creatingTables.push(DB_TABLE_SCHEDULED_TASKS);
     }
 
     await Promise.all(creatingTables.map(

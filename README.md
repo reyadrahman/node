@@ -21,13 +21,14 @@ DB_TABLE_CONVERSATIONS=
 DB_TABLE_MESSAGES=
 DB_TABLE_AI_ACTIONS=
 DB_TABLE_USER_PREFS=
+DB_TABLE_SCHEDULED_TASKS=
 S3_BUCKET_NAME=
 IDENTITY_POOL_ID=
 IDENTITY_POOL_UNAUTH_ROLE_ARN=
 IDENTITY_POOL_AUTH_ROLE_ARN=
 USER_POOL_ID=
 USER_POOL_APP_CLIENT_ID=
-WIZARD_BOT_WEB_CHAT_SECRET=
+CALL_SERVER_LAMBDA_SECRET=
 CONTACT_EMAIL=
 OWN_BASE_URL=
 CDN=
@@ -37,6 +38,8 @@ PORT=
 `NODE_ENV`, `CDN` and `PORT` are **optional**.
 
 `NODE_ENV` can be `production` (default) or `development`.
+
+`CALL_SERVER_LAMBDA_SECRET` should be a random string that matches the same environment variable in the `CallServer` lambda (see "CallServer Lambda" section below).
 
 `OWN_BASE_URL` is the full address of your server (e.g. https://deepiks.io) and is used to, for example, set up webhooks automatically.
 
@@ -118,6 +121,13 @@ Then go to [AWS IAM Console -> Roles](https://console.aws.amazon.com/iam/home#ro
 
 ### Amazon Simple Email Service (SES)
 In order to get the contact form to work, you must provide an email address as an environment variable named `CONTACT_EMAIL` and then have it verified in the SES. To verify the email, please go to your [AWS console -> SES](https://console.aws.amazon.com/ses) and in the "Email Addresses" section select "Verify a new email address".
+
+### `CallServer` Lambda
+Some tasks such as feeds processor tasks need to run periodically and some tasks are scheduled to run in the future. In order for them to work you need to deploy the `CallServer` lambda (from the micro-services repository). Then go to AWS console -> CloudWatch -> Events, create a rule of type "Schedule" and **set it to a fixed rate of 1 minute** and select the name of the `CallServer` lambda as the target.
+
+The lambda (as mentioned in its own README), has an environment variable called `CALL_SERVER_LAMBDA_SECRET`. It must be a long random string and must match the `CALL_SERVER_LAMBDA_SECRET` that you provide here (the bot engine).
+
+The `CallServer` lambda also takes another environment variable called `ENDPOINT_URL` which should be the url of the bot engine with the suffix `/run-periodic-tasks`. For example `https://deepiks.io/run-periodic-tasks`.
 
 ### AI Actions (Config)
 Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
