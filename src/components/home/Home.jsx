@@ -13,22 +13,22 @@ import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Glyphicon,
 import Lightbox from 'react-images';
 
 
-const ribbonUrl = require('../../public/ribbon.png');
-const avatarUrl = require('../../public/avatar.jpg');
-const avatar1Url = require('../../public/avatars/1.jpg');
-const avatar2Url = require('../../public/avatars/2.jpg');
-const avatar3Url = require('../../public/avatars/3.jpg');
-const avatar4Url = require('../../public/avatars/4.jpg');
-const mapUrl = require('../../public/map.png');
+const ribbonUrl = require('../../resources/ribbon.png');
+const avatarUrl = require('../../resources/avatar.jpg');
+const avatar1Url = require('../../resources/avatars/1.jpg');
+const avatar2Url = require('../../resources/avatars/2.jpg');
+const avatar3Url = require('../../resources/avatars/3.jpg');
+const avatar4Url = require('../../resources/avatars/4.jpg');
+const mapUrl = require('../../resources/map.png');
 const screenshots = [
-    require('../../public/screenshots/1.jpg'),
-    require('../../public/screenshots/2.jpg'),
-    require('../../public/screenshots/3.jpg'),
-    require('../../public/screenshots/4.jpg'),
-    require('../../public/screenshots/5.jpg'),
-    require('../../public/screenshots/6.jpg'),
-    require('../../public/screenshots/7.jpg'),
-    require('../../public/screenshots/8.jpg'),
+    require('../../resources/screenshots/1.jpg'),
+    require('../../resources/screenshots/2.jpg'),
+    require('../../resources/screenshots/3.jpg'),
+    require('../../resources/screenshots/4.jpg'),
+    require('../../resources/screenshots/5.jpg'),
+    require('../../resources/screenshots/6.jpg'),
+    require('../../resources/screenshots/7.jpg'),
+    require('../../resources/screenshots/8.jpg'),
 ];
 
 let Home = React.createClass({
