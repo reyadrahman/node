@@ -93,7 +93,7 @@ let Conversations = React.createClass({
                            className="form-control" value={ searchFilter }
                            onChange={this.onFilterChange}
                            placeholder="Search..."/>
-                    <div className="input-group-addon"><i className="fa fa-search"></i></div>
+                    <div className="input-group-addon"><i className="icon-search"></i></div>
                 </div>
                 <div className="conversations">
                     { convsUi }
