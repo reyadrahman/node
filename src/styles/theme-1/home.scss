@@ -263,9 +263,15 @@ $navbarHeight: 50px;
             margin-right: -18px;
         }
 
+        .timeline-centered .timeline-entry.left-aligned:nth-child(2) .timeline-entry-inner .timeline-time {
+            left: auto;
+            right: -110px;
+            text-align: left;
+        }
+
         .timeline-centered .timeline-entry.left-aligned .timeline-entry-inner .timeline-time {
             left: auto;
-            right: -100px;
+            right: -150px;
             text-align: left;
         }
 
@@ -309,9 +315,18 @@ $navbarHeight: 50px;
             clear: both;
         }
 
+
         .timeline-centered .timeline-entry .timeline-entry-inner .timeline-time {
             position: absolute;
-            left: -100px;
+            left: -110px;
+            text-align: right;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .timeline-centered .timeline-entry:nth-child(1) .timeline-entry-inner .timeline-time {
+            position: absolute;
+            left: -140px;
             text-align: right;
             padding: 10px;
             box-sizing: border-box;

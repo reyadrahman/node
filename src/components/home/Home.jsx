@@ -13,13 +13,18 @@ import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Glyphicon,
 import Lightbox from 'react-images';
 
 
+
 const ribbonUrl = require('../../resources/ribbon.png');
 const avatarUrl = require('../../resources/avatar.jpg');
 const avatar1Url = require('../../resources/avatars/1.jpg');
 const avatar2Url = require('../../resources/avatars/2.jpg');
 const avatar3Url = require('../../resources/avatars/3.jpg');
 const avatar4Url = require('../../resources/avatars/4.jpg');
+const emmanuelUrl = require('../../resources/avatars/6.jpg');
+const brunoUrl = require('../../resources/avatars/7.jpg');
 const mapUrl = require('../../resources/map.png');
+const backgroundVideo =  require('../../resources/background-video.mp4');
+const backgroundPoster =  require('../../resources/background-video-poster.jpg');
 const screenshots = [
     require('../../resources/screenshots/1.jpg'),
     require('../../resources/screenshots/2.jpg'),
@@ -30,6 +35,14 @@ const screenshots = [
     require('../../resources/screenshots/7.jpg'),
     require('../../resources/screenshots/8.jpg'),
 ];
+const channels = [
+    require('../../resources/channels/deepiks-painting-spark.png'),
+    require('../../resources/channels/deepiks-painting-slack.png'),
+    require('../../resources/channels/deepiks-painting-telegram.png'),
+    require('../../resources/channels/deepiks-painting-skype.png'),
+    require('../../resources/channels/deepiks-painting-messenger.png'),
+];
+
 
 let Home = React.createClass({
     getInitialState() {
@@ -328,7 +341,7 @@ let Home = React.createClass({
                         </p>
                     </div>
                     <Grid>
-                        <Col xs={12} sm={6} md={3}>
+                        <Col xs={12} sm={6} md={5} mdOffset={1}>
                             <div className="team-member">
                                 <div className="name">
                                     Emmanuel Prat
@@ -337,11 +350,11 @@ let Home = React.createClass({
                                     CEO & CTO
                                 </div>
                                 <div className="avatar">
-                                    <Image src={avatar1Url} responsive />
+                                    <Image src={emmanuelUrl} responsive />
                                 </div>
                             </div>
                         </Col>
-                        <Col xs={12} sm={6} md={3}>
+                        <Col xs={12} sm={6} md={5}>
                             <div className="team-member">
                                 <div className="name">
                                     Bruno Génuit
@@ -350,7 +363,7 @@ let Home = React.createClass({
                                     COO
                                 </div>
                                 <div className="avatar">
-                                    <Image src={avatar2Url} responsive />
+                                    <Image src={brunoUrl} responsive />
                                 </div>
                             </div>
                         </Col>
@@ -367,7 +380,7 @@ let Home = React.createClass({
 
                     <Grid className="screenshots-grid">
                         {
-                            screenshots.map((x, i) => (
+                            channels.map((x, i) => (
                                 <Col md={3}>
                                     <img src={x} onClick={() => this.screenshotClicked(i)} />
                                 </Col>
