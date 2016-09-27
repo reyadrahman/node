@@ -4,6 +4,7 @@ import translations from '../../i18n/translations.js';
 import * as actions from '../../app-state/actions.js';
 import * as utils from '../../client/client-utils.js';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
+import CookieConsent from '../cookie-consent/CookieConsent.jsx';
 
 import '../../styles/theme-1/theme-1.scss';
 
@@ -38,6 +39,7 @@ export const App_ = React.createClass({
                 <ModalBox i18n={i18n} isOpen={!!ModalChild} onRequestClose={closeModal}>
                     { ModalChild && <ModalChild i18n={i18n} /> }
                 </ModalBox>
+                <CookieConsent i18n={i18n} />
             </div>
         );
     },
