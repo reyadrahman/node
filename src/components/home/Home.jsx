@@ -21,9 +21,11 @@ const avatar2Url = require('../../resources/avatars/2.jpg');
 const avatar3Url = require('../../resources/avatars/3.jpg');
 const avatar4Url = require('../../resources/avatars/4.jpg');
 const emmanuelUrl = require('../../resources/avatars/6.jpg');
+const nadellaUrl = require('../../resources/avatars/SatyaNadella.jpg');
+const ellisonUrl = require('../../resources/avatars/LarryEllison.jpg');
+const zuckerbergUrl = require('../../resources/avatars/MarkZuckerberg.jpg');
 const brunoUrl = require('../../resources/avatars/7.jpg');
 const mapUrl = require('../../resources/map.png');
-const backgroundVideo =  require('../../resources/background-video.mp4');
 const backgroundPoster =  require('../../resources/background-video-poster.jpg');
 const screenshots = [
     require('../../resources/screenshots/1.jpg'),
@@ -341,7 +343,7 @@ let Home = React.createClass({
                         </p>
                     </div>
                     <Grid>
-                        <Col xs={12} sm={6} md={5} mdOffset={1}>
+                        <Col xs={12} sm={6} md={3} mdOffset={3}>
                             <div className="team-member">
                                 <div className="name">
                                     Emmanuel Prat
@@ -354,7 +356,7 @@ let Home = React.createClass({
                                 </div>
                             </div>
                         </Col>
-                        <Col xs={12} sm={6} md={5}>
+                        <Col xs={12} sm={6} md={3}>
                             <div className="team-member">
                                 <div className="name">
                                     Bruno Génuit
@@ -489,16 +491,16 @@ let Home = React.createClass({
                         className="carousel" controls={false} slide={false}>
                         <Carousel.Item className="carousel-item">
                             <p><i>Artificial Intelligence (AI)-powered bots will become the next interface, shaping our interactions with the applications and devices we rely on.</i> Satya Nadella, CEO, Microsoft.</p>
-                            <img src={avatarUrl} className="avatar" />
+                            <img src={nadellaUrl} className="avatar" />
                         </Carousel.Item>
                         <Carousel.Item className="carousel-item">
                             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <img src={avatarUrl} className="avatar" />
+                            <img src={zuckerbergUrl} className="avatar" />
                         </Carousel.Item>
                         <Carousel.Item className="carousel-item">
                             <p>							<i>Chatbots will be one of the primary ways to interface with a lot of digital services.</i> 	Larry Ellison, Executive Chairman and CTO, Oracle Corporation. </p>
 
-                            <img src={avatarUrl} className="avatar" />
+                            <img src={ellisonUrl} className="avatar" />
                         </Carousel.Item>
                     </Carousel>
                 </section>

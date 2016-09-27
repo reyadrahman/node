@@ -36,12 +36,13 @@ $navbarHeight: 50px;
 
         .logo {
             display: block;
-            width: 250px;
-            height: 100%;
-            background: url(../../resources/logo-and-title-black.png) center/200px no-repeat;
+            width: 120px;
+            height: 90%;
+            background: url(../../resources/new-logo.png) center/200px no-repeat;
+            background-size: contain;
             border-right: 1px solid #c8c8c8;
-            padding: 0 20px;
-            margin: 0 0 5px 0;
+            padding: 8px;
+            box-sizing: border-box;
         }
 
         .account-button-comp {
