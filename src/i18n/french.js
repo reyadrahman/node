@@ -206,4 +206,9 @@ export default {
     termsOfUsePage: {
         termsOfUse: 'FR Terms of Use',
     },
+    cookieConsent: {
+        message: 'FR This website uses cookies for a better experience.',
+        more: 'FR Learn more.',
+        dismiss: 'FR Got it!',
+    },
 };

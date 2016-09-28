@@ -1,18 +1,18 @@
 /* @flow */
-import { sendToMany } from './channels/all-channels.js';
-import * as aws from '../aws/aws.js';
-import { ENV } from './server-utils.js';
+import { sendToMany } from '../channels/all-channels.js';
+import * as aws from '../../aws/aws.js';
+import { ENV } from '../server-utils.js';
 import { toStr, splitOmitWhitespace, waitForAll, waitForAllOmitErrors,
-         callbackToPromise } from '../misc/utils.js';
+         callbackToPromise } from '../../misc/utils.js';
+import type { ResponseMessage, BotParams, FeedConfig } from '../../misc/types.js';
 import _ from 'lodash';
 import FeedParser from 'feedparser';
-import type { ResponseMessage, BotParams, FeedConfig } from '../misc/types.js';
 // the name request is usually used for { request } from './server-utils.js'
 import request_ from 'request';
 import Twit from 'twit';
 import type { Request, Response } from 'express';
 
-const { CALL_SERVER_LAMBDA_SECRET, DB_TABLE_BOTS } = ENV;
+const { DB_TABLE_BOTS } = ENV;
 
 type BotFeed = {
     categories?: string[],
@@ -25,26 +25,13 @@ type ProcessFeedConfigsRes = {
     feedConfigs: FeedConfig[],
 };
 
-export function feedsPeriodicUpdate(req: Request, res: Response) {
-    const reqSecret = req.header('CALL_SERVER_LAMBDA_SECRET');
-    if (reqSecret !== CALL_SERVER_LAMBDA_SECRET) {
-        console.log('feedsPeriodicUpdate: secret header does not match: ', reqSecret);
-        return res.status(404).send();
-    }
-    res.send();
 
-    feedsPeriodicUpdateHelper()
-        .catch(error => {
-            console.error('ERROR feedsPeriodicUpdate: ', error);
-        });
-}
-
-async function feedsPeriodicUpdateHelper() {
+export default async function updateFeedsPeriodicTask() {
     const botsScanRes = await aws.dynamoScan({
         TableName: DB_TABLE_BOTS,
     });
 
-    console.log('feedsPeriodicUpdateHelper botsScanRes: ', botsScanRes);
+    console.log('updateFeedsPeriodicTask botsScanRes: ', botsScanRes);
 
     if (botsScanRes.Count === 0) return;
 
@@ -52,7 +39,7 @@ async function feedsPeriodicUpdateHelper() {
     const processFeedConfigsResults =
         await waitForAllOmitErrors(botsWithFeeds.map(processFeedConfigs));
     const validProcessFeedConfigsResults = processFeedConfigsResults.filter(Boolean);
-    console.log('feedsPeriodicUpdateHelper validProcessFeedConfigsResults: ',
+    console.log('updateFeedsPeriodicTask validProcessFeedConfigsResults: ',
         toStr(validProcessFeedConfigsResults));
 
     // now publish feeds
