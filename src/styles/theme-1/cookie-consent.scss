@@ -17,15 +17,12 @@
 
     .dismiss {
         position: absolute;
-        display: inline-block;
         top: 0px;
         right: 0px;
         bottom: 0;
         color: #fff;
         background: #87a8ce;
         padding: 0 10px;
-        display: flex;
-        align-items: center;
         outline: none;
         border: 0;
         transition: background 0.2s ease-in-out;
