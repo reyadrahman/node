@@ -154,26 +154,34 @@ $navbarHeight: 50px;
     }
 
     .screenshots {
-        .screenshots-grid {
+        .screenshots-grid {               
             img {
-                width: 100%;
+                width: 80%;
                 cursor: pointer;
-                margin-top: 10px;
+                margin-top: 15px;
+                margin-left: 10%;
                 border: 1px solid #bbb;
                 border-radius: 5px;
             }
         }
-
     }
 
     .updates {
+        background: url('../../resources/drahi-building.jpg') center center;
+        background-color: rgba(0, 0, 0, .55);
+        background-blend-mode: multiply;
+        background-size: cover;
         padding-left: 30px;
         padding-right: 30px;
 
-        .img-rounded
-        {
+        h1 {
+            color: white;
+        }
+
+        .img-rounded {
             border-radius: 3px;
         }
+
         .img-thumbnail
         {
             background-color: #fff;
@@ -271,6 +279,7 @@ $navbarHeight: 50px;
         }
 
         .timeline-centered .timeline-entry.left-aligned .timeline-entry-inner .timeline-time {
+            color: white;
             left: auto;
             right: -150px;
             text-align: left;
@@ -318,6 +327,7 @@ $navbarHeight: 50px;
 
 
         .timeline-centered .timeline-entry .timeline-entry-inner .timeline-time {
+            color: white;
             position: absolute;
             left: -110px;
             text-align: right;

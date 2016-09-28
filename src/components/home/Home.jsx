@@ -20,13 +20,20 @@ const avatar1Url = require('../../resources/avatars/1.jpg');
 const avatar2Url = require('../../resources/avatars/2.jpg');
 const avatar3Url = require('../../resources/avatars/3.jpg');
 const avatar4Url = require('../../resources/avatars/4.jpg');
+
 const emmanuelUrl = require('../../resources/avatars/6.jpg');
+const brunoUrl = require('../../resources/avatars/7.jpg');
+
 const nadellaUrl = require('../../resources/avatars/SatyaNadella.jpg');
 const ellisonUrl = require('../../resources/avatars/LarryEllison.jpg');
 const zuckerbergUrl = require('../../resources/avatars/MarkZuckerberg.jpg');
-const brunoUrl = require('../../resources/avatars/7.jpg');
+
 const mapUrl = require('../../resources/map.png');
+
 const backgroundPoster =  require('../../resources/background-video-poster.jpg');
+
+const timelinePhoto =  require('../../resources/drahi-building.jpg');
+
 const screenshots = [
     require('../../resources/screenshots/1.jpg'),
     require('../../resources/screenshots/2.jpg'),
@@ -37,12 +44,14 @@ const screenshots = [
     require('../../resources/screenshots/7.jpg'),
     require('../../resources/screenshots/8.jpg'),
 ];
+
 const channels = [
     require('../../resources/channels/deepiks-painting-spark.png'),
+    require('../../resources/channels/deepiks-painting-messenger.png'),
     require('../../resources/channels/deepiks-painting-slack.png'),
     require('../../resources/channels/deepiks-painting-telegram.png'),
     require('../../resources/channels/deepiks-painting-skype.png'),
-    require('../../resources/channels/deepiks-painting-messenger.png'),
+    require('../../resources/channels/deepiks-painting-web.png'),
 ];
 
 
@@ -129,7 +138,7 @@ let Home = React.createClass({
                         </p>
                     </div>
                     <Grid>
-                        <Col sm={3} md={3} className="service">
+                        <Col sm={6} md={3} className="service">
                             <div className="service-icon">
                                 <Glyphicon glyph="globe" />
                             </div>
@@ -140,7 +149,7 @@ let Home = React.createClass({
                                 </p>
                             </div>
                         </Col>
-                        <Col sm={3} md={3} className="service">
+                        <Col sm={6} md={3} className="service">
                             <div className="service-icon">
                                 <Glyphicon glyph="bell" />
                             </div>
@@ -152,7 +161,7 @@ let Home = React.createClass({
                             </div>
                         </Col>
                         <Clearfix visibleSmBlock />
-                        <Col sm={3} md={3} className="service">
+                        <Col sm={6} md={3} className="service">
                             <div className="service-icon">
                                 <Glyphicon glyph="stats" />
                             </div>
@@ -163,7 +172,7 @@ let Home = React.createClass({
                                 </p>
                             </div>
                         </Col>
-                        <Col sm={3} md={3} className="service">
+                        <Col sm={6} md={3} className="service">
                             <div className="service-icon">
                                 <Glyphicon glyph="user" />
                             </div>
@@ -383,7 +392,7 @@ let Home = React.createClass({
                     <Grid className="screenshots-grid">
                         {
                             channels.map((x, i) => (
-                                <Col md={3}>
+                                <Col xs={12} sm={6} md={4}>
                                     <img src={x} onClick={() => this.screenshotClicked(i)} />
                                 </Col>
                             ))
