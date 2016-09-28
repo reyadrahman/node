@@ -30,9 +30,7 @@ const zuckerbergUrl = require('../../resources/avatars/MarkZuckerberg.jpg');
 
 const mapUrl = require('../../resources/map.png');
 
-const backgroundPoster =  require('../../resources/background-video-poster.jpg');
-
-const timelinePhoto =  require('../../resources/drahi-building.jpg');
+const backgroundVideo =  require('../../resources/background-video.mp4');
 
 const screenshots = [
     require('../../resources/screenshots/1.jpg'),
@@ -125,6 +123,9 @@ let Home = React.createClass({
                     ]}
                 />
                 <section className="intro">
+                    <video className="video" src={backgroundVideo} autoPlay loop>
+                        No support message
+                    </video>
                     <div className="intro-message">
                        { strings.baseline }
                     </div>
