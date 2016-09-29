@@ -12,7 +12,7 @@ export function toStr(obj: any): string {
  * splitOmitWhitespace(' , a ,, ', ',') will return ['a']
  * @return {[type]} [description]
  */
-export function splitOmitWhitespace(str: string, sep: string): string {
+export function splitOmitWhitespace(str: string, sep: string): string[] {
     return str.split(sep).map(x => x.trim()).filter(Boolean);
 }
 
@@ -46,7 +46,6 @@ export function simpleTimeFormat(timeRaw: Date | number | string) {
  */
 export function createUrlQuery(obj: {[key: string]: any}): string {
     const euc = encodeURIComponent;
-    // $FlowFixMe
     return map(omitBy(obj, (value, key) => isUndefined(value)), (v, k) => `${euc(k)}=${euc(v)}`)
            .join('&');
 }

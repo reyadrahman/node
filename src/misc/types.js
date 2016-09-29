@@ -7,7 +7,12 @@ export type Conversation = {
     lastMessage: DBMessage,
     lastMessageTimestamp: number,
     publisherId: string,
-    witData: WitData
+    witData: WitData,
+    channelData?: ChannelData,
+};
+
+export type ChannelData = {
+    address: Object, // microsoft bot framework specific
 };
 
 export type WitData = {
@@ -69,15 +74,23 @@ export type WebchannelMessage = {
         text: string,
         timestamp: number,
     }
-}
+};
 
-export type ResponseMessage = string | {
+export type ResponseMessage = {
     text?: string,
-    cards?: Array<MessageCard>,
-    actions?: Array<MessageAction>,
+    cards?: MessageCard[],
+    actions?: MessageAction[],
     typingOn?: boolean,
     creationTimestamp?: number,
+    preprocessorActions?: MessagePreprocessorAction[],
 };
+
+export type MessagePreprocessorAction = {
+    action: string,
+    args: string[],
+};
+
+export type RespondFn = (response: ResponseMessage) => Promise<void>;
 
 export type ActionRequest = {
     sessionId: string,
@@ -150,10 +163,6 @@ export type BotParams = {
         twitterConsumerSecret: string,
     },
     feeds: FeedConfig[],
-};
-
-export type ChannelData = {
-    address: Object, // microsoft bot framework specific
 };
 
 export type AIActionInfo = {

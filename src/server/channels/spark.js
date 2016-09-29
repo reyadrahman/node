@@ -23,9 +23,13 @@ type SparkReqBody = {
         personEmail: string,
         created: string,
     }
-}
+};
 
-async function handleWebhookRequest(req: Request, res: Response) {
+
+export async function webhook(req: Request, res: Response) {
+    // respond immediately
+    res.send();
+
     const body: SparkReqBody = (req.body: any);
 
     console.log('------- spark-webhook: req.body: ', toStr(body));
@@ -44,21 +48,19 @@ async function handleWebhookRequest(req: Request, res: Response) {
     const expectedSig = hmac.digest('hex');
     const sig = req.get('X-Spark-Signature');
     if (sig !== expectedSig) {
-        console.error(`ERROR: exprected signatue: ${expectedSig} but received ${sig || ''}`);
         res.status(403).send('Access denied');
-        return;
+        throw new Error(`ERROR: exprected signatue: ${expectedSig} but received ${sig || ''}`);
     }
     console.log(`X-Spark-Signature successfully verified ${sig || ''}`);
 
-
     if (!ciscosparkBotPersonId) {
-        console.error('ciscosparkBotPersonId is empty');
-        return;
+        res.status(500).send('Error');
+        throw new Error('ciscosparkBotPersonId is empty');
     }
     if (ciscosparkWebhookId !== body.id) {
-        console.error(`ciscosparkWebhookId doesn't match. Got: `, body.id,
-                      `, but expected: `, ciscosparkWebhookId)
-        return;
+        res.status(500).send('Error');
+        throw new Error(`ciscosparkWebhookId doesn't match. Got: ${body.id}` +
+                        `, but expected: ${ciscosparkWebhookId}`);
     }
     if (ciscosparkBotPersonId === body.data.personId) {
         console.log('skipping own message, personId: ', body.data.personId);
@@ -103,12 +105,7 @@ async function handleWebhookRequest(req: Request, res: Response) {
 
     console.log('got message: ', message);
 
-    const responses = [];
-    await deepiksBot(message, botParams, m => {
-        responses.push(send(botParams, roomId, m))
-    });
-
-    await waitForAll(responses);
+    await deepiksBot(message, botParams, m => send(botParams, roomId, m));
 }
 
 // roomId is the same as conversationId
@@ -159,18 +156,3 @@ function removeMarkdown(text) {
     return text.replace(/\n\n/g, '\n');
 }
 
-export function webhook(req: Request, res: Response) {
-    // respond immediately
-    res.send();
-
-    handleWebhookRequest(req, res)
-        .then(() => {
-            console.log('Success');
-        })
-        .catch(err => {
-            console.log('Error: ', err || '-');
-            if (err instanceof Error) {
-                throw err;
-            }
-        });
-}

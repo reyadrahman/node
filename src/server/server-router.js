@@ -23,7 +23,13 @@ export default function initializeRoutes(server) {
             return next(new Error(`Unknown channel: ${channel}`));
         }
 
-        webhooks[channel](req, res);
+        webhooks[channel](req, res)
+            .then(() => {
+                console.log(`The webhook of ${channel} completed successfully`);
+            })
+            .catch(error => {
+                console.error(`The webhook of ${channel} failed with error: `, error);
+            });
     });
 
     routes.post('/run-periodic-tasks', (req, res, next) => {

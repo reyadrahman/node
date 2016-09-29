@@ -26,13 +26,13 @@ export default async function updateScheduledTasks() {
     // execute message tasks
     const messageTaskPromises = messageTasks.map(async function(task) {
         const botParams = await aws.getBot(task.publisherId, task.botId);
-        const { conversationId, channel, channelData } =
+        const conversation =
             await aws.getConversation(task.publisherId, task.conversationId);
         const message = {
-            text: task.message,
-            creationTimestamp: Date.now()
+            ...task.message,
+            creationTimestamp: Date.now(),
         };
-        await send(botParams, conversationId, channel, message, channelData);
+        await send(botParams, conversation, message);
     });
     
     // delete tasks

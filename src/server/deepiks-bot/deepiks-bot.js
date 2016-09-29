@@ -3,17 +3,16 @@
 import * as aws from '../../aws/aws.js';
 import { callbackToPromise, toStr, destructureS3Url } from '../../misc/utils.js';
 import { request, ENV } from '../server-utils.js';
-import ai from './ai.js';
+import aiRoute from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
-              ChannelData } from '../../misc/types.js';
+              ChannelData, Conversation, RespondFn } from '../../misc/types.js';
 import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
 import uuid from 'uuid';
 
-const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME } = ENV;
+const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME, DB_TABLE_SCHEDULED_TASKS } = ENV;
 
-type RespondFn = (response: ResponseMessage) => void;
 type ProcessedAttachment = {
     urlP: Promise<string>,
     buffer: Buffer,
@@ -34,9 +33,9 @@ export async function _isMessageInDB(message: WebhookMessage) {
     return qres.Count > 0;
 }
 
-export async function logResponseMessage(ms: ResponseMessage | Array<ResponseMessage>,
-                                         botParams: BotParams, conversationId: string,
-                                         channel: string)
+export async function _logResponseMessage(ms: ResponseMessage | Array<ResponseMessage>,
+                                          botParams: BotParams, conversationId: string,
+                                          channel: string)
 {
     const messages = Array.isArray(ms)
         ? ms : [ms];
@@ -81,16 +80,55 @@ export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
 
 }
 
-export function _signS3UrlsMiddleware(respondFn: RespondFn): RespondFn {
-    return response => {
-        _signS3Urls(response)
-            .then(newResponse => {
-                respondFn(newResponse);
-            })
-            .catch(error => {
-                console.error(error);
-            });
+export function _respondFnPreprocessorActionsMiddleware(
+    next: RespondFn,
+    publisherId: string,
+    botId: string,
+    conversationId: string
+): RespondFn
+{
+    return async function(response) {
+        const pas = response.preprocessorActions;
+        if (!pas || pas.length === 0) {
+            next(response);
+            return;
+        }
 
+        const delayAction = pas.find(x => x.action === 'delay' && Number(x.args[0]));
+        if (delayAction) {
+            // remove the action and schedule it
+            const newResponse = {
+                ...response,
+                preprocessorActions: pas.filter(x => x.action !== 'delay'),
+            }
+            const scheduleTimestamp = Date.now() + Number(delayAction.args[0]) * 1000 * 60;
+            await aws.dynamoPut({
+                TableName: DB_TABLE_SCHEDULED_TASKS,
+                Item: {
+                    dummy: '.',
+                    scheduleTimestamp_taskId: aws.composeKeys(scheduleTimestamp, uuid.v1()),
+                    publisherId: publisherId,
+                    botId,
+                    conversationId,
+                    message: newResponse,
+                    type: 'message',
+                }
+            });
+        }
+    };
+}
+
+export function _respondFnCollectorMiddleware(next: RespondFn, toCollection: ResponseMessage[]): RespondFn {
+    return response => {
+        toCollection.push(response);
+        return next(response);
+    }
+}
+
+export function _respondFnSignS3UrlsMiddleware(next: RespondFn): RespondFn {
+    return async function(response) {
+        const newResponse = await _signS3Urls(response)
+        await next(newResponse);
     }
 }
 
@@ -212,27 +250,15 @@ export async function _insertAttachmentsIntoMessage(
     return newMessage;
 }
 
-export async function _aiRoute(
+export async function _surveyRoute(
     message: DBMessage,
     botParams: BotParams,
     respondFn: RespondFn
-): Promise<Array<ResponseMessage>>
+): Promise<void>
 {
-    console.log('_aiRoute...');
+    // TODO
+    // const lastMessage = await _getLastMessageByUserInConversation(processedMessage.publisherId_conversationId);
 
-    const responses = []
-    try {
-        await ai(message, botParams, m => {
-            respondFn(m);
-            responses.push(m);
-        });
-    } catch(err) {
-        console.error(err);
-        const m = { text: 'Sorry, there seems to be a problem...' };
-        respondFn(m);
-        responses.push(m);
-    }
-    return responses;
 }
 
 /**
@@ -271,41 +297,76 @@ export async function _route(rawMessage: WebhookMessage,
 {
     console.log('route');
 
-    respondFn = _signS3UrlsMiddleware(respondFn);
-
-    // [{urlP, buffer, format}]
     const attachments = await _attachmentMiddleware(rawMessage);
-
     const dbMessage = _webhookMessageToDBMessage(rawMessage);
     const processedMessage = attachments
         ? await _insertAttachmentsIntoMessage(dbMessage, attachments)
         : dbMessage;
+    const [, conversationId] = aws.decomposeKeys(processedMessage.publisherId_conversationId);
 
     console.log('processedMessage: ', processedMessage);
 
     // will await later
+    const updateConversationP = _updateConversationTable(processedMessage, botParams, channelData);
     const logP = _logMessage(processedMessage);
 
-    await _updateConversationTable(processedMessage, botParams, channelData);
-
-    const aiRouteResponses = await _aiRoute(processedMessage, botParams, respondFn);
-
+    await updateConversationP;
     await logP;
 
-    const [, conversationId] = aws.decomposeKeys(processedMessage.publisherId_conversationId);
-    await logResponseMessage(aiRouteResponses, botParams, conversationId, processedMessage.channel);
+    const responses = [];
+    respondFn = _respondFnCollectorMiddleware(respondFn, responses);
+    respondFn = _respondFnPreprocessorActionsMiddleware(
+        respondFn, botParams.publisherId, botParams.botId, conversationId);
+    respondFn = _respondFnSignS3UrlsMiddleware(respondFn);
+
+    // try to process the message as a survey,
+    // if unsuccessful, then pass it to wit.ai
+    const wasSurvey = await _surveyRoute(processedMessage, botParams, respondFn);
+    if (!wasSurvey) {
+        await aiRoute(processedMessage, botParams, respondFn);
+    }
+
+    await _logResponseMessage(responses, botParams, conversationId, processedMessage.channel);
 }
 
 
-export default async function deepiksBot(message: WebhookMessage,
-                                         botParams: BotParams,
-                                         respondFn: RespondFn,
-                                         channelData?: ChannelData)
+export async function deepiksBot(message: WebhookMessage,
+                                 botParams: BotParams,
+                                 respondFn: RespondFn,
+                                 channelData?: ChannelData)
 {
     console.log('deepiksBot');
-    if (await _isMessageInDB(message)) {
-        console.log(`Message is already in the db. It won't be processed.`)
-        return;
+    try {
+        if (await _isMessageInDB(message)) {
+            console.log(`Message is already in the db. It won't be processed.`)
+            return;
+        }
+        await _route(message, botParams, respondFn, channelData);
+    } catch(error) {
+        const [, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
+        const m = { text: 'Sorry, there seems to be a problem...' };
+        // don't await, let them fail silently
+        respondFn(m);
+        _logResponseMessage(m, botParams, conversationId, message.channel);
+
+        throw error;
     }
-    await _route(message, botParams, respondFn, channelData);
 };
+
+// this is used when sending a message from a bot to a user
+// that is not a direct response to the user's message.
+// E.g. feeds, notifications, delayed messages etc.
+export async function coldSend(message: ResponseMessage, botParams: BotParams,
+                               conversation: Conversation, respondFn: RespondFn)
+{
+    const responses = [];
+    respondFn = _respondFnCollectorMiddleware(respondFn, responses);
+    respondFn = _respondFnPreprocessorActionsMiddleware(
+        respondFn, botParams.publisherId, botParams.botId, conversation.conversationId);
+    respondFn = _respondFnSignS3UrlsMiddleware(respondFn);
+
+    await respondFn(message);
+    await _logResponseMessage(responses, botParams, conversation.conversationId, conversation.channel);
+}
+
+export default deepiksBot;

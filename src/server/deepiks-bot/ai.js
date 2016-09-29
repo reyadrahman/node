@@ -2,7 +2,7 @@
 
 import * as aws from '../../aws/aws.js';
 import type { DBMessage, ResponseMessage, BotParams, ActionRequest,
-              ActionResponse, UserPrefs, WitData } from '../../misc/types.js';
+              ActionResponse, UserPrefs, WitData, RespondFn } from '../../misc/types.js';
 import { ENV, request } from '../server-utils.js';
 import { toStr, catchPromise, callbackToPromise } from '../../misc/utils.js';
 import { Wit, log as witLog } from 'node-wit';
@@ -10,8 +10,7 @@ import _ from 'lodash';
 import URL from 'url';
 import uuid from 'node-uuid';
 
-const { DB_TABLE_CONVERSATIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME,
-        DB_TABLE_SCHEDULED_TASKS } = ENV;
+const { DB_TABLE_CONVERSATIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME } = ENV;
 
 type ActionRequestIncomplete = {
     sessionId: string,
@@ -28,27 +27,13 @@ type RunActionsRes = {
     userPrefs: UserPrefs,
 };
 
-export function _mkClient(accessToken: string, respondFn: (m: ResponseMessage) => void) {
+export function _mkClient(accessToken: string, respondFn: RespondFn) {
     return new Wit({
         accessToken,
         respondFn,
         actions: {
-            send: async function(request: ActionRequestIncomplete, response) {
-                console.log('actions.send: ', JSON.stringify(response));
-                respondFn({
-                    text: response.text,
-                    actions: response.actions,
-                    creationTimestamp: Date.now(),
-                });
-            },
-            merge: async function({entities, context, message, sessionId}) {
-                console.log('actions.merge...');
-                console.log('entities: ', entities);
-                console.log('context: ', context);
-                console.log('message: ', message);
-                console.log('sessionId: ', sessionId);
-                return context;
-            },
+            // dummy
+            send() {}
         },
         logger: new witLog.Logger(witLog.DEBUG)
     });
@@ -118,27 +103,10 @@ export async function _runActionsHelper(client: Wit,
     };
 
     if (converseData.type === 'msg') {
-        // check for inline commands inside the message
-        // e.g. "<[DELAY:60]> some message"
-        const inlineCommandRegExpMatch = (converseData.msg || '').match(/^\s*<\[(.*?)\]>\s*(.*)/);
-        if (inlineCommandRegExpMatch) {
-            const [ publisherId, conversationId ] =
-                aws.decomposeKeys(originalMessage.publisherId_conversationId);
-            await handleInlineCommandFromWit(inlineCommandRegExpMatch[1], inlineCommandRegExpMatch[2],
-                                             publisherId, botParams.botId, conversationId);
-        } else {
-            const qrs = converseData.quickreplies;
-            const response = {
-                text: converseData.msg,
-                actions:  qrs && qrs.map(
-                    x => ({ text: x, fallback: x })
-                ),
-            };
-            const invalidContext = await client.config.actions.send(requestData, response);
-            if (invalidContext) {
-                throw new Error('Cannot update context after \'send\' action');
-            }
-        }
+        await client.config.respondFn({
+            ...converseDataToResponseMessage(converseData),
+            creationTimestamp: Date.now(),
+        });
         const newConverseData = await client.converse(witData.sessionId, null, {
             ...witData.context,
             userPrefs,
@@ -178,7 +146,7 @@ export async function _runActionsHelper(client: Wit,
             : userPrefs;
 
         if (actionRes.msg) {
-            client.config.respondFn({
+            await client.config.respondFn({
                 ...actionRes.msg,
                 creationTimestamp: Date.now(),
             });
@@ -274,36 +242,6 @@ export async function _runAction(actionName: string,
     throw new Error(`Unknown action: ${toStr(action)}`);
 }
 
-async function handleInlineCommandFromWit(commandRaw: string, message: string,
-                                          publisherId: string, botId: string,
-                                          conversationId: string)
-{
-    if (!message) return;
-
-    const commands = commandRaw.split(';').map(
-        command => command.split(':').map(x => x.trim().toLowerCase())
-    );
-
-    console.log('handleInlineCommandFromWit commands: ', commands);
-
-    const delayCommand = commands.find(x => x[0] === 'delay' && Number(x[1]));
-    if (delayCommand) {
-        const scheduleTimestamp = Date.now() + Number(delayCommand[1]) * 1000 * 60;
-        await aws.dynamoPut({
-            TableName: DB_TABLE_SCHEDULED_TASKS,
-            Item: {
-                dummy: '.',
-                scheduleTimestamp_taskId: aws.composeKeys(scheduleTimestamp, uuid.v1()),
-                publisherId: publisherId,
-                botId,
-                conversationId,
-                message,
-                type: 'message',
-            }
-        });
-    }
-}
-
 export function _generateS3Policy(publisherId: string, senderId: string): string {
     return JSON.stringify({
         Version: '2012-10-17',
@@ -322,10 +260,37 @@ export function _generateS3Policy(publisherId: string, senderId: string): string
     });
 }
 
+function converseDataToResponseMessage(converseData) {
+    const response = {};
+    // check for preprocessor actions inside the message
+    // e.g. "<[DELAY:60]> some message"
+    const preprocessorMatch = (converseData.msg || '').match(/^\s*<\[(.*?)\]>\s*(.*)/);
+    if (preprocessorMatch) {
+        response.preprocessorActions = preprocessorMatch[1]
+            .split(';')
+            .map(command => command
+                .split(':')
+                .map(x => x.trim().toLowerCase())
+                .filter(Boolean)
+            )
+            .filter(x => x.length > 0)
+            .map(([ action, ...args ]) => ({ action, args }))
+        response.text = preprocessorMatch[2];
+    } else {
+        response.text = converseData.msg;
+    }
+
+    if (converseData.quickreplies) {
+        response.actions = converseData.quickreplies.map(x => ({ text: x, fallback: x }));
+    }
+    return response;
+}
+
 export async function ai(message: DBMessage,
                          botParams: BotParams,
-                         respondFn: (m: ResponseMessage) => void)
+                         respondFn: RespondFn)
 {
+    console.log('ai message: ', message);
     if (!botParams.settings.witAccessToken) {
         throw new Error(`Bot doesn't have witAccessToken: ${toStr(botParams)}`);
     }
