@@ -187,16 +187,8 @@ $navbarHeight: 50px;
     }
 
     .updates {
-        background: url('../../resources/drahi-building.jpg') center center;
-        background-color: rgba(0, 0, 0, .55);
-        background-blend-mode: multiply;
-        background-size: cover;
         padding-left: 30px;
         padding-right: 30px;
-
-        h1 {
-            color: white;
-        }
 
         .img-rounded {
             border-radius: 3px;
@@ -299,7 +291,6 @@ $navbarHeight: 50px;
         }
 
         .timeline-centered .timeline-entry.left-aligned .timeline-entry-inner .timeline-time {
-            color: white;
             left: auto;
             right: -150px;
             text-align: left;
@@ -347,7 +338,6 @@ $navbarHeight: 50px;
 
 
         .timeline-centered .timeline-entry .timeline-entry-inner .timeline-time {
-            color: white;
             position: absolute;
             left: -110px;
             text-align: right;

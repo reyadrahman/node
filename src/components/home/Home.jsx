@@ -28,7 +28,7 @@ const nadellaUrl = require('../../resources/avatars/SatyaNadella.jpg');
 const ellisonUrl = require('../../resources/avatars/LarryEllison.jpg');
 const zuckerbergUrl = require('../../resources/avatars/MarkZuckerberg.jpg');
 
-const mapUrl = require('../../resources/map.png');
+const drahiBuilding = require('../../resources/drahi-building.jpg');
 
 const backgroundVideo =  require('../../resources/background-video.mp4');
 
@@ -453,7 +453,7 @@ let Home = React.createClass({
                                 <div className="timeline-label">
                                     <h2>{ strings.timeline_3_h}</h2>
                                     <p>{ strings.timeline_3_t}</p>
-                                    <img src={mapUrl} alt="map" className="img-responsive" />
+                                    <img src={drahiBuilding} alt="map" className="img-responsive" />
                                 </div>
                             </div>
 
