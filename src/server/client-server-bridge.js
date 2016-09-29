@@ -10,9 +10,11 @@ import type { Request, Response } from 'express';
 import express from 'express';
 import ciscospark from 'ciscospark';
 
-const { AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
-        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, CONTACT_EMAIL,
-        OWN_BASE_URL } = ENV;
+const {
+          AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
+          DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, DB_TABLE_USER_PREFS,
+          CONTACT_EMAIL, OWN_BASE_URL
+      } = ENV;
 
 const routes = express.Router();
 
@@ -71,6 +73,17 @@ routes.get('/fetch-bots', (req, res, next) => {
     }
     const { identityId } = req.customData;
     fetchBots(identityId)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+
+});
+
+routes.get('/fetch-users', (req, res, next) => {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+    const { identityId } = req.customData;
+    fetchUsers(identityId, req.query.botId)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -188,6 +201,25 @@ async function fetchBots(identityId) {
         },
     });
     console.log('qres: ', qres);
+    return qres.Items || [];
+}
+
+async function fetchUsers(identityId, botId) {
+    console.log('fetchUsers: identityId=', identityId, 'botId=', botId);
+    const qres = await aws.dynamoQuery({
+        TableName:                 DB_TABLE_USER_PREFS,
+        KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_userId, :bid)',
+        // FilterExpression:          botId ? 'begins_with(botId_userId, :bid)' : undefined,
+        ExpressionAttributeValues: {
+            ':pid': identityId,
+            ':bid': botId || undefined
+        },
+        // Limit: 50,
+        ScanIndexForward:          false,
+    });
+
+    console.log(qres);
+
     return qres.Items || [];
 }
 

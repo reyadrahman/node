@@ -22,6 +22,11 @@ const initAppState = {
             bots: [],
             errorMessage: '',
         },
+        usersState: {
+            hasFetched: false,
+            users: [],
+            errorMessage: '',
+        },
         conversationsState: {
             hasFetched: false,
             conversations: [],

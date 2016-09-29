@@ -10,6 +10,7 @@ export default {
     },
     sideMenu: {
         account: 'FR Account',
+        users: 'FR Users',
         messages: 'FR Messages',
         feeds: 'FR Feeds',
         notifications: 'FR Notifications',
@@ -71,21 +72,21 @@ export default {
         timeline_t: '',
         timeline_5_d:'October 2016',
         timeline_5_h:'Launch',
-        timeline_5_t:'Deepiks launches bot platform',        
+        timeline_5_t:'Deepiks launches bot platform',
         timeline_4_d:'June 2016',
         timeline_4_h:'Pivot',
-        timeline_4_t:'Deepiks pivots to a bot platform model, keeping a strong focus on deep learning ',        
+        timeline_4_t:'Deepiks pivots to a bot platform model, keeping a strong focus on deep learning ',
         timeline_3_d:'April 2016',
         timeline_3_h:'X-UP !',
-        timeline_3_t:'Deepiks joins X-UP, the accelerator of prestigious Ecole Polytechnique near Paris.',        
+        timeline_3_t:'Deepiks joins X-UP, the accelerator of prestigious Ecole Polytechnique near Paris.',
         timeline_2_d:'February 2016',
         timeline_2_h:'Foundation',
-        timeline_2_t:'Deepiks is founded and starts developing Deep Learning based solutions for the creative industries',        
+        timeline_2_t:'Deepiks is founded and starts developing Deep Learning based solutions for the creative industries',
         timeline_1_d:'',
         timeline_1_h:'',
-        timeline_1_t:'',   
-        contact_h:'Contact us',     
-        contact_t:'If you\'d like to contact us, please send a mail to info@deepiks.io, or use the following form',     
+        timeline_1_t:'',
+        contact_h:'Contact us',
+        contact_t:'If you\'d like to contact us, please send a mail to info@deepiks.io, or use the following form',
     },
     homeContactForm: {
         name: 'FR NAME',
@@ -127,6 +128,9 @@ export default {
     notificationsPage: {
         fetching: 'FETCHING BOTS',
         notifications: 'Notifications',
+    },
+    usersPage: {
+
     },
     messagesPage: {
 

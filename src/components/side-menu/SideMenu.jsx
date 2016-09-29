@@ -42,7 +42,7 @@ const SideMenu = React.createClass({
                                 (e) => this.toggleItem(e, i) : null
                         }
                     >
-                        <Glyphicon glyph={p.icon} className="menu-icon" />
+                        <span className={`menu-icon ${ p.glyph ? 'glyphicon glyphicon-' + p.glyph : p.icon }`} />
                         {p.label}
                         <Glyphicon
                             glyph={!p.children ? '' : openItemIndex === i ? `minus` : `plus`}

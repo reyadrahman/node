@@ -11,7 +11,7 @@ export function lang(state = initAppState.lang, action) {
 
 export function signIn(state = initAppState.signIn, action) {
     if (action.type === 'signIn/reset') {
-        return initAppState.signIn; 
+        return initAppState.signIn;
     } else if (action.type === 'signIn/failed') {
         return {
             errorMessage: action.errorMessage,
@@ -22,7 +22,7 @@ export function signIn(state = initAppState.signIn, action) {
 
 export function signUp(state = initAppState.signUp, action) {
     if (action.type === 'signUp/reset') {
-        return initAppState.signUp; 
+        return initAppState.signUp;
     } else if (action.type === 'signUp/failed') {
         return {
             errorMessage: action.errorMessage,
@@ -64,6 +64,25 @@ export function currentUser(state = initAppState.currentUser, action) {
 
     // the rest of these actions require an active user
     if (!state.signedIn) return state;
+
+    if (action.type === 'currentUser/resetUsersState') {
+        return {
+            ...state,
+            usersState: init.usersState,
+        };
+    }
+
+    if (action.type === 'currentUser/fetchUsersFailed') {
+        return {
+            ...state,
+            botsState: {
+                hasFetched:   false,
+                users:         [],
+                errorMessage: action.errorMessage,
+            },
+        }
+    }
+
 
     if (action.type === 'currentUser/resetBotsState') {
         return {
