@@ -13,13 +13,25 @@ import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Glyphicon,
 import Lightbox from 'react-images';
 
 
+
 const ribbonUrl = require('../../resources/ribbon.png');
 const avatarUrl = require('../../resources/avatar.jpg');
 const avatar1Url = require('../../resources/avatars/1.jpg');
 const avatar2Url = require('../../resources/avatars/2.jpg');
 const avatar3Url = require('../../resources/avatars/3.jpg');
 const avatar4Url = require('../../resources/avatars/4.jpg');
-const mapUrl = require('../../resources/map.png');
+
+const emmanuelUrl = require('../../resources/avatars/6.jpg');
+const brunoUrl = require('../../resources/avatars/7.jpg');
+
+const nadellaUrl = require('../../resources/avatars/SatyaNadella.jpg');
+const ellisonUrl = require('../../resources/avatars/LarryEllison.jpg');
+const zuckerbergUrl = require('../../resources/avatars/MarkZuckerberg.jpg');
+
+const drahiBuilding = require('../../resources/drahi-building.jpg');
+
+const backgroundVideo =  require('../../resources/background-video.mp4');
+
 const screenshots = [
     require('../../resources/screenshots/1.jpg'),
     require('../../resources/screenshots/2.jpg'),
@@ -30,6 +42,16 @@ const screenshots = [
     require('../../resources/screenshots/7.jpg'),
     require('../../resources/screenshots/8.jpg'),
 ];
+
+const channels = [
+    require('../../resources/channels/deepiks-painting-spark.png'),
+    require('../../resources/channels/deepiks-painting-messenger.png'),
+    require('../../resources/channels/deepiks-painting-slack.png'),
+    require('../../resources/channels/deepiks-painting-telegram.png'),
+    require('../../resources/channels/deepiks-painting-skype.png'),
+    require('../../resources/channels/deepiks-painting-web.png'),
+];
+
 
 let Home = React.createClass({
     getInitialState() {
@@ -101,6 +123,9 @@ let Home = React.createClass({
                     ]}
                 />
                 <section className="intro">
+                    <video className="video" src={backgroundVideo} autoPlay loop>
+                        No support message
+                    </video>
                     <div className="intro-message">
                        { strings.baseline }
                     </div>
@@ -114,7 +139,7 @@ let Home = React.createClass({
                         </p>
                     </div>
                     <Grid>
-                        <Col sm={3} md={3} className="service">
+                        <Col sm={6} md={3} className="service">
                             <div className="service-icon">
                                 <Glyphicon glyph="globe" />
                             </div>
@@ -125,7 +150,7 @@ let Home = React.createClass({
                                 </p>
                             </div>
                         </Col>
-                        <Col sm={3} md={3} className="service">
+                        <Col sm={6} md={3} className="service">
                             <div className="service-icon">
                                 <Glyphicon glyph="bell" />
                             </div>
@@ -137,7 +162,7 @@ let Home = React.createClass({
                             </div>
                         </Col>
                         <Clearfix visibleSmBlock />
-                        <Col sm={3} md={3} className="service">
+                        <Col sm={6} md={3} className="service">
                             <div className="service-icon">
                                 <Glyphicon glyph="stats" />
                             </div>
@@ -148,7 +173,7 @@ let Home = React.createClass({
                                 </p>
                             </div>
                         </Col>
-                        <Col sm={3} md={3} className="service">
+                        <Col sm={6} md={3} className="service">
                             <div className="service-icon">
                                 <Glyphicon glyph="user" />
                             </div>
@@ -328,7 +353,7 @@ let Home = React.createClass({
                         </p>
                     </div>
                     <Grid>
-                        <Col xs={12} sm={6} md={3}>
+                        <Col xs={12} sm={6} md={3} mdOffset={3}>
                             <div className="team-member">
                                 <div className="name">
                                     Emmanuel Prat
@@ -337,7 +362,7 @@ let Home = React.createClass({
                                     CEO & CTO
                                 </div>
                                 <div className="avatar">
-                                    <Image src={avatar1Url} responsive />
+                                    <Image src={emmanuelUrl} responsive />
                                 </div>
                             </div>
                         </Col>
@@ -350,7 +375,7 @@ let Home = React.createClass({
                                     COO
                                 </div>
                                 <div className="avatar">
-                                    <Image src={avatar2Url} responsive />
+                                    <Image src={brunoUrl} responsive />
                                 </div>
                             </div>
                         </Col>
@@ -367,8 +392,8 @@ let Home = React.createClass({
 
                     <Grid className="screenshots-grid">
                         {
-                            screenshots.map((x, i) => (
-                                <Col md={3}>
+                            channels.map((x, i) => (
+                                <Col xs={12} sm={6} md={4}>
                                     <img src={x} onClick={() => this.screenshotClicked(i)} />
                                 </Col>
                             ))
@@ -428,7 +453,7 @@ let Home = React.createClass({
                                 <div className="timeline-label">
                                     <h2>{ strings.timeline_3_h}</h2>
                                     <p>{ strings.timeline_3_t}</p>
-                                    <img src={mapUrl} alt="map" className="img-responsive" />
+                                    <img src={drahiBuilding} alt="map" className="img-responsive" />
                                 </div>
                             </div>
 
@@ -476,16 +501,16 @@ let Home = React.createClass({
                         className="carousel" controls={false} slide={false}>
                         <Carousel.Item className="carousel-item">
                             <p><i>Artificial Intelligence (AI)-powered bots will become the next interface, shaping our interactions with the applications and devices we rely on.</i> Satya Nadella, CEO, Microsoft.</p>
-                            <img src={avatarUrl} className="avatar" />
+                            <img src={nadellaUrl} className="avatar" />
                         </Carousel.Item>
                         <Carousel.Item className="carousel-item">
                             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <img src={avatarUrl} className="avatar" />
+                            <img src={zuckerbergUrl} className="avatar" />
                         </Carousel.Item>
                         <Carousel.Item className="carousel-item">
                             <p>							<i>Chatbots will be one of the primary ways to interface with a lot of digital services.</i> 	Larry Ellison, Executive Chairman and CTO, Oracle Corporation. </p>
 
-                            <img src={avatarUrl} className="avatar" />
+                            <img src={ellisonUrl} className="avatar" />
                         </Carousel.Item>
                     </Carousel>
                 </section>

@@ -211,4 +211,9 @@ export default {
     termsOfUsePage: {
         termsOfUse: 'Terms of Use',
     },
+    cookieConsent: {
+        message: 'This website uses cookies for a better experience.',
+        more: 'Learn more.',
+        dismiss: 'Got it!',
+    },
 };

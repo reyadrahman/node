@@ -4,7 +4,7 @@ import express from 'express';
 import render from './server-side-rendering.js';
 import bridge from './client-server-bridge.js';
 import { webhooks } from './channels/all-channels.js';
-import { feedsPeriodicUpdate } from './periodic-tasks.js';
+import periodicTasksUpdate from './periodic-tasks/all-periodic-tasks.js';
 import { Server as WebSocketServer } from 'ws';
 
 export default function initializeRoutes(server) {
@@ -27,7 +27,7 @@ export default function initializeRoutes(server) {
     });
 
     routes.post('/run-periodic-tasks', (req, res, next) => {
-        feedsPeriodicUpdate(req, res);
+        periodicTasksUpdate(req, res);
     });
 
     routes.use('/', (req, res, next) => {
