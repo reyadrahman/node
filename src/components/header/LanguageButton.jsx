@@ -35,7 +35,6 @@ let LanguageButton = React.createClass({
                 className={`language-button-comp ${className || ''}`}
                 title={title}
                 onSelect={this.onMenuSelect}
-                bsStyle={'link'}
                 pullRight
             >
                 { menuItems }
