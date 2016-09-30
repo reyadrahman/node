@@ -103,7 +103,8 @@ export async function _runActionsHelper(client: Wit,
     };
 
     if (converseData.type === 'msg') {
-        await client.config.respondFn({
+        // will wait later
+        const resP = client.config.respondFn({
             ...converseDataToResponseMessage(converseData),
             creationTimestamp: Date.now(),
         });
@@ -111,6 +112,7 @@ export async function _runActionsHelper(client: Wit,
             ...witData.context,
             userPrefs,
         });
+        await resP;
         return await _runActionsHelper(client, text, originalMessage, witData,
                                        userPrefs, botParams, newConverseData, level-1)
 
@@ -145,8 +147,9 @@ export async function _runActionsHelper(client: Wit,
             ? actionRes.userPrefs || {}
             : userPrefs;
 
+        let resP = Promise.resolve();
         if (actionRes.msg) {
-            await client.config.respondFn({
+            resP = client.config.respondFn({
                 ...actionRes.msg,
                 creationTimestamp: Date.now(),
             });
@@ -155,6 +158,7 @@ export async function _runActionsHelper(client: Wit,
             ...newWitData.context,
             userPrefs,
         });
+        await resP;
         return await _runActionsHelper(client, text, originalMessage, newWitData,
                                        newUserPrefs, botParams, newConverseData,
                                        level-1)

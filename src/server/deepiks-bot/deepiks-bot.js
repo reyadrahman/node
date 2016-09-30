@@ -1,7 +1,7 @@
 /* @flow */
 
 import * as aws from '../../aws/aws.js';
-import { callbackToPromise, toStr, destructureS3Url } from '../../misc/utils.js';
+import { callbackToPromise, toStr, destructureS3Url, timeout } from '../../misc/utils.js';
 import { request, ENV } from '../server-utils.js';
 import aiRoute from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
@@ -11,7 +11,8 @@ import gm from 'gm';
 import _ from 'lodash';
 import uuid from 'uuid';
 
-const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, S3_BUCKET_NAME, DB_TABLE_SCHEDULED_TASKS } = ENV;
+const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, DB_TABLE_SCHEDULED_TASKS,
+        DB_TABLE_POLL_QUESTIONS, S3_BUCKET_NAME  } = ENV;
 
 type ProcessedAttachment = {
     urlP: Promise<string>,
@@ -33,6 +34,34 @@ export async function _isMessageInDB(message: WebhookMessage) {
     return qres.Count > 0;
 }
 
+export function _createDBMessageFomResponseMessage(
+    m: ResponseMessage, botParams: BotParams,
+    conversationId: string, channel: string
+) : DBMessage
+{
+    if (!m.creationTimestamp) {
+        throw new Error(`_createDBMessageFomResponseMessage message is ` +
+                        `missing creationTimestamp: ${toStr(m)}`)
+    }
+    return {
+        publisherId_conversationId: aws.composeKeys(botParams.publisherId, conversationId),
+        senderId: aws.composeKeys(botParams.publisherId, botParams.botId),
+        senderName: botParams.botName,
+        channel: channel,
+        senderIsBot: true,
+        id: uuid.v1(),
+        text: m.text,
+        cards: m.cards,
+        actions: m.actions,
+        creationTimestamp: m.creationTimestamp,
+        poll: m.poll && {
+            pollId: m.poll.pollId,
+            questionId: m.poll.questionId,
+            isQuestion: true,
+        },
+    }
+}
+
 export async function _logResponseMessage(ms: ResponseMessage | Array<ResponseMessage>,
                                           botParams: BotParams, conversationId: string,
                                           channel: string)
@@ -40,15 +69,9 @@ export async function _logResponseMessage(ms: ResponseMessage | Array<ResponseMe
     const messages = Array.isArray(ms)
         ? ms : [ms];
 
-    await _logMessage(messages.map(m => ({
-        publisherId_conversationId: aws.composeKeys(botParams.publisherId, conversationId),
-        senderId: aws.composeKeys(botParams.publisherId, botParams.botId),
-        senderName: botParams.botName,
-        channel: channel,
-        senderIsBot: true,
-        id: uuid.v1(),
-        ...m,
-    })));
+    await _logMessage(messages.map(
+        x => _createDBMessageFomResponseMessage(x, botParams, conversationId, channel)
+    ));
 }
 
 export async function _logWebhookMessage(ms: WebhookMessage | Array<WebhookMessage>) {
@@ -82,24 +105,35 @@ export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
 
 export function _respondFnPreprocessorActionsMiddleware(
     next: RespondFn,
-    publisherId: string,
-    botId: string,
-    conversationId: string
+    botParams: BotParams,
+    conversationId: string,
+    channel: string,
+    sendAsUser: (msg: DBMessage) => Promise<*>
 ): RespondFn
 {
-    return async function(response) {
+    return async function self(response) {
         const pas = response.preprocessorActions;
         if (!pas || pas.length === 0) {
-            next(response);
+            await next(response);
+            return;
+        }
+        console.log('_respondFnPreprocessorActionsMiddleware self: ', pas);
+
+        const delayAction = pas.find(x => x.action === 'delay' && Number(x.args[0]));
+        const pollAction = pas.find(x => x.action === 'poll' && x.args[0] && x.args[1]);
+
+        if (delayAction && pollAction) {
+            const m = `Cannot use 'delay' and 'poll' preprocessor actions together`;
+            console.error(m);
+            await next({ text: m, creationTimestamp: Date.now() });
             return;
         }
 
-        const delayAction = pas.find(x => x.action === 'delay' && Number(x.args[0]));
         if (delayAction) {
             // remove the action and schedule it
             const newResponse = {
                 ...response,
-                preprocessorActions: pas.filter(x => x.action !== 'delay'),
+                preprocessorActions: _.without(pas, delayAction),
             }
             const scheduleTimestamp = Date.now() + Number(delayAction.args[0]) * 1000 * 60;
             await aws.dynamoPut({
@@ -107,14 +141,39 @@ export function _respondFnPreprocessorActionsMiddleware(
                 Item: {
                     dummy: '.',
                     scheduleTimestamp_taskId: aws.composeKeys(scheduleTimestamp, uuid.v1()),
-                    publisherId: publisherId,
-                    botId,
+                    publisherId: botParams.publisherId,
+                    botId: botParams.botId,
                     conversationId,
                     message: newResponse,
                     type: 'message',
                 }
             });
+            return;
         }
+
+        if (pollAction) {
+            const [ pollId, questionId ] = pollAction.args;
+            const newResponse = {
+                ...response,
+                poll: { pollId, questionId },
+                preprocessorActions: _.without(pas, pollAction),
+            };
+            await self(newResponse);
+        }
+
+        const asUserAction = pas.find(x => x.action === 'as user');
+        if (asUserAction) {
+            console.log('asUserAction: ', response.text);
+            const message = _createDBMessageFomResponseMessage({
+                text: response.text,
+                creationTimestamp: Date.now(),
+            }, botParams, conversationId, channel);
+
+            // TODO investigate why the strange behaviours occur without this timeout
+            await timeout(3000);
+            await sendAsUser(message);
+        }
+
     };
 }
 
@@ -183,10 +242,10 @@ async function _getFileFormat(buffer: Buffer): Promise<string> {
     return '';
 }
 
-export async function _attachmentMiddleware(message: WebhookMessage):
+export async function _processAttachments(message: WebhookMessage):
     Promise<?Array<ProcessedAttachment>>
 {
-    console.log('_attachmentMiddleware');
+    console.log('_processAttachments');
     const { cards, fetchCardImages } = message;
 
     if (!cards && !fetchCardImages) {
@@ -250,15 +309,79 @@ export async function _insertAttachmentsIntoMessage(
     return newMessage;
 }
 
-export async function _surveyRoute(
+// if the message is a poll answer, it'll store the answer for the poll in DB
+// and return the same message with its `poll` field set appropriately
+export async function _pollMiddleware(
     message: DBMessage,
     botParams: BotParams,
     respondFn: RespondFn
-): Promise<void>
+) : Promise<DBMessage>
 {
-    // TODO
-    // const lastMessage = await _getLastMessageByUserInConversation(processedMessage.publisherId_conversationId);
+    const lastMessage = await _getLastMessageInConversation(
+        message.publisherId_conversationId,
+        message.creationTimestamp);
+    if (!lastMessage || !lastMessage.poll || !lastMessage.poll.isQuestion) {
+        return message;
+    }
 
+    const { pollId, questionId } = lastMessage.poll;
+
+    console.log(`_pollMiddleware pollId: ${pollId}, ` +
+                `questionId: ${questionId}, ` +
+                `answer: ${message.text || ''}`);
+
+    const pollQuestion = await aws.getPollQuestion(botParams.publisherId, botParams.botId, pollId, questionId);
+    console.log('_pollMiddleware pollQuestion: ', pollQuestion);
+    const pollAnswer = (message.text || '').trim().toLowerCase();
+
+    if (!pollQuestion.validAnswers.find(x => String(x).toLowerCase() === pollAnswer)) {
+        console.log('_pollMiddleware got ', pollAnswer, ', but expected one of ', pollQuestion.validAnswers);
+        respondFn({ text: 'Invalid answer', creationTimestamp: Date.now() });
+        return message;
+    }
+
+    await aws.dynamoUpdate({
+        TableName: DB_TABLE_POLL_QUESTIONS,
+        Key: {
+            publisherId: botParams.publisherId,
+            botId_pollId_questionId: aws.composeKeys(botParams.botId, aws.composeKeys(pollId, questionId)),
+        },
+        // UpdateExpression: 'SET feeds = list_append(if_not_exists(feeds, :emptyList), :newFeed)',
+        UpdateExpression: 'SET aggregates.#answer = if_not_exists(aggregates.#answer, :zero) + :one',
+        ExpressionAttributeNames: {
+            '#answer': pollAnswer,
+        },
+        ExpressionAttributeValues: {
+            ':one': 1,
+            ':zero': 0,
+        },
+    });
+
+    return {
+        ...message,
+        poll: {
+            pollId,
+            questionId,
+            isQuestion: false,
+        },
+    };
+}
+
+export async function _getLastMessageInConversation(
+    publisherId_conversationId: string,
+    before: number
+) : Promise<?DBMessage>
+{
+    const qres = await aws.dynamoQuery({
+        TableName: DB_TABLE_MESSAGES,
+        KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp < :t',
+        ExpressionAttributeValues: {
+            ':pc': publisherId_conversationId,
+            ':t': before,
+        },
+        ScanIndexForward: false,
+    });
+    return qres.Items[0];
 }
 
 /**
@@ -290,43 +413,53 @@ export async function _updateConversationTable(message: DBMessage,
     console.log('_updateConversationTable res: ', res);
 }
 
-export async function _route(rawMessage: WebhookMessage,
-                             botParams: BotParams,
-                             respondFn: RespondFn,
-                             channelData?: ChannelData)
-{
+export async function _handleWebhookMessage(
+    rawMessage: WebhookMessage,
+    botParams: BotParams,
+    respondFn: RespondFn,
+    channelData?: ChannelData
+) {
     console.log('route');
 
-    const attachments = await _attachmentMiddleware(rawMessage);
-    const dbMessage = _webhookMessageToDBMessage(rawMessage);
-    const processedMessage = attachments
+    const attachments = await _processAttachments(rawMessage);
+    let dbMessage = _webhookMessageToDBMessage(rawMessage);
+    dbMessage = attachments
         ? await _insertAttachmentsIntoMessage(dbMessage, attachments)
         : dbMessage;
-    const [, conversationId] = aws.decomposeKeys(processedMessage.publisherId_conversationId);
 
-    console.log('processedMessage: ', processedMessage);
+    console.log('dbMessage: ', dbMessage);
 
+    const [, conversationId] = aws.decomposeKeys(dbMessage.publisherId_conversationId);
+    let newRespondFn;
+    const sendAsUser = (msg: DBMessage) => _handleProcessedDBMessage(msg, botParams, newRespondFn, conversationId, channelData);
+
+    const responses = [];
+    newRespondFn = respondFn;
+    newRespondFn = _respondFnSignS3UrlsMiddleware(newRespondFn);
+    newRespondFn = _respondFnCollectorMiddleware(newRespondFn, responses);
+    newRespondFn = _respondFnPreprocessorActionsMiddleware(
+        newRespondFn, botParams, conversationId, dbMessage.channel, sendAsUser);
+
+    await sendAsUser(dbMessage);
+    await _logResponseMessage(responses, botParams, conversationId, dbMessage.channel);
+}
+
+export async function _handleProcessedDBMessage(
+    dbMessage: DBMessage,
+    botParams: BotParams,
+    respondFn: RespondFn,
+    conversationId: string,
+    channelData?: ChannelData
+) {
     // will await later
-    const updateConversationP = _updateConversationTable(processedMessage, botParams, channelData);
-    const logP = _logMessage(processedMessage);
+    const updateConversationP = _updateConversationTable(dbMessage, botParams, channelData);
+    const logP = _logMessage(dbMessage);
 
     await updateConversationP;
     await logP;
 
-    const responses = [];
-    respondFn = _respondFnCollectorMiddleware(respondFn, responses);
-    respondFn = _respondFnPreprocessorActionsMiddleware(
-        respondFn, botParams.publisherId, botParams.botId, conversationId);
-    respondFn = _respondFnSignS3UrlsMiddleware(respondFn);
-
-    // try to process the message as a survey,
-    // if unsuccessful, then pass it to wit.ai
-    const wasSurvey = await _surveyRoute(processedMessage, botParams, respondFn);
-    if (!wasSurvey) {
-        await aiRoute(processedMessage, botParams, respondFn);
-    }
-
-    await _logResponseMessage(responses, botParams, conversationId, processedMessage.channel);
+    dbMessage = await _pollMiddleware(dbMessage, botParams, respondFn);
+    await aiRoute(dbMessage, botParams, respondFn);
 }
 
 
@@ -341,10 +474,10 @@ export async function deepiksBot(message: WebhookMessage,
             console.log(`Message is already in the db. It won't be processed.`)
             return;
         }
-        await _route(message, botParams, respondFn, channelData);
+        await _handleWebhookMessage(message, botParams, respondFn, channelData);
     } catch(error) {
         const [, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
-        const m = { text: 'Sorry, there seems to be a problem...' };
+        const m = { text: 'Sorry, there seems to be a problem...', creationTimestamp: Date.now() };
         // don't await, let them fail silently
         respondFn(m);
         _logResponseMessage(m, botParams, conversationId, message.channel);
@@ -359,13 +492,21 @@ export async function deepiksBot(message: WebhookMessage,
 export async function coldSend(message: ResponseMessage, botParams: BotParams,
                                conversation: Conversation, respondFn: RespondFn)
 {
+    let newRespondFn;
+    const sendAsUser = (msg: DBMessage) => _handleProcessedDBMessage(
+        msg, botParams, newRespondFn, conversation.conversationId,
+        conversation.channelData
+    );
     const responses = [];
-    respondFn = _respondFnCollectorMiddleware(respondFn, responses);
-    respondFn = _respondFnPreprocessorActionsMiddleware(
-        respondFn, botParams.publisherId, botParams.botId, conversation.conversationId);
-    respondFn = _respondFnSignS3UrlsMiddleware(respondFn);
+    newRespondFn = respondFn;
+    newRespondFn = _respondFnSignS3UrlsMiddleware(newRespondFn);
+    newRespondFn = _respondFnCollectorMiddleware(newRespondFn, responses);
+    newRespondFn = _respondFnPreprocessorActionsMiddleware(
+        newRespondFn, botParams, conversation.conversationId,
+        conversation.channel, sendAsUser
+    );
 
-    await respondFn(message);
+    await newRespondFn(message);
     await _logResponseMessage(responses, botParams, conversation.conversationId, conversation.channel);
 }
 

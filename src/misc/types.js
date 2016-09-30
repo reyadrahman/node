@@ -32,7 +32,7 @@ export type MessageCard = {
     imageUrl: string,
     title?: string,
     subtitle?: string,
-    actions?: Array<MessageAction>,
+    actions?: MessageAction[],
 };
 
 export type DBMessage = {
@@ -44,9 +44,14 @@ export type DBMessage = {
     senderName?: string,
     id?: string,
     text?: string,
-    cards?: Array<MessageCard>,
-    actions?: Array<MessageAction>,
+    cards?: MessageCard[],
+    actions?: MessageAction[],
     senderProfilePic?: string,
+    poll?: {
+        pollId: string,
+        questionId: string,
+        isQuestion: boolean,
+    },
 };
 
 export type WebhookMessage = {
@@ -58,7 +63,7 @@ export type WebhookMessage = {
     senderId: string,
     senderName?: string,
     text?: string,
-    cards?: Array<MessageCard>,
+    cards?: MessageCard[],
     fetchCardImages?: Array<() => Promise<Buffer>>,
     senderProfilePic?: string,
 };
@@ -82,6 +87,10 @@ export type ResponseMessage = {
     actions?: MessageAction[],
     typingOn?: boolean,
     creationTimestamp?: number,
+    poll?: {
+        pollId: string,
+        questionId: string,
+    },
     preprocessorActions?: MessagePreprocessorAction[],
 };
 
@@ -193,6 +202,7 @@ export type ServerEnv = {
     DB_TABLE_AI_ACTIONS: string,
     DB_TABLE_USER_PREFS: string,
     DB_TABLE_SCHEDULED_TASKS: string,
+    DB_TABLE_POLL_QUESTIONS: string,
     S3_BUCKET_NAME: string,
     PUBLIC_PATH: string,
     PUBLIC_URL: string,

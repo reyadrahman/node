@@ -23,6 +23,7 @@ DB_TABLE_MESSAGES=
 DB_TABLE_AI_ACTIONS=
 DB_TABLE_USER_PREFS=
 DB_TABLE_SCHEDULED_TASKS=
+DB_TABLE_POLL_QUESTIONS=
 S3_BUCKET_NAME=
 IDENTITY_POOL_ID=
 IDENTITY_POOL_UNAUTH_ROLE_ARN=
@@ -276,7 +277,7 @@ function handler() {
 ```
 
 ## Deploy
-We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule, because it is not available in npm. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
+We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
 ```
 git submodule update --init
 ```
@@ -337,6 +338,13 @@ Then go to [my bots](https://dev.botframework.com/bots?id=botframework) and unde
 Currently Skype and Slack are supported.
 
 ## Development
+### Git submodules
+We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
+```
+git submodule update --init
+```
+You also need to run the above command after `git pull` if the submodule has been modified.
+
 ### Tests
 Make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for real use.
 

@@ -14,7 +14,7 @@ import jwkToPem from 'jwk-to-pem';
 const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
         DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
         DB_TABLE_AI_ACTIONS, DB_TABLE_USER_PREFS, DB_TABLE_SCHEDULED_TASKS,
-        S3_BUCKET_NAME, IDENTITY_POOL_ID, USER_POOL_ID} = ENV;
+        DB_TABLE_POLL_QUESTIONS, S3_BUCKET_NAME, IDENTITY_POOL_ID, USER_POOL_ID} = ENV;
 
 // this is used to verify signatures for user pool's JWT
 var _userPoolPems_;
@@ -77,7 +77,7 @@ export function dynamoCleanUpObj(obj: Object) {
     }, {});
 }
 
-export async function getBot(publisherId: string, botId: string): Promise<BotParams> {
+export async function getBot(publisherId: string, botId: string): Promise<?BotParams> {
     console.log('getBot publisherId: ', publisherId, ', botId: ', botId);
     const qres = await dynamoQuery({
         TableName: DB_TABLE_BOTS,
@@ -95,7 +95,7 @@ export async function getBot(publisherId: string, botId: string): Promise<BotPar
 }
 
 export async function getConversation(publisherId: string, conversationId: string)
-: Promise<Conversation>
+: Promise<?Conversation>
 {
     console.log('getConversation publisherId: ', publisherId, ', conversationId: ', conversationId);
     const qres = await dynamoQuery({
@@ -108,6 +108,29 @@ export async function getConversation(publisherId: string, conversationId: strin
     });
     if (qres.Count === 0) {
         throw new Error(`Cannot find conversation with id ${conversationId}`);
+    }
+
+    return qres.Items[0];
+}
+
+export async function getPollQuestion(
+    publisherId: string, botId: string,
+    pollId: string, questionId: string
+) : Promise<?BotParams>
+{
+    console.log('getPoll publisherId: ', publisherId, ', botId: ', botId, ', pollId');
+    const qres = await dynamoQuery({
+        TableName: DB_TABLE_POLL_QUESTIONS,
+        KeyConditionExpression: 'publisherId = :publisherId and botId_pollId_questionId = :bpq',
+        ExpressionAttributeValues: {
+            ':publisherId': publisherId,
+            ':bpq': composeKeys(botId, composeKeys(pollId, questionId)),
+        },
+    });
+    if (qres.Count === 0) {
+        throw new Error(`Cannot find poll question publisherId: ${publisherId}, ` +
+                        `botId: ${botId}, pollId: ${pollId}, ` +
+                        `questionId: ${questionId}`);
     }
 
     return qres.Items[0];
@@ -341,6 +364,26 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(DB_TABLE_SCHEDULED_TASKS);
+    }
+    if (!tables.includes(DB_TABLE_POLL_QUESTIONS)) {
+        console.log('creating table: DB_TABLE_POLL_QUESTIONS');
+        const tableParams = {
+            TableName : DB_TABLE_POLL_QUESTIONS,
+            KeySchema: [
+                { AttributeName: 'publisherId', KeyType: 'HASH' },
+                { AttributeName: 'botId_pollId_questionId', KeyType: 'RANGE' }
+            ],
+            AttributeDefinitions: [
+                { AttributeName: 'publisherId', AttributeType: 'S' },
+                { AttributeName: 'botId_pollId_questionId', AttributeType: 'S' },
+            ],
+            ProvisionedThroughput: {
+                ReadCapacityUnits: readCapacityUnits,
+                WriteCapacityUnits: writeCapacityUnits,
+            }
+        };
+        const res = await dynamoCreateTable(tableParams);
+        creatingTables.push(DB_TABLE_POLL_QUESTIONS);
     }
 
     await Promise.all(creatingTables.map(
