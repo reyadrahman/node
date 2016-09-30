@@ -1,8 +1,16 @@
 .add-bot-page-comp {
-    padding: 50px;
+    padding: 80px 50px 30px 50px;
     // display: flex;
     // align-items: center;
     // flex-direction: column;
+
+    .add-bot-section {
+        background: white;
+        border: 2px solid #e4e4e4;
+        max-width: 800px;
+        margin: 0 auto 30px auto;
+        padding: 30px;
+    }
 
     .title {
         letter-spacing: 4px;
@@ -15,7 +23,7 @@
         max-width: 900px;
         margin: 0 auto;
 
-        .inputsRow {
+        .inputs-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -26,19 +34,20 @@
                 flex: 0 0 auto;
                 width: 300px;
                 font-size: 14px;
-                color: rgb(60, 60, 60);
+                color: #6f6f6f;
             }
             .field {
                 flex: 1 0 auto;
             }
         }
 
-        .buttonArea {
-            text-align: right;
-            padding: 0px 50px 50px 50px;
+        .button-area {
+            display: flex;
+            justify-content: space-around;
+            padding: 50px;
 
-            .addBotButton {
-                width: 180px;
+            .button {
+                margin: 0 10px;
             }
         }
         .messages {

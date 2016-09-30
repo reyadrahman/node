@@ -1,6 +1,7 @@
 import React from 'react';
-import { Form, Input, Button, ButtonArea, TextArea, SuccessMessage,
+import { Form, Input, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
+import { Button } from 'react-bootstrap';
 import * as actions from '../../app-state/actions.js';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import { connect } from 'react-redux';
@@ -154,13 +155,12 @@ let AccountPage = React.createClass({
                     successMessage &&
                         <SuccessMessage message={successMessage} />
                 }
-                <ButtonArea className="profile-info-button-area">
-                    <Button
-                        className="profile-info-save-button"
-                        label={strings.save}
-                        type='submit'
-                    />
-                </ButtonArea>
+                <Button
+                    className="button"
+                    bsSize='large'
+                    type='submit'
+                    > { strings.save }
+                </Button>
             </Form>
         );
 
@@ -222,13 +222,11 @@ let AccountPage = React.createClass({
                         fetchingBots || emptyBotList || botGridUi
                     }
                     <Form className="add-bot-form" onSubmit={this.addBot}>
-                        <ButtonArea>
                             <Button
-                                className="add-bot-button"
-                                label={strings.addBot}
+                                className="button"
+                                bsSize='large'
                                 type='submit'
-                            />
-                        </ButtonArea>
+                            >{ strings.addBot }</Button>
                     </Form>
                 </div>
             </div>
