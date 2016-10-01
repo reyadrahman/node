@@ -16,6 +16,7 @@ const VALID_ENV_VARS = [
     { name: 'DB_TABLE_AI_ACTIONS',            required: true  },
     { name: 'DB_TABLE_USER_PREFS',            required: true  },
     { name: 'DB_TABLE_SCHEDULED_TASKS',       required: true  },
+    { name: 'DB_TABLE_POLL_QUESTIONS',        required: true  },
     { name: 'S3_BUCKET_NAME',                 required: true  },
     { name: 'IDENTITY_POOL_ID',               required: true  },
     { name: 'IDENTITY_POOL_UNAUTH_ROLE_ARN',  required: true  },

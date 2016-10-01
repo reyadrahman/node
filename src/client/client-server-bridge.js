@@ -17,7 +17,7 @@ export async function fetchBots(jwtIdToken: string) {
     return await fetchg2j('/api/fetch-bots', { jwtIdToken });
 }
 
-export async function fetchConversations(jwtIdToken: string, botId: string|undefined) {
+export async function fetchConversations(jwtIdToken: string, botId: string) {
     console.log('fetchConversations: jwtIdToken: ', jwtIdToken, 'botId:', botId);
     return await fetchg2j('/api/fetch-conversations', { jwtIdToken, botId });
 }

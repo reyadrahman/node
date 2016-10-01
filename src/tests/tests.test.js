@@ -1,4 +1,3 @@
-/* @flow */
 
 import '../server/preamble.js';
 import 'babel-polyfill';

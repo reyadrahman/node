@@ -21,7 +21,6 @@ import { initResources } from '../aws/aws.js';
 import { ENV } from './server-utils.js';
 import { Server as WebSocketServer } from 'ws';
 import initializeRoutes from './server-router.js';
-import { WebReqBody } from '../misc/types.js';
 import { websocketMessage } from './channels/web.js';
 import uuid from 'node-uuid';
 const debug = require('debug')('app:server');
