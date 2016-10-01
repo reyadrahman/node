@@ -382,22 +382,22 @@ let Home = React.createClass({
                     </div>
 
                     <Grid className="screenshots-grid">
-                        <Col xs={12} sm={6} md={4}>
+                        <Col xs={12} sm={6} md={4} className="screenshot">
                             <a href="https://www.messenger.com/t/257424221305928" title="Messenger" className="messenger"></a>
                         </Col>
-                        <Col xs={12} sm={6} md={4}>
+                        <Col xs={12} sm={6} md={4} className="screenshot">
                             <a href="https://slack.com/signin?redir=%2Foauth%2Freflow%3Fclient_id%3D60397725745.69597352256%26redirect_uri%3Dhttps%253A%252F%252Fslack.botframework.com%252FHome%252Fauth%26state%3Ddeepiks%26scope%3Dbot" title="Slack" className="slack"></a>
                         </Col>
-                        <Col xs={12} sm={6} md={4}>
+                        <Col xs={12} sm={6} md={4} className="screenshot">
                             <a href="https://webchat.botframework.com/embed/deepiks?s=B3lvwUz4p0Q.cwA.-YA.toIk9HIRPR2aBTvrdCb5YYX9xcoHd18ibusSV29lyeg" title="Web" className="web"></a>
                         </Col>
-                        <Col xs={12} sm={6} md={4}>
+                        <Col xs={12} sm={6} md={4} className="screenshot">
                             <a href="https://telegram.me/deepiks_painting_bot" title="Telegram" className="telegram"></a>
                         </Col>
-                        <Col xs={12} sm={6} md={4}>
+                        <Col xs={12} sm={6} md={4} className="screenshot">
                             <a href="https://join.skype.com/bot/e105d635-f622-4dfa-a35a-6844809b62ce" title="Skype"className="skype"></a>
                         </Col>
-                        <Col xs={12} sm={6} md={4}>
+                        <Col xs={12} sm={6} md={4} className="screenshot">
                             <a href="mailto:deepiks_painting@sparkbot.io" title="Spark" className="spark"></a>
                         </Col>
                     </Grid>
