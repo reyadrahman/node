@@ -504,7 +504,7 @@ let Home = React.createClass({
                             <img src={nadellaUrl} className="avatar" />
                         </Carousel.Item>
                         <Carousel.Item className="carousel-item">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <p><i>No one wants to have to install a new app for every business or service that they want to interact with. We think that you should just be able to message a business in the same way that you message a friend.</i> Mark Zuckerberg, CEO, Facebook</p>
                             <img src={zuckerbergUrl} className="avatar" />
                         </Carousel.Item>
                         <Carousel.Item className="carousel-item">
