@@ -1,4 +1,18 @@
 .users-page-comp {
     padding-top: 60px;
     padding-left: 20px;
+
+    td.user-id {
+        word-break: break-all;
+        width: 300px;
+    }
+
+    td.actions {
+        width: 50px;
+        text-align: center;
+    }
+
+    .spinner {
+        font-size: 24px;
+    }
 }

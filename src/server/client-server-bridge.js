@@ -214,11 +214,8 @@ async function fetchUsers(identityId, botId) {
             ':pid': identityId,
             ':bid': botId || undefined
         },
-        // Limit: 50,
         ScanIndexForward:          false,
     });
-
-    console.log(qres);
 
     return qres.Items || [];
 }

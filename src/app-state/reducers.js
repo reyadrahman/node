@@ -65,6 +65,17 @@ export function currentUser(state = initAppState.currentUser, action) {
     // the rest of these actions require an active user
     if (!state.signedIn) return state;
 
+    if (action.type === 'currentUser/setUsersState') {
+        return {
+            ...state,
+            usersState: {
+                hasFetched:    true,
+                users: action.users,
+                errorMessage:  '',
+            }
+        };
+    }
+
     if (action.type === 'currentUser/resetUsersState') {
         return {
             ...state,
@@ -75,7 +86,7 @@ export function currentUser(state = initAppState.currentUser, action) {
     if (action.type === 'currentUser/fetchUsersFailed') {
         return {
             ...state,
-            botsState: {
+            usersState: {
                 hasFetched:   false,
                 users:         [],
                 errorMessage: action.errorMessage,

@@ -42,9 +42,70 @@ let UsersPage = React.createClass({
             return null;
         }
 
+        let content;
+
+        if (!currentUser.usersState.hasFetched) {
+            if (currentUser.usersState.errorMessage) {
+                content = (
+                    <tr>
+                        <td colSpan="5" className="text-center">{currentUser.usersState.errorMessage}</td>
+                    </tr>
+                );
+            } else {
+                content = (
+                    <tr>
+                        <td colSpan="5" className="text-center spinner"><i className="icon-spinner animate-spin"/></td>
+                    </tr>
+                );
+            }
+        } else {
+            content = currentUser.usersState.users.map(function (user) {
+                let userId = user.botId_userId.split('__')[1];
+
+                return (
+                    <tr>
+                        <td className="user-id">{userId}</td>
+                        <td>-</td>
+                        <td>{user.role || 'User'}</td>
+                        <td>-</td>
+                        <td className="actions">
+                            <a href={`/users/edit/${userId}`}>
+                                <i className="icon-edit"/>
+                            </a>
+                        </td>
+                    </tr>
+                )
+            });
+        }
+
         return (
-            <div className="users-page-comp">
-                Users table here
+            <div className={`users-page-comp ${className}`}>
+                <div className="panel">
+                    <div className="panel-heading">
+                        <h1>Users</h1>
+                    </div>
+
+                    <div className="panel-body">
+                        <table className="table table-bordered table-hover table-striped">
+                            <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Channel</th>
+                                <th>Role</th>
+                                <th>Last Chat</th>
+                                <th/>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {content}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="panel-footer text-right">
+                        <a href="/users/add" className="btn btn-primary">Add User</a>
+                    </div>
+                </div>
             </div>
         );
     }
