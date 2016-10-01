@@ -174,14 +174,43 @@ $navbarHeight: 50px;
     }
 
     .screenshots {
+
         .screenshots-grid {               
-            img {
-                width: 80%;
-                cursor: pointer;
-                margin-top: 15px;
-                margin-left: 10%;
+            a {
+                background-repeat: no-repeat;
+                background-size: contain;
                 border: 1px solid #bbb;
                 border-radius: 5px;
+                cursor: pointer;
+                display: block;
+                height: 460px;
+                margin-top: 25px;
+                margin-left: 45px;
+                width: 260px;
+
+                &.messenger {
+                    background-image: url('../../resources/channels/deepiks-painting-messenger.png');
+                }
+
+                &.slack {
+                    background-image: url('../../resources/channels/deepiks-painting-slack.png');
+                }
+
+                &.web {
+                    background-image: url('../../resources/channels/deepiks-painting-web.png');
+                }
+
+                &.telegram {
+                    background-image: url('../../resources/channels/deepiks-painting-telegram.png');
+                }
+
+                &.skype {
+                    background-image: url('../../resources/channels/deepiks-painting-skype.png');
+                }
+
+                &.spark {
+                    background-image: url('../../resources/channels/deepiks-painting-spark.png');
+                }
             }
         }
     }
