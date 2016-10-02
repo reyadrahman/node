@@ -6,7 +6,7 @@ import {connect} from 'react-redux';
 import {withRouter} from 'react-router';
 
 import {
-    Button, FormGroup, ControlLabel, FormControl
+    Button, FormGroup, ControlLabel, FormControl, Alert
 } from 'react-bootstrap';
 
 let UserSavePage = React.createClass({
@@ -16,7 +16,9 @@ let UserSavePage = React.createClass({
                 id:       '',
                 channel:  '',
                 category: ''
-            }
+            },
+            saved: false,
+            busy: false
         };
     },
 
@@ -29,9 +31,15 @@ let UserSavePage = React.createClass({
 
     async save(e) {
         e.preventDefault();
+
+        this.setState({busy: true});
+
         let user   = this.state.user;
         user.botId = this.props.currentUser.selectedBotId;
         let saved  = await (await this.props.saveUser(this.props.params.botId_userId, user)).json();
+
+        this.setState({saved: true, busy: false});
+        setTimeout(() => {this.setState({saved: null})}, 2000);
 
         if (!this.props.params.botId_userId) {
             this.props.router.push(`/users/edit/${saved.botId_userId}`);
@@ -84,7 +92,7 @@ let UserSavePage = React.createClass({
             return;
         }
 
-        if (params.botId_userId != oldProps.params.botId_userId) {
+        if (oldProps.params.botId_userId && params.botId_userId != oldProps.params.botId_userId) {
             this.fetchUser();
         }
     },
@@ -146,6 +154,12 @@ let UserSavePage = React.createClass({
             );
         }
 
+        let alert = '';
+
+        if (this.state.saved) {
+            alert = <Alert bsStyle="success">User saved</Alert>;
+        }
+
         return (
             <div className={`users-page-comp ${className}`}>
                 <div className="panel">
@@ -157,10 +171,18 @@ let UserSavePage = React.createClass({
                         {content}
                     </div>
 
-                    <div className="panel-footer text-right">
-                        <Button onClick={this.save} bsStyle="primary" disabled={!user.id}>
-                            Save User
-                        </Button>
+                    <div className="panel-footer">
+                        <div className="row">
+                            <div className="col-xs-4"/>
+                            <div className="col-xs-4 submit-alert">
+                                {alert}
+                            </div>
+                            <div className="col-xs-4 text-right">
+                                <Button onClick={this.save} bsStyle="primary" disabled={!user.id || this.state.busy}>
+                                    Save User
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
