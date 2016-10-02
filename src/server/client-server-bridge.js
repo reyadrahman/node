@@ -10,9 +10,11 @@ import type { Request, Response } from 'express';
 import express from 'express';
 import ciscospark from 'ciscospark';
 
-const { AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
-        DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, CONTACT_EMAIL,
-        OWN_BASE_URL } = ENV;
+const {
+          AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
+          DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, DB_TABLE_USER_PREFS,
+          CONTACT_EMAIL, OWN_BASE_URL
+      } = ENV;
 
 const routes = express.Router();
 
@@ -71,6 +73,38 @@ routes.get('/fetch-bots', (req, res, next) => {
     }
     const { identityId } = req.customData;
     fetchBots(identityId)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+
+});
+
+routes.get('/fetch-users', (req, res, next) => {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+    const { identityId } = req.customData;
+    fetchUsers(identityId, req.query.botId)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+
+});
+
+routes.get('/fetch-user', (req, res, next) => {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+    const {identityId} = req.customData;
+    fetchUser(identityId, req.query.botId, req.query.userId)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+
+});
+
+routes.post('/save-user', (req, res, next) => {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+    saveUser(req.customData.identityId, req.body.botId_userId, req.body.model)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -189,6 +223,72 @@ async function fetchBots(identityId) {
     });
     console.log('qres: ', qres);
     return qres.Items || [];
+}
+
+async function fetchUsers(identityId, botId) {
+    console.log('fetchUsers: identityId=', identityId, 'botId=', botId);
+    const qres = await aws.dynamoQuery({
+        TableName:                 DB_TABLE_USER_PREFS,
+        KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_userId, :bid)',
+        // FilterExpression:          botId ? 'begins_with(botId_userId, :bid)' : undefined,
+        ExpressionAttributeValues: {
+            ':pid': identityId,
+            ':bid': botId || undefined
+        },
+        ScanIndexForward:          false,
+    });
+
+    return qres.Items || [];
+}
+
+async function fetchUser(identityId, botId, userId) {
+    console.log('fetchUsers: identityId=', identityId, 'botId=', botId);
+    const qres = await aws.dynamoQuery({
+        TableName:                 DB_TABLE_USER_PREFS,
+        KeyConditionExpression:    'publisherId = :pid AND botId_userId = :pk',
+        ExpressionAttributeValues: {
+            ':pid': identityId,
+            ':pk':  aws.composeKeys(botId, userId)
+        },
+        Limit:                     1,
+        ScanIndexForward:          false,
+    });
+
+    return qres.Items && qres.Items[0] || null;
+}
+
+async function saveUser(identityId, botId_userId, model) {
+    if (botId_userId) {
+        let user =  await aws.dynamoUpdate({
+            TableName:                 DB_TABLE_USER_PREFS,
+            Key:                       {
+                publisherId: identityId,
+                             botId_userId
+            },
+            UpdateExpression:          'set category = :category, channel = :channel',
+            ExpressionAttributeValues: {
+                ':category': model.category || null,
+                ':channel':  model.channel || null
+            },
+            ReturnValues:              'ALL_NEW'
+        });
+        return user.Attributes;
+    } else {
+        if (!model.id) {
+            throw new Error('User id must be present');
+        }
+        await aws.dynamoPut({
+            TableName:    DB_TABLE_USER_PREFS,
+            Item:         {
+                publisherId:  identityId,
+                botId_userId: aws.composeKeys(model.botId, model.id),
+                category:     model.category || null,
+                channel:      model.channel || null
+            }
+        });
+
+        return fetchUser(identityId, model.botId, model.id);
+    }
 }
 
 async function fetchConversations(identityId, botId) {

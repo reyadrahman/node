@@ -1,0 +1,28 @@
+.users-page-comp {
+    padding-top: 60px;
+    padding-left: 20px;
+
+    td.user-id {
+        word-break: break-all;
+        width: 300px;
+    }
+
+    td.actions {
+        width: 50px;
+        text-align: center;
+    }
+
+    .spinner {
+        font-size: 24px;
+    }
+
+    .input-group-addon {
+        font-size: 13px;
+    }
+
+    .submit-alert .alert{
+        padding-top: 5px;
+        padding-bottom: 5px;
+        text-align: center;
+    }
+}

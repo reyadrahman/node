@@ -205,6 +205,48 @@ export function fetchBots() {
     }
 }
 
+export function fetchUsers(botId) {
+    return async function(dispatch: Function) {
+        dispatch({ type: 'currentUser/resetUsersState' });
+        try {
+            const session = await aws.getCurrentSession();
+            const users = await bridge.fetchUsers(
+                session.getIdToken().getJwtToken(),
+                botId
+            );
+            dispatch({
+                type: 'currentUser/setUsersState',
+                      users,
+            });
+        } catch(error) {
+            dispatch({
+                type: 'currentUser/fetchUsersFailed',
+                errorMessage: 'Could not fetch users for selected bot',
+            });
+        }
+    }
+}
+
+export function fetchUser(botId, userId) {
+    return async function (dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        return bridge.fetchUser(
+            session.getIdToken().getJwtToken(),
+            botId, userId
+        );
+    }
+}
+
+export function saveUser(botId_userId, model) {
+    return async function (dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        return bridge.saveUser(
+            session.getIdToken().getJwtToken(),
+            botId_userId, model
+        );
+    }
+}
+
 export function fetchConversations(botId) {
     return async function(dispatch: Function) {
         dispatch({ type: 'currentUser/resetConversationsState' });

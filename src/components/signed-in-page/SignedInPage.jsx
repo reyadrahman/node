@@ -72,25 +72,31 @@ let SignedInPage = React.createClass({
             {
                 label: sideMenuStrings.account,
                 link: '/account',
-                icon: 'user',
+                glyph: 'user',
                 value: 'account',
+            },
+            {
+                label: sideMenuStrings.users,
+                link: '/users',
+                icon: 'icon-users',
+                value: 'users',
             },
             {
                 label: sideMenuStrings.messages,
                 link: '/messages',
-                icon: 'comment',
+                glyph: 'comment',
                 value: 'messages',
             },
             {
                 label: sideMenuStrings.feeds,
                 link: '/feeds',
-                icon: 'comment',
+                glyph: 'comment',
                 value: 'feeds',
             },
             {
                 label: sideMenuStrings.notifications,
                 link: '/notifications',
-                icon: 'comment',
+                glyph: 'comment',
                 value: 'notifications',
             },
         ];
