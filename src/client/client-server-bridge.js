@@ -18,8 +18,15 @@ export async function fetchBots(jwtIdToken: string) {
 }
 
 export async function fetchUsers(jwtIdToken: string, botId: string|undefined) {
-    console.log('fetchConversations: jwtIdToken: ', jwtIdToken, 'botId:', botId);
     return await fetchg2j('/api/fetch-users', { jwtIdToken, botId });
+}
+
+export async function fetchUser(jwtIdToken: string, botId: string, userId: string) {
+    return await fetchg2j('/api/fetch-user', {jwtIdToken, botId, userId});
+}
+
+export async function saveUser(jwtIdToken: string, botId_userId: string, model: object) {
+    return await fetchjp('/api/save-user', {jwtIdToken, botId_userId, model});
 }
 
 export async function fetchConversations(jwtIdToken: string, botId: string|undefined) {

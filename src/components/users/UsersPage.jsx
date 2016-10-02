@@ -5,9 +5,23 @@ import * as actions from '../../app-state/actions.js';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
 
+import {Pagination} from 'react-bootstrap';
+
 let UsersPage = React.createClass({
     getInitialState() {
-        return {};
+        return {
+            page:         1,
+            perPage:      20,
+            searchFilter: ''
+        };
+    },
+
+    onFilterChange(e){
+        this.setState({searchFilter: e.target.value.toLowerCase()});
+    },
+
+    paginate(page) {
+        this.setState({page});
     },
 
     componentDidMount() {
@@ -22,7 +36,7 @@ let UsersPage = React.createClass({
     },
 
     componentDidUpdate(oldProps) {
-        const {params, currentUser, fetchUsers} = this.props;
+        const {currentUser, fetchUsers} = this.props;
         if (!currentUser.signedIn) {
             return;
         }
@@ -33,16 +47,15 @@ let UsersPage = React.createClass({
     },
 
     render() {
-        const {
-                  className, params, currentUser, i18n,
-                  i18n: {strings: {UsersPage: strings}}
-              } = this.props;
+        const {className, currentUser} = this.props;
 
         if (!currentUser.signedIn) {
             return null;
         }
 
         let content;
+
+        let pagination = '';
 
         if (!currentUser.usersState.hasFetched) {
             if (currentUser.usersState.errorMessage) {
@@ -59,19 +72,45 @@ let UsersPage = React.createClass({
                 );
             }
         } else {
-            content = currentUser.usersState.users.map(function (user) {
+            let pageUsers, users;
+
+            users = currentUser.usersState.users;
+
+            if (this.state.searchFilter) {
+                users = users.filter(user => {
+                    let userId = user.botId_userId.split('__')[1];
+                    return userId.toLowerCase().indexOf(this.state.searchFilter) > -1;
+                });
+            }
+
+            if (users.length > this.state.perPage) {
+                pageUsers = users.slice((this.state.page - 1) * this.state.perPage, this.state.page * this.state.perPage);
+
+                pagination = (
+                    <Pagination
+                        activePage={this.state.page}
+                        items={Math.ceil(users.length / this.state.perPage)}
+                        onSelect={this.paginate}
+                    />
+                );
+
+            } else {
+                pageUsers = users;
+            }
+
+            content = pageUsers.map(function (user) {
                 let userId = user.botId_userId.split('__')[1];
 
                 return (
                     <tr>
                         <td className="user-id">{userId}</td>
-                        <td>-</td>
-                        <td>{user.role || 'User'}</td>
+                        <td>{user.channel || '-'}</td>
+                        <td>{user.category || 'User'}</td>
                         <td>-</td>
                         <td className="actions">
-                            <a href={`/users/edit/${userId}`}>
+                            <Link to={`/users/edit/${user.botId_userId}`}>
                                 <i className="icon-edit"/>
-                            </a>
+                            </Link>
                         </td>
                     </tr>
                 )
@@ -83,6 +122,13 @@ let UsersPage = React.createClass({
                 <div className="panel">
                     <div className="panel-heading">
                         <h1>Users</h1>
+                        <div className="input-group col-xs-4">
+                            <input type="text" name="filter"
+                                   className="form-control" value={ this.state.searchFilter }
+                                   onChange={this.onFilterChange}
+                                   placeholder="Search..."/>
+                            <div className="input-group-addon"><i className="icon-search"/></div>
+                        </div>
                     </div>
 
                     <div className="panel-body">
@@ -100,10 +146,12 @@ let UsersPage = React.createClass({
                             {content}
                             </tbody>
                         </table>
+
+                        {pagination}
                     </div>
 
                     <div className="panel-footer text-right">
-                        <a href="/users/add" className="btn btn-primary">Add User</a>
+                        <Link to="/users/add" className="btn btn-primary">Add User</Link>
                     </div>
                 </div>
             </div>
