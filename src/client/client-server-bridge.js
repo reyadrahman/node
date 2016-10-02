@@ -29,7 +29,7 @@ export async function saveUser(jwtIdToken: string, botId_userId: string, model: 
     return await fetchjp('/api/save-user', {jwtIdToken, botId_userId, model});
 }
 
-export async function fetchConversations(jwtIdToken: string, botId: string|undefined) {
+export async function fetchConversations(jwtIdToken: string, botId: string) {
     console.log('fetchConversations: jwtIdToken: ', jwtIdToken, 'botId:', botId);
     return await fetchg2j('/api/fetch-conversations', { jwtIdToken, botId });
 }

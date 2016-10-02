@@ -1,6 +1,7 @@
 import React from 'react';
-import { Form, Input, Button, TextArea, SuccessMessage,
+import { Form, Input, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
+import { Button } from 'react-bootstrap';
 import * as actions from '../../app-state/actions.js';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
@@ -75,100 +76,105 @@ let AddBotPage = React.createClass({
 
         return (
             <div className={`add-bot-page-comp ${className || ''}`}>
-                <h2 className="title">{strings.title}</h2>
-                <Form
-                    className="form"
-                    onSubmit={this.addBot}
-                >
-                    <div className="inputs-row">
-                        <label>{strings.botName}</label>
-                        <Input
-                            className="field"
-                            value={state.botName}
-                            onChange={this.botNameChanged}
-                        />
-                    </div>
-                    <div className="inputs-row">
-                        <label>{strings.ciscosparkAccessToken}</label>
-                        <Input
-                            className="field"
-                            value={state.ciscosparkAccessToken}
-                            onChange={this.ciscosparkAccessTokenChanged}
-                        />
-                    </div>
-                    <div className="inputs-row">
-                        <label>{strings.messengerPageAccessToken}</label>
-                        <Input
-                            className="field"
-                            value={state.messengerPageAccessToken}
-                            onChange={this.messengerPageAccessTokenChanged}
-                        />
-                    </div>
-                    <div className="inputs-row">
-                        <label>{strings.messengerAppSecret}</label>
-                        <Input
-                            className="field"
-                            value={state.messengerAppSecret}
-                            onChange={this.messengerAppSecretChanged}
-                        />
-                    </div>
-                    <div className="inputs-row">
-                        <label>{strings.microsoftAppId}</label>
-                        <Input
-                            className="field"
-                            value={state.microsoftAppId}
-                            onChange={this.microsoftAppIdChanged}
-                        />
-                    </div>
-                    <div className="inputs-row">
-                        <label>{strings.microsoftAppPassword}</label>
-                        <Input
-                            className="field"
-                            value={state.microsoftAppPassword}
-                            onChange={this.microsoftAppPasswordChanged}
-                        />
-                    </div>
-                    <div className="inputs-row">
-                        <label>{strings.witAccessToken}</label>
-                        <Input
-                            className="field"
-                            value={state.witAccessToken}
-                            onChange={this.witAccessTokenChanged}
-                        />
-                    </div>
-                    <div className="inputs-row">
-                        <label>{strings.twitterConsumerKey}</label>
-                        <Input
-                            className="field"
-                            value={state.twitterConsumerKey}
-                            onChange={this.twitterConsumerKeyChanged}
-                        />
-                    </div>
-                    <div className="inputs-row">
-                        <label>{strings.twitterConsumerSecret}</label>
-                        <Input
-                            className="field"
-                            value={state.twitterConsumerSecret}
-                            onChange={this.twitterConsumerSecretChanged}
-                        />
-                    </div>
-                    <div className="messages">
-                        <ErrorMessage message={errorMessage} />
-                        <SuccessMessage className="success" message={successMessage} />
-                    </div>
-                    <div className="button-area">
-                        <Button
-                            className="cancel-button"
-                            label={strings.cancel}
-                            onClick={this.cancel}
-                        />
-                        <Button
-                            className="add-bot-button"
-                            label={strings.addBot}
-                            type="submit"
-                        />
-                    </div>
-                </Form>
+                <div className="add-bot-section">
+                    <h1 className="title">{strings.title}</h1>
+                    <Form
+                        className="form"
+                        onSubmit={this.addBot}
+                    >
+                        <div className="inputs-row">
+                            <label>{strings.botName}</label>
+                            <Input
+                                className="field"
+                                value={state.botName}
+                                onChange={this.botNameChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.ciscosparkAccessToken}</label>
+                            <Input
+                                className="field"
+                                value={state.ciscosparkAccessToken}
+                                onChange={this.ciscosparkAccessTokenChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.messengerPageAccessToken}</label>
+                            <Input
+                                className="field"
+                                value={state.messengerPageAccessToken}
+                                onChange={this.messengerPageAccessTokenChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.messengerAppSecret}</label>
+                            <Input
+                                className="field"
+                                value={state.messengerAppSecret}
+                                onChange={this.messengerAppSecretChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.microsoftAppId}</label>
+                            <Input
+                                className="field"
+                                value={state.microsoftAppId}
+                                onChange={this.microsoftAppIdChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.microsoftAppPassword}</label>
+                            <Input
+                                className="field"
+                                value={state.microsoftAppPassword}
+                                onChange={this.microsoftAppPasswordChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.witAccessToken}</label>
+                            <Input
+                                className="field"
+                                value={state.witAccessToken}
+                                onChange={this.witAccessTokenChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.twitterConsumerKey}</label>
+                            <Input
+                                className="field"
+                                value={state.twitterConsumerKey}
+                                onChange={this.twitterConsumerKeyChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.twitterConsumerSecret}</label>
+                            <Input
+                                className="field"
+                                value={state.twitterConsumerSecret}
+                                onChange={this.twitterConsumerSecretChanged}
+                            />
+                        </div>
+                        <div className="messages">
+                            <ErrorMessage message={errorMessage} />
+                            <SuccessMessage className="success" message={successMessage} />
+                        </div>
+                        <div className="button-area">
+                            <Button
+                                className="button"
+                                bsSize="large"
+                                onClick={this.cancel}
+                                > {strings.cancel}
+                            </Button>
+                            <Button
+                                className="button"
+                                bsStyle="primary"
+                                bsSize="large"
+                                type="submit"
+                                > { strings.addBot}
+                            </Button>
+                        </div>
+                    </Form>
+                </div>
             </div>
         );
     }

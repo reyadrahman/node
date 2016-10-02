@@ -44,7 +44,7 @@ let FeedsPage = React.createClass({
         );
 
         const newFeedButton = (
-            <Button className="new-feed-button" bsSize="large" onClick={this.newFeed}>
+            <Button className="button" bsSize="large" onClick={this.newFeed}>
                 { strings.newFeed }
             </Button>
         );
@@ -60,8 +60,11 @@ let FeedsPage = React.createClass({
         if (_.isEmpty(bots)) {
             return wrapPage(wrapFeedsSection([
                 <h2>{strings.noBots}</h2>,
-                <Button className="new-bot-button" bsSize="large" onClick={this.newBot}>
-                    { strings.newBot }
+                <Button
+                    className="button"
+                    bsSize="large"
+                    onClick={this.newBot}
+                    > { strings.newBot }
                 </Button>
             ]));
         }
@@ -242,7 +245,13 @@ let NewFeed = React.createClass({
                     </FormGroup>
                     <HelpBlock>* {strings.requiredField}</HelpBlock>
                     <div className="button-area">
-                        <Button bsStyle="primary" bsSize="large" type="submit">{strings.create}</Button>
+                        <Button
+                            className="button"
+                            bsStyle="primary"
+                            bsSize="large"
+                            type="submit"
+                            >{strings.create}
+                        </Button>
                     </div>
                 </form>
             </div>

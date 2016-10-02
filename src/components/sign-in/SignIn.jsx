@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Glyphicon } from 'react-bootstrap';
+import { Glyphicon, Button } from 'react-bootstrap';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../app-state/actions.js';
@@ -31,16 +31,12 @@ let SignIn = React.createClass({
         const { i18n: { strings: { signIn: strings } },
                 errorMessage, successMessage } = this.props;
         const { state } = this;
-        const buttons = [
-            { label: strings.signIn, type: 'submit' },
-        ];
 
         return (
             <div className="sign-in-modal-comp">
                 <Title title={strings.title} />
                 <Form
                     onSubmit={this.signIn}
-                    buttons={buttons}
                 >
                     <div className="inputs-row">
                         <label>{strings.email}</label>
@@ -63,6 +59,13 @@ let SignIn = React.createClass({
                     </div>
                     <ErrorMessage message={errorMessage} />
                     <SuccessMessage message={successMessage} />
+                    <Button
+                        className="button"
+                        bsStyle="primary"
+                        bsSize='large'
+                        type='submit'
+                        > { strings.signIn }
+                    </Button>
                 </Form>
             </div>
         );

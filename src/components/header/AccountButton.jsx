@@ -44,10 +44,10 @@ let AccountButton = React.createClass({
                     onSelect={this.onSignUpOrVerifyClick}
                     pullRight
                 >
-                    <Button onClick={this.onSignInClick}>
+                    <Button className="sign-in-btn" onClick={this.onSignInClick}>
                         { strings.signIn }
                     </Button>
-                    <Dropdown.Toggle />
+                    <Dropdown.Toggle className="arrow-btn" />
                     <Dropdown.Menu>
                         <MenuItem eventKey="signUp">
                             <Glyphicon glyph="plus-sign" className="icon" /> { strings.signUp }
@@ -67,10 +67,10 @@ let AccountButton = React.createClass({
                 pullRight
                 onToggle={this.onToggle}
             >
-                <Button onClick={this.onNameClick}>
+                <Button className="account-btn" onClick={this.onNameClick}>
                     { currentUser.attributes.given_name }
                 </Button>
-                <Dropdown.Toggle />
+                <Dropdown.Toggle className="arrow-btn" />
                 <Dropdown.Menu>
                     <MenuItem eventKey="account">
                         <Glyphicon glyph="user" className="icon" /> { strings.account }

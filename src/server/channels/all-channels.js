@@ -5,12 +5,10 @@ import * as messenger from './messenger.js';
 import * as ms from './ms.js';
 import * as aws from '../../aws/aws.js';
 import { waitForAll } from '../../misc/utils.js';
-import type { ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
+import type { ResponseMessage, BotParams, Conversation } from '../../misc/types.js';
 import { ENV } from '../server-utils.js';
 import { toStr } from '../../misc/utils.js';
-// TODO remove dependency on deepiks-bot
-//      instead take a callback for logging
-import { logResponseMessage } from '../deepiks-bot/deepiks-bot.js';
+import { coldSend as deepiksColdSend } from '../deepiks-bot/deepiks-bot.js';
 import _ from 'lodash';
 
 const { DB_TABLE_CONVERSATIONS } = ENV;
@@ -22,24 +20,27 @@ export const webhooks = {
     // web.webhook not here, handled with websocket
 };
 
-export async function send(botParams: BotParams, conversationId: string,
-                           channel: string, message: ResponseMessage,
-                           channelData?: ChannelData)
+export async function send(botParams: BotParams, conversation: Conversation,
+                           message: ResponseMessage)
 {
+    const { channel, conversationId, channelData } = conversation;
+    let sendFn;
     if (channel === 'messenger') {
-        await messenger.send(botParams, conversationId, message);
+        sendFn = m => messenger.send(botParams, conversationId, m);
     } else if (channel === 'ciscospark') {
-        await spark.send(botParams, conversationId, message);
+        sendFn = m => spark.send(botParams, conversationId, m);
     } else if (['skype', 'slack', 'telegram', 'webchat'].includes(channel)) {
         if (!channelData) {
             throw new Error('send: channelData is missing');
         }
-        await ms.sendCold(botParams, channelData, message);
-    } else {
+        sendFn = m => ms.coldSend(botParams, channelData, m);
+    }
+
+    if (!sendFn) {
         throw new Error(`send: unsupported channel ${channel}`);
     }
 
-    await logResponseMessage(message, botParams, conversationId, channel);
+    await deepiksColdSend(message, botParams, conversation, sendFn);
 }
 
 export async function sendToMany(botParams: BotParams, message: ResponseMessage, categories?: string[]) {
@@ -49,7 +50,6 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
         TableName: DB_TABLE_CONVERSATIONS,
         KeyConditionExpression: 'publisherId = :pid',
         FilterExpression: 'botId = :bid and subscribed <> :s',
-        ProjectionExpression: 'publisherId, conversationId, channel, channelData, subscriptions',
         ExpressionAttributeValues: {
             ':pid': botParams.publisherId,
             ':bid': botParams.botId,
@@ -76,7 +76,7 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
     console.log('sendAll: sending to (showing first 10): ', toStr(qItems.slice(0, 10)));
 
     await waitForAll(qItems.map(
-        x => send(botParams, x.conversationId, x.channel, message, x.channelData)
+        x => send(botParams, x, message)
     ));
 
     console.log('sendAll: sent all messages');

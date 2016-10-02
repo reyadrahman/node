@@ -1,7 +1,7 @@
 /* @flow */
 
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import { callbackToPromise, waitForAll } from '../../misc/utils.js';
+import { callbackToPromise, waitForAll, timeout } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
@@ -13,7 +13,11 @@ import _ from 'lodash';
 
 const MAX_MS_CAROUSEL_ITEM_COUNT = 5;
 
-async function handleWebhookRequest(req: Request, res: Response) {
+export async function webhook(req: Request, res: Response) {
+    if (req.method !== 'POST') {
+        res.send();
+        throw new Error(`req.method is ${req.method}`);
+    }
     console.log('ms-webhook raw req.body: ', inspect(req.body, {depth:null}));
     console.log('ms-webhook raw req.headers: ', inspect(req.headers, {depth:null}));
     const { publisherId, botId } = req.params;
@@ -99,20 +103,23 @@ async function processMessage(session, authRequest, botParams) {
     console.log('ms-webhook: got message: ', message);
     console.log('ms-webhook: attachments: ', atts);
 
-    const responses = [];
-    setTimeout(() => {
-        if (responses.length === 0) {
+    let responseCount = 0;
+    // will await later
+    const sendTypingOnPromise = timeout(CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000)
+        .then(() => {
+            if (responseCount > 0) return;
+            // TODO return a promise that resolves when sendTyping is sent
             session.sendTyping();
-        }
-    }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
+        });
+
     await deepiksBot(message, botParams, x => {
-        responses.push(send(m.address.channelId, x, y => session.send(y), session));
+        responseCount++;
+        return send(m.address.channelId, x, y => session.send(y), session);
     }, {
         address: _.omit(m.address, 'user'),
     });
 
-    console.log('ms-webhook: await all responses');
-    await waitForAll(responses);
+    await sendTypingOnPromise;
 };
 
 async function getBinary(requestFn, url) {
@@ -202,10 +209,10 @@ export async function send(channel: string, message: ResponseMessage,
     }
 }
 
-export async function sendCold(botParams: BotParams, channelData: ChannelData,
+export async function coldSend(botParams: BotParams, channelData: ChannelData,
                                message: ResponseMessage)
 {
-    console.log('sendCold: channelData: ', channelData, ', message: ', message);
+    console.log('coldSend: channelData: ', channelData, ', message: ', message);
 
     const connector = new builder.ChatConnector({
         appId: botParams.settings.microsoftAppId,
@@ -218,24 +225,6 @@ export async function sendCold(botParams: BotParams, channelData: ChannelData,
     };
 
     await send(channelData.address.channelId, message, sendHelper);
-}
-
-export function webhook(req: Request, res: Response) {
-    if (req.method !== 'POST') {
-        res.send();
-        return;
-    }
-
-    handleWebhookRequest(req, res)
-        .then(() => {
-            console.log('Success');
-        })
-        .catch(err => {
-            console.log('Error: ', err || '-');
-            if (err instanceof Error) {
-                throw err;
-            }
-        });
 }
 
 /*

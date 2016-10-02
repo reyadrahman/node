@@ -83,14 +83,12 @@ let MessagesPage = React.createClass({
             <div className={`messages-page-comp ${className || ''}`}>
                 <div className="left-right-split">
                     <Conversations
-                        className="conversations"
                         currentUser={currentUser}
                         selectedConversationId={params.conversationId}
                         i18n={i18n}
                         onSelectConversation={this.conversationSelected}
                     />
                     <Messages
-                        className="messages"
                         currentUser={currentUser}
                         selectedConversationId={params.conversationId}
                         i18n={i18n}

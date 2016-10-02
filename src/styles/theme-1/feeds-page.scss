@@ -30,10 +30,10 @@
             }
         }
 
-        .new-feed-button {
+        .button {
             display: block;
             margin: 30px auto;
-            padding: 10px 40px; 
+            padding: 10px 40px;
         }
     }
 }
@@ -41,6 +41,9 @@
 .new-feed-comp {
     form > *:not(.button-area) {
         margin: 20px 40px;
+        &.button {
+            margin: 30px auto;
+        }
     }
 
     .publish-hour-select {
@@ -51,14 +54,15 @@
 
 
     .button-area {
-        padding: 20px 10px 10px 10px;
+        padding: 30px 10px;
         border-top: 1px solid rgba(0,0,0,.1);
         background: rgba(248,248,248,.9);
-        text-align: right;
+        text-align: center;
 
-        button {
-            margin: 0 10px;
-            padding: 10px 20px;
+        .button {
+            margin: 30px auto;
+            padding: 10px 40px;
+            margin: 0 auto;
         }
     }
 }

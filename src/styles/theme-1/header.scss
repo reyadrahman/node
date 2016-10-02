@@ -36,13 +36,12 @@ $navbarHeight: 50px;
 
         .logo {
             display: block;
-            width: 120px;
+            width: 170px;
             height: 90%;
-            background: url(../../resources/new-logo3.png) center/200px no-repeat;
-            background-size: contain;
+            background: url(../../resources/new-logo3.png) center/ auto 25px no-repeat;
             border-right: 1px solid #c8c8c8;
             padding: 8px;
-            box-sizing: border-box;
+            box-sizing: border-box; 
         }
 
         .account-button-comp {
@@ -54,6 +53,33 @@ $navbarHeight: 50px;
                 margin-right: 5px;
             }
         }
+
+        .dropdown {
+            height: 100%;
+            button {
+                padding: 0 40px;
+                height: 100%;
+                border-radius: 0;
+                border: 0;
+                background-color: transparent;
+                &:hover {
+                    background-color: #dbdbdb;
+                }
+               //  .caret {
+               //     margin-left: 10px;
+               // }
+
+               &.sign-in-btn,
+               &.arrow-btn,
+               &.account-btn {
+                   padding: 0 15px;
+               }
+               &.language-button-comp {
+                padding: 0 20px;
+               }
+            }
+        }
+
         .language-button-comp {
             &, &:focus, &:hover, &:active {
                 background: none;

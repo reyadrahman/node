@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Button } from 'react-bootstrap';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
@@ -39,9 +40,9 @@ let SignUp = React.createClass({
         const { isOpen, i18n: { strings: { signUp: strings } },
                 errorMessage, successMessage, closeSignUp } = this.props;
         const { state } = this;
-        const buttons = [
-            { label: strings.signUp, type: 'submit' },
-        ];
+        //const buttons = [
+        //    { label: strings.signUp, type: 'submit' },
+        //];
 
 
         return (
@@ -49,7 +50,6 @@ let SignUp = React.createClass({
                 <Title title={strings.title} />
                 <Form
                     onSubmit={this.signUp}
-                    buttons={buttons}
                 >
                     <div className="inputs-row">
                         <label>{strings.firstName}</label>
@@ -86,6 +86,13 @@ let SignUp = React.createClass({
                     </div>
                     <ErrorMessage message={errorMessage} />
                     <SuccessMessage message={successMessage} />
+                    <Button
+                        className="button"
+                        bsStyle="primary"
+                        bsSize='large'
+                        type='submit'
+                        > { strings.signUp }
+                    </Button>
                 </Form>
             </div>
         );

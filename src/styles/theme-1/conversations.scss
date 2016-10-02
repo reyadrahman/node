@@ -1,6 +1,7 @@
 .conversations-comp {
     border: 1px solid #dcdcdc;
     position: relative;
+    overflow-y: scroll;
 
     .input-group-addon {
         font-size: 13px;
@@ -18,7 +19,6 @@
 
     .conversations {
         margin-top: 5px;
-        overflow-y: scroll;
     }
 
     .conversation {

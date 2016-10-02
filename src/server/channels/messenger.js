@@ -1,7 +1,7 @@
 /* @flow */
 
 import { request, ENV, CONSTANTS } from '../server-utils.js';
-import { toStr, waitForAll } from '../../misc/utils.js';
+import { toStr, waitForAll, timeout } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
@@ -55,7 +55,7 @@ type MessengerReqAttachment = {
     },
 };
 
-async function handleWebhookRequest(req: Request, res: Response) {
+export async function webhook(req: Request, res: Response) {
     // webhook verification
     if (req.method === 'GET' &&
         req.query['hub.mode'] === 'subscribe' &&
@@ -71,9 +71,8 @@ async function handleWebhookRequest(req: Request, res: Response) {
     // see https://developers.facebook.com/docs/messenger-platform/webhook-reference#security
     const sig = req.get('X-Hub-Signature');
     if (!sig) {
-        console.error('No X-Hub-Signature provided');
         res.status(403).send('Access denied');
-        return;
+        throw new Error('No X-Hub-Signature provided');
     }
 
     const { publisherId, botId } = req.params;
@@ -84,9 +83,8 @@ async function handleWebhookRequest(req: Request, res: Response) {
     const expectedSig = 'sha1=' + hmac.digest('hex');
 
     if (sig !== expectedSig) {
-        console.error(`ERROR: exprected signatue: ${expectedSig} but received ${sig}`);
         res.status(403).send('Access denied');
-        return;
+        throw new Error(`ERROR: exprected signatue: ${expectedSig} but received ${sig}`);
     }
     console.log(`X-Hub-Signatue successfully verified ${sig}`);
 
@@ -98,6 +96,7 @@ async function handleWebhookRequest(req: Request, res: Response) {
         return;
     }
 
+    // respond immediately
     res.send();
     await processMessages(body, botParams);
 }
@@ -169,20 +168,20 @@ async function receivedMessage(entry: MessengerReqEntry,
 
     console.log('messenger-webhook sending deepiks-bot: ', message);
 
-    const responses = [];
-    setTimeout(() => {
-        if (responses.length === 0) {
-            send(botParams, pageId_senderId, {
-                typingOn: true,
-            }).catch(error => console.error(error));
-        }
-    }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
+    let responseCount = 0;
+    // will await later
+    const sendTypingOnPromise = timeout(CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000)
+        .then(() => {
+            if (responseCount > 0) return;
+            return send(botParams, pageId_senderId, { typingOn: true });
+        });
 
     await deepiksBot(message, botParams, m => {
-        responses.push(send(botParams, pageId_senderId, m));
+        responseCount++;
+        return send(botParams, pageId_senderId, m);
     });
 
-    await waitForAll(responses);
+    await sendTypingOnPromise;
 }
 
 export async function send(botParams: BotParams, conversationId: string,
@@ -298,23 +297,6 @@ async function getUserProfile(userId, botParams) {
 
     return r.body;
 }
-
-
-export function webhook(req: Request, res: Response) {
-    console.log('messenger-webhook...');
-    handleWebhookRequest(req, res)
-        .then(() => {
-            console.log('Success');
-        })
-        .catch(err => {
-            console.log('Error: ', err || '-');
-            if (err instanceof Error) {
-                throw err;
-            }
-        });
-}
-
-
 
 
 /*
