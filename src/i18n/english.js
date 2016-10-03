@@ -14,6 +14,12 @@ export default {
         messages: 'Messages',
         feeds: 'Feeds',
         notifications: 'Notifications',
+        features:'Features',
+        pricing:'Pricing',
+        team:'Team',
+        channels:'Channels',
+        timeline:'Timeline',
+        contact:'Contact',
     },
     home: {
     	baseline: 'Hi. We are a smart chatbot platform.',

@@ -64,13 +64,14 @@ let Header = React.createClass({
             </li>
         );
 
-        const navItems = [
-            createNavItem('services', 'ok', 'Features'),
-            createNavItem('pricing', 'euro', 'Pricing'),
-            createNavItem('team', 'user', 'Team'),
-            createNavItem('screenshots', 'globe', 'Channels'),
-            createNavItem('updates', 'tasks', 'Timeline'),
-            createNavItem('contact', 'envelope', 'Contact'),
+    	    const sideMenuStrings = i18n.strings.sideMenu;
+            const navItems = [
+            createNavItem('services', 'ok', sideMenuStrings.features),
+            createNavItem('pricing', 'euro', sideMenuStrings.pricing),
+            createNavItem('team', 'user', sideMenuStrings.team),
+            createNavItem('screenshots', 'globe', sideMenuStrings.channels),
+            createNavItem('updates', 'tasks', sideMenuStrings.timeline),
+            createNavItem('contact', 'envelope', sideMenuStrings.contact),
         ];
 
 
