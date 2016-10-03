@@ -20,7 +20,11 @@ export default {
         channels:'Channels',
         timeline:'Timeline',
         contact:'Contact',
-   },
+        test:'Test',
+        surveys:'Surveys',
+        tracking:'Tracking',
+        settings:"Settings",
+  },
     home: {
     	baseline: 'Bonjour. Nous sommes une plate-forme de chatbots intelligents.',
     	services_h: 'Premium Bot Platform',

@@ -20,6 +20,10 @@ export default {
         channels:'Channels',
         timeline:'Timeline',
         contact:'Contact',
+        test:'Test',
+        surveys:'Surveys',
+        tracking:'Tracking',
+        settings:"Settings",
     },
     home: {
     	baseline: 'Hi. We are a smart chatbot platform.',

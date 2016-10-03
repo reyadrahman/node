@@ -70,10 +70,16 @@ let SignedInPage = React.createClass({
         const sideMenuStrings = i18n.strings.sideMenu;
         const menu = [
             {
-                label: sideMenuStrings.account,
-                link: '/account',
-                glyph: 'user',
-                value: 'account',
+                label: sideMenuStrings.test,
+                link: '/test',
+                glyph: 'play',
+                value: 'test',
+            },
+            {
+                label: sideMenuStrings.settings,
+                link: '/settings',
+                glyph: 'cog',
+                value: 'settings',
             },
             {
                 label: sideMenuStrings.users,
@@ -88,15 +94,27 @@ let SignedInPage = React.createClass({
                 value: 'messages',
             },
             {
+                label: sideMenuStrings.tracking,
+                link: '/tracking',
+                glyph: 'signal',
+                value: 'tracking',
+            },
+            {
+                label: sideMenuStrings.surveys,
+                link: '/surveys',
+                glyph: 'thumbs-up',
+                value: 'surveys',
+            },
+            {
                 label: sideMenuStrings.feeds,
                 link: '/feeds',
-                glyph: 'comment',
+                icon: 'icon-rss',
                 value: 'feeds',
             },
             {
                 label: sideMenuStrings.notifications,
                 link: '/notifications',
-                glyph: 'comment',
+                glyph: 'bell',
                 value: 'notifications',
             },
         ];
