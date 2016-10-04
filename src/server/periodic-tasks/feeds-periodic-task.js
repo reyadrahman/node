@@ -31,7 +31,7 @@ export default async function updateFeedsPeriodicTask() {
         TableName: DB_TABLE_BOTS,
     });
 
-    console.log('updateFeedsPeriodicTask botsScanRes: ', botsScanRes);
+    console.log('updateFeedsPeriodicTask botsScanRes: ', toStr(botsScanRes));
 
     if (botsScanRes.Count === 0) return;
 

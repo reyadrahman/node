@@ -293,14 +293,15 @@ async function saveUser(identityId, botId_userId, model) {
 
 async function fetchConversations(identityId, botId) {
     console.log('fetchConversations: identityId=', identityId, 'botId=', botId);
+    // TODO paging
     const qres = await aws.dynamoQuery({
         TableName:                 DB_TABLE_CONVERSATIONS,
         IndexName:                 'byLastMessageTimestamp',
         KeyConditionExpression:    'publisherId = :pid',
-        FilterExpression:          botId ? 'botId = :bid' : undefined,
+        FilterExpression:          'botId = :bid',
         ExpressionAttributeValues: {
             ':pid': identityId,
-            ':bid': botId || undefined
+            ':bid': botId,
         },
         // Limit: 50,
         ScanIndexForward:          false,

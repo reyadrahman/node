@@ -166,7 +166,7 @@ async function receivedMessage(entry: MessengerReqEntry,
         senderProfilePic: userProfile.profile_pic || null,
     };
 
-    console.log('messenger-webhook sending deepiks-bot: ', message);
+    console.log('messenger sending deepiks-bot: ', message);
 
     let responseCount = 0;
     // will await later
@@ -260,7 +260,7 @@ export async function send(botParams: BotParams, conversationId: string,
 }
 
 async function sendHelper(botParams: BotParams, messageData) {
-    console.log('messenger-webhook sendHelper: ',
+    console.log('messenger sendHelper: ',
         u.inspect(messageData, { depth: null}));
     const r = await request({
         uri: 'https://graph.facebook.com/v2.6/me/messages',
@@ -269,8 +269,8 @@ async function sendHelper(botParams: BotParams, messageData) {
         json: messageData
     });
     if (r.statusCode !== 200) {
-        throw new Error('Sending message failed with code %s msg %s and body: ',
-                        r.statusCode, r.statusMessage, r.body);
+        throw new Error(`Sending message failed with code ${r.statusCode} msg ` +
+                        `${r.statusMessage} and body: ${toStr(r.body)}`);
     }
 }
 
@@ -288,7 +288,7 @@ async function getUserProfile(userId, botParams) {
         method: 'GET',
         json: true,
     };
-    console.log('messenger-webhook getUserProfile: ', reqData);
+    console.log('messenger getUserProfile: ', reqData);
     const r = await request(reqData);
     if (r.statusCode !== 200) {
         throw new Error(`getUserProfile failed with code ${r.statusCode} msg ` +

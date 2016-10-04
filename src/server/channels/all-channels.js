@@ -45,26 +45,25 @@ export async function send(botParams: BotParams, conversation: Conversation,
 
 export async function sendToMany(botParams: BotParams, message: ResponseMessage, categories?: string[]) {
     console.log('sendAll: botParams: ', botParams, ', message: ', message, ', categories: ', categories);
-    // TODO paging
-    const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_CONVERSATIONS,
-        KeyConditionExpression: 'publisherId = :pid',
-        FilterExpression: 'botId = :bid and subscribed <> :s',
-        ExpressionAttributeValues: {
-            ':pid': botParams.publisherId,
-            ':bid': botParams.botId,
-            ':s': false,
-        },
-    });
+    let qItems = await aws.dynamoAccumulatePages(
+        startKey => aws.dynamoQuery({
+            TableName: DB_TABLE_CONVERSATIONS,
+            KeyConditionExpression: 'publisherId = :pid',
+            FilterExpression: 'botId = :bid and subscribed <> :s',
+            ExclusiveStartKey: startKey,
+            ExpressionAttributeValues: {
+                ':pid': botParams.publisherId,
+                ':bid': botParams.botId,
+                ':s': false,
+            },
+        })
+    );
 
-    console.log('sendToMany, got qres');
-
-    if (qres.Count === 0) {
+    if (qItems.length === 0) {
         console.log('sendAll: no conversation found')
         return;
     }
 
-    let qItems = qres.Items;
     if (categories && categories.length > 0) {
         const categoriesLC = categories.map(x => x.toLowerCase());
         const inCategories = x => categoriesLC.find(y => y.toLowerCase);

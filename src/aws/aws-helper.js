@@ -1,10 +1,8 @@
-console.log('======== AWS SERVER');
-
 /* @flow */
 
 // server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.min.js'
 import AWS from 'aws-sdk';
-import { callbackToPromise } from '../misc/utils.js';
+import { callbackToPromise, pushMany } from '../misc/utils.js';
 import { ENV, CONSTANTS, request } from '../server/server-utils.js';
 import type { BotParams, AIActionInfo, Conversation } from '../misc/types.js';
 import _ from 'lodash';
@@ -77,6 +75,20 @@ export function dynamoCleanUpObj(obj: Object) {
     }, {});
 }
 
+export async function dynamoAccumulatePages(getOnePage: (start?: Object) => Object)
+: Promise<Object[]>
+{
+    let pageRes = await getOnePage();
+    let accumulator = pushMany([], pageRes.Items || []);
+    while (pageRes.LastEvaluatedKey) {
+        console.log('dynamoAccumulatePages: LastEvaluatedKey: ',
+                    pageRes.LastEvaluatedKey);
+        pageRes = await getOnePage(pageRes.LastEvaluatedKey);
+        pushMany(accumulator, pageRes.Items || []);
+    }
+    return accumulator;
+}
+
 export async function getBot(publisherId: string, botId: string): Promise<?BotParams> {
     console.log('getBot publisherId: ', publisherId, ', botId: ', botId);
     const qres = await dynamoQuery({
@@ -136,7 +148,7 @@ export async function getPollQuestion(
     return qres.Items[0];
 }
 
-export async function getIdFromJwtIdToken(jwtIdToken: string): string {
+export async function getIdFromJwtIdToken(jwtIdToken: string): Promise<string> {
     const res = await cognitoIdentityGetId({
         IdentityPoolId: IDENTITY_POOL_ID,
         Logins: {

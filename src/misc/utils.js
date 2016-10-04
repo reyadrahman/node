@@ -16,6 +16,20 @@ export function splitOmitWhitespace(str: string, sep: string): string[] {
     return str.split(sep).map(x => x.trim()).filter(Boolean);
 }
 
+/**
+ * see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply
+ * for why we need this and the limits of Function.prototyp.apply
+ */
+export function pushMany<T>(arr: T[], newElems: T[]): T[] {
+  const CHUNK_LENGTH = 32768;
+  const n = newElems.length;
+  for (let i = 0; i < n; i += CHUNK_LENGTH) {
+    arr.push(...newElems.slice(i, Math.min(i+CHUNK_LENGTH, n)));
+  }
+
+  return arr;
+}
+
 export function leftPad(x: string | number, pad: string, n: number): string {
     const str = String(x);
     return pad.repeat(Math.max(0, n - str.length)) + str;
