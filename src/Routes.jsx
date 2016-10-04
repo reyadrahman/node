@@ -9,6 +9,7 @@ import UserSavePage from './components/users/UserSavePage.jsx';
 import MessagesPage from './components/messages-page/MessagesPage.jsx';
 import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 import FeedsPage from './components/feeds-page/FeedsPage.jsx';
+import TestPage from './components/test-page/TestPage.jsx';
 import NotificationsPage from './components/notifications-page/NotificationsPage.jsx';
 import TermsOfUsePage from './components/terms-of-use-page/TermsOfUsePage.jsx'
 import PrivacyPage from './components/privacy-page/PrivacyPage.jsx'
@@ -27,6 +28,7 @@ const Routes = (
             <Route path="/feeds" component={FeedsPage} />
             <Route path="/add-bot" component={AddBotPage} />
             <Route path="/notifications" component={NotificationsPage} />
+            <Route path="/test" component={TestPage} />
         </Route>
     </Route>
 );
