@@ -379,6 +379,9 @@ async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
 async function sendNotification(identityId, botId, message, categories) {
     console.log('sendNotification: ', identityId, botId, message);
     const botParams = await aws.getBot(identityId, botId);
+    if (!botParams) {
+        throw new Error(`Did not find bot with publisherId ${identityId} and botId ${botId}`);
+    }
     const msg = {
         ...message,
         creationTimestamp: Date.now(),

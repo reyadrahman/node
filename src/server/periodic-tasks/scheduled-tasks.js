@@ -24,8 +24,16 @@ export default async function updateScheduledTasks() {
     // execute message tasks
     const messageTaskPromises = messageTasks.map(async function(task) {
         const botParams = await aws.getBot(task.publisherId, task.botId);
+        if (!botParams) {
+            throw new Error(`Did not find bot with publisherId ${task.publisherId} and botId ${task.botId}`);
+        }
         const conversation =
             await aws.getConversation(task.publisherId, task.botId, task.conversationId);
+        if (!conversation) {
+            throw new Error(`Did not find conversation with publisherId ` +
+                            `${task.publisherId}, botId ${task.botId} ` +
+                            `and conversationId ${task.conversationId}`);
+        }
         const message = {
             ...task.message,
             creationTimestamp: Date.now(),

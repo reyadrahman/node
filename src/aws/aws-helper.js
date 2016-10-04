@@ -94,11 +94,7 @@ export async function getBot(publisherId: string, botId: string): Promise<?BotPa
             ':botId': botId,
         },
     });
-    if (qres.Count === 0) {
-        throw new Error(`Cannot find bot with id ${botId}`);
-    }
-
-    return qres.Items[0];
+    return qres.Items && qres.Items[0];
 }
 
 export async function getConversation(publisherId: string, botId: string, conversationId: string)
@@ -115,11 +111,8 @@ export async function getConversation(publisherId: string, botId: string, conver
             ':bc': composeKeys(botId, conversationId),
         },
     });
-    if (qres.Count === 0) {
-        throw new Error(`Cannot find conversation with id ${conversationId}`);
-    }
 
-    return qres.Items[0];
+    return qres.Items && qres.Items[0];
 }
 
 export async function getPollQuestion(
@@ -136,13 +129,8 @@ export async function getPollQuestion(
             ':bpq': composeKeys(botId, composeKeys(pollId, questionId)),
         },
     });
-    if (qres.Count === 0) {
-        throw new Error(`Cannot find poll question publisherId: ${publisherId}, ` +
-                        `botId: ${botId}, pollId: ${pollId}, ` +
-                        `questionId: ${questionId}`);
-    }
 
-    return qres.Items[0];
+    return qres.Items && qres.Items[0];
 }
 
 export async function getIdFromJwtIdToken(jwtIdToken: string): Promise<string> {

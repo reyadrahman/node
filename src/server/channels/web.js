@@ -18,6 +18,9 @@ async function handleWebsocketMessage(
     //Retrieve bot
     const { publisherId, botId } = messageReceived;
     const botParams = await aws.getBot(publisherId, botId);
+    if (!botParams) {
+        throw new Error(`Did not find bot with publisherId ${publisherId} and botId ${botId}`);
+    }
 
     //Retrieve message data
     const { conversationId, senderId, text, timestamp } = messageReceived.data;

@@ -330,30 +330,44 @@ export async function _pollMiddleware(
 
     const pollQuestion = await aws.getPollQuestion(botParams.publisherId, botParams.botId, pollId, questionId);
     console.log('_pollMiddleware pollQuestion: ', pollQuestion);
-    const pollAnswer = (message.text || '').trim().toLowerCase();
+    const pollAnswer = (message.text || '').trim().substr(0, 100).toLowerCase();
 
-    if (!pollQuestion.validAnswers.find(x => String(x).toLowerCase() === pollAnswer)) {
-        console.log('_pollMiddleware got ', pollAnswer, ', but expected one of ', pollQuestion.validAnswers);
-        respondFn({ text: 'Invalid answer', creationTimestamp: Date.now() });
-        return message;
+    // if (!pollQuestion.validAnswers.find(x => String(x).toLowerCase() === pollAnswer)) {
+    //     console.log('_pollMiddleware got ', pollAnswer, ', but expected one of ', pollQuestion.validAnswers);
+    //     respondFn({ text: 'Invalid answer', creationTimestamp: Date.now() });
+    //     return message;
+    // }
+
+    const keys = {
+        publisherId: botParams.publisherId,
+        botId_pollId_questionId: composeKeys(botParams.botId, composeKeys(pollId, questionId)),
+    };
+
+    if (pollQuestion) {
+        await aws.dynamoUpdate({
+            TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
+            Key: keys,
+            // UpdateExpression: 'SET feeds = list_append(if_not_exists(feeds, :emptyList), :newFeed)',
+            UpdateExpression: 'SET aggregates.#answer = if_not_exists(aggregates.#answer, :zero) + :one',
+            ExpressionAttributeNames: {
+                '#answer': pollAnswer,
+            },
+            ExpressionAttributeValues: {
+                ':one': 1,
+                ':zero': 0,
+            },
+        });
+    } else {
+        await aws.dynamoPut({
+            TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
+            Item: {
+                ...keys,
+                aggregates: {
+                    [pollAnswer]: 1,
+                }
+            },
+        });
     }
-
-    await aws.dynamoUpdate({
-        TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
-        Key: {
-            publisherId: botParams.publisherId,
-            botId_pollId_questionId: composeKeys(botParams.botId, composeKeys(pollId, questionId)),
-        },
-        // UpdateExpression: 'SET feeds = list_append(if_not_exists(feeds, :emptyList), :newFeed)',
-        UpdateExpression: 'SET aggregates.#answer = if_not_exists(aggregates.#answer, :zero) + :one',
-        ExpressionAttributeNames: {
-            '#answer': pollAnswer,
-        },
-        ExpressionAttributeValues: {
-            ':one': 1,
-            ':zero': 0,
-        },
-    });
 
     return {
         ...message,

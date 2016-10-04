@@ -23,6 +23,10 @@ export async function webhook(req: Request, res: Response) {
     console.log('ms-webhook raw req.headers: ', inspect(req.headers, {depth:null}));
     const { publisherId, botId } = req.params;
     const botParams = await aws.getBot(publisherId, botId);
+    if (!botParams) {
+        throw new Error(`Did not find bot with publisherId ${publisherId} and botId ${botId}`);
+    }
+
 
     const connector = new builder.ChatConnector({
         appId: botParams.settings.microsoftAppId,

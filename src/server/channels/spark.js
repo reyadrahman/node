@@ -40,6 +40,9 @@ export async function webhook(req: Request, res: Response) {
 
     const { publisherId, botId } = req.params;
     const botParams = await aws.getBot(publisherId, botId);
+    if (!botParams) {
+        throw new Error(`Did not find bot with publisherId ${publisherId} and botId ${botId}`);
+    }
     const { settings: { ciscosparkBotPersonId, ciscosparkAccessToken,
                         ciscosparkWebhookSecret, ciscosparkWebhookId } } = botParams;
 
