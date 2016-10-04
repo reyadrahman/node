@@ -17,13 +17,7 @@ NODE_ENV=
 AWS_REGION=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-DB_TABLE_BOTS=
-DB_TABLE_CONVERSATIONS=
-DB_TABLE_MESSAGES=
-DB_TABLE_AI_ACTIONS=
-DB_TABLE_USER_PREFS=
-DB_TABLE_SCHEDULED_TASKS=
-DB_TABLE_POLL_QUESTIONS=
+DB_TABLES_PREFIX=
 S3_BUCKET_NAME=
 IDENTITY_POOL_ID=
 IDENTITY_POOL_UNAUTH_ROLE_ARN=
@@ -37,7 +31,7 @@ CDN=
 PORT=
 ```
 
-`NODE_ENV`, `CDN` and `PORT` are **optional**.
+`NODE_ENV`, `DB_TABLES_PREFIX`, `CDN` and `PORT` are **optional**.
 
 `NODE_ENV` can be `production` (default) or `development`.
 
@@ -63,8 +57,6 @@ Environment variables defined in these config files will overwrite those in `.en
 No need to configure the database or s3 buckets. They are created automatically if none exists.
 
 NOTE: Existing database tables and s3 buckets are never overwritten.
-
-Temporarily, until we have a UI for adding AI actions, we can enter them directly into the DynamoDB table named by `DB_TABLE_AI_ACTIONS`. See "AI Actions" section for more details.
 
 ### User Pool & Identity Pool
 In [AWS Cognito Console](https://console.aws.amazon.com/cognito) you need to create an a user pool by going to "Manage your user pools" and an identity pool by going to "Manage federated identities". Then add their IDs to the environment variables `USER_POOL_ID` and `IDENTITY_POOL_ID`.
@@ -132,7 +124,9 @@ The lambda (as mentioned in its own README), has an environment variable called 
 The `CallServer` lambda also takes another environment variable called `ENDPOINT_URL` which should be the url of the bot engine with the suffix `/run-periodic-tasks`. For example `https://deepiks.io/run-periodic-tasks`.
 
 ### AI Actions (Config)
-Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
+Temporarily, until we have a UI for adding AI actions, we can enter them directly into the DynamoDB table `actions`.
+
+Each item in the `actions` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
 ``` json
 {
     "action": "getForecast",
