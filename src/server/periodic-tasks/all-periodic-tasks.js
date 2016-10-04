@@ -7,7 +7,8 @@ import { ENV } from '../server-utils.js';
 const { CALL_SERVER_LAMBDA_SECRET } = ENV;
 
 export default function periodicTasksUpdate(req: Request, res: Response) {
-    const reqSecret = req.header('CALL_SERVER_LAMBDA_SECRET');
+    const reqSecret = req.header('call-server-lambda-secret');
+    // console.log(`periodicTasksUpdate: req.headers: `, req.headers);
     console.log(`periodicTasksUpdate: reqSecret: ${reqSecret}`);
     if (reqSecret !== CALL_SERVER_LAMBDA_SECRET) {
         console.log(`periodicTasksUpdate: secret header does not match. ` +
