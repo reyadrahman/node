@@ -30,7 +30,7 @@ declare function beforeEach(f: Function): void;
 declare function afterEach(f: Function): void;
 
 
-const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, DB_TABLE_BOTS, DB_TABLE_AI_ACTIONS,
+const { CONSTANTS.DB_TABLE_MESSAGES, CONSTANTS.DB_TABLE_CONVERSATIONS, CONSTANTS.DB_TABLE_BOTS, CONSTANTS.DB_TABLE_AI_ACTIONS,
         S3_BUCKET_NAME } = ENV;
 
 // additional environment variables exclusive to testing
@@ -73,7 +73,7 @@ describe('tests', function() {
         await deepiksBot._logWebhookMessage(message);
 
         const qres = await aws.dynamoQuery({
-            TableName: DB_TABLE_MESSAGES,
+            TableName: CONSTANTS.DB_TABLE_MESSAGES,
             // IndexName: 'Index',
             KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp = :t',
             ExpressionAttributeValues: {
@@ -113,11 +113,11 @@ describe('tests', function() {
         const message: WebhookMessage = createSampleWebhookMessage();
         const witSession = {a: 1, b: 2};
 
-        const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
+        const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
         await deepiksBot._updateConversationTable(message);
         await aws.dynamoPut({
-            TableName: DB_TABLE_CONVERSATIONS,
+            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
             Item: {
                 publisherId,
                 conversationId,
@@ -129,7 +129,7 @@ describe('tests', function() {
         await deepiksBot._updateConversationTable(message);
 
         const qres = await aws.dynamoQuery({
-            TableName: DB_TABLE_CONVERSATIONS,
+            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
             KeyConditionExpression: 'publisherId = :publisherId and conversationId = :conversationId',
             ExpressionAttributeValues: {
                 ':publisherId': publisherId,
@@ -239,7 +239,7 @@ describe('tests', function() {
         assert.equal(res1, true);
 
         const res2 = await aws.dynamoQuery({
-            TableName: DB_TABLE_MESSAGES,
+            TableName: CONSTANTS.DB_TABLE_MESSAGES,
             // IndexName: 'Index',
             KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp = :t',
             ExpressionAttributeValues: {
@@ -289,7 +289,7 @@ describe('tests', function() {
         };
 
         await aws.dynamoPut({
-            TableName: DB_TABLE_BOTS,
+            TableName: CONSTANTS.DB_TABLE_BOTS,
             Item: expected,
         });
 
@@ -305,7 +305,7 @@ describe('tests', function() {
         };
 
         await aws.dynamoPut({
-            TableName: DB_TABLE_AI_ACTIONS,
+            TableName: CONSTANTS.DB_TABLE_AI_ACTIONS,
             Item: expected,
         });
 

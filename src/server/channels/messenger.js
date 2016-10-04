@@ -1,7 +1,7 @@
 /* @flow */
 
-import { request, ENV, CONSTANTS } from '../server-utils.js';
-import { toStr, waitForAll, timeout } from '../../misc/utils.js';
+import { request, CONSTANTS } from '../server-utils.js';
+import { toStr, waitForAll, timeout, composeKeys, decomposeKeys } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
@@ -151,10 +151,10 @@ async function receivedMessage(entry: MessengerReqEntry,
         attachments.filter(x => x.type === 'image')
                    .map(x => ({ imageUrl: x.payload.url }));
 
-    const pageId_senderId = aws.composeKeys(entry.id, messagingEvent.sender.id);
+    const pageId_senderId = composeKeys(entry.id, messagingEvent.sender.id);
     const message: WebhookMessage = {
         publisherId_conversationId:
-            aws.composeKeys(botParams.publisherId, pageId_senderId),
+            composeKeys(botParams.publisherId, pageId_senderId),
         creationTimestamp: new Date(messagingEvent.timestamp).getTime(),
         id: messagingEvent.message.mid,
         senderId: messagingEvent.sender.id,
@@ -189,8 +189,8 @@ export async function send(botParams: BotParams, conversationId: string,
 {
     console.log('send: ', conversationId, toStr(message));
 
-    // conversationId is constructed by aws.composeKeys(pageId, senderId)
-    const [ pageId, to ] = aws.decomposeKeys(conversationId);
+    // conversationId is constructed by composeKeys(pageId, senderId)
+    const [ pageId, to ] = decomposeKeys(conversationId);
     const { typingOn, text, cards, actions } = message;
 
     if (typingOn) {

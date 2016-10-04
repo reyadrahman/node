@@ -3,14 +3,13 @@
 import * as aws from '../../aws/aws.js';
 import type { DBMessage, ResponseMessage, BotParams, ActionRequest,
               ActionResponse, UserPrefs, WitData, RespondFn } from '../../misc/types.js';
-import { ENV, request } from '../server-utils.js';
-import { toStr, catchPromise, callbackToPromise } from '../../misc/utils.js';
+import { CONSTANTS, request } from '../server-utils.js';
+import { toStr, catchPromise, callbackToPromise,
+         composeKeys, decomposeKeys } from '../../misc/utils.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
 import URL from 'url';
 import uuid from 'node-uuid';
-
-const { DB_TABLE_CONVERSATIONS, DB_TABLE_USER_PREFS, S3_BUCKET_NAME } = ENV;
 
 type ActionRequestIncomplete = {
     sessionId: string,
@@ -299,16 +298,16 @@ export async function ai(message: DBMessage,
         throw new Error(`Bot doesn't have witAccessToken: ${toStr(botParams)}`);
     }
 
-    const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
+    const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
 
     // TODO batch queries
     const convQueryRes = await aws.dynamoQuery({
-        TableName: DB_TABLE_CONVERSATIONS,
-        KeyConditionExpression: 'publisherId = :publisherId and conversationId = :conversationId',
+        TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+        KeyConditionExpression: 'publisherId = :publisherId and botId_conversationId = :bc',
         ExpressionAttributeValues: {
             ':publisherId': publisherId,
-            ':conversationId': conversationId,
+            ':bc': composeKeys(botParams.botId, conversationId),
         },
     });
     convQueryRes.Items.map((x, i) => console.log(`ai: convQueryRes ${i}`, x));
@@ -326,11 +325,11 @@ export async function ai(message: DBMessage,
 
     // TODO batch queries
     const prefQueryRes = await aws.dynamoQuery({
-        TableName: DB_TABLE_USER_PREFS,
+        TableName: CONSTANTS.DB_TABLE_USER_PREFS,
         KeyConditionExpression: 'publisherId = :publisherId and botId_userId = :bu',
         ExpressionAttributeValues: {
             ':publisherId': publisherId,
-            ':bu': aws.composeKeys(botParams.botId, message.senderId),
+            ':bu': composeKeys(botParams.botId, message.senderId),
         },
     });
     console.log('ai: user preferences found: ', prefQueryRes.Items);
@@ -353,10 +352,10 @@ export async function ai(message: DBMessage,
 
     // TODO batch dynamo queries
     await aws.dynamoUpdate({
-        TableName: DB_TABLE_CONVERSATIONS,
+        TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
         Key: {
             publisherId,
-            conversationId,
+            botId_conversationId: composeKeys(botParams.botId, conversationId),
         },
         UpdateExpression: 'SET witData = :witData',
         ExpressionAttributeValues: {
@@ -364,10 +363,10 @@ export async function ai(message: DBMessage,
         },
     });
     await aws.dynamoPut({
-        TableName: DB_TABLE_USER_PREFS,
+        TableName: CONSTANTS.DB_TABLE_USER_PREFS,
         Item: aws.dynamoCleanUpObj({
             publisherId,
-            botId_userId: aws.composeKeys(botParams.botId, message.senderId),
+            botId_userId: composeKeys(botParams.botId, message.senderId),
             prefs: newUserPrefs,
         }),
     });

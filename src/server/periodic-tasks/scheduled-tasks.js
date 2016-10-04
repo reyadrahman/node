@@ -1,15 +1,13 @@
 /* @flow */
 import * as aws from '../../aws/aws.js';
 import { toStr, waitForAll, waitForAllOmitErrors } from '../../misc/utils.js';
-import { ENV } from '../server-utils.js';
+import { CONSTANTS } from '../server-utils.js';
 import { send } from '../channels/all-channels.js';
 import _ from 'lodash';
 
-const { DB_TABLE_SCHEDULED_TASKS } = ENV;
-
 export default async function updateScheduledTasks() {
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_SCHEDULED_TASKS,
+        TableName: CONSTANTS.DB_TABLE_SCHEDULED_TASKS,
         KeyConditionExpression: 'dummy = :dummy and scheduleTimestamp_taskId <= :now',
         ExpressionAttributeValues: {
             ':dummy': '.',
@@ -27,7 +25,7 @@ export default async function updateScheduledTasks() {
     const messageTaskPromises = messageTasks.map(async function(task) {
         const botParams = await aws.getBot(task.publisherId, task.botId);
         const conversation =
-            await aws.getConversation(task.publisherId, task.conversationId);
+            await aws.getConversation(task.publisherId, task.botId, task.conversationId);
         const message = {
             ...task.message,
             creationTimestamp: Date.now(),
@@ -43,7 +41,7 @@ export default async function updateScheduledTasks() {
     const deletePromises = chunks.map(
         chunk => aws.dynamoBatchWrite({
             RequestItems: {
-                [DB_TABLE_SCHEDULED_TASKS]: chunk.map(x => ({
+                [CONSTANTS.DB_TABLE_SCHEDULED_TASKS]: chunk.map(x => ({
                     DeleteRequest: {
                         Key: {
                             dummy: '.',

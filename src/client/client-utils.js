@@ -1,7 +1,7 @@
 /* @flow */
 
 import _ from 'lodash';
-import type { ClientEnv } from '../misc/types.js';
+import type { ClientConstants } from '../misc/types.js';
 import { createUrlQuery } from '../misc/utils.js';
 
 export function isFullscreen() {
@@ -38,14 +38,10 @@ export function exitFullscreen() {
     }
 }
 
-export const ENV: ClientEnv = _.pick(process.env, [
+export const CONSTANTS_KEYS = [
     'NODE_ENV',
     'PLATFORM',
     'AWS_REGION',
-    'DB_TABLE_BOTS',
-    'DB_TABLE_CONVERSATIONS',
-    'DB_TABLE_MESSAGES',
-    'DB_TABLE_USER_PREFS',
     'S3_BUCKET_NAME',
     'IDENTITY_POOL_ID',
     'IDENTITY_POOL_UNAUTH_ROLE_ARN',
@@ -55,7 +51,9 @@ export const ENV: ClientEnv = _.pick(process.env, [
     'PUBLIC_PATH',
     'PUBLIC_URL',
     'DEBUG',
-]);
+];
+
+export const CONSTANTS: ClientConstants = _.pick(process.env, CONSTANTS_KEYS);
 
 /*
     POST request with json body, return raw response

@@ -1,8 +1,9 @@
 /* @flow */
 
 import * as aws from '../../aws/aws.js';
-import { callbackToPromise, toStr, destructureS3Url, timeout } from '../../misc/utils.js';
-import { request, ENV } from '../server-utils.js';
+import { callbackToPromise, toStr, destructureS3Url, timeout,
+         composeKeys, decomposeKeys } from '../../misc/utils.js';
+import { request, CONSTANTS } from '../server-utils.js';
 import aiRoute from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
               ChannelData, Conversation, RespondFn } from '../../misc/types.js';
@@ -10,9 +11,6 @@ import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
 import uuid from 'uuid';
-
-const { DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS, DB_TABLE_SCHEDULED_TASKS,
-        DB_TABLE_POLL_QUESTIONS, S3_BUCKET_NAME  } = ENV;
 
 type ProcessedAttachment = {
     urlP: Promise<string>,
@@ -23,7 +21,7 @@ type ProcessedAttachment = {
 export async function _isMessageInDB(message: WebhookMessage) {
     console.log('_isMessageInDB');
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_MESSAGES,
+        TableName: CONSTANTS.DB_TABLE_MESSAGES,
         // IndexName: 'Index',
         KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp = :t',
         ExpressionAttributeValues: {
@@ -44,8 +42,8 @@ export function _createDBMessageFomResponseMessage(
                         `missing creationTimestamp: ${toStr(m)}`)
     }
     return {
-        publisherId_conversationId: aws.composeKeys(botParams.publisherId, conversationId),
-        senderId: aws.composeKeys(botParams.publisherId, botParams.botId),
+        publisherId_conversationId: composeKeys(botParams.publisherId, conversationId),
+        senderId: composeKeys(botParams.publisherId, botParams.botId),
         senderName: botParams.botName,
         channel: channel,
         senderIsBot: true,
@@ -89,7 +87,7 @@ export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
         const chunk = chunks[i];
         await aws.dynamoBatchWrite({
             RequestItems: {
-                [DB_TABLE_MESSAGES]: chunk.map(x => {
+                [CONSTANTS.DB_TABLE_MESSAGES]: chunk.map(x => {
                     return {
                         PutRequest: {
                             Item: aws.dynamoCleanUpObj(x),
@@ -137,10 +135,10 @@ export function _respondFnPreprocessorActionsMiddleware(
             }
             const scheduleTimestamp = Date.now() + Number(delayAction.args[0]) * 1000 * 60;
             await aws.dynamoPut({
-                TableName: DB_TABLE_SCHEDULED_TASKS,
+                TableName: CONSTANTS.DB_TABLE_SCHEDULED_TASKS,
                 Item: {
                     dummy: '.',
-                    scheduleTimestamp_taskId: aws.composeKeys(scheduleTimestamp, uuid.v1()),
+                    scheduleTimestamp_taskId: composeKeys(scheduleTimestamp, uuid.v1()),
                     publisherId: botParams.publisherId,
                     botId: botParams.botId,
                     conversationId,
@@ -197,7 +195,7 @@ export async function _signS3Urls(response: ResponseMessage): Promise<ResponseMe
     if (clone.cards) {
         cardsP = Promise.all(clone.cards.map(async function(c) {
             const bucketAndKey = destructureS3Url(c.imageUrl);
-            if (!bucketAndKey || bucketAndKey.bucket !== S3_BUCKET_NAME) {
+            if (!bucketAndKey || bucketAndKey.bucket !== CONSTANTS.S3_BUCKET_NAME) {
                 return c;
             }
 
@@ -224,7 +222,7 @@ export async function _uploadToS3(key: string, buffer: Buffer) {
     console.log('_uploadToS3: key: ', key);
 
     const res = await aws.s3Upload({
-        Bucket: S3_BUCKET_NAME,
+        Bucket: CONSTANTS.S3_BUCKET_NAME,
         Key: key,
         Body: buffer,
     });
@@ -271,7 +269,7 @@ export async function _processAttachments(message: WebhookMessage):
     const formats = await Promise.all(downloads.map(_getFileFormat));
 
     const s3LocationAndFormatPs = _.zip(downloads, formats).map(([buffer, format], i) => {
-        const [pid] = aws.decomposeKeys(message.publisherId_conversationId);
+        const [pid] = decomposeKeys(message.publisherId_conversationId);
         // const bid = botParams.botId;
         const mid = message.id;
         const sid = message.senderId;
@@ -341,10 +339,10 @@ export async function _pollMiddleware(
     }
 
     await aws.dynamoUpdate({
-        TableName: DB_TABLE_POLL_QUESTIONS,
+        TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
         Key: {
             publisherId: botParams.publisherId,
-            botId_pollId_questionId: aws.composeKeys(botParams.botId, aws.composeKeys(pollId, questionId)),
+            botId_pollId_questionId: composeKeys(botParams.botId, composeKeys(pollId, questionId)),
         },
         // UpdateExpression: 'SET feeds = list_append(if_not_exists(feeds, :emptyList), :newFeed)',
         UpdateExpression: 'SET aggregates.#answer = if_not_exists(aggregates.#answer, :zero) + :one',
@@ -373,7 +371,7 @@ export async function _getLastMessageInConversation(
 ) : Promise<?DBMessage>
 {
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_MESSAGES,
+        TableName: CONSTANTS.DB_TABLE_MESSAGES,
         KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp < :t',
         ExpressionAttributeValues: {
             ':pc': publisherId_conversationId,
@@ -392,19 +390,22 @@ export async function _updateConversationTable(message: DBMessage,
                                                channelData?: ChannelData)
 {
     console.log('_updateConversationTable');
-    const [publisherId, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
+    const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
     const res = await aws.dynamoUpdate({
-        TableName: DB_TABLE_CONVERSATIONS,
+        TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
         Key: {
             publisherId,
-            conversationId,
+            botId_conversationId: composeKeys(botParams.botId, conversationId),
         },
-        UpdateExpression: 'SET lastMessage = :lastMessage, lastMessageTimestamp = :lmt, channel = :chan, botId = :botId ' +
-            (channelData ? ', channelData = :cd' : 'REMOVE channelData'),
+        UpdateExpression: 'SET lastMessage = :lastMessage, ' +
+                          'botId_lastInteractiveMessageTimestamp_messageId = :blimtm, ' +
+                          'channel = :chan, botId = :botId ' +
+                          (channelData ? ', channelData = :cd' : 'REMOVE channelData'),
         ExpressionAttributeValues: {
             ':lastMessage': aws.dynamoCleanUpObj(message),
-            ':lmt': message.creationTimestamp,
+            ':blimtm': composeKeys(botParams.botId,
+                composeKeys(message.creationTimestamp, message.id)),
             ':chan': message.channel,
             ':botId': botParams.botId,
             ':cd': channelData,
@@ -429,7 +430,7 @@ export async function _handleWebhookMessage(
 
     console.log('dbMessage: ', dbMessage);
 
-    const [, conversationId] = aws.decomposeKeys(dbMessage.publisherId_conversationId);
+    const [, conversationId] = decomposeKeys(dbMessage.publisherId_conversationId);
     let newRespondFn;
     const sendAsUser = (msg: DBMessage) => _handleProcessedDBMessage(msg, botParams, newRespondFn, conversationId, channelData);
 
@@ -476,7 +477,7 @@ export async function deepiksBot(message: WebhookMessage,
         }
         await _handleWebhookMessage(message, botParams, respondFn, channelData);
     } catch(error) {
-        const [, conversationId] = aws.decomposeKeys(message.publisherId_conversationId);
+        const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
         const m = { text: 'Sorry, there seems to be a problem...', creationTimestamp: Date.now() };
         // don't await, let them fail silently
         respondFn(m);
@@ -492,22 +493,22 @@ export async function deepiksBot(message: WebhookMessage,
 export async function coldSend(message: ResponseMessage, botParams: BotParams,
                                conversation: Conversation, respondFn: RespondFn)
 {
+    const [, conversationId] = decomposeKeys(conversation.botId_conversationId);
     let newRespondFn;
     const sendAsUser = (msg: DBMessage) => _handleProcessedDBMessage(
-        msg, botParams, newRespondFn, conversation.conversationId,
-        conversation.channelData
+        msg, botParams, newRespondFn, conversationId, conversation.channelData
     );
     const responses = [];
     newRespondFn = respondFn;
     newRespondFn = _respondFnSignS3UrlsMiddleware(newRespondFn);
     newRespondFn = _respondFnCollectorMiddleware(newRespondFn, responses);
     newRespondFn = _respondFnPreprocessorActionsMiddleware(
-        newRespondFn, botParams, conversation.conversationId,
+        newRespondFn, botParams, conversationId,
         conversation.channel, sendAsUser
     );
 
     await newRespondFn(message);
-    await _logResponseMessage(responses, botParams, conversation.conversationId, conversation.channel);
+    await _logResponseMessage(responses, botParams, conversationId, conversation.channel);
 }
 
 export default deepiksBot;

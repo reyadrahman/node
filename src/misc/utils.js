@@ -4,6 +4,17 @@ import map from 'lodash/map';
 import omitBy from 'lodash/omitBy';
 import isUndefined from 'lodash/isUndefined';
 
+
+export function composeKeys(a: string | number, b: string | number): string {
+    return `${a}__${b}`;
+}
+
+export function decomposeKeys(k: string): Array<string> {
+    const split = k.split('__');
+    return [split[0], split.slice(1).join('__')];
+}
+
+
 export function toStr(obj: any): string {
     return JSON.stringify(obj, null, ' ');
 }

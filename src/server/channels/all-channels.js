@@ -6,12 +6,10 @@ import * as ms from './ms.js';
 import * as aws from '../../aws/aws.js';
 import { waitForAll } from '../../misc/utils.js';
 import type { ResponseMessage, BotParams, Conversation } from '../../misc/types.js';
-import { ENV } from '../server-utils.js';
-import { toStr } from '../../misc/utils.js';
+import { CONSTANTS } from '../server-utils.js';
+import { toStr, decomposeKeys } from '../../misc/utils.js';
 import { coldSend as deepiksColdSend } from '../deepiks-bot/deepiks-bot.js';
 import _ from 'lodash';
-
-const { DB_TABLE_CONVERSATIONS } = ENV;
 
 export const webhooks = {
     messenger: messenger.webhook,
@@ -23,7 +21,8 @@ export const webhooks = {
 export async function send(botParams: BotParams, conversation: Conversation,
                            message: ResponseMessage)
 {
-    const { channel, conversationId, channelData } = conversation;
+    const { channel, botId_conversationId, channelData } = conversation;
+    const [, conversationId] = decomposeKeys(botId_conversationId);
     let sendFn;
     if (channel === 'messenger') {
         sendFn = m => messenger.send(botParams, conversationId, m);
@@ -47,9 +46,9 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
     console.log('sendAll: botParams: ', botParams, ', message: ', message, ', categories: ', categories);
     let qItems = await aws.dynamoAccumulatePages(
         startKey => aws.dynamoQuery({
-            TableName: DB_TABLE_CONVERSATIONS,
-            KeyConditionExpression: 'publisherId = :pid',
-            FilterExpression: 'botId = :bid and subscribed <> :s',
+            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+            KeyConditionExpression: 'publisherId = :pid and begins_with(botId_conversationId, :bid)',
+            FilterExpression: 'subscribed <> :s',
             ExclusiveStartKey: startKey,
             ExpressionAttributeValues: {
                 ':pid': botParams.publisherId,

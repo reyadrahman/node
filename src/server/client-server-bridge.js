@@ -1,20 +1,15 @@
 /* @flow */
 
-import { ENV, request } from './server-utils.js';
+import { CONSTANTS, request } from './server-utils.js';
 import * as aws from '../aws/aws.js';
 import * as channels from './channels/all-channels.js';
 import type { ContactFormData, FeedConfig } from '../misc/types.js';
+import { composeKeys, decomposeKeys } from '../misc/utils.js';
 
 import uuid from 'node-uuid';
 import type { Request, Response } from 'express';
 import express from 'express';
 import ciscospark from 'ciscospark';
-
-const {
-          AWS_REGION, USER_POOL_ID, IDENTITY_POOL_ID, DB_TABLE_BOTS,
-          DB_TABLE_CONVERSATIONS, DB_TABLE_MESSAGES, DB_TABLE_USER_PREFS,
-          CONTACT_EMAIL, OWN_BASE_URL
-      } = ENV;
 
 const routes = express.Router();
 
@@ -186,7 +181,7 @@ async function sendEmail(contactFormData: ContactFormData) {
     const params = {
         Destination: {
             ToAddresses: [
-                CONTACT_EMAIL,
+                CONSTANTS.CONTACT_EMAIL,
             ],
         },
         Message: {
@@ -202,7 +197,7 @@ async function sendEmail(contactFormData: ContactFormData) {
             },
         },
         // TODO
-        Source: CONTACT_EMAIL,
+        Source: CONSTANTS.CONTACT_EMAIL,
         ReplyToAddresses: [
             name + '<' + email + '>',
         ],
@@ -215,7 +210,7 @@ async function sendEmail(contactFormData: ContactFormData) {
 async function fetchBots(identityId) {
     console.log('fetchBots: ', identityId);
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_BOTS,
+        TableName: CONSTANTS.DB_TABLE_BOTS,
         KeyConditionExpression: 'publisherId = :pid',
         ExpressionAttributeValues: {
             ':pid': identityId,
@@ -228,12 +223,12 @@ async function fetchBots(identityId) {
 async function fetchUsers(identityId, botId) {
     console.log('fetchUsers: identityId=', identityId, 'botId=', botId);
     const qres = await aws.dynamoQuery({
-        TableName:                 DB_TABLE_USER_PREFS,
+        TableName:                 CONSTANTS.DB_TABLE_USER_PREFS,
         KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_userId, :bid)',
         // FilterExpression:          botId ? 'begins_with(botId_userId, :bid)' : undefined,
         ExpressionAttributeValues: {
             ':pid': identityId,
-            ':bid': botId || undefined
+            ':bid': botId,
         },
         ScanIndexForward:          false,
     });
@@ -244,11 +239,11 @@ async function fetchUsers(identityId, botId) {
 async function fetchUser(identityId, botId, userId) {
     console.log('fetchUsers: identityId=', identityId, 'botId=', botId);
     const qres = await aws.dynamoQuery({
-        TableName:                 DB_TABLE_USER_PREFS,
+        TableName:                 CONSTANTS.DB_TABLE_USER_PREFS,
         KeyConditionExpression:    'publisherId = :pid AND botId_userId = :pk',
         ExpressionAttributeValues: {
             ':pid': identityId,
-            ':pk':  aws.composeKeys(botId, userId)
+            ':pk':  composeKeys(botId, userId)
         },
         Limit:                     1,
         ScanIndexForward:          false,
@@ -260,7 +255,7 @@ async function fetchUser(identityId, botId, userId) {
 async function saveUser(identityId, botId_userId, model) {
     if (botId_userId) {
         let user =  await aws.dynamoUpdate({
-            TableName:                 DB_TABLE_USER_PREFS,
+            TableName:                 CONSTANTS.DB_TABLE_USER_PREFS,
             Key:                       {
                 publisherId: identityId,
                              botId_userId
@@ -278,10 +273,10 @@ async function saveUser(identityId, botId_userId, model) {
             throw new Error('User id must be present');
         }
         await aws.dynamoPut({
-            TableName:    DB_TABLE_USER_PREFS,
+            TableName:    CONSTANTS.DB_TABLE_USER_PREFS,
             Item:         {
                 publisherId:  identityId,
-                botId_userId: aws.composeKeys(model.botId, model.id),
+                botId_userId: composeKeys(model.botId, model.id),
                 category:     model.category || null,
                 channel:      model.channel || null
             }
@@ -294,11 +289,12 @@ async function saveUser(identityId, botId_userId, model) {
 async function fetchConversations(identityId, botId) {
     console.log('fetchConversations: identityId=', identityId, 'botId=', botId);
     // TODO paging
+    // see dynamoAccumulatePages in aws-helper.js
     const qres = await aws.dynamoQuery({
-        TableName:                 DB_TABLE_CONVERSATIONS,
-        IndexName:                 'byLastMessageTimestamp',
-        KeyConditionExpression:    'publisherId = :pid',
-        FilterExpression:          'botId = :bid',
+        TableName:                 CONSTANTS.DB_TABLE_CONVERSATIONS,
+        IndexName:                 'byLastInteractiveMessage',
+        KeyConditionExpression:    'publisherId = :pid and ' +
+            'begins_with(botId_lastInteractiveMessageTimestamp_messageId, :bid)',
         ExpressionAttributeValues: {
             ':pid': identityId,
             ':bid': botId,
@@ -313,10 +309,10 @@ async function fetchConversations(identityId, botId) {
 async function fetchMessages(identityId, conversationId) {
     console.log('fetchMessages: ', identityId);
     const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_MESSAGES,
+        TableName: CONSTANTS.DB_TABLE_MESSAGES,
         KeyConditionExpression: 'publisherId_conversationId = :pc',
         ExpressionAttributeValues: {
-            ':pc': aws.composeKeys(identityId, conversationId),
+            ':pc': composeKeys(identityId, conversationId),
         },
     });
 
@@ -337,7 +333,7 @@ async function addBot(identityId, botName, settings) {
     });
     const webhook = await csClient.webhooks.create({
         name: `deepiks bot (${botName})`,
-        targetUrl: `${OWN_BASE_URL}/webhooks/${identityId}/${botId}/spark`,
+        targetUrl: `${CONSTANTS.OWN_BASE_URL}/webhooks/${identityId}/${botId}/spark`,
         resource: 'all',
         event: 'all',
         secret: ciscosparkWebhookSecret,
@@ -345,7 +341,7 @@ async function addBot(identityId, botName, settings) {
     const me = await csClient.people.get('me');
 
     await aws.dynamoPut({
-        TableName: DB_TABLE_BOTS,
+        TableName: CONSTANTS.DB_TABLE_BOTS,
         Item: aws.dynamoCleanUpObj({
             publisherId: identityId,
             botId,
@@ -366,7 +362,7 @@ async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
         feedId: uuid.v1(),
     };
     await aws.dynamoUpdate({
-        TableName: DB_TABLE_BOTS,
+        TableName: CONSTANTS.DB_TABLE_BOTS,
         Key: {
             publisherId: identityId,
             botId,

@@ -1,7 +1,8 @@
 /* @flow */
 
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import { callbackToPromise, waitForAll, timeout } from '../../misc/utils.js';
+import { callbackToPromise, waitForAll, timeout,
+         composeKeys, decomposeKeys } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
@@ -89,7 +90,7 @@ async function processMessage(session, authRequest, botParams) {
 
     const message: WebhookMessage = {
         publisherId_conversationId:
-            aws.composeKeys(botParams.publisherId, m.address.conversation.id),
+            composeKeys(botParams.publisherId, m.address.conversation.id),
         creationTimestamp: new Date(m.timestamp).getTime(),
         id: m.address.id,
         senderId: m.user.id,

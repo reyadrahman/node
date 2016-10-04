@@ -1,7 +1,8 @@
 import Html from '../components/html/Html.jsx';
 import Routes from '../Routes.jsx';
 import { languages } from '../i18n/translations.js';
-import { ENV as CLIENT_ENV } from '../client/client-utils.js';
+import { CONSTANTS_KEYS as CLIENT_CONSTANTS_KEYS } from '../client/client-utils.js';
+import { CONSTANTS } from './server-utils.js'
 import initAppState from '../app-state/init-app-state.js';
 import * as reducers from '../app-state/reducers.js';
 import thunkMiddleware from 'redux-thunk'
@@ -11,6 +12,7 @@ import { Provider } from 'react-redux';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import { RouterContext, match } from 'react-router';
+import _ from 'lodash';
 
 
 const loggerMiddleware = createLogger();
@@ -28,7 +30,7 @@ export default function render(full, req, res, next) {
             next();
         } else {
             const envVars = {
-                ...CLIENT_ENV,
+                ...(_.pick(CONSTANTS, CLIENT_CONSTANTS_KEYS)),
                 PLATFORM: 'browser',
             };
             const systemLang = req.acceptsLanguages(...languages);

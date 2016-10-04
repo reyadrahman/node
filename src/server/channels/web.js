@@ -1,7 +1,7 @@
 /* @flow */
 
-import { request, ENV, CONSTANTS } from '../server-utils.js';
-import { toStr, waitForAll } from '../../misc/utils.js';
+import { request, CONSTANTS } from '../server-utils.js';
+import { toStr, waitForAll, composeKeys, decomposeKeys } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams, WebchannelMessage } from '../../misc/types.js';
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
@@ -23,7 +23,7 @@ async function handleWebsocketMessage(
     const { conversationId, senderId, text, timestamp } = messageReceived.data;
 
     const message: WebhookMessage = {
-        publisherId_conversationId: aws.composeKeys(botParams.publisherId, message.id),
+        publisherId_conversationId: composeKeys(botParams.publisherId, message.id),
         creationTimestamp: new Date(timestamp).getTime(),
         id: body.id,
         senderId: senderId,

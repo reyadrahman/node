@@ -2,7 +2,7 @@
 
 import * as aws from '../aws/aws.js';
 import { destructureS3Url } from '../misc/utils.js';
-import * as utils from '../client/client-utils.js';
+import { CONSTANTS } from '../client/client-utils.js';
 import * as bridge from '../client/client-server-bridge.js';
 import SignIn from '../components/sign-in/SignIn.jsx';
 import SignUp from '../components/sign-up/SignUp.jsx';
@@ -12,8 +12,6 @@ import type { DBMessage, ResponseMessage, FeedConfig } from '../misc/types.js';
 import type { Component } from 'react';
 import { browserHistory } from 'react-router'
 import Cookies from 'js-cookie';
-
-const { PLATFORM, S3_BUCKET_NAME } = utils.ENV;
 
 export function closeModal() {
     return { type: 'ui/closeModal' };
@@ -69,7 +67,7 @@ export function setLanguage(lang: string) {
 
         // TODO if logged in, store in AWS Cognito attributes
 
-        if (PLATFORM === 'browser') {
+        if (CONSTANTS.PLATFORM === 'browser') {
             Cookies.set('language', lang,
                         {expires: 1000, path: '/'});
             console.log('cookies: ', document.cookie);
@@ -304,7 +302,7 @@ async function signS3UrlsInMesssages(messages: DBMessage[]): Promise<DBMessage[]
         if (clone.cards) {
             cardsP = Promise.all(clone.cards.map(async function(c) {
                 const bucketAndKey = destructureS3Url(c.imageUrl);
-                if (!bucketAndKey || bucketAndKey.bucket !== S3_BUCKET_NAME) {
+                if (!bucketAndKey || bucketAndKey.bucket !== CONSTANTS.S3_BUCKET_NAME) {
                     return c;
                 }
 

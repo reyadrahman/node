@@ -2,17 +2,12 @@
 
 // server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.min.js'
 import AWS from 'aws-sdk';
-import { callbackToPromise, pushMany } from '../misc/utils.js';
-import { ENV, CONSTANTS, request } from '../server/server-utils.js';
+import { callbackToPromise, pushMany, composeKeys, decomposeKeys } from '../misc/utils.js';
+import { CONSTANTS, request } from '../server/server-utils.js';
 import type { BotParams, AIActionInfo, Conversation } from '../misc/types.js';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
-
-const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
-        DB_TABLE_BOTS, DB_TABLE_MESSAGES, DB_TABLE_CONVERSATIONS,
-        DB_TABLE_AI_ACTIONS, DB_TABLE_USER_PREFS, DB_TABLE_SCHEDULED_TASKS,
-        DB_TABLE_POLL_QUESTIONS, S3_BUCKET_NAME, IDENTITY_POOL_ID, USER_POOL_ID} = ENV;
 
 // this is used to verify signatures for user pool's JWT
 var _userPoolPems_;
@@ -26,9 +21,9 @@ AWS.config.update({
         cognitoidentity: '2014-06-30',
         cognitosync: '2014-06-30',
     },
-    region: AWS_REGION,
-    accessKeyId: AWS_ACCESS_KEY_ID,
-    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    region: CONSTANTS.AWS_REGION,
+    accessKeyId: CONSTANTS.AWS_ACCESS_KEY_ID,
+    secretAccessKey: CONSTANTS.AWS_SECRET_ACCESS_KEY,
 });
 
 const dynamoDoc = new AWS.DynamoDB.DocumentClient();
@@ -92,7 +87,7 @@ export async function dynamoAccumulatePages(getOnePage: (start?: Object) => Obje
 export async function getBot(publisherId: string, botId: string): Promise<?BotParams> {
     console.log('getBot publisherId: ', publisherId, ', botId: ', botId);
     const qres = await dynamoQuery({
-        TableName: DB_TABLE_BOTS,
+        TableName: CONSTANTS.DB_TABLE_BOTS,
         KeyConditionExpression: 'publisherId = :publisherId and botId = :botId',
         ExpressionAttributeValues: {
             ':publisherId': publisherId,
@@ -106,16 +101,18 @@ export async function getBot(publisherId: string, botId: string): Promise<?BotPa
     return qres.Items[0];
 }
 
-export async function getConversation(publisherId: string, conversationId: string)
+export async function getConversation(publisherId: string, botId: string, conversationId: string)
 : Promise<?Conversation>
 {
-    console.log('getConversation publisherId: ', publisherId, ', conversationId: ', conversationId);
+    console.log('getConversation publisherId: ', publisherId,
+                ', botId: ', botId,
+                ', conversationId: ', conversationId);
     const qres = await dynamoQuery({
-        TableName: DB_TABLE_CONVERSATIONS,
-        KeyConditionExpression: 'publisherId = :publisherId and conversationId = :conversationId',
+        TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+        KeyConditionExpression: 'publisherId = :publisherId and botId_conversationId = :bc',
         ExpressionAttributeValues: {
             ':publisherId': publisherId,
-            ':conversationId': conversationId,
+            ':bc': composeKeys(botId, conversationId),
         },
     });
     if (qres.Count === 0) {
@@ -132,7 +129,7 @@ export async function getPollQuestion(
 {
     console.log('getPoll publisherId: ', publisherId, ', botId: ', botId, ', pollId');
     const qres = await dynamoQuery({
-        TableName: DB_TABLE_POLL_QUESTIONS,
+        TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
         KeyConditionExpression: 'publisherId = :publisherId and botId_pollId_questionId = :bpq',
         ExpressionAttributeValues: {
             ':publisherId': publisherId,
@@ -150,9 +147,9 @@ export async function getPollQuestion(
 
 export async function getIdFromJwtIdToken(jwtIdToken: string): Promise<string> {
     const res = await cognitoIdentityGetId({
-        IdentityPoolId: IDENTITY_POOL_ID,
+        IdentityPoolId: CONSTANTS.IDENTITY_POOL_ID,
         Logins: {
-            [`cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`]: jwtIdToken
+            [`cognito-idp.${CONSTANTS.AWS_REGION}.amazonaws.com/${CONSTANTS.USER_POOL_ID}`]: jwtIdToken
         }
     });
     return res.IdentityId;
@@ -167,7 +164,7 @@ export function verifyJwt(token: string) {
         throw new Error(`verifyJwt: Could not decode JWT: ${token}`);
     }
     console.log('verifyJwt decoded: ', decoded);
-    const iss = `https://cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`;
+    const iss = `https://cognito-idp.${CONSTANTS.AWS_REGION}.amazonaws.com/${CONSTANTS.USER_POOL_ID}`;
 
     if (decoded.payload.iss !== iss) {
         throw new Error(`verifyJwt: Invalid issuer: ${decoded.payload.iss}`);
@@ -201,7 +198,7 @@ export function _createGetAIAction() {
         console.log('getAIActionHelper: making DB request');
 
         const qres = await dynamoScan({
-            TableName: DB_TABLE_AI_ACTIONS,
+            TableName: CONSTANTS.DB_TABLE_AI_ACTIONS,
         });
 
         cache = _.fromPairs(qres.Items.map(x => [x.action, x]));
@@ -214,15 +211,6 @@ export function _createGetAIAction() {
 
         return cache[actionName]
     }
-}
-
-export function composeKeys(a: string, b: string): string {
-    return `${a}__${b}`;
-}
-
-export function decomposeKeys(k: string): Array<string> {
-    const split = k.split('__');
-    return [split[0], split.slice(1).join('__')];
 }
 
 /*
@@ -245,10 +233,10 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
     const { TableNames: tables } = await dynamoListTables({});
 
     const creatingTables = [];
-    if (!tables.includes(DB_TABLE_BOTS)) {
-        console.log('creating table: DB_TABLE_BOTS');
+    if (!tables.includes(CONSTANTS.DB_TABLE_BOTS)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_BOTS');
         const tableParams = {
-            TableName : DB_TABLE_BOTS,
+            TableName : CONSTANTS.DB_TABLE_BOTS,
             KeySchema: [
                 { AttributeName: 'publisherId', KeyType: 'HASH'},
                 { AttributeName: 'botId', KeyType: 'RANGE'},
@@ -263,28 +251,27 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             },
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(DB_TABLE_BOTS);
+        creatingTables.push(CONSTANTS.DB_TABLE_BOTS);
     }
-    if (!tables.includes(DB_TABLE_CONVERSATIONS)) {
-        console.log('creating table: DB_TABLE_CONVERSATIONS');
+    if (!tables.includes(CONSTANTS.DB_TABLE_CONVERSATIONS)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_CONVERSATIONS');
         const tableParams = {
-            TableName : DB_TABLE_CONVERSATIONS,
+            TableName : CONSTANTS.DB_TABLE_CONVERSATIONS,
             KeySchema: [
                 { AttributeName: 'publisherId', KeyType: 'HASH'},
-                { AttributeName: 'conversationId', KeyType: 'RANGE'},
-                // { AttributeName: "title", KeyType: "RANGE" }
+                { AttributeName: 'botId_conversationId', KeyType: 'RANGE'},
             ],
             AttributeDefinitions: [
                 { AttributeName: 'publisherId', AttributeType: 'S' },
-                { AttributeName: 'conversationId', AttributeType: 'S' },
-                { AttributeName: 'lastMessageTimestamp', AttributeType: 'N' },
+                { AttributeName: 'botId_conversationId', AttributeType: 'S' },
+                { AttributeName: 'botId_lastInteractiveMessageTimestamp_messageId', AttributeType: 'S' },
             ],
             LocalSecondaryIndexes: [
                 {
-                    IndexName: 'byLastMessageTimestamp',
+                    IndexName: 'byLastInteractiveMessage',
                     KeySchema: [
                         { AttributeName: 'publisherId', KeyType: 'HASH'},
-                        { AttributeName: 'lastMessageTimestamp', KeyType: 'RANGE'},
+                        { AttributeName: 'botId_lastInteractiveMessageTimestamp_messageId', KeyType: 'RANGE'},
                     ],
                     Projection: {
                         ProjectionType: 'ALL',
@@ -297,12 +284,12 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             },
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(DB_TABLE_CONVERSATIONS);
+        creatingTables.push(CONSTANTS.DB_TABLE_CONVERSATIONS);
     }
-    if (!tables.includes(DB_TABLE_MESSAGES)) {
-        console.log('creating table: DB_TABLE_MESSAGES');
+    if (!tables.includes(CONSTANTS.DB_TABLE_MESSAGES)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_MESSAGES');
         const tableParams = {
-            TableName : DB_TABLE_MESSAGES,
+            TableName : CONSTANTS.DB_TABLE_MESSAGES,
             KeySchema: [
                 { AttributeName: 'publisherId_conversationId', KeyType: 'HASH'},
                 { AttributeName: 'creationTimestamp', KeyType: 'RANGE' }
@@ -317,12 +304,12 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             }
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(DB_TABLE_MESSAGES);
+        creatingTables.push(CONSTANTS.DB_TABLE_MESSAGES);
     }
-    if (!tables.includes(DB_TABLE_AI_ACTIONS)) {
-        console.log('creating table: DB_TABLE_AI_ACTIONS');
+    if (!tables.includes(CONSTANTS.DB_TABLE_AI_ACTIONS)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_AI_ACTIONS');
         const tableParams = {
-            TableName : DB_TABLE_AI_ACTIONS,
+            TableName : CONSTANTS.DB_TABLE_AI_ACTIONS,
             KeySchema: [
                 { AttributeName: 'action', KeyType: 'HASH'},
             ],
@@ -335,12 +322,12 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             }
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(DB_TABLE_AI_ACTIONS);
+        creatingTables.push(CONSTANTS.DB_TABLE_AI_ACTIONS);
     }
-    if (!tables.includes(DB_TABLE_USER_PREFS)) {
-        console.log('creating table: DB_TABLE_USER_PREFS');
+    if (!tables.includes(CONSTANTS.DB_TABLE_USER_PREFS)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_USER_PREFS');
         const tableParams = {
-            TableName : DB_TABLE_USER_PREFS,
+            TableName : CONSTANTS.DB_TABLE_USER_PREFS,
             KeySchema: [
                 { AttributeName: 'publisherId', KeyType: 'HASH' },
                 { AttributeName: 'botId_userId', KeyType: 'RANGE' }
@@ -355,12 +342,12 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             }
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(DB_TABLE_USER_PREFS);
+        creatingTables.push(CONSTANTS.DB_TABLE_USER_PREFS);
     }
-    if (!tables.includes(DB_TABLE_SCHEDULED_TASKS)) {
-        console.log('creating table: DB_TABLE_SCHEDULED_TASKS');
+    if (!tables.includes(CONSTANTS.DB_TABLE_SCHEDULED_TASKS)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_SCHEDULED_TASKS');
         const tableParams = {
-            TableName : DB_TABLE_SCHEDULED_TASKS,
+            TableName : CONSTANTS.DB_TABLE_SCHEDULED_TASKS,
             KeySchema: [
                 { AttributeName: 'dummy', KeyType: 'HASH' },
                 { AttributeName: 'scheduleTimestamp_taskId', KeyType: 'RANGE' }
@@ -375,12 +362,12 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             }
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(DB_TABLE_SCHEDULED_TASKS);
+        creatingTables.push(CONSTANTS.DB_TABLE_SCHEDULED_TASKS);
     }
-    if (!tables.includes(DB_TABLE_POLL_QUESTIONS)) {
-        console.log('creating table: DB_TABLE_POLL_QUESTIONS');
+    if (!tables.includes(CONSTANTS.DB_TABLE_POLL_QUESTIONS)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_POLL_QUESTIONS');
         const tableParams = {
-            TableName : DB_TABLE_POLL_QUESTIONS,
+            TableName : CONSTANTS.DB_TABLE_POLL_QUESTIONS,
             KeySchema: [
                 { AttributeName: 'publisherId', KeyType: 'HASH' },
                 { AttributeName: 'botId_pollId_questionId', KeyType: 'RANGE' }
@@ -395,7 +382,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             }
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(DB_TABLE_POLL_QUESTIONS);
+        creatingTables.push(CONSTANTS.DB_TABLE_POLL_QUESTIONS);
     }
 
     await Promise.all(creatingTables.map(
@@ -408,17 +395,17 @@ async function initResourcesS3() {
     const { Buckets: buckets } = await s3ListBuckets();
     const bucketNames = buckets.map(x => x.Name);
 
-    if (!bucketNames.includes(S3_BUCKET_NAME)) {
-        console.log('creating s3 bucket ', S3_BUCKET_NAME);
+    if (!bucketNames.includes(CONSTANTS.S3_BUCKET_NAME)) {
+        console.log('creating s3 bucket ', CONSTANTS.S3_BUCKET_NAME);
         await s3CreateBucket({
-            Bucket: S3_BUCKET_NAME,
+            Bucket: CONSTANTS.S3_BUCKET_NAME,
         });
         // await s3PutBucketPolicy({
-        //     Bucket: S3_BUCKET_NAME,
-        //     Policy: createS3Policy(S3_BUCKET_NAME),
+        //     Bucket: CONSTANTS.S3_BUCKET_NAME,
+        //     Policy: createS3Policy(CONSTANTS.S3_BUCKET_NAME),
         // })
         await s3PutBucketCors({
-            Bucket: S3_BUCKET_NAME,
+            Bucket: CONSTANTS.S3_BUCKET_NAME,
             CORSConfiguration: {
                 CORSRules: [
                     {
@@ -431,7 +418,7 @@ async function initResourcesS3() {
             },
         })
         await s3WaitFor('bucketExists', {
-            Bucket: S3_BUCKET_NAME,
+            Bucket: CONSTANTS.S3_BUCKET_NAME,
         });
     }
     console.log('All S3 buckets ready');
@@ -441,7 +428,7 @@ async function initResourcesS3() {
 // sets _userPoolJwtByKid_
 async function initResourcesUserPoolJwt() {
     const req = await request({
-        uri: `https://cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}/.well-known/jwks.json`,
+        uri: `https://cognito-idp.${CONSTANTS.AWS_REGION}.amazonaws.com/${CONSTANTS.USER_POOL_ID}/.well-known/jwks.json`,
         json: true,
     });
     const userPoolJwtByKid = _.keyBy(req.body.keys, 'kid');

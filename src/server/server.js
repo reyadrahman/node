@@ -1,9 +1,5 @@
 /* @flow */
 
-console.log('PLATFORM: ', process.env.PLATFORM);
-console.log('NODE_ENV: ', process.env.NODE_ENV);
-console.log('PORT: ', process.env.PORT);
-
 if (process.env.NODE_ENV === 'development') {
     console.log('registering source-map-support');
     require('source-map-support').install();
@@ -18,7 +14,7 @@ import bodyParser from 'body-parser';
 import http from 'http';
 import compression from 'compression';
 import { initResources } from '../aws/aws.js';
-import { ENV } from './server-utils.js';
+import { CONSTANTS } from './server-utils.js';
 import { Server as WebSocketServer } from 'ws';
 import initializeRoutes from './server-router.js';
 import { websocketMessage } from './channels/web.js';
@@ -27,9 +23,7 @@ const debug = require('debug')('app:server');
 
 const ROOT_DIR = path.join(__dirname, '../');
 
-const { PUBLIC_PATH, PUBLIC_URL, PORT, NODE_ENV } = ENV;
-
-const DEV = NODE_ENV === 'development';
+const DEV = process.env.NODE_ENV === 'development';
 
 
 debug(`running server in ${DEV ? 'development' : 'production'} mode`);
@@ -55,7 +49,7 @@ app.use(bodyParser.json({
 }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(PUBLIC_PATH, express.static(path.join(ROOT_DIR, 'dist-client'),
+app.use(CONSTANTS.PUBLIC_PATH, express.static(path.join(ROOT_DIR, 'dist-client'),
     DEV ? {} : { maxage: '1d' }));
 
 app.use(initializeRoutes(server));
@@ -79,10 +73,10 @@ app.use(function(err, req, res, next) {
 debug('Initializing resources...');
 initResources(5, 5).then(() => {
     debug('Successfully initialized resources');
-    server.listen(parseInt(PORT));
+    server.listen(parseInt(CONSTANTS.PORT));
     server.on('error', onError);
     server.on('listening', () => {
-        debug(`Listening on ${PORT}`);
+        debug(`Listening on ${CONSTANTS.PORT}`);
     });
 
 }).catch(err => {
@@ -95,7 +89,7 @@ function onError(error) {
     throw error;
   }
 
-  const bind = `Port ${PORT}`;
+  const bind = `Port ${CONSTANTS.PORT}`;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {

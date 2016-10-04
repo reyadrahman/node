@@ -3,7 +3,7 @@
 import deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import { request } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
-import { toStr, waitForAll } from '../../misc/utils.js';
+import { toStr, waitForAll, composeKeys, decomposeKeys } from '../../misc/utils.js';
 import * as aws from '../../aws/aws.js';
 import URL from 'url';
 import ciscospark from 'ciscospark';
@@ -92,7 +92,7 @@ export async function webhook(req: Request, res: Response) {
     );
     const senderProfile = await client.people.get(rawMessage.personId);
     const message: WebhookMessage = {
-        publisherId_conversationId: aws.composeKeys(botParams.publisherId, rawMessage.roomId),
+        publisherId_conversationId: composeKeys(botParams.publisherId, rawMessage.roomId),
         creationTimestamp: new Date(rawMessage.created).getTime(),
         id: rawMessage.id,
         senderId: rawMessage.personId,

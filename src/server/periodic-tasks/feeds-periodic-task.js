@@ -1,7 +1,7 @@
 /* @flow */
 import { sendToMany } from '../channels/all-channels.js';
 import * as aws from '../../aws/aws.js';
-import { ENV } from '../server-utils.js';
+import { CONSTANTS } from '../server-utils.js';
 import { toStr, splitOmitWhitespace, waitForAll, waitForAllOmitErrors,
          callbackToPromise } from '../../misc/utils.js';
 import type { ResponseMessage, BotParams, FeedConfig } from '../../misc/types.js';
@@ -11,8 +11,6 @@ import FeedParser from 'feedparser';
 import request_ from 'request';
 import Twit from 'twit';
 import type { Request, Response } from 'express';
-
-const { DB_TABLE_BOTS } = ENV;
 
 type BotFeed = {
     categories?: string[],
@@ -28,7 +26,7 @@ type ProcessFeedConfigsRes = {
 
 export default async function updateFeedsPeriodicTask() {
     const botsScanRes = await aws.dynamoScan({
-        TableName: DB_TABLE_BOTS,
+        TableName: CONSTANTS.DB_TABLE_BOTS,
     });
 
     console.log('updateFeedsPeriodicTask botsScanRes: ', toStr(botsScanRes));
@@ -58,7 +56,7 @@ export default async function updateFeedsPeriodicTask() {
     // update DB
     const updateDBPromises = validProcessFeedConfigsResults.map(
         ({ botFeeds, feedConfigs, botParams }) => aws.dynamoUpdate({
-            TableName: DB_TABLE_BOTS,
+            TableName: CONSTANTS.DB_TABLE_BOTS,
             Key: {
                 publisherId: botParams.publisherId,
                 botId: botParams.botId,

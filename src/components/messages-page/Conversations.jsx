@@ -3,7 +3,7 @@
 import React from 'react';
 import _ from 'lodash';
 
-import { simpleTimeFormat } from '../../misc/utils.js';
+import { simpleTimeFormat, decomposeKeys } from '../../misc/utils.js';
 // $FlowFixMe
 import defaultAvatarUrl from '../../resources/avatar.jpg';
 
@@ -58,13 +58,14 @@ let Conversations = React.createClass({
             if (text.length > 20) {
                 text = text.substr(0, 17) + '...';
             }
-            let extraClass = x.conversationId === selectedConversationId
+            const [, conversationId] = decomposeKeys(x.botId_conversationId);
+            let extraClass = conversationId === selectedConversationId
                 ? 'selected' : '';
             return (
                 <div
                     key={i}
                     className={`conversation ${extraClass}`}
-                    onClick={() => this.props.onSelectConversation(x.conversationId)}
+                    onClick={() => this.props.onSelectConversation(conversationId)}
                 >
                     <div className="profile-pic" style={profilePicStyle} />
                     <div className="conversation-name-and-text">

@@ -17,7 +17,7 @@ export async function fetchBots(jwtIdToken: string) {
     return await fetchg2j('/api/fetch-bots', { jwtIdToken });
 }
 
-export async function fetchUsers(jwtIdToken: string, botId: string|undefined) {
+export async function fetchUsers(jwtIdToken: string, botId: string) {
     return await fetchg2j('/api/fetch-users', { jwtIdToken, botId });
 }
 

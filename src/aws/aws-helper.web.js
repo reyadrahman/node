@@ -2,14 +2,10 @@
 
 console.log('======== AWS CLIENT...');
 
-import { ENV } from '../client/client-utils.js';
+import { CONSTANTS } from '../client/client-utils.js';
 import { callbackToPromise } from '../misc/utils.js';
 import _ from 'lodash';
 import Cookies from 'js-cookie';
-
-const { IDENTITY_POOL_ID, USER_POOL_ID, AWS_REGION,
-        IDENTITY_POOL_UNAUTH_ROLE_ARN, IDENTITY_POOL_AUTH_ROLE_ARN,
-        USER_POOL_APP_CLIENT_ID } = ENV;
 
 const XMLHttpRequest = require('xhr2');
 global.XMLHttpRequest = XMLHttpRequest;
@@ -58,7 +54,7 @@ class AutoRefreshCredential extends AWS.CognitoIdentityCredentials {
                 console.group();
                 console.log('AutoRefreshCredential got session: ', session);
                 console.groupEnd();
-                this.params.Logins[`cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`] =
+                this.params.Logins[`cognito-idp.${CONSTANTS.AWS_REGION}.amazonaws.com/${CONSTANTS.USER_POOL_ID}`] =
                     session.getIdToken().getJwtToken();
                 console.log('AutoRefreshCredential params: ', this.params);
                 super.refresh(cb);
@@ -71,25 +67,25 @@ class AutoRefreshCredential extends AWS.CognitoIdentityCredentials {
 var _currentUser_ = null;
 
 
-AWS.config.region = AWS_REGION;
+AWS.config.region = CONSTANTS.AWS_REGION;
 AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId: IDENTITY_POOL_ID,
-    RoleArn: IDENTITY_POOL_UNAUTH_ROLE_ARN,
+    IdentityPoolId: CONSTANTS.IDENTITY_POOL_ID,
+    RoleArn: CONSTANTS.IDENTITY_POOL_UNAUTH_ROLE_ARN,
     // AccountId,
 });
 
 // $FlowFixMe
-AWSCognito.config.region = AWS_REGION;
+AWSCognito.config.region = CONSTANTS.AWS_REGION;
 AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId: IDENTITY_POOL_ID,
+    IdentityPoolId: CONSTANTS.IDENTITY_POOL_ID,
 // TODO is this needed?
-//     RoleArn: IDENTITY_POOL_UNAUTH_ROLE_ARN,
+//     RoleArn: CONSTANTS.IDENTITY_POOL_UNAUTH_ROLE_ARN,
 //     // AccountId,
 });
 
 var poolData = {
-    UserPoolId: USER_POOL_ID,
-    ClientId: USER_POOL_APP_CLIENT_ID,
+    UserPoolId: CONSTANTS.USER_POOL_ID,
+    ClientId: CONSTANTS.USER_POOL_APP_CLIENT_ID,
 };
 var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 
@@ -204,12 +200,12 @@ export async function updateCurrentUserAttrsAndPass(attrs: Object,
 function updateCredentials(session) {
     return new Promise((resolve, reject) => {
         AWS.config.credentials = new AutoRefreshCredential({
-            IdentityPoolId : IDENTITY_POOL_ID,
+            IdentityPoolId : CONSTANTS.IDENTITY_POOL_ID,
             getSession: getCurrentSession,
-            RoleArn: IDENTITY_POOL_AUTH_ROLE_ARN,
+            RoleArn: CONSTANTS.IDENTITY_POOL_AUTH_ROLE_ARN,
             Logins: {},
             // Logins : {
-            //     [`cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`]:
+            //     [`cognito-idp.${CONSTANTS.AWS_REGION}.amazonaws.com/${CONSTANTS.USER_POOL_ID}`]:
             //         session.getIdToken().getJwtToken()
             // }
         });
@@ -300,8 +296,8 @@ export async function signOut() {
         const cognitoUser = await getCurrentUser();
         cognitoUser.signOut();
         AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: IDENTITY_POOL_ID,
-            // RoleArn: IDENTITY_POOL_UNAUTH_ROLE_ARN,
+            IdentityPoolId: CONSTANTS.IDENTITY_POOL_ID,
+            // RoleArn: CONSTANTS.IDENTITY_POOL_UNAUTH_ROLE_ARN,
         });
         Cookies.remove('signedIn', { path: '/' });
     } catch(error) {}

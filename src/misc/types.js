@@ -1,11 +1,10 @@
 /* @flow */
 
 export type Conversation = {
-    botId: string,
     channel: string,
-    conversationId: string,
+    botId_conversationId: string,
     lastMessage: DBMessage,
-    lastMessageTimestamp: number,
+    botId_lastInteractiveMessageTimestamp_messageId: string,
     publisherId: string,
     witData: WitData,
     channelData?: ChannelData,
@@ -190,12 +189,13 @@ export type ContactFormData = {
     message: string,
 };
 
-export type ServerEnv = {
+export type ServerConstants = {
     NODE_ENV: string,
     PLATFORM: string,
     AWS_REGION: string,
     AWS_ACCESS_KEY_ID: string,
     AWS_SECRET_ACCESS_KEY: string,
+    DB_TABLES_PREFIX: string,
     DB_TABLE_BOTS: string,
     DB_TABLE_CONVERSATIONS: string,
     DB_TABLE_MESSAGES: string,
@@ -204,6 +204,8 @@ export type ServerEnv = {
     DB_TABLE_SCHEDULED_TASKS: string,
     DB_TABLE_POLL_QUESTIONS: string,
     S3_BUCKET_NAME: string,
+    AI_ACTION_CACHE_VALID_TIME_S: number,
+    TYPING_INDICATOR_DELAY_S: number,
     PUBLIC_PATH: string,
     PUBLIC_URL: string,
     USER_POOL_ID: string,
@@ -218,14 +220,10 @@ export type ServerEnv = {
     CDN?: string,
     DEBUG?: string,
 };
-export type ClientEnv = {
+export type ClientConstants = {
     NODE_ENV: string,
     PLATFORM: string,
     AWS_REGION: string,
-    DB_TABLE_BOTS: string,
-    DB_TABLE_CONVERSATIONS: string,
-    DB_TABLE_MESSAGES: string,
-    DB_TABLE_USER_PREFS: string,
     S3_BUCKET_NAME: string,
     PUBLIC_URL: string,
     USER_POOL_ID: string,

@@ -41,7 +41,9 @@ let UsersPage = React.createClass({
             return;
         }
 
-        if (currentUser.selectedBotId != oldProps.currentUser.selectedBotId) {
+        if (currentUser.selectedBotId &&
+            currentUser.selectedBotId != oldProps.currentUser.selectedBotId)
+        {
             fetchUsers(currentUser.selectedBotId);
         }
     },
