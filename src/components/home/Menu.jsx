@@ -59,7 +59,7 @@ let Header = React.createClass({
         const createNavItem = (to, icon, text) => (
             <li>
                 <Link href="#" to={to} spy={true} smooth={true} duration={500}>
-                    <i className={"icon fa fa-"+icon}></i>
+                    <i className={"icon icon-"+icon}></i>
                     { text }
                 </Link>
             </li>
@@ -73,7 +73,7 @@ let Header = React.createClass({
 
         return (
             <div className={`home-menu-comp ${className || ''}`}>
-                <i  className="menu-toggle fa fa-bars"
+                <i  className="menu-toggle icon-menu"
                     onClick={this.onMenuToggle}
                     onMouseEnter={this.onMenuToggleEnter}
                     onMouseLeave={this.onMenuToggleLeave}

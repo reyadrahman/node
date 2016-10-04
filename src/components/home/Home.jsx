@@ -111,7 +111,7 @@ let Home = React.createClass({
             { 'to': 'team', 'glyph' : 'user', 'string': sideMenuStrings.team },
             { 'to': 'screenshots', 'glyph': 'globe', 'string': sideMenuStrings.channels },
             { 'to': 'updates',  'glyph': 'tasks', 'string': sideMenuStrings.timeline },
-            { 'to': 'contact', 'glyph': 'envelope', 'string': sideMenuStrings.contact }
+            { 'to': 'contact', 'glyph': 'mail', 'string': sideMenuStrings.contact }
         ];
 
         return (
