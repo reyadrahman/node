@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react';
-import { Glyphicon } from 'react-bootstrap';
 import { Link as ScrollLink } from 'react-scroll';
 import { Link as RouterLink } from 'react-router';
 
@@ -60,7 +59,7 @@ let Header = React.createClass({
         const createNavItem = (to, icon, text) => (
             <li>
                 <Link href="#" to={to} spy={true} smooth={true} duration={500}>
-                    <Glyphicon glyph={icon} className="icon" />
+                    <i className={"icon fa fa-"+icon}></i>
                     { text }
                 </Link>
             </li>
@@ -73,14 +72,12 @@ let Header = React.createClass({
 
 
         return (
-            <div className="home-menu-comp">
-                <Glyphicon
-                    glyph="menu-hamburger"
-                    className="menu-toggle"
+            <div className={`home-menu-comp ${className || ''}`}>
+                <i  className="menu-toggle fa fa-bars"
                     onClick={this.onMenuToggle}
                     onMouseEnter={this.onMenuToggleEnter}
                     onMouseLeave={this.onMenuToggleLeave}
-                />
+                    ></i>
                 <nav
                     className={`left-navbar ${leftNavbarClass}`}
                     onMouseEnter={this.onMenuEnter}

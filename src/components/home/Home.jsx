@@ -1,6 +1,6 @@
 import * as actions from '../../app-state/actions.js';
 import Header from '../header/Header.jsx';
-import HomeMenu from './HomeMenu.jsx';
+import Menu from './Menu.jsx';
 import HomeContactForm from './HomeContactForm.jsx';
 
 import React from 'react';
@@ -106,7 +106,7 @@ let Home = React.createClass({
 
         const sideMenuStrings = i18n.strings.sideMenu;
         var menu = [
-            { 'to': 'services', 'glyph': 'ok', 'string': sideMenuStrings.features },
+            { 'to': 'services', 'glyph': 'check', 'string': sideMenuStrings.features },
             { 'to': 'pricing', 'glyph': 'euro', 'string': sideMenuStrings.pricing },
             { 'to': 'team', 'glyph' : 'user', 'string': sideMenuStrings.team },
             { 'to': 'screenshots', 'glyph': 'globe', 'string': sideMenuStrings.channels },
@@ -120,7 +120,9 @@ let Home = React.createClass({
                     className={`home-comp ${className || ''}`}
                     i18n={i18n}
                     leftItemsBeforeLogo={[
-                        <HomeMenu i18n={i18n} menu={menu} isScroll={true} />
+                        <Menu i18n={i18n} menu={menu} isScroll={true}
+
+                        />
                     ]}
                 />
                 <section className="intro">

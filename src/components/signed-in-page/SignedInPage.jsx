@@ -1,9 +1,9 @@
 import * as actions from '../../app-state/actions.js';
 import Header from '../header/Header.jsx';
-import HomeMenu from '../home/HomeMenu.jsx';
+import Menu from '../home/Menu.jsx';
 
 import React from 'react';
-import { Glyphicon, Dropdown, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
+import { Dropdown, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import _ from 'lodash';
@@ -84,7 +84,7 @@ let SignedInPage = React.createClass({
             {
                 string: sideMenuStrings.users,
                 to: '/users',
-                icon: 'icon-users',
+                glyph: 'users',
                 value: 'users',
             },
             {
@@ -108,7 +108,7 @@ let SignedInPage = React.createClass({
             {
                 string: sideMenuStrings.feeds,
                 to: '/feeds',
-                icon: 'icon-rss',
+                glyph: 'rss',
                 value: 'feeds',
             },
             {
@@ -120,11 +120,11 @@ let SignedInPage = React.createClass({
         ];
 
         const menuToggle = (
-            <Glyphicon
-                glyph="menu-hamburger"
-                className={`menu-toggle ${ui.sideMenu ? 'open' : ''}`}
+            <i  className="menu-toggle fa fa-bars"
                 onClick={this.onMenuToggle}
-            />
+                onMouseEnter={this.onMenuToggleEnter}
+                onMouseLeave={this.onMenuToggleLeave}
+                ></i>
         );
 
         const { selectedBotId, botsState: { bots, hasFetched } } = currentUser;
@@ -170,7 +170,7 @@ let SignedInPage = React.createClass({
                 <Header
                     className="header" i18n={i18n}
                     leftItemsBeforeLogo = {[
-                        <HomeMenu i18n={i18n} menu={menu} isScroll={false} />
+                        <Menu className="signed-in" i18n={i18n} menu={menu} isScroll={false} />
                     ]}
                     leftItemsAfterLogo={botSelector}
                 />
