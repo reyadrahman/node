@@ -18,6 +18,8 @@ let AddBotPage = React.createClass({
             witAccessToken: '',
             twitterConsumerKey: '',
             twitterConsumerSecret: '',
+            dashbotFacebookKey: '',
+            dashbotGenericKey: '',
         };
     },
     addBot(e) {
@@ -26,6 +28,7 @@ let AddBotPage = React.createClass({
         const { botName, ...settings } = this.state;
         this.props.addBot(botName, settings).then(() => {
             this.props.router.push('/account');
+            this.props.fetchBots();
         });
     },
     cancel(e) {
@@ -59,6 +62,12 @@ let AddBotPage = React.createClass({
     },
     twitterConsumerSecretChanged(e) {
         this.setState({ twitterConsumerSecret: e.target.value });
+    },
+    dashbotFacebookKeyChanged(e) {
+        this.setState({ dashbotFacebookKey: e.target.value });
+    },
+    dashbotGenericKeyChanged(e) {
+        this.setState({ dashbotGenericKey: e.target.value });
     },
 
     componentWillMount() {
@@ -154,6 +163,22 @@ let AddBotPage = React.createClass({
                                 onChange={this.twitterConsumerSecretChanged}
                             />
                         </div>
+                        <div className="inputs-row">
+                            <label>{strings.dashbotFacebookKey}</label>
+                            <Input
+                                className="field"
+                                value={state.dashbotFacebookKey}
+                                onChange={this.dashbotFacebookKeyChanged}
+                            />
+                        </div>
+                        <div className="inputs-row">
+                            <label>{strings.dashbotGenericKey}</label>
+                            <Input
+                                className="field"
+                                value={state.dashbotGenericKey}
+                                onChange={this.dashbotGenericKeyChanged}
+                            />
+                        </div>
                         <div className="messages">
                             <ErrorMessage message={errorMessage} />
                             <SuccessMessage className="success" message={successMessage} />
@@ -188,6 +213,7 @@ AddBotPage = connect(
     }),
     {
         addBot: actions.addBot,
+        fetchBots: actions.fetchBots,
     }
 )(AddBotPage);
 

@@ -32,7 +32,7 @@ export async function send(botParams: BotParams, conversation: Conversation,
         if (!channelData) {
             throw new Error('send: channelData is missing');
         }
-        sendFn = m => ms.coldSend(botParams, channelData, m);
+        sendFn = m => ms.coldSend(botParams, conversationId, channelData, m);
     }
 
     if (!sendFn) {

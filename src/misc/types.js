@@ -169,6 +169,8 @@ export type BotParams = {
         witAccessToken: string,
         twitterConsumerKey: string,
         twitterConsumerSecret: string,
+        dashbotFacebookKey?: string,
+        dashbotGenericKey?: string,
     },
     feeds: FeedConfig[],
 };

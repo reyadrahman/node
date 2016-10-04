@@ -117,13 +117,33 @@ async function processMessage(session, authRequest, botParams) {
             session.sendTyping();
         });
 
+    let dashbotPromise;
+    if (botParams.settings.dashbotGenericKey) {
+        dashbotPromise = request({
+            uri: 'https://tracker.dashbot.io/track',
+            qs : {
+                type: 'outgoing',
+                platform: 'generic',
+                apiKey: botParams.settings.dashbotGenericKey,
+                v: '0.7.4-rest',
+            },
+            method: 'POST',
+            json: {
+                text: message.text,
+                userId: m.address.conversation.id,
+            }
+        });
+    }
+
     await deepiksBot(message, botParams, x => {
         responseCount++;
-        return send(m.address.channelId, x, y => session.send(y), session);
+        return send(botParams, m.address.conversation.id,
+                    m.address.channelId, x, y => session.send(y), session);
     }, {
         address: _.omit(m.address, 'user'),
     });
 
+    if (dashbotPromise) await dashbotPromise;
     await sendTypingOnPromise;
 };
 
@@ -139,7 +159,10 @@ async function getBinary(requestFn, url) {
     return r.body;
 }
 
-export async function send(channel: string, message: ResponseMessage,
+export async function send(botParams: BotParams,
+                           conversationId: string,
+                           channel: string,
+                           message: ResponseMessage,
                            sendHelperFn: Function, session?: Object)
 {
     console.log('send: ', message);
@@ -211,10 +234,13 @@ export async function send(channel: string, message: ResponseMessage,
         resText && resMessage.text(resText);
         resAttachments.length > 0 && resMessage.attachments(resAttachments);
         sendHelperFn(resMessage);
+        await dashbotSend(botParams, conversationId, resText || '');
     }
 }
 
-export async function coldSend(botParams: BotParams, channelData: ChannelData,
+export async function coldSend(botParams: BotParams,
+                               conversationId: string,
+                               channelData: ChannelData,
                                message: ResponseMessage)
 {
     console.log('coldSend: channelData: ', channelData, ', message: ', message);
@@ -229,7 +255,26 @@ export async function coldSend(botParams: BotParams, channelData: ChannelData,
         ubot.send(m.address(channelData.address));
     };
 
-    await send(channelData.address.channelId, message, sendHelper);
+    await send(botParams, conversationId, channelData.address.channelId, message, sendHelper);
+}
+
+async function dashbotSend(botParams, conversationId, text) {
+    if (!botParams.settings.dashbotGenericKey) return;
+
+    await request({
+        uri: 'https://tracker.dashbot.io/track',
+        qs : {
+            type: 'outgoing',
+            platform: 'generic',
+            apiKey: botParams.settings.dashbotGenericKey,
+            v: '0.7.4-rest',
+        },
+        method: 'POST',
+        json: {
+            text: text,
+            userId: conversationId,
+        }
+    });
 }
 
 /*

@@ -186,6 +186,8 @@ export default {
         witAccessToken: 'Wit access token',
         twitterConsumerKey: 'Twitter consumer key',
         twitterConsumerSecret: 'Twitter consumer secret',
+        dashbotFacebookKey: 'Dashbot Facebook key',
+        dashbotGenericKey: 'Dashbot generic key',
     },
     signUp: {
         title: 'Sign Up',

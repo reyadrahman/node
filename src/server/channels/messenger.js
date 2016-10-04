@@ -10,8 +10,7 @@ import _ from 'lodash';
 import uuid from 'node-uuid';
 import u from 'util';
 import crypto from 'crypto';
-
-//const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
+import createDashbot from 'dashbot';
 
 type MessengerReqBody = {
     object: string,
@@ -97,6 +96,11 @@ export async function webhook(req: Request, res: Response) {
     if (req.method !== 'POST' || body.object !== 'page') {
         res.send();
         return;
+    }
+
+    if (botParams.settings.dashbotFacebookKey) {
+        const dashbot = createDashbot(botParams.settings.dashbotFacebookKey).facebook;
+        dashbot.logIncoming(body);
     }
 
     // respond immediately
@@ -265,12 +269,18 @@ export async function send(botParams: BotParams, conversationId: string,
 async function sendHelper(botParams: BotParams, messageData) {
     console.log('messenger sendHelper: ',
         u.inspect(messageData, { depth: null}));
-    const r = await request({
+
+    const requestData = {
         uri: 'https://graph.facebook.com/v2.6/me/messages',
         qs: { access_token: botParams.settings.messengerPageAccessToken },
         method: 'POST',
         json: messageData
-    });
+    };
+    const r = await request(requestData);
+    if (botParams.settings.dashbotFacebookKey) {
+        const dashbot = createDashbot(botParams.settings.dashbotFacebookKey).facebook;
+        dashbot.logOutgoing(requestData, r.body);
+    }
     if (r.statusCode !== 200) {
         throw new Error(`Sending message failed with code ${r.statusCode} msg ` +
                         `${r.statusMessage} and body: ${toStr(r.body)}`);

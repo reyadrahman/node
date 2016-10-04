@@ -185,6 +185,8 @@ export default {
         witAccessToken: 'FR Wit access token',
         twitterConsumerKey: 'FR Twitter consumer key',
         twitterConsumerSecret: 'FR Twitter consumer secret',
+        dashbotFacebookKey: 'FR Dashbot Facebook key',
+        dashbotGenericKey: 'FR Dashbot generic key',
     },
     signUp: {
         title: 'French Sign Up',

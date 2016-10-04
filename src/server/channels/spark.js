@@ -108,7 +108,27 @@ export async function webhook(req: Request, res: Response) {
 
     console.log('got message: ', message);
 
+    let dashbotPromise;
+    if (botParams.settings.dashbotGenericKey) {
+        dashbotPromise = request({
+            uri: 'https://tracker.dashbot.io/track',
+            qs : {
+                type: 'outgoing',
+                platform: 'generic',
+                apiKey: botParams.settings.dashbotGenericKey,
+                v: '0.7.4-rest',
+            },
+            method: 'POST',
+            json: {
+                text: message.text,
+                userId: rawMessage.roomId,
+            }
+        });
+    }
+
     await deepiksBot(message, botParams, m => send(botParams, roomId, m));
+
+    if (dashbotPromise) await dashbotPromise;
 }
 
 // roomId is the same as conversationId
@@ -127,6 +147,7 @@ export async function send(botParams: BotParams, conversationId: string,
     const actionsToStr = xs =>
         (xs || []).filter(x => x.fallback).map(x => x.fallback).join(', ');
     // ciscospark can only send 1 file at a time
+    const dashbotPromises = [];
     const { typingOn, text, cards, actions } = message;
     if (cards) {
         for (let i=0; i<cards.length; i++) {
@@ -136,26 +157,50 @@ export async function send(botParams: BotParams, conversationId: string,
                 files: [c.imageUrl],
                 roomId: conversationId,
             });
-            const cardText = actionsToStr(c.actions);
+            // TODO how to send images to dashbot 
+
+            const cardText = removeMarkdown(actionsToStr(c.actions) || '');
             await client.messages.create({
-                text: removeMarkdown(cardText || ''),
+                text: cardText,
                 roomId: conversationId,
             });
+            dashbotPromises.push(dashbotSend(botParams, conversationId, cardText));
         }
     }
 
     if (text || actions) {
-        const textToSend = (
-            (text || '') + '\n' + actionsToStr(actions)
-        ).trim();
+        const textToSend = removeMarkdown(
+            ((text || '') + '\n' + actionsToStr(actions)).trim()
+        );
         await client.messages.create({
-            text: removeMarkdown(textToSend || ''),
+            text: textToSend,
             roomId: conversationId,
         });
+        dashbotPromises.push(dashbotSend(botParams, conversationId, textToSend));
     }
+
+    await waitForAll(dashbotPromises);
 };
 
 function removeMarkdown(text) {
     return text.replace(/\n\n/g, '\n');
 }
 
+async function dashbotSend(botParams, roomId, text) {
+    if (!botParams.settings.dashbotGenericKey) return;
+
+    await request({
+        uri: 'https://tracker.dashbot.io/track',
+        qs : {
+            type: 'outgoing',
+            platform: 'generic',
+            apiKey: botParams.settings.dashbotGenericKey,
+            v: '0.7.4-rest',
+        },
+        method: 'POST',
+        json: {
+            text: text,
+            userId: roomId,
+        }
+    });
+}
