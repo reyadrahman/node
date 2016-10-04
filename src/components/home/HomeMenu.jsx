@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
 import { Glyphicon } from 'react-bootstrap';
-import Scroll from 'react-scroll';
+import { Link as ScrollLink } from 'react-scroll';
+import { Link as RouterLink } from 'react-router';
 
-const Link = Scroll.Link;
 
 let Header = React.createClass({
     getInitialState() {
@@ -30,7 +30,7 @@ let Header = React.createClass({
             this.setState({
                 isMenuHovered: false,
             });
-        }, 1500);
+        }, 500);
     },
 
     onMenuEnter() {
@@ -45,11 +45,13 @@ let Header = React.createClass({
             this.setState({
                 isMenuOpen: false,
             });
-        }, 1500);
+        }, 500);
     },
 
     render() {
-        const { className, i18n, i18n: { strings: { homeMenu: strings } } } = this.props;
+        const { className, menu, isScroll, i18n, i18n: { strings: { homeMenu: strings } } } = this.props;
+
+        const Link = isScroll ? ScrollLink : RouterLink;
 
         const { isMenuOpen, isMenuHovered } = this.state;
         const leftNavbarClass = isMenuOpen
@@ -64,15 +66,10 @@ let Header = React.createClass({
             </li>
         );
 
-    	    const sideMenuStrings = i18n.strings.sideMenu;
-            const navItems = [
-            createNavItem('services', 'ok', sideMenuStrings.features),
-            createNavItem('pricing', 'euro', sideMenuStrings.pricing),
-            createNavItem('team', 'user', sideMenuStrings.team),
-            createNavItem('screenshots', 'globe', sideMenuStrings.channels),
-            createNavItem('updates', 'tasks', sideMenuStrings.timeline),
-            createNavItem('contact', 'envelope', sideMenuStrings.contact),
-        ];
+        var navItems = [];
+        for(var i = 0; i < menu.length; i++) {
+            navItems.push(createNavItem(menu[i].to, menu[i].glyph, menu[i].string));
+        }
 
 
         return (

@@ -104,13 +104,23 @@ let Home = React.createClass({
         console.log('Home render');
         const { className, i18n, i18n: { strings: { home: strings } } } = this.props;
 
+        const sideMenuStrings = i18n.strings.sideMenu;
+        var menu = [
+            { 'to': 'services', 'glyph': 'ok', 'string': sideMenuStrings.features },
+            { 'to': 'pricing', 'glyph': 'euro', 'string': sideMenuStrings.pricing },
+            { 'to': 'team', 'glyph' : 'user', 'string': sideMenuStrings.team },
+            { 'to': 'screenshots', 'glyph': 'globe', 'string': sideMenuStrings.channels },
+            { 'to': 'updates',  'glyph': 'tasks', 'string': sideMenuStrings.timeline },
+            { 'to': 'contact', 'glyph': 'envelope', 'string': sideMenuStrings.contact }
+        ];
+
         return (
             <div className="home-comp">
                 <Header
                     className={`home-comp ${className || ''}`}
                     i18n={i18n}
                     leftItemsBeforeLogo={[
-                        <HomeMenu i18n={i18n} />
+                        <HomeMenu i18n={i18n} menu={menu} isScroll={true} />
                     ]}
                 />
                 <section className="intro">
