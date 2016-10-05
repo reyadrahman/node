@@ -198,7 +198,7 @@ export async function _runAction(actionName: string,
             expiration: credentials.Expiration,
         },
         s3: {
-            bucket: S3_BUCKET_NAME,
+            bucket: CONSTANTS.S3_BUCKET_NAME,
             prefix: `${publisherId}/${senderId}/`,
         }
     }
@@ -256,7 +256,7 @@ export function _generateS3Policy(publisherId: string, senderId: string): string
                     's3:PutObject',
                 ],
                 Resource: [
-                    `arn:aws:s3:::${S3_BUCKET_NAME}/${publisherId}/${senderId}/*`,
+                    `arn:aws:s3:::${CONSTANTS.S3_BUCKET_NAME}/${publisherId}/${senderId}/*`,
                 ]
             }
         ]
