@@ -29,6 +29,10 @@ export function selectBot(botId) {
     return { type: 'currentUser/selectBot', botId };
 }
 
+export function setBots(bots) {
+    return {type: 'currentUser/setBotsAndUpdateSelectedBotId', bots};
+}
+
 // ==================================================
 // Thunks
 // ==================================================
@@ -187,17 +191,24 @@ export function addBot(botName: string, data) {
     }
 }
 
+export function updateBot(botId: string, data) {
+    return async function (dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        return await bridge.updateBot(session.getIdToken().getJwtToken(), botId, data);
+    }
+}
+
 export function fetchBots() {
     return async function(dispatch: Function, getState: Function) {
         dispatch({ type: 'currentUser/resetBotsState' });
         try {
             const session = await aws.getCurrentSession();
             const bots = await bridge.fetchBots(session.getIdToken().getJwtToken());
-            dispatch({ type: 'currentUser/setBotsAndUpdateSelectedBotId', bots });
+            dispatch(setBots(bots));
         } catch(err) {
             dispatch({
-                type: 'currentUser/fetchBotsFailed',
-                errorMessage: 'Could not fetch the bots'
+                type:         'currentUser/fetchBotsFailed',
+                errorMessage: 'Could not fetch the bots ' + err.message
             });
         }
     }

@@ -4,6 +4,7 @@ import App from './components/app/App.jsx';
 import SignedInPage from './components/signed-in-page/SignedInPage.jsx';
 import Home from './components/home/Home.jsx';
 import AccountPage from './components/account-page/AccountPage.jsx';
+import BotSettingsPage from './components/bot-setting-page/BotSettingsPage.jsx';
 import UsersPage from './components/users/UsersPage.jsx';
 import UserSavePage from './components/users/UserSavePage.jsx';
 import MessagesPage from './components/messages-page/MessagesPage.jsx';
@@ -21,6 +22,7 @@ const Routes = (
         <Route path="/privacy" component={PrivacyPage} />
         <Route component={SignedInPage}>
             <Route path="/account" component={AccountPage} />
+            <Route path="/settings" component={BotSettingsPage}/>
             <Route path="/users" component={UsersPage} />
             <Route path="/users/add" component={UserSavePage}/>
             <Route path="/users/edit/:botId_userId" component={UserSavePage}/>
