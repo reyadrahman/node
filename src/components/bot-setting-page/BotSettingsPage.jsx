@@ -45,7 +45,7 @@ let BotSettingsPage = React.createClass({
 
     onFormFieldChange(e) {
         let bot   = this.state.bot;
-        let value = e.target.value === 'on' ? e.target.checked : e.target.value;
+        let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
         if (value === '') {value = null}
 
