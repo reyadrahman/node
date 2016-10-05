@@ -23,7 +23,6 @@ let UserSavePage = React.createClass({
     },
 
     onFormFieldChange(e) {
-        console.log('event: ', e.target.id, e.target.value);
         let user          = this.state.user;
         user[e.target.id] = e.target.value;
         this.setState({user});

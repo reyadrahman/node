@@ -25,6 +25,14 @@ const routes = express.Router();
 //     throw new Error('invalid jwtIdTokenRaw: ', jwtIdTokenRaw);
 // }
 
+function authMiddleware(req, res, next) {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+
+    next();
+}
+
 routes.use('/', (req, res, next) => {
     let jwtIdTokenRaw;
     if (req.query.jwtIdToken) {
@@ -133,6 +141,12 @@ routes.post('/add-bot', (req, res, next) => {
     }
     const { identityId } = req.customData;
     addBot(identityId, req.body.botName, req.body.settings)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+});
+
+routes.post('/update-bot', authMiddleware, (req, res, next) => {
+    updateBot(req.customData.identityId, req.body.botId, req.body.settings)
         .then(x => res.send(x))
         .catch(err => next(err));
 });
@@ -354,6 +368,27 @@ async function addBot(identityId, botName, settings) {
             },
         })
     });
+}
+
+async function updateBot(identityId, botId, model) {
+    console.log('updateBot: ', identityId, botId, model);
+
+    let bot = await aws.dynamoUpdate({
+        TableName:                 CONSTANTS.DB_TABLE_BOTS,
+        Key:                       {publisherId: identityId, botId},
+        UpdateExpression:          `set botName = :botName, 
+                                        botIcon = :botIcon, 
+                                        enableUsersFilter = :enableUsersFilter, 
+                                        settings = :settings`,
+        ExpressionAttributeValues: {
+            ':botName':           model.botName || null,
+            ':botIcon':           model.botIcon || null,
+            ':enableUsersFilter': model.enableUsersFilter || false,
+            ':settings':          model.settings
+        },
+        ReturnValues:              'ALL_NEW'
+    });
+    return bot.Attributes;
 }
 
 async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
