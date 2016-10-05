@@ -1,9 +1,9 @@
 import * as actions from '../../app-state/actions.js';
 import Header from '../header/Header.jsx';
-import SideMenu from '../side-menu/SideMenu.jsx';
+import Menu from '../home/Menu.jsx';
 
 import React from 'react';
-import { Glyphicon, Dropdown, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
+import { Dropdown, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import _ from 'lodash';
@@ -70,61 +70,61 @@ let SignedInPage = React.createClass({
         const sideMenuStrings = i18n.strings.sideMenu;
         const menu = [
             {
-                label: sideMenuStrings.test,
-                link: '/test',
+                string: sideMenuStrings.test,
+                to: '/test',
                 glyph: 'play',
                 value: 'test',
             },
             {
-                label: sideMenuStrings.settings,
-                link: '/settings',
+                string: sideMenuStrings.settings,
+                to: '/settings',
                 glyph: 'cog',
                 value: 'settings',
             },
             {
-                label: sideMenuStrings.users,
-                link: '/users',
-                icon: 'icon-users',
+                string: sideMenuStrings.users,
+                to: '/users',
+                glyph: 'users',
                 value: 'users',
             },
             {
-                label: sideMenuStrings.messages,
-                link: '/messages',
+                string: sideMenuStrings.messages,
+                to: '/messages',
                 glyph: 'comment',
                 value: 'messages',
             },
             {
-                label: sideMenuStrings.tracking,
-                link: '/tracking',
+                string: sideMenuStrings.tracking,
+                to: '/tracking',
                 glyph: 'signal',
                 value: 'tracking',
             },
             {
-                label: sideMenuStrings.surveys,
-                link: '/surveys',
+                string: sideMenuStrings.surveys,
+                to: '/surveys',
                 glyph: 'thumbs-up',
                 value: 'surveys',
             },
             {
-                label: sideMenuStrings.feeds,
-                link: '/feeds',
-                icon: 'icon-rss',
+                string: sideMenuStrings.feeds,
+                to: '/feeds',
+                glyph: 'rss',
                 value: 'feeds',
             },
             {
-                label: sideMenuStrings.notifications,
-                link: '/notifications',
+                string: sideMenuStrings.notifications,
+                to: '/notifications',
                 glyph: 'bell',
                 value: 'notifications',
             },
         ];
 
         const menuToggle = (
-            <Glyphicon
-                glyph="menu-hamburger"
-                className={`menu-toggle ${ui.sideMenu ? 'open' : ''}`}
+            <i  className="menu-toggle fa fa-bars"
                 onClick={this.onMenuToggle}
-            />
+                onMouseEnter={this.onMenuToggleEnter}
+                onMouseLeave={this.onMenuToggleLeave}
+                ></i>
         );
 
         const { selectedBotId, botsState: { bots, hasFetched } } = currentUser;
@@ -169,13 +169,10 @@ let SignedInPage = React.createClass({
             <div className={`${className || ''} signed-in-page-comp`}>
                 <Header
                     className="header" i18n={i18n}
-                    leftItemsBeforeLogo={menuToggle}
+                    leftItemsBeforeLogo = {[
+                        <Menu className="signed-in" i18n={i18n} menu={menu} isScroll={false} />
+                    ]}
                     leftItemsAfterLogo={botSelector}
-                />
-                <SideMenu
-                    i18n={i18n} menu={menu}
-                    value={location.pathname.split('/')[1] || ''}
-                    isOpen={ui.sideMenu}
                 />
             { cs }
             </div>
