@@ -10,6 +10,7 @@ import UserSavePage from './components/users/UserSavePage.jsx';
 import MessagesPage from './components/messages-page/MessagesPage.jsx';
 import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 import FeedsPage from './components/feeds-page/FeedsPage.jsx';
+import PollsPage from './components/polls-page/PollsPage.jsx';
 import TestPage from './components/test-page/TestPage.jsx';
 import NotificationsPage from './components/notifications-page/NotificationsPage.jsx';
 import TermsOfUsePage from './components/terms-of-use-page/TermsOfUsePage.jsx'
@@ -28,6 +29,7 @@ const Routes = (
             <Route path="/users/edit/:botId_userId" component={UserSavePage}/>
             <Route path="/messages(/:selectedBotId)(/:conversationId)" component={MessagesPage} />
             <Route path="/feeds" component={FeedsPage} />
+            <Route path="/polls" component={PollsPage}/>
             <Route path="/add-bot" component={AddBotPage} />
             <Route path="/notifications" component={NotificationsPage} />
             <Route path="/test" component={TestPage} />

@@ -92,6 +92,12 @@ routes.get('/fetch-users', (req, res, next) => {
 
 });
 
+routes.get('/fetch-polls', authMiddleware, (req, res, next) => {
+    fetchPolls(req.customData.identityId, req.query.botId)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+});
+
 routes.get('/fetch-user', (req, res, next) => {
     if (!req.customData || !req.customData.identityId) {
         return res.status(403).send('Missing JWT');
@@ -240,6 +246,21 @@ async function fetchUsers(identityId, botId) {
         TableName:                 CONSTANTS.DB_TABLE_USER_PREFS,
         KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_userId, :bid)',
         // FilterExpression:          botId ? 'begins_with(botId_userId, :bid)' : undefined,
+        ExpressionAttributeValues: {
+            ':pid': identityId,
+            ':bid': botId,
+        },
+        ScanIndexForward:          false,
+    });
+
+    return qres.Items || [];
+}
+
+async function fetchPolls(identityId, botId) {
+    console.log('fetchPolls: identityId=', identityId, 'botId=', botId);
+    const qres = await aws.dynamoQuery({
+        TableName:                 CONSTANTS.DB_TABLE_POLL_QUESTIONS,
+        KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_pollId_questionId, :bid)',
         ExpressionAttributeValues: {
             ':pid': identityId,
             ':bid': botId,

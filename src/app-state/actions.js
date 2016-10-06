@@ -236,6 +236,16 @@ export function fetchUsers(botId) {
     }
 }
 
+export function fetchPolls(botId) {
+    return async function (dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        return bridge.fetchPolls(
+            session.getIdToken().getJwtToken(),
+            botId
+        );
+    }
+}
+
 export function fetchUser(botId, userId) {
     return async function (dispatch: Function) {
         const session = await aws.getCurrentSession();

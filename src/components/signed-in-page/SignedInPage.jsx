@@ -112,6 +112,12 @@ let SignedInPage = React.createClass({
                 value: 'feeds',
             },
             {
+                string: sideMenuStrings.polls,
+                to:     '/polls',
+                glyph:   'check',
+                value:  'polls',
+            },
+            {
                 string: sideMenuStrings.notifications,
                 to: '/notifications',
                 glyph: 'bell',

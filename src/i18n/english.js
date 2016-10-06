@@ -11,6 +11,7 @@ export default {
     sideMenu: {
         account: 'Account',
         users: 'Users',
+        polls: 'Polls',
         messages: 'Messages',
         feeds: 'Feeds',
         notifications: 'Notifications',
