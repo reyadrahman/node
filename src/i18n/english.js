@@ -27,7 +27,8 @@ export default {
         settings:"Settings",
     },
     home: {
-    	baseline: 'Hi. We are a smart chatbot platform.',
+    	hello: 'Hello.',
+    	baseline: 'We are a smart chatbot platform.',
     	services_h: 'Premium Bot Platform',
         services_t : 'Our platform provides a wide range of features that are simple and ready to use',
     	universal_h: 'Universal',

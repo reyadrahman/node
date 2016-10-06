@@ -100,22 +100,16 @@ let SignedInPage = React.createClass({
                 value: 'tracking',
             },
             {
-                string: sideMenuStrings.surveys,
-                to: '/surveys',
-                glyph: 'thumbs-up',
-                value: 'surveys',
+                string: sideMenuStrings.polls,
+                to:     '/polls',
+                glyph:   'thumbs-up',
+                value:  'polls',
             },
             {
                 string: sideMenuStrings.feeds,
                 to: '/feeds',
                 glyph: 'rss',
                 value: 'feeds',
-            },
-            {
-                string: sideMenuStrings.polls,
-                to:     '/polls',
-                glyph:   'check',
-                value:  'polls',
             },
             {
                 string: sideMenuStrings.notifications,
