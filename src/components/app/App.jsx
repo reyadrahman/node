@@ -13,6 +13,16 @@ export const App_ = React.createClass({
         this.props.setFullscreen(utils.isFullscreen());
     },
 
+    componentWillMount() {
+        this.props.setPageTitle(translations[this.props.lang].app.pageTitle);
+    },
+
+    componentWillReceiveProps(newProps) {
+        if (newProps.lang !== this.props.lang) {
+            this.props.setPageTitle(translations[newProps.lang].app.pageTitle);
+        }
+    },
+
     componentDidMount() {
         document.addEventListener("fullscreenchange", this.fullscreenHandler);
         document.addEventListener("webkitfullscreenchange", this.fullscreenHandler);

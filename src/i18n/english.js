@@ -1,4 +1,7 @@
 export default {
+    app: {
+        pageTitle: 'Deepiks',
+    },
     header: {
     },
     accountButton: {

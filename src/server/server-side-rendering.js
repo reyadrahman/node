@@ -1,6 +1,6 @@
 import Html from '../components/html/Html.jsx';
 import Routes from '../Routes.jsx';
-import { languages } from '../i18n/translations.js';
+import { languages, translations } from '../i18n/translations.js';
 import { CONSTANTS_KEYS as CLIENT_CONSTANTS_KEYS } from '../client/client-utils.js';
 import { CONSTANTS } from './server-utils.js'
 import initAppState from '../app-state/init-app-state.js';
@@ -82,10 +82,20 @@ function renderFull(req, res, next, renderProps, envVars, systemLang) {
 
     console.log('renderFull renderProps: ', renderProps);
 
+    let pageTitle = '';
+
     const renderFullHelper = () => {
+        const createElement = (comp, props) => {
+            return React.createElement(comp, {
+                ...props,
+                setPageTitle(title) {
+                    pageTitle = title;
+                },
+            });
+        };
         let body = ReactDOM.renderToString(
             <Provider store={store}>
-                <RouterContext {...renderProps} />
+                <RouterContext {...renderProps} createElement={createElement} />
             </Provider>
         );
         let html = ReactDOM.renderToStaticMarkup(
@@ -94,6 +104,7 @@ function renderFull(req, res, next, renderProps, envVars, systemLang) {
                 initAppState={store.getState()}
                 envVars={envVars}
                 systemLang={systemLang}
+                title={pageTitle}
             />
         );
         let doc = '<!doctype html>\n' + html;
