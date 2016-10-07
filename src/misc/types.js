@@ -225,6 +225,7 @@ export type ServerConstants = {
     IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
     IDENTITY_POOL_AUTH_ROLE_ARN: string,
     CONTACT_EMAIL: string,
+    EMAIL_ACTION_FROM_ADDRESS: string,
     PORT: string,
     OWN_BASE_URL: string,
     CALL_SERVER_LAMBDA_SECRET: string,

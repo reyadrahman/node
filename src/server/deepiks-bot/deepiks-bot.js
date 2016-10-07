@@ -22,7 +22,6 @@ export async function _isMessageInDB(message: WebhookMessage) {
     console.log('_isMessageInDB');
     const qres = await aws.dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_MESSAGES,
-        // IndexName: 'Index',
         KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp = :t',
         ExpressionAttributeValues: {
             ':pc': message.publisherId_conversationId,
@@ -128,9 +127,18 @@ export function _respondFnPreprocessorActionsMiddleware(
 
         const delayAction = pas.find(x => x.action === 'delay' && Number(x.args[0]));
         const pollAction = pas.find(x => x.action === 'poll' && x.args[0] && x.args[1]);
+        const asUserAction = pas.find(x => x.action === 'as user');
+        const emailAction = pas.find(x => x.action === 'email' && x.args[0]);
 
         if (delayAction && pollAction) {
             const m = `Cannot use 'delay' and 'poll' preprocessor actions together`;
+            console.error(m);
+            await next({ text: m, creationTimestamp: Date.now() });
+            return;
+        }
+
+        if (emailAction && asUserAction) {
+            const m = `Cannot user 'email' and 'as user' preprocessor actions together`;
             console.error(m);
             await next({ text: m, creationTimestamp: Date.now() });
             return;
@@ -168,7 +176,17 @@ export function _respondFnPreprocessorActionsMiddleware(
             await self(newResponse);
         }
 
-        const asUserAction = pas.find(x => x.action === 'as user');
+        if (emailAction) {
+            // const qres = await aws.dynamoQuery({
+            //     TableName: CONSTANTS.DB_TABLE_MESSAGES,
+            //     KeyConditionExpression: 'publisherId_conversationId = :pc',
+            //     ExpressionAttributeValues: {
+            //         ':pc': composeKeys(botParams.publisherId, conversationId),
+            //         ':t': 
+            //     },
+            // });
+        }
+
         if (asUserAction) {
             console.log('asUserAction: ', response.text);
             const message = _createDBMessageFromResponseMessage({
