@@ -4,6 +4,8 @@ const { createBaseConfig, createPublicPathAndUrl } = require('./webpack-config-b
 const _ = require('lodash');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const autoprefixer = require('autoprefixer');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 
 /*
     Environment Variables:
@@ -72,6 +74,9 @@ module.exports = Object.assign({}, baseConfig, {
             'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
             'process.env': 'window.process.env',
         }),
+        new CopyWebpackPlugin([
+            { from: 'src/resources/copy-to-dist' },
+        ]),
         // new webpack.ProvidePlugin({
         //     // Make $ and jQuery available in every module without writing require("jquery")
         //     $: "jquery",
