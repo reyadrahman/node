@@ -48,7 +48,7 @@ see wit.js:interactive():
 
 let context = initContext || {};
 let line = await prompt();
-let sessionId = uuid.v1();
+let sessionId = uuid.v4();
 while(...) {
     context = await this.runActions(sessionId, line, context, steps)
     line = await prompt();

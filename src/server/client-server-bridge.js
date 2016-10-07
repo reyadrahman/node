@@ -315,8 +315,8 @@ async function fetchMessages(identityId, conversationId) {
 
 async function addBot(identityId, botName, settings) {
     console.log('addBot: ', identityId, botName, settings);
-    const botId = uuid.v1();
-    const ciscosparkWebhookSecret = uuid.v1();
+    const botId = uuid.v4();
+    const ciscosparkWebhookSecret = uuid.v4();
 
     // register webhook for cisco spark
     const csClient = ciscospark.init({
@@ -373,7 +373,7 @@ async function updateBot(identityId, botId, model) {
 async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
     const feedConfigWithId = {
         ...feedConfig,
-        feedId: uuid.v1(),
+        feedId: uuid.v4(),
     };
     await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_BOTS,

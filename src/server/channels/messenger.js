@@ -136,7 +136,7 @@ async function receivedPostback(entry: MessengerReqEntry,
         recipient: messagingEvent.recipient,
         timestamp: messagingEvent.timestamp,
         message: {
-            mid: uuid.v1(),
+            mid: uuid.v4(),
             text: messagingEvent.postback.payload,
         },
     };

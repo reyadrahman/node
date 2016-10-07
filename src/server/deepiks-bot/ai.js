@@ -182,7 +182,7 @@ export async function _runAction(actionName: string,
         throw new Error(`ERROR: _runAction senderId: ${senderId || ''}`);
     }
     const federationToken = await aws.stsGetFederationToken({
-        Name: uuid.v1().substr(0, 30),
+        Name: uuid.v4().substr(0, 30),
         DurationSeconds: 15 * 60,
         Policy: _generateS3Policy(publisherId, senderId),
     });
@@ -317,7 +317,7 @@ export async function ai(message: DBMessage,
     }
 
     const witData = Object.assign({
-        sessionId: uuid.v1(),
+        sessionId: uuid.v4(),
         context: {},
     }, convQueryRes.Items[0].witData);
     console.log('ai: witData: ', witData);

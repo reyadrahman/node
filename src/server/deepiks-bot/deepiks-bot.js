@@ -55,7 +55,7 @@ export function _createDBMessageFromResponseMessage(
         senderName: botParams.botName,
         channel: channel,
         senderIsBot: true,
-        id: uuid.v1(),
+        id: uuid.v4(),
         text: m.text,
         cards: m.cards,
         actions: m.actions,
@@ -155,7 +155,7 @@ export function _respondFnPreprocessorActionsMiddleware(
                 TableName: CONSTANTS.DB_TABLE_SCHEDULED_TASKS,
                 Item: {
                     dummy: '.',
-                    scheduleTimestamp_taskId: composeKeys(scheduleTimestamp, uuid.v1()),
+                    scheduleTimestamp_taskId: composeKeys(scheduleTimestamp, uuid.v4()),
                     publisherId: botParams.publisherId,
                     botId: botParams.botId,
                     conversationId,
