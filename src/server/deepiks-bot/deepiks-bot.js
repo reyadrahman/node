@@ -188,7 +188,7 @@ export function _respondFnPreprocessorActionsMiddleware(
             const emailParams = {
                 Destination: {
                     ToAddresses: [
-                        CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
+                        email,
                     ],
                 },
                 Message: {
