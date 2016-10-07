@@ -177,14 +177,37 @@ export function _respondFnPreprocessorActionsMiddleware(
         }
 
         if (emailAction) {
-            // const qres = await aws.dynamoQuery({
-            //     TableName: CONSTANTS.DB_TABLE_MESSAGES,
-            //     KeyConditionExpression: 'publisherId_conversationId = :pc',
-            //     ExpressionAttributeValues: {
-            //         ':pc': composeKeys(botParams.publisherId, conversationId),
-            //         ':t': 
-            //     },
-            // });
+            let [ email, subject = 'Conversation' ] = emailAction.args;
+            if (!email) {
+                console.log('emailAction invalid email: ', email);
+            }
+
+            const message = `See the full conversation at:\n\n${CONSTANTS.OWN_BASE_URL}` +
+                            `/messages/${botParams.botId}/${conversationId}`;
+
+            const emailParams = {
+                Destination: {
+                    ToAddresses: [
+                        CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
+                    ],
+                },
+                Message: {
+                    Body: {
+                        Text: {
+                            Data: message,
+                            Charset: 'UTF-8',
+                        },
+                    },
+                    Subject: {
+                        Data: subject,
+                        Charset: 'UTF-8'
+                    },
+                },
+                Source: CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
+            };
+
+            console.log('emailAction emailParams: ', emailParams);
+            await aws.sesSendEmail(emailParams);
         }
 
         if (asUserAction) {

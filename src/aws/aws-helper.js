@@ -55,7 +55,7 @@ export const s3GetSignedUrl = callbackToPromise(s3.getSignedUrl, s3);
 export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
 export const cognitoIdentityGetId = callbackToPromise(cognitoIdentity.getId, cognitoIdentity);
 export const stsGetFederationToken = callbackToPromise(sts.getFederationToken, sts);
-export const sendEmail = callbackToPromise(ses.sendEmail, ses);
+export const sesSendEmail = callbackToPromise(ses.sendEmail, ses);
 
 export function dynamoCleanUpObj(obj: Object) {
     return _.reduce(obj, (acc, v, k) => {

@@ -195,7 +195,7 @@ async function sendEmail(contactFormData: ContactFormData) {
     };
 
     console.log('sendEmail: ', params);
-    await aws.sendEmail(params);
+    await aws.sesSendEmail(params);
 }
 
 async function fetchBots(identityId) {
