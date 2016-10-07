@@ -303,7 +303,7 @@ eb open
 **NOTE: `eb deploy` [deploys git's HEAD commit](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-cli-git.html). You can use `eb deploy --staged` to deploy the staged changes (those that are `git add`'ed)**
 
 ### Notes for Production
-Use CDN in production to server static files. All you need to do is to create a distribution in AWS CloudFront, set its origin to your server's domain and set the `CDN` environment variable of your server to your CloudFront's distribution domain.
+Use CDN in production to serve static files. All you need to do is to create a distribution in AWS CloudFront, set its origin to your server's domain and set the `CDN` environment variable of your server to your CloudFront's distribution domain.
 
 Once the `CDN` environment variable is set and you deploy the server, every static file will be served through the CDN. Files will be available in the CDN immediately without any delays caused by caching.
 
@@ -405,6 +405,8 @@ const faviconURL = `${CONSTANTS.PUBLIC_URL}favicon.png`;
 ```
 
 Now depending on your configurations, faviconURL could be a relative path to `dist-client` or the URL to the corresponding file in CDN.
+
+**Please use CDN in production to serve static files.** See "Deploy" section for more details.
 
 #### Front-End - Immutable Props
 **The entire application state and all `props` of every component are immutable.** Please ensure that you do not ever modify them directly. Always use actions to update the application state and let Redux+React propagate the props down to each component.
