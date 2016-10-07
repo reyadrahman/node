@@ -118,11 +118,11 @@ let BotSettingsPage = React.createClass({
                         </Col>
                     </FormGroup>
 
-                    <FormGroup controlId="enableUsersFilter">
+                    <FormGroup controlId="onlyAllowedUsersCanChat">
                         <Col smOffset={2} sm={10}>
                             <Checkbox
-                                id="enableUsersFilter"
-                                checked={!!bot.enableUsersFilter}
+                                id="onlyAllowedUsersCanChat"
+                                checked={!!bot.onlyAllowedUsersCanChat}
                                 onChange={this.onFormFieldChange}
                             >Only allowed users can chat with bot</Checkbox>
                         </Col>

@@ -120,13 +120,33 @@ export async function getPollQuestion(
     pollId: string, questionId: string
 ) : Promise<?BotParams>
 {
-    console.log('getPoll publisherId: ', publisherId, ', botId: ', botId, ', pollId');
+    console.log(`getPoll publisherId: ${publisherId}, botId: ${botId}, ` +
+                `pollId: ${polllId}, questionId: ${questionId}`);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
         KeyConditionExpression: 'publisherId = :publisherId and botId_pollId_questionId = :bpq',
         ExpressionAttributeValues: {
             ':publisherId': publisherId,
-            ':bpq': composeKeys(botId, composeKeys(pollId, questionId)),
+            ':bpq': composeKeys(botId, pollId, questionId),
+        },
+    });
+
+    return qres.Items && qres.Items[0];
+}
+
+export async function getUser(
+    publisherId: string, botId: string,
+    channel: string, userId: string
+) : Promise<?User>
+{
+    console.log(`getPoll publisherId: ${publisherId}, botId: ${botId}, ` +
+                `channel: ${channel}, userId: ${userId}`);
+    const qres = await dynamoQuery({
+        TableName: CONSTANTS.DB_TABLE_USERS,
+        KeyConditionExpression: 'publisherId = :publisherId and botId_channel_userId = :bcu',
+        ExpressionAttributeValues: {
+            ':publisherId': publisherId,
+            ':bcu': composeKeys(botId, channel, userId),
         },
     });
 
@@ -312,17 +332,17 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(CONSTANTS.DB_TABLE_AI_ACTIONS);
     }
-    if (!tables.includes(CONSTANTS.DB_TABLE_USER_PREFS)) {
-        console.log('creating table: CONSTANTS.DB_TABLE_USER_PREFS');
+    if (!tables.includes(CONSTANTS.DB_TABLE_USERS)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_USERS');
         const tableParams = {
-            TableName : CONSTANTS.DB_TABLE_USER_PREFS,
+            TableName : CONSTANTS.DB_TABLE_USERS,
             KeySchema: [
                 { AttributeName: 'publisherId', KeyType: 'HASH' },
-                { AttributeName: 'botId_userId', KeyType: 'RANGE' }
+                { AttributeName: 'botId_channel_userId', KeyType: 'RANGE' }
             ],
             AttributeDefinitions: [
                 { AttributeName: 'publisherId', AttributeType: 'S' },
-                { AttributeName: 'botId_userId', AttributeType: 'S' },
+                { AttributeName: 'botId_channel_userId', AttributeType: 'S' },
             ],
             ProvisionedThroughput: {
                 ReadCapacityUnits: readCapacityUnits,
@@ -330,7 +350,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             }
         };
         const res = await dynamoCreateTable(tableParams);
-        creatingTables.push(CONSTANTS.DB_TABLE_USER_PREFS);
+        creatingTables.push(CONSTANTS.DB_TABLE_USERS);
     }
     if (!tables.includes(CONSTANTS.DB_TABLE_SCHEDULED_TASKS)) {
         console.log('creating table: CONSTANTS.DB_TABLE_SCHEDULED_TASKS');

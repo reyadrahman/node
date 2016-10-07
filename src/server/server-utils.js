@@ -20,7 +20,7 @@ export const CONSTANTS: ServerConstants = ({
     DB_TABLE_CONVERSATIONS: prefixDBTable('conversations'),
     DB_TABLE_MESSAGES: prefixDBTable('messages'),
     DB_TABLE_AI_ACTIONS: prefixDBTable('actions'),
-    DB_TABLE_USER_PREFS: prefixDBTable('users'),
+    DB_TABLE_USERS: prefixDBTable('users'),
     DB_TABLE_SCHEDULED_TASKS: prefixDBTable('schedules'),
     DB_TABLE_POLL_QUESTIONS: prefixDBTable('polls'),
 }: any);

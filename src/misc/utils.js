@@ -5,13 +5,12 @@ import omitBy from 'lodash/omitBy';
 import isUndefined from 'lodash/isUndefined';
 
 
-export function composeKeys(a: string | number, b: string | number): string {
-    return `${a}__${b}`;
+export function composeKeys(...xs: Array<string | number>): string {
+    return xs.join('__');
 }
 
 export function decomposeKeys(k: string): Array<string> {
-    const split = k.split('__');
-    return [split[0], split.slice(1).join('__')];
+    return k.split('__');
 }
 
 

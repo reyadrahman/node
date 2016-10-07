@@ -324,17 +324,17 @@ export async function ai(message: DBMessage,
 
 
     // TODO batch queries
-    const prefQueryRes = await aws.dynamoQuery({
-        TableName: CONSTANTS.DB_TABLE_USER_PREFS,
-        KeyConditionExpression: 'publisherId = :publisherId and botId_userId = :bu',
+    const userQueryRes = await aws.dynamoQuery({
+        TableName: CONSTANTS.DB_TABLE_USERS,
+        KeyConditionExpression: 'publisherId = :publisherId and botId_channel_userId = :bcu',
         ExpressionAttributeValues: {
             ':publisherId': publisherId,
-            ':bu': composeKeys(botParams.botId, message.senderId),
+            ':bcu': composeKeys(botParams.botId, message.channel, message.senderId),
         },
     });
-    console.log('ai: user preferences found: ', prefQueryRes.Items);
-    const userPrefs = prefQueryRes.Items && prefQueryRes.Items[0] &&
-                      prefQueryRes.Items[0].prefs || {};
+    console.log('ai: user preferences found: ', userQueryRes.Items);
+    const userPrefs = userQueryRes.Items && userQueryRes.Items[0] &&
+                      userQueryRes.Items[0].prefs || {};
 
 
     let text = message.text;
@@ -362,13 +362,16 @@ export async function ai(message: DBMessage,
             ':witData': aws.dynamoCleanUpObj(newWitData),
         },
     });
-    await aws.dynamoPut({
-        TableName: CONSTANTS.DB_TABLE_USER_PREFS,
-        Item: aws.dynamoCleanUpObj({
+    await aws.dynamoUpdate({
+        TableName: CONSTANTS.DB_TABLE_USERS,
+        Key: {
             publisherId,
-            botId_userId: composeKeys(botParams.botId, message.senderId),
-            prefs: newUserPrefs,
-        }),
+            botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
+        },
+        UpdateExpression: 'SET prefs = :prefs',
+        ExpressionAttributeValues: {
+            ':prefs': aws.dynamoCleanUpObj(newUserPrefs),
+        },
     });
 }
 

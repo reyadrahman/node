@@ -1,5 +1,17 @@
 /* @flow */
 
+export type User = {
+    publisherId: string,
+    botId_channel_userId: string,
+    prefs: UserPrefs,
+    userLastMessage: DBMessage,
+    userName: string,
+    userRole: 'user' | 'admin' | 'none',
+};
+
+// is that it?
+export type UserPrefs = Object;
+
 export type Conversation = {
     channel: string,
     botId_conversationId: string,
@@ -181,9 +193,6 @@ export type AIActionInfo = {
     lambda?: string,
 };
 
-// is that it?
-export type UserPrefs = Object;
-
 export type ContactFormData = {
     name: string,
     email: string,
@@ -202,7 +211,7 @@ export type ServerConstants = {
     DB_TABLE_CONVERSATIONS: string,
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
-    DB_TABLE_USER_PREFS: string,
+    DB_TABLE_USERS: string,
     DB_TABLE_SCHEDULED_TASKS: string,
     DB_TABLE_POLL_QUESTIONS: string,
     S3_BUCKET_NAME: string,

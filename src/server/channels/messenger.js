@@ -147,6 +147,7 @@ async function receivedMessage(entry: MessengerReqEntry,
                                messagingEvent: MessengerReqMessaging,
                                botParams: BotParams)
 {
+    console.log('messenger receivedMessage: ', u.inspect(entry, {depth:null}));
     let userProfile = {};
     try {
         userProfile = await getUserProfile(messagingEvent.sender.id, botParams);
@@ -158,10 +159,10 @@ async function receivedMessage(entry: MessengerReqEntry,
         attachments.filter(x => x.type === 'image')
                    .map(x => ({ imageUrl: x.payload.url }));
 
-    const pageId_senderId = composeKeys(entry.id, messagingEvent.sender.id);
+    const conversationId = [entry.id, messagingEvent.sender.id].join('::');
     const message: WebhookMessage = {
         publisherId_conversationId:
-            composeKeys(botParams.publisherId, pageId_senderId),
+            composeKeys(botParams.publisherId, conversationId),
         creationTimestamp: new Date(messagingEvent.timestamp).getTime(),
         id: messagingEvent.message.mid,
         senderId: messagingEvent.sender.id,
@@ -180,12 +181,12 @@ async function receivedMessage(entry: MessengerReqEntry,
     const sendTypingOnPromise = timeout(CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000)
         .then(() => {
             if (responseCount > 0) return;
-            return send(botParams, pageId_senderId, { typingOn: true });
+            return send(botParams, conversationId, { typingOn: true });
         });
 
     await deepiksBot(message, botParams, m => {
         responseCount++;
-        return send(botParams, pageId_senderId, m);
+        return send(botParams, conversationId, m);
     });
 
     await sendTypingOnPromise;
@@ -196,8 +197,8 @@ export async function send(botParams: BotParams, conversationId: string,
 {
     console.log('send: ', conversationId, toStr(message));
 
-    // conversationId is constructed by composeKeys(pageId, senderId)
-    const [ pageId, to ] = decomposeKeys(conversationId);
+    // conversationId is constructed by [pageId, senderId].join('::')
+    const [ pageId, to ] = conversationId.split('::');
     const { typingOn, text, cards, actions } = message;
 
     if (typingOn) {

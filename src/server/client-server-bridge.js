@@ -66,14 +66,11 @@ routes.use('/', (req, res, next) => {
 
 routes.post('/send-email', (req, res, next) => {
     sendEmail(req.body.contactFormData)
-        .then(x => res.send(x))
+        .then(() => res.send())
         .catch(err => next(err));
 });
 
-routes.get('/fetch-bots', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.get('/fetch-bots', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     fetchBots(identityId)
         .then(x => res.send(x))
@@ -81,10 +78,7 @@ routes.get('/fetch-bots', (req, res, next) => {
 
 });
 
-routes.get('/fetch-users', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.get('/fetch-users', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     fetchUsers(identityId, req.query.botId)
         .then(x => res.send(x))
@@ -98,31 +92,23 @@ routes.get('/fetch-polls', authMiddleware, (req, res, next) => {
         .catch(err => next(err));
 });
 
-routes.get('/fetch-user', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.get('/fetch-user', authMiddleware, (req, res, next) => {
     const {identityId} = req.customData;
-    fetchUser(identityId, req.query.botId, req.query.userId)
+    fetchUser(identityId, req.query.botId, req.query.channel, req.query.userId)
         .then(x => res.send(x))
         .catch(err => next(err));
 
 });
 
-routes.post('/save-user', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
-    saveUser(req.customData.identityId, req.body.botId_userId, req.body.model)
+routes.post('/save-user', authMiddleware, (req, res, next) => {
+    saveUser(req.customData.identityId, req.body.botId,
+             req.body.channel, req.body.userId, req.body.model)
         .then(x => res.send(x))
         .catch(err => next(err));
 
 });
 
-routes.get('/fetch-conversations', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.get('/fetch-conversations', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     fetchConversations(identityId, req.query.botId)
         .then(x => res.send(x))
@@ -130,10 +116,7 @@ routes.get('/fetch-conversations', (req, res, next) => {
 
 });
 
-routes.get('/fetch-messages', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.get('/fetch-messages', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     fetchMessages(identityId, req.query.conversationId)
         .then(x => res.send(x))
@@ -141,10 +124,7 @@ routes.get('/fetch-messages', (req, res, next) => {
 
 });
 
-routes.post('/add-bot', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.post('/add-bot', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     addBot(identityId, req.body.botName, req.body.settings)
         .then(x => res.send(x))
@@ -157,28 +137,19 @@ routes.post('/update-bot', authMiddleware, (req, res, next) => {
         .catch(err => next(err));
 });
 
-routes.delete('/remove-bot', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.delete('/remove-bot', authMiddleware, (req, res, next) => {
     // TODO: Once the client supports removing bots, remove the bot from the
     //       database, remove messages, conversations and cisco spark webhooks
 });
 
-routes.post('/add-bot-feed', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.post('/add-bot-feed', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     addBotFeed(identityId, req.body.botId, req.body.feedConfig)
         .then(x => res.send(x))
         .catch(err => next(err));
 });
 
-routes.post('/send-notification', (req, res, next) => {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
+routes.post('/send-notification', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     sendNotification(identityId, req.body.botId, req.body.message, req.body.categories)
         .then(x => res.send(x))
@@ -243,9 +214,8 @@ async function fetchBots(identityId) {
 async function fetchUsers(identityId, botId) {
     console.log('fetchUsers: identityId=', identityId, 'botId=', botId);
     const qres = await aws.dynamoQuery({
-        TableName:                 CONSTANTS.DB_TABLE_USER_PREFS,
-        KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_userId, :bid)',
-        // FilterExpression:          botId ? 'begins_with(botId_userId, :bid)' : undefined,
+        TableName:                 CONSTANTS.DB_TABLE_USERS,
+        KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_channel_userId, :bid)',
         ExpressionAttributeValues: {
             ':pid': identityId,
             ':bid': botId,
@@ -271,54 +241,42 @@ async function fetchPolls(identityId, botId) {
     return qres.Items || [];
 }
 
-async function fetchUser(identityId, botId, userId) {
-    console.log('fetchUsers: identityId=', identityId, 'botId=', botId);
+async function fetchUser(identityId, botId, channel, userId) {
+    console.log('fetchUsers: identityId=', identityId, ', channel': channel, ', botId=', botId);
     const qres = await aws.dynamoQuery({
-        TableName:                 CONSTANTS.DB_TABLE_USER_PREFS,
-        KeyConditionExpression:    'publisherId = :pid AND botId_userId = :pk',
+        TableName:                 CONSTANTS.DB_TABLE_USERS,
+        KeyConditionExpression:    'publisherId = :pid AND botId_channel_userId = :bcu',
         ExpressionAttributeValues: {
             ':pid': identityId,
-            ':pk':  composeKeys(botId, userId)
+            ':bcu':  composeKeys(botId, channel, userId)
         },
-        Limit:                     1,
         ScanIndexForward:          false,
     });
 
     return qres.Items && qres.Items[0] || null;
 }
 
-async function saveUser(identityId, botId_userId, model) {
-    if (botId_userId) {
-        let user =  await aws.dynamoUpdate({
-            TableName:                 CONSTANTS.DB_TABLE_USER_PREFS,
-            Key:                       {
-                publisherId: identityId,
-                             botId_userId
-            },
-            UpdateExpression:          'set category = :category, channel = :channel',
-            ExpressionAttributeValues: {
-                ':category': model.category || null,
-                ':channel':  model.channel || null
-            },
-            ReturnValues:              'ALL_NEW'
-        });
-        return user.Attributes;
-    } else {
-        if (!model.id) {
-            throw new Error('User id must be present');
-        }
-        await aws.dynamoPut({
-            TableName:    CONSTANTS.DB_TABLE_USER_PREFS,
-            Item:         {
-                publisherId:  identityId,
-                botId_userId: composeKeys(model.botId, model.id),
-                category:     model.category || null,
-                channel:      model.channel || null
-            }
-        });
-
-        return fetchUser(identityId, model.botId, model.id);
+async function saveUser(identityId, botId, channel, userId, model) {
+    if (!['user', 'admin', 'none'].includes(model.userRole)) {
+        throw new Error(`saveUser invalid userRole: ${model.userRole}`);
     }
+    if (!botId || !channel || !userId) {
+        throw new Error(`saveUser must provide botId, channel and userId: ` +
+                        `${botId}, ${channel}, ${userId}`);
+    }
+    const user = await aws.dynamoUpdate({
+        TableName: CONSTANTS.DB_TABLE_USERS,
+        Key: {
+            publisherId: identityId,
+            botId_channel_userId: composeKeys(botId, channel, userId),
+        },
+        UpdateExpression: 'set userRole = :userRole',
+        ExpressionAttributeValues: {
+            ':userRole': model.userRole,
+        },
+        ReturnValues: 'ALL_NEW',
+    });
+    return user.Attributes;
 }
 
 async function fetchConversations(identityId, botId) {
@@ -399,15 +357,15 @@ async function updateBot(identityId, botId, model) {
         Key:                       {publisherId: identityId, botId},
         UpdateExpression:          `set botName = :botName, 
                                         botIcon = :botIcon, 
-                                        enableUsersFilter = :enableUsersFilter, 
+                                        onlyAllowedUsersCanChat = :onlyAllowedUsersCanChat, 
                                         settings = :settings`,
         ExpressionAttributeValues: {
-            ':botName':           model.botName || null,
-            ':botIcon':           model.botIcon || null,
-            ':enableUsersFilter': model.enableUsersFilter || false,
-            ':settings':          model.settings
+            ':botName':                  model.botName || null,
+            ':botIcon':                  model.botIcon || null,
+            ':onlyAllowedUsersCanChat':  model.onlyAllowedUsersCanChat || false,
+            ':settings':                 aws.dynamoCleanUpObj(model.settings),
         },
-        ReturnValues:              'ALL_NEW'
+        ReturnValues:                    'ALL_NEW'
     });
     return bot.Attributes;
 }

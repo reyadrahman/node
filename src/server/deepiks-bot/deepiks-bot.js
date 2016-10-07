@@ -2,7 +2,7 @@
 
 import * as aws from '../../aws/aws.js';
 import { callbackToPromise, toStr, destructureS3Url, timeout,
-         composeKeys, decomposeKeys } from '../../misc/utils.js';
+         composeKeys, decomposeKeys, waitForAll } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
 import aiRoute from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
@@ -32,18 +32,27 @@ export async function _isMessageInDB(message: WebhookMessage) {
     return qres.Count > 0;
 }
 
-export function _createDBMessageFomResponseMessage(
+export async function _isSenderAllowedToChat(botParams: BotParams, message: WebhookMessage) {
+    if (!botParams.onlyAllowedUsersCanChat) {
+        return true;
+    }
+    const qres = await aws.getUser(botParams.publisherId, botParams.botId,
+                                   message.channel, message.senderId);
+    return qres && qres.userRole !== 'none';
+}
+
+export function _createDBMessageFromResponseMessage(
     m: ResponseMessage, botParams: BotParams,
     conversationId: string, channel: string
 ) : DBMessage
 {
     if (!m.creationTimestamp) {
-        throw new Error(`_createDBMessageFomResponseMessage message is ` +
+        throw new Error(`_createDBMessageFromResponseMessage message is ` +
                         `missing creationTimestamp: ${toStr(m)}`)
     }
     return {
         publisherId_conversationId: composeKeys(botParams.publisherId, conversationId),
-        senderId: composeKeys(botParams.publisherId, botParams.botId),
+        senderId: [botParams.publisherId, botParams.botId].join('::'),
         senderName: botParams.botName,
         channel: channel,
         senderIsBot: true,
@@ -68,7 +77,7 @@ export async function _logResponseMessage(ms: ResponseMessage | Array<ResponseMe
         ? ms : [ms];
 
     await _logMessage(messages.map(
-        x => _createDBMessageFomResponseMessage(x, botParams, conversationId, channel)
+        x => _createDBMessageFromResponseMessage(x, botParams, conversationId, channel)
     ));
 }
 
@@ -162,7 +171,7 @@ export function _respondFnPreprocessorActionsMiddleware(
         const asUserAction = pas.find(x => x.action === 'as user');
         if (asUserAction) {
             console.log('asUserAction: ', response.text);
-            const message = _createDBMessageFomResponseMessage({
+            const message = _createDBMessageFromResponseMessage({
                 text: response.text,
                 creationTimestamp: Date.now(),
             }, botParams, conversationId, channel);
@@ -340,7 +349,7 @@ export async function _pollMiddleware(
 
     const keys = {
         publisherId: botParams.publisherId,
-        botId_pollId_questionId: composeKeys(botParams.botId, composeKeys(pollId, questionId)),
+        botId_pollId_questionId: composeKeys(botParams.botId, pollId, questionId),
     };
 
     if (pollQuestion) {
@@ -418,14 +427,39 @@ export async function _updateConversationTable(message: DBMessage,
                           (channelData ? ', channelData = :cd' : 'REMOVE channelData'),
         ExpressionAttributeValues: {
             ':lastMessage': aws.dynamoCleanUpObj(message),
-            ':blimtm': composeKeys(botParams.botId,
-                composeKeys(message.creationTimestamp, message.id)),
+            ':blimtm': composeKeys(botParams.botId, message.creationTimestamp, message.id),
             ':chan': message.channel,
             ':botId': botParams.botId,
             ':cd': channelData,
         },
     });
-    console.log('_updateConversationTable res: ', res);
+}
+
+/**
+ * updates the users table, creating a new item if necessary.
+ * The `message` must be a message from user, not from bot.
+ */
+export async function _updateUsersTable(message: DBMessage,
+                                        botParams: BotParams)
+{
+    console.log('_updateUsersTable');
+    // const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
+
+    const res = await aws.dynamoUpdate({
+        TableName: CONSTANTS.DB_TABLE_USERS,
+        Key: {
+            publisherId: botParams.publisherId,
+            botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
+        },
+        UpdateExpression: 'SET userLastMessage = :userLastMessage, ' +
+                          'userName = :userName, ' +
+                          'userRole = if_not_exists(userRole, :defaultRole)',
+        ExpressionAttributeValues: {
+            ':userLastMessage': aws.dynamoCleanUpObj(message),
+            ':userName': message.senderName,
+            ':defaultRole': 'user',
+        },
+    });
 }
 
 export async function _handleWebhookMessage(
@@ -434,7 +468,23 @@ export async function _handleWebhookMessage(
     respondFn: RespondFn,
     channelData?: ChannelData
 ) {
-    console.log('route');
+    console.log('_handleWebhookMessage');
+    const [alreadyInDB, isAllowedToChat] = await Promise.all([
+        _isMessageInDB(rawMessage),
+        _isSenderAllowedToChat(botParams, rawMessage),
+    ]);
+    if (alreadyInDB) {
+        console.log(`Message is already in the db. It won't be processed.`)
+        return;
+    }
+    if (!isAllowedToChat) {
+        await respondFn({ text: `Sorry, I'm not allowed to chat with you. Please contact the publisher.` });
+        return;
+    }
+    // if (await _isMessageInDB(message)) {
+    //     console.log(`Message is already in the db. It won't be processed.`)
+    //     return;
+    // }
 
     const attachments = await _processAttachments(rawMessage);
     let dbMessage = _webhookMessageToDBMessage(rawMessage);
@@ -453,10 +503,21 @@ export async function _handleWebhookMessage(
     newRespondFn = _respondFnSignS3UrlsMiddleware(newRespondFn);
     newRespondFn = _respondFnCollectorMiddleware(newRespondFn, responses);
     newRespondFn = _respondFnPreprocessorActionsMiddleware(
-        newRespondFn, botParams, conversationId, dbMessage.channel, sendAsUser);
+        newRespondFn, botParams, conversationId, dbMessage.channel, sendAsUser
+    );
 
     await sendAsUser(dbMessage);
-    await _logResponseMessage(responses, botParams, conversationId, dbMessage.channel);
+
+    if (responses.length > 0) {
+        const responsesAsDBMessages = responses.map(
+            x => _createDBMessageFromResponseMessage(x, botParams, conversationId, dbMessage.channel)
+        );
+
+        await waitForAll([
+            _logMessage(responsesAsDBMessages),
+            _updateConversationTable(_.last(responsesAsDBMessages), botParams, channelData),
+        ]);
+    }
 }
 
 export async function _handleProcessedDBMessage(
@@ -466,17 +527,15 @@ export async function _handleProcessedDBMessage(
     conversationId: string,
     channelData?: ChannelData
 ) {
-    // will await later
-    const updateConversationP = _updateConversationTable(dbMessage, botParams, channelData);
-    const logP = _logMessage(dbMessage);
-
-    await updateConversationP;
-    await logP;
+    await Promise.all([
+        _updateConversationTable(dbMessage, botParams, channelData),
+        _updateUsersTable(dbMessage, botParams),
+        _logMessage(dbMessage),
+    ]);
 
     dbMessage = await _pollMiddleware(dbMessage, botParams, respondFn);
     await aiRoute(dbMessage, botParams, respondFn);
 }
-
 
 export async function deepiksBot(message: WebhookMessage,
                                  botParams: BotParams,
@@ -485,10 +544,6 @@ export async function deepiksBot(message: WebhookMessage,
 {
     console.log('deepiksBot');
     try {
-        if (await _isMessageInDB(message)) {
-            console.log(`Message is already in the db. It won't be processed.`)
-            return;
-        }
         await _handleWebhookMessage(message, botParams, respondFn, channelData);
     } catch(error) {
         const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
