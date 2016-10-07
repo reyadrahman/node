@@ -302,11 +302,14 @@ eb open
 
 **NOTE: `eb deploy` [deploys git's HEAD commit](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-cli-git.html). You can use `eb deploy --staged` to deploy the staged changes (those that are `git add`'ed)**
 
+### Notes for Production
+Use CDN in production to server static files. All you need to do is to create a distribution in AWS CloudFront, set its origin to your server's domain and set the `CDN` environment variable of your server to your CloudFront's distribution domain.
+
+Once the `CDN` environment variable is set and you deploy the server, every static file will be served through the CDN. Files will be available in the CDN immediately without any delays caused by caching.
+
 ## Setting Up Webhooks
 ### Spark
-The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/spark
-Where `SOME_DOMAIN`, `PUBLISHER_ID` and `BOT_ID` must be replaced with appropriate values.
-Use SparkWebHookManager to set up webhooks.
+The add-bot page automatically sets up the webhook.
 
 ### Messenger
 The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/messenger
@@ -381,7 +384,81 @@ Where `DEEPIKS_ROOT` is the root directory of this repository.
 
 For more information see [aws-sdk-js's docs](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/browser-building.html).
 
-## TODO
-Customize icons using Fontello to include only the used icons.
 
-Customize flag icons using www.flag-sprites.com
+### Development Notes
+
+#### Static Files
+The server serves the static files from `dist-client`. This directory is created by Webpack after a build. There are 3 ways for a file to end up in `dist-client`:
+
+1. Webpack's output: these are the Javascript and CSS files that Webpack produces
+2. Files that are `require`d **from the client code**. For example if in the client code you have `const logoURL = require('./resources/logo.png')`, then the file `./resources/logo.png` (relative to the source file) will be copied to `dist-client` under a **unique name**. You can then use the `logoURL` to refer to the file. The `logoURL` could be a relative path or prefixed with CDN's domain depending on the the configurations you set via the environment variables.
+3. The contents of `resources/copy-to-dist/` will be copy **as-is** to the `dist-client`.
+
+
+Please note that all `url`s inside CSS/SCSS/LESS files will be treated as if they were `require`d (second method above).
+
+In the client code you can use the second method above (`require(...)`) to get the URL of a static file. However, in the server-only code (e.g. `src/components/html/Html.jsx`), you cannot do that. Instead use the 3rd method above. That is, put the file in `resources/copy-to-dist/` and then you can refer to it as in the following example from `Html.jsx` (assuming `resources/copy-to-dist/favicon.png` exists):
+
+```js
+import { CONSTANTS } from '../../client/client-utils.js';
+const faviconURL = `${CONSTANTS.PUBLIC_URL}favicon.png`;
+```
+
+Now depending on your configurations, faviconURL could be a relative path to `dist-client` or the URL to the corresponding file in CDN.
+
+#### Front-End - Immutable Props
+**The entire application state and all `props` of every component are immutable.** Please ensure that you do not ever modify them directly. Always use actions to update the application state and let Redux+React propagate the props down to each component.
+
+Please see [Redux](http://redux.js.org/) for more details.
+
+#### Promises and Async
+Please remember that by default promises swallow errors and **silently fail**:
+
+```js
+async function f() {
+    throw new Error('You will not see this message');
+}
+
+function bad() {
+    f();
+}
+
+function good1() {
+    f().catch(err => console.error(err));
+}
+
+async function good2() {
+    try {
+        await f();
+    } catch(err) {
+        console.error(err);
+    }
+}
+```
+
+#### Compose/Decompose keys for DynamoDB
+As you can see in `src/misc/types.js`, some properties are composed of multiple keys, for example `publisherId_botId`. Please always use the functions `composeKeys` and `decomposeKeys` located at `src/misc/utils.js` to create or parse these keys. The reason is that the separator is subject to change and later we may need to use nested composition.
+
+#### `dynamoCleanUpObj`
+
+From DynamoDB's docs:
+
+> When you add an item, [...] attribute values cannot be null. String and Binary type attributes must have lengths greater than zero. Set type attributes cannot be empty. **Requests with empty values will be rejected with a ValidationException exception.**
+
+So when adding/updating an item, always wrap your values with `dynamoCleanUpObj` from `src/aws/aws.js` to ensure that empty values will be removed.
+
+For example:
+
+```js
+const res = await aws.dynamoUpdate({
+    TableName: /*...*/,
+    Key: {
+        /*...*/
+    },
+    UpdateExpression: /*...*/,
+    ExpressionAttributeValues: {
+        ':userLastMessage': aws.dynamoCleanUpObj(message),
+    },
+});
+
+```
