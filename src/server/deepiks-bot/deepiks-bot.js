@@ -6,7 +6,7 @@ import { callbackToPromise, toStr, destructureS3Url, timeout,
 import { request, CONSTANTS } from '../server-utils.js';
 import aiRoute from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
-              ChannelData, Conversation, RespondFn } from '../../misc/types.js';
+              ChannelData, Conversation, RespondFn, UserPrefs } from '../../misc/types.js';
 import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
@@ -505,7 +505,7 @@ export async function _updateConversationTable(message: DBMessage,
  */
 export async function _updateUsersTable(
     message: DBMessage, botParams: BotParams,
-    userRole?: string, invitationToken?: string
+    userRole?: string, prefs?: UserPrefs
 ) {
     console.log('_updateUsersTable');
     // const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
@@ -519,23 +519,23 @@ export async function _updateUsersTable(
         UpdateExpression: 'SET userLastMessage = :userLastMessage' +
                           ', userName = :userName' +
                           (userRole ? ', userRole = :userRole' : ', userRole = if_not_exists(userRole, :userRole)') +
-                          (invitationToken ? ', invitationToken = :it' : ''),
+                          (prefs ? ', prefs = :prefs' : ''),
         ExpressionAttributeValues: {
             ':userLastMessage': aws.dynamoCleanUpObj(message),
             ':userName': message.senderName,
             ':userRole': userRole || 'user',
-            ':it': invitationToken,
+            ':prefs': prefs,
         },
     });
 }
 
 export function _updateTablesAfterReceivingMessage(
     dbMessage: DBMessage, botParams: BotParams, channelData?: ChannelData,
-    userRole?: string, invitationToken?: string
+    userRole?: string, prefs?: UserPrefs
 ) {
     return Promise.all([
         _updateConversationTable(dbMessage, botParams, channelData),
-        _updateUsersTable(dbMessage, botParams, userRole, invitationToken),
+        _updateUsersTable(dbMessage, botParams, userRole, prefs),
         _logMessage(dbMessage),
     ]);
 }
@@ -603,7 +603,7 @@ export async function _handleWebhookMessage(
         } else {
             // user entered a valid invitation token
             await _updateTablesAfterReceivingMessage(
-                dbMessage, botParams, channelData, 'user', invitationToken
+                dbMessage, botParams, channelData, 'user', { invitationToken }
             );
             await newRespondFn({
                 text: `Thanks, now we can chat...`,
