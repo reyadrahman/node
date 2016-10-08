@@ -1,5 +1,10 @@
 /* @flow */
 
+export type Invitation = {
+    publisherId: string,
+    botId_invitationToken: string,
+};
+
 export type User = {
     publisherId: string,
     botId_channel_userId: string,
@@ -214,6 +219,7 @@ export type ServerConstants = {
     DB_TABLE_USERS: string,
     DB_TABLE_SCHEDULED_TASKS: string,
     DB_TABLE_POLL_QUESTIONS: string,
+    DB_TABLE_INVITATION_TOKENS: string,
     S3_BUCKET_NAME: string,
     AI_ACTION_CACHE_VALID_TIME_S: number,
     TYPING_INDICATOR_DELAY_S: number,

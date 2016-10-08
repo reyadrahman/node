@@ -69,3 +69,7 @@ export async function sendNotification(jwtIdToken: string,
 {
     return await fetchjp('/api/send-notification', { jwtIdToken, botId, message, categories });
 }
+
+export async function createInvitationTokens(jwtIdToken: string, botId: string, count: number) {
+    return await fetchjp('/api/create-invitation-tokens', { jwtIdToken, botId, count });
+}

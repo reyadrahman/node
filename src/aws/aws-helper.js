@@ -2,9 +2,11 @@
 
 // server uses 'aws-sdk'. Client uses 'external_modules/aws-sdk.min.js'
 import AWS from 'aws-sdk';
-import { callbackToPromise, pushMany, composeKeys, decomposeKeys } from '../misc/utils.js';
+import { callbackToPromise, pushMany, composeKeys, decomposeKeys,
+         waitForAll } from '../misc/utils.js';
 import { CONSTANTS, request } from '../server/server-utils.js';
-import type { BotParams, AIActionInfo, Conversation } from '../misc/types.js';
+import type { BotParams, AIActionInfo, Conversation, User,
+              Invitation } from '../misc/types.js';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
@@ -37,6 +39,7 @@ const ses = new AWS.SES();
 export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
 export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
 export const dynamoUpdate = callbackToPromise(dynamoDoc.update, dynamoDoc);
+export const dynamoDelete = callbackToPromise(dynamoDoc.delete, dynamoDoc);
 export const dynamoQuery = callbackToPromise(dynamoDoc.query, dynamoDoc);
 export const dynamoScan = callbackToPromise(dynamoDoc.scan, dynamoDoc);
 export const dynamoCreateTable = callbackToPromise(dynamodb.createTable, dynamodb);
@@ -56,6 +59,27 @@ export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
 export const cognitoIdentityGetId = callbackToPromise(cognitoIdentity.getId, cognitoIdentity);
 export const stsGetFederationToken = callbackToPromise(sts.getFederationToken, sts);
 export const sesSendEmail = callbackToPromise(ses.sendEmail, ses);
+
+export async function dynamoBatchWriteHelper(tableName, operations) {
+    // TODO retry unprocessedItems
+    // TODO use an exponential backoff algorithm
+
+    // dynamodb batch write limit is 25
+    const unprocessedItems = [];
+    let remaining = operations;
+    while (remaining.length > 0) {
+        const chunk = _.take(remaining, 25)
+        remaining = _.drop(remaining, 25);
+        const res = await dynamoBatchWrite({
+            RequestItems: {
+                [tableName]: chunk,
+            }
+        });
+
+        unprocessedItems.push(res.UnprocessedItems);
+    }
+    return unprocessedItems;
+}
 
 export function dynamoCleanUpObj(obj: Object) {
     return _.reduce(obj, (acc, v, k) => {
@@ -147,6 +171,25 @@ export async function getUser(
         ExpressionAttributeValues: {
             ':publisherId': publisherId,
             ':bcu': composeKeys(botId, channel, userId),
+        },
+    });
+
+    return qres.Items && qres.Items[0];
+}
+
+export async function getInvitationToken(
+    publisherId: string, botId: string,
+    invitationToken: string
+) : Promise<?Invitation>
+{
+    console.log(`getInvitationToken publisherId: ${publisherId}, botId: ${botId}, ` +
+                `invitationToken: ${invitationToken}`);
+    const qres = await dynamoQuery({
+        TableName: CONSTANTS.DB_TABLE_INVITATION_TOKENS,
+        KeyConditionExpression: 'publisherId = :publisherId and botId_invitationToken = :bi',
+        ExpressionAttributeValues: {
+            ':publisherId': publisherId,
+            ':bi': composeKeys(botId, invitationToken),
         },
     });
 
@@ -391,6 +434,26 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         };
         const res = await dynamoCreateTable(tableParams);
         creatingTables.push(CONSTANTS.DB_TABLE_POLL_QUESTIONS);
+    }
+    if (!tables.includes(CONSTANTS.DB_TABLE_INVITATION_TOKENS)) {
+        console.log('creating table: CONSTANTS.DB_TABLE_INVITATION_TOKENS');
+        const tableParams = {
+            TableName : CONSTANTS.DB_TABLE_INVITATION_TOKENS,
+            KeySchema: [
+                { AttributeName: 'publisherId', KeyType: 'HASH' },
+                { AttributeName: 'botId_invitationToken', KeyType: 'RANGE' }
+            ],
+            AttributeDefinitions: [
+                { AttributeName: 'publisherId', AttributeType: 'S' },
+                { AttributeName: 'botId_invitationToken', AttributeType: 'S' },
+            ],
+            ProvisionedThroughput: {
+                ReadCapacityUnits: readCapacityUnits,
+                WriteCapacityUnits: writeCapacityUnits,
+            }
+        };
+        const res = await dynamoCreateTable(tableParams);
+        creatingTables.push(CONSTANTS.DB_TABLE_INVITATION_TOKENS);
     }
 
     await Promise.all(creatingTables.map(

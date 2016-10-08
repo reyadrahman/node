@@ -3,6 +3,7 @@
 import map from 'lodash/map';
 import omitBy from 'lodash/omitBy';
 import isUndefined from 'lodash/isUndefined';
+import uuid from 'node-uuid';
 
 
 export function composeKeys(...xs: Array<string | number>): string {
@@ -13,6 +14,10 @@ export function decomposeKeys(k: string): Array<string> {
     return k.split('__');
 }
 
+// 64 bit random number in hex format
+export function shortLowerCaseRandomId() {
+    return uuid.v4(null, new Buffer(16)).slice(0,8).toString('hex');
+}
 
 export function toStr(obj: any): string {
     return JSON.stringify(obj, null, ' ');

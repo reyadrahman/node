@@ -4,26 +4,17 @@ import { CONSTANTS, request } from './server-utils.js';
 import * as aws from '../aws/aws.js';
 import * as channels from './channels/all-channels.js';
 import type { ContactFormData, FeedConfig } from '../misc/types.js';
-import { composeKeys, decomposeKeys } from '../misc/utils.js';
+import { composeKeys, decomposeKeys, shortLowerCaseRandomId } from '../misc/utils.js';
 
+import { inspect } from 'util';
 import uuid from 'node-uuid';
 import type { Request, Response } from 'express';
 import express from 'express';
 import ciscospark from 'ciscospark';
+import _ from 'lodash';
 
 const routes = express.Router();
 
-
-// function parseJwtIdToken(jwtIdTokenRaw) {
-//     try {
-//         var idToken = jwtDecode(jwtIdTokenRaw);
-//     } catch(err) { }
-//
-//     if (idToken && idToken.sub) {
-//         return idToken;
-//     }
-//     throw new Error('invalid jwtIdTokenRaw: ', jwtIdTokenRaw);
-// }
 
 function authMiddleware(req, res, next) {
     if (!req.customData || !req.customData.identityId) {
@@ -152,6 +143,13 @@ routes.post('/add-bot-feed', authMiddleware, (req, res, next) => {
 routes.post('/send-notification', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     sendNotification(identityId, req.body.botId, req.body.message, req.body.categories)
+        .then(x => res.send(x))
+        .catch(err => next(err));
+});
+
+routes.post('/create-invitation-tokens', authMiddleware, (req, res, next) => {
+    const { identityId } = req.customData;
+    createInvitationTokens(identityId, req.body.botId, req.body.count)
         .then(x => res.send(x))
         .catch(err => next(err));
 });
@@ -401,6 +399,33 @@ async function sendNotification(identityId, botId, message, categories) {
         creationTimestamp: Date.now(),
     };
     await channels.sendToMany(botParams, msg, categories);
+}
+
+async function createInvitationTokens(identityId, botId, count) {
+    console.log('createInvitationTokens: ', identityId, botId, count);
+    count = Number(count);
+    if (!botId || !Number.isInteger(count) || count <= 0 || count > 1000) {
+        throw new Error(`createInvitationTokens invalid parameters ${botId}, ${count}`);
+    }
+    const botParams = await aws.getBot(identityId, botId);
+    if (!botParams) {
+        throw new Error(`createInvitationTokens did not find bot with ` +
+                        `publisherId ${identityId} and botId ${botId}`);
+    }
+
+    const tokens = _.range(count).map(shortLowerCaseRandomId);
+
+    const res = await aws.dynamoBatchWriteHelper(CONSTANTS.DB_TABLE_INVITATION_TOKENS,
+        tokens.map(x => ({
+            PutRequest: {
+                Item: {
+                    publisherId: identityId,
+                    botId_invitationToken: composeKeys(botId, x),
+                },
+            },
+        }))
+    );
+    console.log(`createInvitationTokens res: `, inspect(res, { depth: null}));
 }
 
 export default routes;
