@@ -68,7 +68,7 @@ let BotSettingsPage = React.createClass({
 
         let saved = await this.props.updateBot(bot.botId, bot);
 
-        let bots = this.props.currentUser.botsState.bots;
+        let bots = _.cloneDeep(this.props.currentUser.botsState.bots);
         for (let i = 0; i < bots.length; i += 1) {
             if (bots[i].botId === saved.botId) {
                 bots[i] = saved;

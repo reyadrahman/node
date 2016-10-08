@@ -39,7 +39,7 @@ export async function fetchUser(jwtIdToken: string, botId: string, userId: strin
 }
 
 export async function saveUser(jwtIdToken: string, botId_userId: string, model: object) {
-    return await fetchjp('/api/save-user', {jwtIdToken, botId_userId, model});
+    return await fetchjp2j('/api/save-user', {jwtIdToken, botId_userId, model});
 }
 
 export async function fetchConversations(jwtIdToken: string, botId: string) {

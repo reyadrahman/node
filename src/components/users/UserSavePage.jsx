@@ -12,13 +12,14 @@ import {
 let UserSavePage = React.createClass({
     getInitialState() {
         return {
-            user: {
+            user:  {
                 id:       '',
                 channel:  '',
                 category: ''
             },
             saved: false,
-            busy: false
+            busy:  false,
+            error: null
         };
     },
 
@@ -31,17 +32,24 @@ let UserSavePage = React.createClass({
     async save(e) {
         e.preventDefault();
 
-        this.setState({busy: true});
+        this.setState({busy: true, error: null});
 
         let user   = this.state.user;
         user.botId = this.props.currentUser.selectedBotId;
-        let saved  = await (await this.props.saveUser(this.props.params.botId_userId, user)).json();
+        try {
+            let saved = await this.props.saveUser(this.props.params.botId_userId, user);
+            this.setState({saved: true});
 
-        this.setState({saved: true, busy: false});
-        setTimeout(() => {this.setState({saved: null})}, 2000);
+            setTimeout(() => {this.setState({saved: null})}, 2000);
 
-        if (!this.props.params.botId_userId) {
-            this.props.router.push(`/users/edit/${saved.botId_userId}`);
+            if (!this.props.params.botId_userId) {
+                this.props.router.push(`/users/edit/${saved.botId_userId}`);
+            }
+        }
+        catch (e) {
+            this.setState({error: e.message})
+        } finally {
+            this.setState({busy: false});
         }
     },
 
@@ -50,7 +58,7 @@ let UserSavePage = React.createClass({
 
 
         if (currentUser.selectedBotId && params.botId_userId) {
-            this.setState({fetchingUser: true});
+            this.setState({fetchingUser: true, error: null});
 
             let parts = params.botId_userId.split('__');
             this.setState({botId: parts[0], userId: parts[1]});
@@ -59,11 +67,18 @@ let UserSavePage = React.createClass({
                 this.props.selectBot(parts[0]);
             }
 
-            let user      = await fetchUser(parts[0], parts[1]);
-            user.id       = user.botId_userId.split('__')[1];
-            user.category = user.category || '';
-            user.channel  = user.channel || '';
-            this.setState({user: user, fetchingUser: false});
+            try {
+                let user      = await fetchUser(parts[0], parts[1]);
+                user.id       = user.botId_userId.split('__')[1];
+                user.category = user.category || '';
+                user.channel  = user.channel || '';
+
+                this.setState({user: user});
+            } catch (e) {
+                this.setState({error: e.message})
+            } finally {
+                this.setState({fetchingUser: false});
+            }
         }
     },
 
@@ -106,7 +121,9 @@ let UserSavePage = React.createClass({
         let user = this.state.user;
         let content;
 
-        if (this.state.fetchingUser || (!this.state.user.id && params.botId_userId)) {
+        if (this.state.error) {
+            content = <Alert bsStyle="danger">{this.state.error}</Alert>;
+        } else if (this.state.fetchingUser || (!this.state.user.id && params.botId_userId)) {
             content = <i className="icon-spinner animate-spin"/>;
         } else {
             content = (

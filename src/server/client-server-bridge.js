@@ -240,7 +240,7 @@ async function fetchPolls(identityId, botId) {
 }
 
 async function fetchUser(identityId, botId, channel, userId) {
-    console.log('fetchUsers: identityId=', identityId, ', channel': channel, ', botId=', botId);
+    console.log('fetchUsers: identityId=', identityId, ', channel:', channel, ', botId=', botId);
     const qres = await aws.dynamoQuery({
         TableName:                 CONSTANTS.DB_TABLE_USERS,
         KeyConditionExpression:    'publisherId = :pid AND botId_channel_userId = :bcu',

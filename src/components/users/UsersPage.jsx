@@ -5,7 +5,7 @@ import * as actions from '../../app-state/actions.js';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
 
-import {Pagination} from 'react-bootstrap';
+import {Pagination, Alert} from 'react-bootstrap';
 
 let UsersPage = React.createClass({
     getInitialState() {
@@ -63,7 +63,9 @@ let UsersPage = React.createClass({
             if (currentUser.usersState.errorMessage) {
                 content = (
                     <tr>
-                        <td colSpan="5" className="text-center">{currentUser.usersState.errorMessage}</td>
+                        <td colSpan="5" className="text-center">
+                            <Alert bsStyle="danger">{currentUser.usersState.errorMessage}</Alert>
+                        </td>
                     </tr>
                 );
             } else {
