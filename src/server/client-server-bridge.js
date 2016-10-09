@@ -92,8 +92,7 @@ routes.get('/fetch-user', authMiddleware, (req, res, next) => {
 });
 
 routes.post('/save-user', authMiddleware, (req, res, next) => {
-    saveUser(req.customData.identityId, req.body.botId,
-             req.body.channel, req.body.userId, req.body.model)
+    saveUser(req.customData.identityId, req.body.botId_channel_userId, req.body.model)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -254,27 +253,43 @@ async function fetchUser(identityId, botId, channel, userId) {
     return qres.Items && qres.Items[0] || null;
 }
 
-async function saveUser(identityId, botId, channel, userId, model) {
-    if (!['user', 'admin', 'none'].includes(model.userRole)) {
-        throw new Error(`saveUser invalid userRole: ${model.userRole}`);
+async function saveUser(identityId, botId_channel_userId, model) {
+    if (!model.userRole) {
+        model.userRole = 'user';
     }
-    if (!botId || !channel || !userId) {
-        throw new Error(`saveUser must provide botId, channel and userId: ` +
-                        `${botId}, ${channel}, ${userId}`);
+
+    if (botId_channel_userId) {
+        let user = await aws.dynamoUpdate({
+            TableName:                 CONSTANTS.DB_TABLE_USERS,
+            Key:                       {
+                publisherId: identityId,
+                             botId_channel_userId
+            },
+            UpdateExpression:          'set userRole = :userRole',
+            ExpressionAttributeValues: {
+                ':userRole': model.userRole,
+            },
+            ReturnValues:              'ALL_NEW'
+        });
+        return user.Attributes;
+    } else {
+        if (!model.id || !model.channel || !model.botId) {
+            throw new Error(
+                'saveUser must provide botId, channel and userId: ' +
+                `${model.botId}, ${model.channel}, ${modeluserId}`
+            );
+        }
+        await aws.dynamoPut({
+            TableName: CONSTANTS.DB_TABLE_USERS,
+            Item:      {
+                publisherId:          identityId,
+                botId_channel_userId: composeKeys(model.botId, model.channel, model.id),
+                userRole:             model.userRole,
+            }
+        });
+
+        return fetchUser(identityId, model.botId, model.channel, model.id);
     }
-    const user = await aws.dynamoUpdate({
-        TableName: CONSTANTS.DB_TABLE_USERS,
-        Key: {
-            publisherId: identityId,
-            botId_channel_userId: composeKeys(botId, channel, userId),
-        },
-        UpdateExpression: 'set userRole = :userRole',
-        ExpressionAttributeValues: {
-            ':userRole': model.userRole,
-        },
-        ReturnValues: 'ALL_NEW',
-    });
-    return user.Attributes;
 }
 
 async function fetchConversations(identityId, botId) {

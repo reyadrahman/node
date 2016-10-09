@@ -26,7 +26,7 @@ const Routes = (
             <Route path="/settings" component={BotSettingsPage}/>
             <Route path="/users" component={UsersPage} />
             <Route path="/users/add" component={UserSavePage}/>
-            <Route path="/users/edit/:botId_userId" component={UserSavePage}/>
+            <Route path="/users/edit/:botId_channel_userId" component={UserSavePage}/>
             <Route path="/messages(/:selectedBotId)(/:conversationId)" component={MessagesPage} />
             <Route path="/feeds" component={FeedsPage} />
             <Route path="/polls" component={PollsPage}/>

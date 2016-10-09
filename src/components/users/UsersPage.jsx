@@ -82,7 +82,7 @@ let UsersPage = React.createClass({
 
             if (this.state.searchFilter) {
                 users = users.filter(user => {
-                    let userId = user.botId_userId.split('__')[1];
+                    let userId = user.botId__channel_userId.split('__')[2];
                     return userId.toLowerCase().indexOf(this.state.searchFilter) > -1;
                 });
             }
@@ -102,23 +102,31 @@ let UsersPage = React.createClass({
                 pageUsers = users;
             }
 
-            content = pageUsers.map(function (user) {
-                let userId = user.botId_userId.split('__')[1];
+            if (users.length) {
+                content = pageUsers.map(function (user) {
+                    let [botId, channel, userId] = user.botId__channel_userId.split('__');
 
-                return (
+                    return (
+                        <tr>
+                            <td className="user-id">{userId}</td>
+                            <td>{channel}</td>
+                            <td>{user.userRole || 'user'}</td>
+                            <td>-</td>
+                            <td className="actions">
+                                <Link to={`/users/edit/${user.botId__channel_userId}`}>
+                                    <i className="icon-edit"/>
+                                </Link>
+                            </td>
+                        </tr>
+                    )
+                });
+            } else {
+                content = (
                     <tr>
-                        <td className="user-id">{userId}</td>
-                        <td>{user.channel || '-'}</td>
-                        <td>{user.category || 'User'}</td>
-                        <td>-</td>
-                        <td className="actions">
-                            <Link to={`/users/edit/${user.botId_userId}`}>
-                                <i className="icon-edit"/>
-                            </Link>
-                        </td>
+                        <td colSpan="5" className="text-center">No users were found for this bot</td>
                     </tr>
-                )
-            });
+                );
+            }
         }
 
         return (

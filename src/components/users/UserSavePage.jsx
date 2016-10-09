@@ -15,7 +15,7 @@ let UserSavePage = React.createClass({
             user:  {
                 id:       '',
                 channel:  '',
-                category: ''
+                userRole: 'user'
             },
             saved: false,
             busy:  false,
@@ -37,13 +37,13 @@ let UserSavePage = React.createClass({
         let user   = this.state.user;
         user.botId = this.props.currentUser.selectedBotId;
         try {
-            let saved = await this.props.saveUser(this.props.params.botId_userId, user);
+            let saved = await this.props.saveUser(this.props.params.botId_channel_userId, user);
             this.setState({saved: true});
 
             setTimeout(() => {this.setState({saved: null})}, 2000);
 
-            if (!this.props.params.botId_userId) {
-                this.props.router.push(`/users/edit/${saved.botId_userId}`);
+            if (!this.props.params.botId_channel_userId) {
+                this.props.router.push(`/users/edit/${saved.botId_channel_userId}`);
             }
         }
         catch (e) {
@@ -57,21 +57,21 @@ let UserSavePage = React.createClass({
         const {currentUser, params, fetchUser} = this.props;
 
 
-        if (currentUser.selectedBotId && params.botId_userId) {
+        if (currentUser.selectedBotId && params.botId_channel_userId) {
             this.setState({fetchingUser: true, error: null});
 
-            let parts = params.botId_userId.split('__');
-            this.setState({botId: parts[0], userId: parts[1]});
+            let [botId, channel, userId] = params.botId_channel_userId.split('__');
+            this.setState({botId, channel, userId});
 
-            if (parts[0] !== currentUser.selectedBotId) {
-                this.props.selectBot(parts[0]);
+            if (botId !== currentUser.selectedBotId) {
+                this.props.selectBot(botId);
             }
 
             try {
-                let user      = await fetchUser(parts[0], parts[1]);
-                user.id       = user.botId_userId.split('__')[1];
-                user.category = user.category || '';
-                user.channel  = user.channel || '';
+                let user      = await fetchUser(botId, channel, userId);
+                user.id       = userId;
+                user.userRole = user.userRole || 'user';
+                user.channel  = channel;
 
                 this.setState({user: user});
             } catch (e) {
@@ -106,7 +106,7 @@ let UserSavePage = React.createClass({
             return;
         }
 
-        if (oldProps.params.botId_userId && params.botId_userId != oldProps.params.botId_userId) {
+        if (oldProps.params.botId_channel_userId && params.botId_channel_userId != oldProps.params.botId_channel_userId) {
             this.fetchUser();
         }
     },
@@ -121,9 +121,7 @@ let UserSavePage = React.createClass({
         let user = this.state.user;
         let content;
 
-        if (this.state.error) {
-            content = <Alert bsStyle="danger">{this.state.error}</Alert>;
-        } else if (this.state.fetchingUser || (!this.state.user.id && params.botId_userId)) {
+        if (this.state.fetchingUser || (!this.state.user.id && params.botId_channel_userId)) {
             content = <i className="icon-spinner animate-spin"/>;
         } else {
             content = (
@@ -136,7 +134,7 @@ let UserSavePage = React.createClass({
                             type="text"
                             value={user.id}
                             placeholder="User ID"
-                            disabled={!!params.botId_userId}
+                            disabled={!!params.botId_channel_userId}
                             onChange={this.onFormFieldChange}
                         />
                     </FormGroup>
@@ -148,26 +146,31 @@ let UserSavePage = React.createClass({
                             type="text"
                             value={user.channel}
                             placeholder="Channel"
+                            disabled={!!params.botId_channel_userId}
                             onChange={this.onFormFieldChange}
                         />
                     </FormGroup>
                     <FormGroup
-                        controlId="category"
+                        controlId="userRole"
                     >
                         <ControlLabel>Role</ControlLabel>
                         <FormControl
                             componentClass="select"
-                            value={user.category}
+                            value={user.userRole}
                             placeholder="Role"
                             onChange={this.onFormFieldChange}
                         >
                             <option value="admin">Admin</option>
-                            <option value="">User</option>
+                            <option value="user">User</option>
                             <option value="none">None</option>
                         </FormControl>
                     </FormGroup>
                 </form>
             );
+
+            if (this.state.error) {
+                content += <Alert bsStyle="danger">{this.state.error}</Alert>;
+            }
         }
 
         let alert = '';

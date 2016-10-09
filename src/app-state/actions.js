@@ -246,22 +246,22 @@ export function fetchPolls(botId) {
     }
 }
 
-export function fetchUser(botId, userId) {
+export function fetchUser(botId, channel, userId) {
     return async function (dispatch: Function) {
         const session = await aws.getCurrentSession();
         return bridge.fetchUser(
             session.getIdToken().getJwtToken(),
-            botId, userId
+            botId, channel, userId
         );
     }
 }
 
-export function saveUser(botId_userId, model) {
+export function saveUser(botId_channel_userId, model) {
     return async function (dispatch: Function) {
         const session = await aws.getCurrentSession();
         return bridge.saveUser(
             session.getIdToken().getJwtToken(),
-            botId_userId, model
+            botId_channel_userId, model
         );
     }
 }
