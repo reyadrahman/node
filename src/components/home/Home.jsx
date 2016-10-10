@@ -130,7 +130,7 @@ let Home = React.createClass({
                         No support message
                     </video>
                     <div className="intro-message">
-                       { strings.hello }<br/>{ strings.baseline }
+                       <br/><br/><br/><br/><br/><br/><br/><br/><br/>{ strings.hello }<br/>{ strings.baseline }
                     </div>
                 </section>
 
