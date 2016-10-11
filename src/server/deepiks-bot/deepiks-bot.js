@@ -2,21 +2,26 @@
 
 import * as aws from '../../aws/aws.js';
 import { callbackToPromise, toStr, destructureS3Url, timeout,
-         composeKeys, decomposeKeys, waitForAll } from '../../misc/utils.js';
+         composeKeys, decomposeKeys, waitForAll,
+         shortLowerCaseRandomId } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
 import aiRoute from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
-              ChannelData, Conversation, RespondFn, UserPrefs } from '../../misc/types.js';
+              ChannelData, Conversation, RespondFn, UserPrefs, User } from '../../misc/types.js';
 import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
-import uuid from 'uuid';
+import uuid from 'node-uuid';
 
 type ProcessedAttachment = {
     urlP: Promise<string>,
     buffer: Buffer,
     format: string,
 };
+
+export function _textToResponseMessage(text: string): ResponseMessage {
+    return { text, creationTimestamp: Date.now() };
+}
 
 export async function _isMessageInDB(message: DBMessage) {
     console.log('_isMessageInDB');
@@ -31,36 +36,53 @@ export async function _isMessageInDB(message: DBMessage) {
     return qres.Count > 0;
 }
 
-export async function _isSenderAllowedToChat(botParams: BotParams, message: DBMessage) {
-    if (!botParams.onlyAllowedUsersCanChat) {
-        return true;
-    }
-    const qres = await aws.getUser(botParams.publisherId, botParams.botId,
-                                   message.channel, message.senderId);
-    return qres && qres.userRole !== 'none';
-}
-
-
-// Checks to see if the message contains a valid invitation token
-// If yes, it will remove the token from DB_TABLE_INVITATION_TOKENS
-// and return the token. Otherwise returns null;
-export async function _userCheckIn(botParams: BotParams, message: DBMessage)
-: ?string
-{
+export async function _authorizeUser(
+    botParams: BotParams, message: DBMessage, respondFn: RespondFn, user: ?User
+) {
     const token = (message.text || '').trim().toLowerCase();
-    if (!message.text) return null;
+    if (!message.text) return;
+    // TODO request authorization token
 
-    const invitation = await aws.getInvitationToken(botParams.publisherId, botParams.botId, token);
-    if (!invitation) return null;
+    if (!user) {
+        user = await aws.getUserByAuthorizationToken(
+            botParams.publisherId, botParams.botId, message.channel, token
+        );
+    }
 
-    await aws.dynamoDelete({
-        TableName: CONSTANTS.DB_TABLE_INVITATION_TOKENS,
-        Key: {
-            publisherId: botParams.publisherId,
-            botId_invitationToken: composeKeys(botParams.botId, token),
+    if (!user || decomposeKeys(user.botId_channel_authorizationToken)[2] !== token) {
+        return await respondFn(_textToResponseMessage(
+            `Please provide your authorization token before we can chat`
+        ));
+    }
+
+    // the userId that is already in user may be a temporary placeholder
+    // in which case it must be replaced with message.senderId and the old
+
+    const promises = [];
+    promises.push(aws.dynamoPut({
+        TableName: CONSTANTS.DB_TABLE_USERS,
+        Item: {
+            ...user,
+            botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
+            prefs: { authorizationToken: token },
+            userLastMessage: message,
         }
-    })
-    return token;
+    }));
+
+    const [,, userIdFromDB] = decomposeKeys(user.botId_channel_userId);
+    if (userIdFromDB !== message.senderId) {
+        // the userId was a temporary placeholder
+        promises.push(aws.dynamoDelete({
+            TableName: CONSTANTS.DB_TABLE_USERS,
+            Key: {
+                publisherId: botParams.publisherId,
+                botId_channel_userId: user.botId_channel_userId,
+            }
+        }));
+    }
+
+    await Promise.all(promises);
+    await respondFn(_textToResponseMessage(`Thanks, now we can chat...`));
 }
 
 export function _createDBMessageFromResponseMessage(
@@ -68,7 +90,8 @@ export function _createDBMessageFromResponseMessage(
     conversationId: string, channel: string
 ) : DBMessage
 {
-    if (!m.creationTimestamp) {
+    const ct = m.creationTimestamp;
+    if (!ct) {
         throw new Error(`_createDBMessageFromResponseMessage message is ` +
                         `missing creationTimestamp: ${toStr(m)}`)
     }
@@ -82,7 +105,7 @@ export function _createDBMessageFromResponseMessage(
         text: m.text,
         cards: m.cards,
         actions: m.actions,
-        creationTimestamp: m.creationTimestamp,
+        creationTimestamp: ct,
         poll: m.poll && {
             pollId: m.poll.pollId,
             questionId: m.poll.questionId,
@@ -103,9 +126,6 @@ export async function _logResponseMessage(ms: ResponseMessage | Array<ResponseMe
     ));
 }
 
-export async function _logWebhookMessage(ms: WebhookMessage | Array<WebhookMessage>) {
-    await _logMessage((ms: any));
-}
 export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
     const messages = Array.isArray(ms)
         ? ms : [ms];
@@ -505,7 +525,6 @@ export async function _updateConversationTable(message: DBMessage,
  */
 export async function _updateUsersTable(
     message: DBMessage, botParams: BotParams,
-    userRole?: string, prefs?: UserPrefs
 ) {
     console.log('_updateUsersTable');
     // const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
@@ -517,29 +536,19 @@ export async function _updateUsersTable(
             botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
         },
         UpdateExpression: 'SET userLastMessage = :userLastMessage' +
-                          ', userName = :userName' +
-                          (userRole ? ', userRole = :userRole' : ', userRole = if_not_exists(userRole, :userRole)') +
-                          (prefs ? ', prefs = :prefs' : ''),
+                          ', prefs = if_not_exists(prefs, :defaultPrefs)' +
+                          ', userRole = if_not_exists(userRole, :defaultUserRole)' +
+                          ', botId_channel_authorizationToken = if_not_exists(botId_channel_authorizationToken, :bca)' +
+                          ', botId_channel_email = if_not_exists(botId_channel_email, :bce)',
         ExpressionAttributeValues: {
             ':userLastMessage': aws.dynamoCleanUpObj(message),
-            ':userName': message.senderName,
-            ':userRole': userRole || 'user',
-            ':prefs': prefs,
+            ':defaultUserRole': 'user',
+            ':defaultPrefs': {},
+            ':bca': composeKeys(botParams.botId, message.channel, `dummy::${shortLowerCaseRandomId()}`),
+            ':bce': composeKeys(botParams.botId, message.channel, `dummy::${shortLowerCaseRandomId()}`),
         },
     });
 }
-
-export function _updateTablesAfterReceivingMessage(
-    dbMessage: DBMessage, botParams: BotParams, channelData?: ChannelData,
-    userRole?: string, prefs?: UserPrefs
-) {
-    return Promise.all([
-        _updateConversationTable(dbMessage, botParams, channelData),
-        _updateUsersTable(dbMessage, botParams, userRole, prefs),
-        _logMessage(dbMessage),
-    ]);
-}
-
 
 export async function _handleWebhookMessage(
     rawMessage: WebhookMessage,
@@ -559,7 +568,7 @@ export async function _handleWebhookMessage(
     console.log('dbMessage: ', dbMessage);
 
 
-    // set up 
+    // set up
     const [, conversationId] = decomposeKeys(dbMessage.publisherId_conversationId);
     let newRespondFn;
     const sendAsUser = (msg: DBMessage) => {
@@ -577,39 +586,25 @@ export async function _handleWebhookMessage(
 
     // Ensure the message is not already processed
     // and the sender is allowed to chat
-    const [alreadyInDB, isAllowedToChat] = await Promise.all([
+    const [alreadyInDB, user] = await Promise.all([
         _isMessageInDB(dbMessage),
-        _isSenderAllowedToChat(botParams, dbMessage),
+        aws.getUserByUserId(botParams.publisherId, botParams.botId,
+                            dbMessage.channel, dbMessage.senderId),
     ]);
     if (alreadyInDB) {
         console.log(`Message is already in the db. It won't be processed.`)
         return;
     }
-    if (isAllowedToChat) {
+    if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none') {
         // Process message, will connect to wit etc.
         await sendAsUser(dbMessage);
 
     } else {
-        const invitationToken = await _userCheckIn(botParams, dbMessage);
-        if (!invitationToken) {
-            // user entered an invalid invitation token
-            await _updateTablesAfterReceivingMessage(
-                dbMessage, botParams, channelData, 'none'
-            );
-            await newRespondFn({
-                text: `Please provide your invitation token before we can chat`,
-                creationTimestamp: Date.now(),
-            });
-        } else {
-            // user entered a valid invitation token
-            await _updateTablesAfterReceivingMessage(
-                dbMessage, botParams, channelData, 'user', { invitationToken }
-            );
-            await newRespondFn({
-                text: `Thanks, now we can chat...`,
-                creationTimestamp: Date.now(),
-            });
-        }
+        await Promise.all([
+            _authorizeUser(botParams, dbMessage, newRespondFn, user),
+            _updateConversationTable(dbMessage, botParams, channelData),
+            _logMessage(dbMessage),
+        ]);
     }
 
     // log responses and update conversations table
@@ -632,7 +627,12 @@ export async function _handleProcessedDBMessage(
     conversationId: string,
     channelData?: ChannelData,
 ) {
-    await _updateTablesAfterReceivingMessage(dbMessage, botParams, channelData);
+    // await _updateTablesAfterReceivingMessage(dbMessage, botParams, channelData);
+    await Promise.all([
+        _updateConversationTable(dbMessage, botParams, channelData),
+        _updateUsersTable(dbMessage, botParams),
+        _logMessage(dbMessage),
+    ]);
     dbMessage = await _pollMiddleware(dbMessage, botParams, respondFn);
     await aiRoute(dbMessage, botParams, respondFn);
 }
@@ -647,14 +647,14 @@ export async function deepiksBot(message: WebhookMessage,
         await _handleWebhookMessage(message, botParams, respondFn, channelData);
     } catch(error) {
         const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
-        const m = { text: 'Sorry, there seems to be a problem...', creationTimestamp: Date.now() };
+        const m = _textToResponseMessage('Sorry, there seems to be a problem...');
         // don't await, let them fail silently
         respondFn(m);
         _logResponseMessage(m, botParams, conversationId, message.channel);
 
         throw error;
     }
-};
+}
 
 // this is used when sending a message from a bot to a user
 // that is not a direct response to the user's message.

@@ -1,17 +1,13 @@
 /* @flow */
 
-export type Invitation = {
-    publisherId: string,
-    botId_invitationToken: string,
-};
-
 export type User = {
     publisherId: string,
     botId_channel_userId: string,
+    botId_channel_authorizationToken: string,
+    botId_channel_email: string,
     prefs: UserPrefs,
-    userLastMessage: DBMessage,
-    userName: string,
     userRole: 'user' | 'admin' | 'none',
+    userLastMessage?: DBMessage,
 };
 
 // is that it?
@@ -57,8 +53,8 @@ export type DBMessage = {
     senderIsBot: boolean,
     senderId: string,
     channel: string,
+    id: string,
     senderName?: string,
-    id?: string,
     text?: string,
     cards?: MessageCard[],
     actions?: MessageAction[],
@@ -219,7 +215,6 @@ export type ServerConstants = {
     DB_TABLE_USERS: string,
     DB_TABLE_SCHEDULED_TASKS: string,
     DB_TABLE_POLL_QUESTIONS: string,
-    DB_TABLE_INVITATION_TOKENS: string,
     S3_BUCKET_NAME: string,
     AI_ACTION_CACHE_VALID_TIME_S: number,
     TYPING_INDICATOR_DELAY_S: number,

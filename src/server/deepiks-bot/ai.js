@@ -301,15 +301,17 @@ export async function ai(message: DBMessage,
     const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
 
-    // TODO batch queries
-    const convQueryRes = await aws.dynamoQuery({
-        TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
-        KeyConditionExpression: 'publisherId = :publisherId and botId_conversationId = :bc',
-        ExpressionAttributeValues: {
-            ':publisherId': publisherId,
-            ':bc': composeKeys(botParams.botId, conversationId),
-        },
-    });
+    const [convQueryRes, user] = await Promise.all([
+        aws.dynamoQuery({
+            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+            KeyConditionExpression: 'publisherId = :publisherId and botId_conversationId = :bc',
+            ExpressionAttributeValues: {
+                ':publisherId': publisherId,
+                ':bc': composeKeys(botParams.botId, conversationId),
+            },
+        }),
+        aws.getUserByUserId(publisherId, botParams.botId, message.channel, message.senderId),
+    ]);
     convQueryRes.Items.map((x, i) => console.log(`ai: convQueryRes ${i}`, x));
 
     if (convQueryRes.Count === 0) {
@@ -323,18 +325,8 @@ export async function ai(message: DBMessage,
     console.log('ai: witData: ', witData);
 
 
-    // TODO batch queries
-    const userQueryRes = await aws.dynamoQuery({
-        TableName: CONSTANTS.DB_TABLE_USERS,
-        KeyConditionExpression: 'publisherId = :publisherId and botId_channel_userId = :bcu',
-        ExpressionAttributeValues: {
-            ':publisherId': publisherId,
-            ':bcu': composeKeys(botParams.botId, message.channel, message.senderId),
-        },
-    });
-    console.log('ai: user preferences found: ', userQueryRes.Items);
-    const userPrefs = userQueryRes.Items && userQueryRes.Items[0] &&
-                      userQueryRes.Items[0].prefs || {};
+    const userPrefs = user && user.prefs || {};
+    console.log('ai user preferences: ', userPrefs);
 
 
     let text = message.text;
@@ -350,29 +342,30 @@ export async function ai(message: DBMessage,
     const { witData: newWitData, userPrefs: newUserPrefs } =
         await _runActions(client, text, message, witData, userPrefs, botParams);
 
-    // TODO batch dynamo queries
-    await aws.dynamoUpdate({
-        TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
-        Key: {
-            publisherId,
-            botId_conversationId: composeKeys(botParams.botId, conversationId),
-        },
-        UpdateExpression: 'SET witData = :witData',
-        ExpressionAttributeValues: {
-            ':witData': aws.dynamoCleanUpObj(newWitData),
-        },
-    });
-    await aws.dynamoUpdate({
-        TableName: CONSTANTS.DB_TABLE_USERS,
-        Key: {
-            publisherId,
-            botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
-        },
-        UpdateExpression: 'SET prefs = :prefs',
-        ExpressionAttributeValues: {
-            ':prefs': aws.dynamoCleanUpObj(newUserPrefs),
-        },
-    });
+    await Promise.all([
+        aws.dynamoUpdate({
+            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+            Key: {
+                publisherId,
+                botId_conversationId: composeKeys(botParams.botId, conversationId),
+            },
+            UpdateExpression: 'SET witData = :witData',
+            ExpressionAttributeValues: {
+                ':witData': aws.dynamoCleanUpObj(newWitData),
+            },
+        }),
+        aws.dynamoUpdate({
+            TableName: CONSTANTS.DB_TABLE_USERS,
+            Key: {
+                publisherId,
+                botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
+            },
+            UpdateExpression: 'SET prefs = :prefs',
+            ExpressionAttributeValues: {
+                ':prefs': aws.dynamoCleanUpObj(newUserPrefs),
+            },
+        }),
+    ]);
 }
 
 export default ai;

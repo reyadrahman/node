@@ -45,7 +45,7 @@ async function handleWebsocketMessage(
 }
 
 export async function send(botParams: BotParams, conversationId: string,
-    wss: WebSocketServer, message: ResponseMessage)
+                           wss: WebSocketServer, message: ResponseMessage)
 {
     wss.send(message);
 }

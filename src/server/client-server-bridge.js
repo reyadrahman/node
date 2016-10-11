@@ -92,7 +92,8 @@ routes.get('/fetch-user', authMiddleware, (req, res, next) => {
 });
 
 routes.post('/save-user', authMiddleware, (req, res, next) => {
-    saveUser(req.customData.identityId, req.body.botId_channel_userId, req.body.model)
+    saveUser(req.customData.identityId, req.body.botId, req.body.channel,
+             req.body.userId, req.body.email, req.body.userRole)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -146,12 +147,12 @@ routes.post('/send-notification', authMiddleware, (req, res, next) => {
         .catch(err => next(err));
 });
 
-routes.post('/create-invitation-tokens', authMiddleware, (req, res, next) => {
-    const { identityId } = req.customData;
-    createInvitationTokens(identityId, req.body.botId, req.body.count)
-        .then(x => res.send(x))
-        .catch(err => next(err));
-});
+// routes.post('/create-invitation-tokens', authMiddleware, (req, res, next) => {
+//     const { identityId } = req.customData;
+//     createInvitationTokens(identityId, req.body.botId, req.body.count)
+//         .then(x => res.send(x))
+//         .catch(err => next(err));
+// });
 
 async function sendEmail(contactFormData: ContactFormData) {
     let { email, name, subject, message } = contactFormData;
@@ -239,57 +240,59 @@ async function fetchPolls(identityId, botId) {
 }
 
 async function fetchUser(identityId, botId, channel, userId) {
-    console.log('fetchUsers: identityId=', identityId, ', channel:', channel, ', botId=', botId);
-    const qres = await aws.dynamoQuery({
-        TableName:                 CONSTANTS.DB_TABLE_USERS,
-        KeyConditionExpression:    'publisherId = :pid AND botId_channel_userId = :bcu',
-        ExpressionAttributeValues: {
-            ':pid': identityId,
-            ':bcu':  composeKeys(botId, channel, userId)
-        },
-        ScanIndexForward:          false,
-    });
-
-    return qres.Items && qres.Items[0] || null;
+    console.log('fetchUsers: identityId=', identityId, ', channel=', channel, ', botId=', botId);
+    return await aws.getUserByUserId(identityId, botId, channel, userId);
 }
 
-async function saveUser(identityId, botId_channel_userId, model) {
-    if (!model.userRole) {
-        model.userRole = 'user';
-    }
+/**
+ * At least one of userId or email must be provided.
+ * If item doesn't exist in the database, it will be created. Otherwise, it will be updated.
+ * If email is provided but it's not unique per bot and channel, it will fail.
+ * Will return the new/updated item.
+ *
+ * @param identityId
+ * @param botId
+ * @param channel
+ * @param userId optional
+ * @param email optional
+ * @param userRole optional, defaults to 'user'
+ */
+async function saveUser(
+    identityId: string, botId: string, channel: string,
+    userId?: string, email?: string, userRole?: string,
+) {
+    if (!userRole) userRole = 'user';
 
-    if (botId_channel_userId) {
-        let user = await aws.dynamoUpdate({
-            TableName:                 CONSTANTS.DB_TABLE_USERS,
-            Key:                       {
+    if (botId && channel && (userId || email)) {
+        // dynamoUpdate will create a new item if none exists
+        const user = await aws.dynamoUpdate({
+            TableName: CONSTANTS.DB_TABLE_USERS,
+            Key: {
                 publisherId: identityId,
-                             botId_channel_userId
+                botId_channel_userId: composeKeys(botId, channel, userId || `dummy::${shortLowerCaseRandomId()}`),
             },
-            UpdateExpression:          'set userRole = :userRole',
+            UpdateExpression:
+                'set userRole = :userRole' +
+                ', prefs = if_not_exists(prefs, :defaultPrefs)' +
+                ', botId_channel_authorizationToken = if_not_exists(botId_channel_authorizationToken, :bca)' +
+                (email ? ', botId_channel_email = :bce' : ', botId_channel_email = if_not_exists(botId_channel_email, :bce)'),
             ExpressionAttributeValues: {
-                ':userRole': model.userRole,
+                ':userRole': userRole,
+                ':defaultPrefs': {},
+                ':bca': composeKeys(botId, channel, shortLowerCaseRandomId()),
+                ':bce': email
+                    ? composeKeys(botId, channel, email)
+                    : composeKeys(botId, channel, `dummy::${shortLowerCaseRandomId()}`),
             },
-            ReturnValues:              'ALL_NEW'
+            ReturnValues: 'ALL_NEW'
         });
         return user.Attributes;
-    } else {
-        if (!model.id || !model.channel || !model.botId) {
-            throw new Error(
-                'saveUser must provide botId, channel and userId: ' +
-                `${model.botId}, ${model.channel}, ${modeluserId}`
-            );
-        }
-        await aws.dynamoPut({
-            TableName: CONSTANTS.DB_TABLE_USERS,
-            Item:      {
-                publisherId:          identityId,
-                botId_channel_userId: composeKeys(model.botId, model.channel, model.id),
-                userRole:             model.userRole,
-            }
-        });
-
-        return fetchUser(identityId, model.botId, model.channel, model.id);
     }
+
+    throw new Error(
+        `saveUser must provide botId, channel, and either userId or emailId or both. ` +
+        `Instead got: ${botId}, ${channel}, ${userId}, ${email}`
+    );
 }
 
 async function fetchConversations(identityId, botId) {
@@ -416,31 +419,31 @@ async function sendNotification(identityId, botId, message, categories) {
     await channels.sendToMany(botParams, msg, categories);
 }
 
-async function createInvitationTokens(identityId, botId, count) {
-    console.log('createInvitationTokens: ', identityId, botId, count);
-    count = Number(count);
-    if (!botId || !Number.isInteger(count) || count <= 0 || count > 1000) {
-        throw new Error(`createInvitationTokens invalid parameters ${botId}, ${count}`);
-    }
-    const botParams = await aws.getBot(identityId, botId);
-    if (!botParams) {
-        throw new Error(`createInvitationTokens did not find bot with ` +
-                        `publisherId ${identityId} and botId ${botId}`);
-    }
-
-    const tokens = _.range(count).map(shortLowerCaseRandomId);
-
-    const res = await aws.dynamoBatchWriteHelper(CONSTANTS.DB_TABLE_INVITATION_TOKENS,
-        tokens.map(x => ({
-            PutRequest: {
-                Item: {
-                    publisherId: identityId,
-                    botId_invitationToken: composeKeys(botId, x),
-                },
-            },
-        }))
-    );
-    console.log(`createInvitationTokens res: `, inspect(res, { depth: null}));
-}
+// async function createInvitationTokens(identityId, botId, count) {
+//     console.log('createInvitationTokens: ', identityId, botId, count);
+//     count = Number(count);
+//     if (!botId || !Number.isInteger(count) || count <= 0 || count > 1000) {
+//         throw new Error(`createInvitationTokens invalid parameters ${botId}, ${count}`);
+//     }
+//     const botParams = await aws.getBot(identityId, botId);
+//     if (!botParams) {
+//         throw new Error(`createInvitationTokens did not find bot with ` +
+//                         `publisherId ${identityId} and botId ${botId}`);
+//     }
+//
+//     const tokens = _.range(count).map(shortLowerCaseRandomId);
+//
+//     const res = await aws.dynamoBatchWriteHelper(CONSTANTS.DB_TABLE_INVITATION_TOKENS,
+//         tokens.map(x => ({
+//             PutRequest: {
+//                 Item: {
+//                     publisherId: identityId,
+//                     botId_invitationToken: composeKeys(botId, x),
+//                 },
+//             },
+//         }))
+//     );
+//     console.log(`createInvitationTokens res: `, inspect(res, { depth: null}));
+// }
 
 export default routes;

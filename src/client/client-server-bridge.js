@@ -38,8 +38,13 @@ export async function fetchUser(jwtIdToken: string, botId: string, channel, user
     return await fetchg2j('/api/fetch-user', {jwtIdToken, botId, channel, userId});
 }
 
-export async function saveUser(jwtIdToken: string, botId_channel_userId: string, model: object) {
-    return await fetchjp2j('/api/save-user', {jwtIdToken, botId_channel_userId, model});
+export async function saveUser(
+    jwtIdToken: string, botId: string, channel: string,
+    userId?: string, email?: string, role?: string
+) {
+    return await fetchjp2j('/api/save-user', {
+        jwtIdToken, botId, channel, userId, email, role
+    });
 }
 
 export async function fetchConversations(jwtIdToken: string, botId: string) {

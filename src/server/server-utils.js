@@ -23,6 +23,5 @@ export const CONSTANTS: ServerConstants = ({
     DB_TABLE_USERS: prefixDBTable('users'),
     DB_TABLE_SCHEDULED_TASKS: prefixDBTable('schedules'),
     DB_TABLE_POLL_QUESTIONS: prefixDBTable('polls'),
-    DB_TABLE_INVITATION_TOKENS: prefixDBTable('invitations'),
 }: any);
 

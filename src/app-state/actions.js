@@ -206,6 +206,7 @@ export function fetchBots() {
             const bots = await bridge.fetchBots(session.getIdToken().getJwtToken());
             dispatch(setBots(bots));
         } catch(err) {
+            console.error(err);
             dispatch({
                 type:         'currentUser/fetchBotsFailed',
                 errorMessage: 'Could not fetch the bots ' + err.message
@@ -228,6 +229,7 @@ export function fetchUsers(botId) {
                       users,
             });
         } catch(error) {
+            console.error(error);
             dispatch({
                 type: 'currentUser/fetchUsersFailed',
                 errorMessage: 'Could not fetch users for selected bot',
@@ -256,12 +258,12 @@ export function fetchUser(botId, channel, userId) {
     }
 }
 
-export function saveUser(botId_channel_userId, model) {
+export function saveUser(botId, channel, userId, email, role) {
     return async function (dispatch: Function) {
         const session = await aws.getCurrentSession();
         return bridge.saveUser(
             session.getIdToken().getJwtToken(),
-            botId_channel_userId, model
+            botId, channel, userId, email, role
         );
     }
 }
@@ -280,6 +282,7 @@ export function fetchConversations(botId) {
                 conversations,
             });
         } catch(error) {
+            console.error(error);
             dispatch({
                 type: 'currentUser/fetchConversationsFailed',
                 errorMessage: 'Could not fetch the bots',
@@ -307,6 +310,7 @@ export function fetchMessages(conversationId: string) {
                 messages: messagesWithSignedUrls,
             });
         } catch(error) {
+            console.error(error);
             dispatch({
                 type: 'currentUser/fetchMessagesFailed',
                 errorMessage: 'Could not fetch the bots',
