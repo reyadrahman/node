@@ -144,7 +144,7 @@ export async function getPollQuestion(
 ) : Promise<?BotParams>
 {
     console.log(`getPoll publisherId: ${publisherId}, botId: ${botId}, ` +
-                `pollId: ${polllId}, questionId: ${questionId}`);
+                `pollId: ${pollId}, questionId: ${questionId}`);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
         KeyConditionExpression: 'publisherId = :publisherId and botId_pollId_questionId = :bpq',
