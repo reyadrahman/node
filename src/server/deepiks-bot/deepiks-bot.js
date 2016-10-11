@@ -704,7 +704,6 @@ export async function deepiksBot(message: WebhookMessage,
 {
     console.log('deepiksBot');
     try {
-        throw new Error();
         await _handleWebhookMessage(message, botParams, respondFn, channelData);
     } catch(error) {
         const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
