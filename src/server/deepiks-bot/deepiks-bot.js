@@ -39,10 +39,73 @@ export async function _isMessageInDB(message: DBMessage) {
 export async function _authorizeUser(
     botParams: BotParams, message: DBMessage, respondFn: RespondFn, user: ?User
 ) {
-    const token = (message.text || '').trim().toLowerCase();
-    if (!message.text) return;
-    // TODO request authorization token
+    if (user && user.userRole === 'none') {
+        return await respondFn(_textToResponseMessage(
+            `I'm afraid you are not authorized. Please contact the publisher.`
+        ));
+    }
 
+    const text = (message.text || '').trim().toLowerCase();
+    if (!text) return;
+
+    const emailMatch = text.match(/\S+@\S+\.\S+/);
+    if (emailMatch) {
+        // generate a new token, store it in DB and send it to user via email
+
+        const email = emailMatch[0];
+        user = await aws.getUserByEmail(
+            botParams.publisherId, botParams.botId, message.channel, email
+        );
+        if (!user || user.userRole === 'none') {
+            return await respondFn(_textToResponseMessage(
+                `Sorry, this email address is not authorized. Please enter another email ` +
+                `address or your authorization code.`
+            ));
+        }
+        const newAuthToken = shortLowerCaseRandomId();
+        await aws.dynamoUpdate({
+            TableName: CONSTANTS.DB_TABLE_USERS,
+            Key: {
+                publisherId: user.publisherId,
+                botId_channel_userId: user.botId_channel_userId,
+            },
+            UpdateExpression:
+                'set botId_channel_authorizationToken = :bca' +
+                ', prefs.authorizationToken = :a',
+            ExpressionAttributeValues: {
+                ':bca': composeKeys(botParams.botId, message.channel, newAuthToken),
+                ':a': newAuthToken,
+            }
+        });
+
+        const emailParams = {
+            Destination: {
+                ToAddresses: [ email ],
+            },
+            Message: {
+                Body: {
+                    Text: {
+                        Data: `Here's your authentication token: ${newAuthToken}`,
+                        Charset: 'UTF-8',
+                    },
+                },
+                Subject: {
+                    Data: `${botParams.botName} - Authorization Token`,
+                    Charset: 'UTF-8'
+                },
+            },
+            Source: CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
+        };
+
+        console.log('_authorizeUser sendEmail: ', emailParams);
+        await aws.sesSendEmail(emailParams);
+
+        return await respondFn(_textToResponseMessage(
+            `A new authorization token has been sent to your inbox at ${email}`
+        ));
+    }
+
+    const token = text;
     if (!user) {
         user = await aws.getUserByAuthorizationToken(
             botParams.publisherId, botParams.botId, message.channel, token
@@ -51,8 +114,10 @@ export async function _authorizeUser(
 
     if (!user || decomposeKeys(user.botId_channel_authorizationToken)[2] !== token) {
         return await respondFn(_textToResponseMessage(
-            `Please provide your authorization token before we can chat`
+            `Please provide your authorization code. If you don't have one you can enter ` +
+            `your email address instead and I will send you one.`
         ));
+
     }
 
     // the userId that is already in user may be a temporary placeholder
@@ -66,6 +131,7 @@ export async function _authorizeUser(
             botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
             prefs: { authorizationToken: token },
             userLastMessage: message,
+            authorized: true,
         }
     }));
 
@@ -537,15 +603,11 @@ export async function _updateUsersTable(
         },
         UpdateExpression: 'SET userLastMessage = :userLastMessage' +
                           ', prefs = if_not_exists(prefs, :defaultPrefs)' +
-                          ', userRole = if_not_exists(userRole, :defaultUserRole)' +
-                          ', botId_channel_authorizationToken = if_not_exists(botId_channel_authorizationToken, :bca)' +
-                          ', botId_channel_email = if_not_exists(botId_channel_email, :bce)',
+                          ', userRole = if_not_exists(userRole, :defaultUserRole)',
         ExpressionAttributeValues: {
             ':userLastMessage': aws.dynamoCleanUpObj(message),
             ':defaultUserRole': 'user',
             ':defaultPrefs': {},
-            ':bca': composeKeys(botParams.botId, message.channel, `dummy::${shortLowerCaseRandomId()}`),
-            ':bce': composeKeys(botParams.botId, message.channel, `dummy::${shortLowerCaseRandomId()}`),
         },
     });
 }

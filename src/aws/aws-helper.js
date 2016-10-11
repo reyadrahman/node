@@ -176,6 +176,27 @@ export async function getUserByUserId(
     return qres.Items && qres.Items[0];
 }
 
+export async function getUserByEmail(
+    publisherId: string, botId: string,
+    channel: string, email: string
+) : Promise<?User>
+{
+    email = email.toLowerCase();
+    console.log(`getPoll publisherId: ${publisherId}, botId: ${botId}, ` +
+        `channel: ${channel}, email: ${email}`);
+    const qres = await dynamoQuery({
+        TableName: CONSTANTS.DB_TABLE_USERS,
+        IndexName: 'byEmail',
+        KeyConditionExpression: 'publisherId = :publisherId and botId_channel_email = :bce',
+        ExpressionAttributeValues: {
+            ':publisherId': publisherId,
+            ':bce': composeKeys(botId, channel, email),
+        },
+    });
+
+    return qres.Items && qres.Items[0];
+}
+
 export async function getUserByAuthorizationToken(
     publisherId: string, botId: string,
     channel: string, authorizationToken: string

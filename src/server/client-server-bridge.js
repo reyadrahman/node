@@ -274,14 +274,12 @@ async function saveUser(
                 'set userRole = :userRole' +
                 ', prefs = if_not_exists(prefs, :defaultPrefs)' +
                 ', botId_channel_authorizationToken = if_not_exists(botId_channel_authorizationToken, :bca)' +
-                (email ? ', botId_channel_email = :bce' : ', botId_channel_email = if_not_exists(botId_channel_email, :bce)'),
+                (email ? ', botId_channel_email = :bce' : ''),
             ExpressionAttributeValues: {
                 ':userRole': userRole,
                 ':defaultPrefs': {},
                 ':bca': composeKeys(botId, channel, shortLowerCaseRandomId()),
-                ':bce': email
-                    ? composeKeys(botId, channel, email)
-                    : composeKeys(botId, channel, `dummy::${shortLowerCaseRandomId()}`),
+                ':bce': email ? composeKeys(botId, channel, email) : undefined,
             },
             ReturnValues: 'ALL_NEW'
         });
