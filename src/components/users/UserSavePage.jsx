@@ -51,7 +51,7 @@ let UserSavePage = React.createClass({
             setTimeout(() => {this.setState({saved: null})}, 2000);
 
             if (!this.props.params.botId_channel_userId) {
-                this.props.router.push(`/users/edit/${saved.botId_channel_userId}`);
+                this.props.router.push(`/users`);
             }
         }
         catch (e) {
