@@ -80,8 +80,12 @@ export function createUrlQuery(obj: {[key: string]: any}): string {
 }
 
 export function destructureS3Url(url: string): ?{ bucket: string, key: string} {
-    let res = url.match(/https:\/\/(.*?)\.s3(.*?)\.amazonaws\.com\/(.*)/) ||
-              url.match(/https:\/\/s3(.*?)\.amazonaws.com\/(.*?)\/(.*)/);
+    // examples
+    // https://s3.amazonaws.com/BUCKET/KEY
+    // https://BUCKET.s3-eu-west-1.amazonaws.com/KEY
+    // https://BUCKET.s3.amazonaws.com/KEY
+    let res = url.match(/https:\/\/s3\.amazonaws\.com\/(.+?)\/(.+)/i) ||
+              url.match(/https:\/\/(.+?)\.s3.*?\.amazonaws\.com\/(.+)/i);
     if (!res) return null;
     return { bucket: decodeURIComponent(res[1]), key: decodeURIComponent(res[2]) };
 }
