@@ -8,6 +8,7 @@ import { request, CONSTANTS } from '../server-utils.js';
 import aiRoute from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
               ChannelData, Conversation, RespondFn, UserPrefs, User } from '../../misc/types.js';
+import { translations as tr, languages as langs } from '../i18n/translations.js';
 import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
@@ -39,10 +40,9 @@ export async function _isMessageInDB(message: DBMessage) {
 export async function _authorizeUser(
     botParams: BotParams, message: DBMessage, respondFn: RespondFn, user: ?User
 ) {
+    const strings = (tr[botParams.defaultLanguage] || tr[langs[0]]).authorization;
     if (user && user.userRole === 'none') {
-        return await respondFn(_textToResponseMessage(
-            `I'm afraid you are not authorized. Please contact the publisher.`
-        ));
+        return await respondFn(_textToResponseMessage(strings.userNotAuthorized));
     }
 
     const text = (message.text || '').trim().toLowerCase();
@@ -57,10 +57,7 @@ export async function _authorizeUser(
             botParams.publisherId, botParams.botId, message.channel, email
         );
         if (!user || user.userRole === 'none') {
-            return await respondFn(_textToResponseMessage(
-                `Sorry, this email address is not authorized. Please enter another email ` +
-                `address or your authorization code.`
-            ));
+            return await respondFn(_textToResponseMessage(strings.emailNotAuthorized));
         }
         const newAuthToken = shortLowerCaseRandomId();
         await aws.dynamoUpdate({
@@ -85,12 +82,12 @@ export async function _authorizeUser(
             Message: {
                 Body: {
                     Text: {
-                        Data: `Here's your authentication token: ${newAuthToken}`,
+                        Data: strings.authTokenEmailBodyFn(newAuthToken),
                         Charset: 'UTF-8',
                     },
                 },
                 Subject: {
-                    Data: `${botParams.botName} - Authorization Token`,
+                    Data: strings.authTokenEmailSubjectFn(botParams.botName),
                     Charset: 'UTF-8'
                 },
             },
@@ -100,9 +97,7 @@ export async function _authorizeUser(
         console.log('_authorizeUser sendEmail: ', emailParams);
         await aws.sesSendEmail(emailParams);
 
-        return await respondFn(_textToResponseMessage(
-            `A new authorization token has been sent to your inbox at ${email}`
-        ));
+        return await respondFn(_textToResponseMessage(strings.authorizationSentFn(email)));
     }
 
     const token = text;
@@ -113,10 +108,7 @@ export async function _authorizeUser(
     }
 
     if (!user || decomposeKeys(user.botId_channel_authorizationToken)[2] !== token) {
-        return await respondFn(_textToResponseMessage(
-            `Please provide your authorization code. If you don't have one you can enter ` +
-            `your email address instead and I will send you one.`
-        ));
+        return await respondFn(_textToResponseMessage(strings.enterAuthorizationTokenOrEmail));
 
     }
 
@@ -148,7 +140,7 @@ export async function _authorizeUser(
     }
 
     await Promise.all(promises);
-    await respondFn(_textToResponseMessage(`Thanks, now we can chat...`));
+    await respondFn(_textToResponseMessage(strings.successfullyAuthorized));
 }
 
 export function _createDBMessageFromResponseMessage(
@@ -712,10 +704,12 @@ export async function deepiksBot(message: WebhookMessage,
 {
     console.log('deepiksBot');
     try {
+        throw new Error();
         await _handleWebhookMessage(message, botParams, respondFn, channelData);
     } catch(error) {
         const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
-        const m = _textToResponseMessage('Sorry, there seems to be a problem...');
+
+        const m = _textToResponseMessage((tr[botParams.defaultLanguage] || tr[langs[0]]).errors.general);
         // don't await, let them fail silently
         respondFn(m);
         _logResponseMessage(m, botParams, conversationId, message.channel);

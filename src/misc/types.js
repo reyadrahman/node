@@ -172,6 +172,7 @@ export type FeedConfigRss = {
 export type BotParams = {
     botId: string,
     botName: string,
+    defaultLanguage: string,
     publisherId: string,
     settings: {
         ciscosparkAccessToken: string,
