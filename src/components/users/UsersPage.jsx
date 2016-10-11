@@ -4,6 +4,7 @@ import React from 'react';
 import * as actions from '../../app-state/actions.js';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
+import {simpleTimeFormat, decomposeKeys} from '../../misc/utils.js';
 
 import {Pagination, Alert} from 'react-bootstrap';
 
@@ -63,7 +64,7 @@ let UsersPage = React.createClass({
             if (currentUser.usersState.errorMessage) {
                 content = (
                     <tr>
-                        <td colSpan="5" className="text-center">
+                        <td colSpan="6" className="text-center">
                             <Alert bsStyle="danger">{currentUser.usersState.errorMessage}</Alert>
                         </td>
                     </tr>
@@ -71,7 +72,7 @@ let UsersPage = React.createClass({
             } else {
                 content = (
                     <tr>
-                        <td colSpan="5" className="text-center spinner"><i className="icon-spinner animate-spin"/></td>
+                        <td colSpan="6" className="text-center spinner"><i className="icon-spinner animate-spin"/></td>
                     </tr>
                 );
             }
@@ -82,8 +83,10 @@ let UsersPage = React.createClass({
 
             if (this.state.searchFilter) {
                 users = users.filter(user => {
-                    let userId = user.botId__channel_userId.split('__')[2];
-                    return userId.toLowerCase().indexOf(this.state.searchFilter) > -1;
+                    let userId    = decomposeKeys(user.botId_channel_userId)[2];
+                    let userEmail = user.botId_channel_email && decomposeKeys(user.botId_channel_email)[2] || '';
+                    return userId.toLowerCase().indexOf(this.state.searchFilter) > -1 ||
+                        userEmail.toLowerCase().indexOf(this.state.searchFilter) > -1;
                 });
             }
 
@@ -104,16 +107,37 @@ let UsersPage = React.createClass({
 
             if (users.length) {
                 content = pageUsers.map(function (user) {
-                    let [botId, channel, userId] = user.botId__channel_userId.split('__');
+                    let [botId, channel, userId] = user.botId_channel_userId.split('__');
+                    let email = user.botId_channel_email && decomposeKeys(user.botId_channel_email)[2] || '';
+
+                    let lastConversationId, text;
+
+                    if (user.userLastMessage) {
+                        lastConversationId = decomposeKeys(user.userLastMessage.publisherId_conversationId)[1];
+                        text               = user.userLastMessage.text || '';
+                        if (text.length > 20) {
+                            text = text.substr(0, 17) + '...';
+                        }
+                    }
 
                     return (
                         <tr>
                             <td className="user-id">{userId}</td>
+                            <td>{email}</td>
                             <td>{channel}</td>
                             <td>{user.userRole || 'user'}</td>
-                            <td>-</td>
+                            <td>
+                                {lastConversationId
+                                    ?
+                                    <Link to={`/messages/${currentUser.selectedBotId}/${lastConversationId}`}>
+                                        [{ simpleTimeFormat(user.userLastMessage.creationTimestamp) }]
+                                    &nbsp;<b>{user.userLastMessage.senderName}:</b>&nbsp;
+                                        {text}
+                                    </Link>
+                                    : '-'}
+                            </td>
                             <td className="actions">
-                                <Link to={`/users/edit/${user.botId__channel_userId}`}>
+                                <Link to={`/users/edit/${user.botId_channel_userId}`}>
                                     <i className="icon-edit"/>
                                 </Link>
                             </td>
@@ -123,7 +147,7 @@ let UsersPage = React.createClass({
             } else {
                 content = (
                     <tr>
-                        <td colSpan="5" className="text-center">No users were found for this bot</td>
+                        <td colSpan="6" className="text-center">No users were found for this bot</td>
                     </tr>
                 );
             }
@@ -148,9 +172,10 @@ let UsersPage = React.createClass({
                             <thead>
                             <tr>
                                 <th>User ID</th>
+                                <th>E-Mail</th>
                                 <th>Channel</th>
                                 <th>Role</th>
-                                <th>Last Chat</th>
+                                <th>Last Message</th>
                                 <th/>
                             </tr>
                             </thead>

@@ -14,6 +14,21 @@ let Conversations = React.createClass({
         };
     },
 
+    componentDidMount(){
+        if (this.props.selectedConversationId) {
+            this.setState({scrollToConversation: true});
+        }
+    },
+
+    componentDidUpdate(){
+        if (this.state.scrollToConversation && this.refs.activeConversation) {
+            if (this.refs.activeConversation.scrollIntoView) {
+                this.refs.activeConversation.scrollIntoView();
+            }
+            this.setState({scrollToConversation: false});
+        }
+    },
+
     onFilterChange: function (event) {
         this.setState({searchFilter: event.target.value});
     },
@@ -59,13 +74,19 @@ let Conversations = React.createClass({
                 text = text.substr(0, 17) + '...';
             }
             const [, conversationId] = decomposeKeys(x.botId_conversationId);
-            let extraClass = conversationId === selectedConversationId
-                ? 'selected' : '';
+
+            let extraClass = '', props = {};
+            if (conversationId === selectedConversationId) {
+                extraClass = 'selected';
+                props.ref  = 'activeConversation';
+            }
+
             return (
                 <div
                     key={i}
                     className={`conversation ${extraClass}`}
                     onClick={() => this.props.onSelectConversation(conversationId)}
+                    {...props}
                 >
                     <div className="profile-pic" style={profilePicStyle} />
                     <div className="conversation-name-and-text">
