@@ -247,7 +247,6 @@ async function fetchUser(identityId, botId, channel, userId) {
 /**
  * At least one of userId or email must be provided.
  * If item doesn't exist in the database, it will be created. Otherwise, it will be updated.
- * If email is provided but it's not unique per bot and channel, it will fail.
  * Will return the new/updated item.
  *
  * @param identityId
