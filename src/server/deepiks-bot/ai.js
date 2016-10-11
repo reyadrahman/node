@@ -51,7 +51,7 @@ export async function _runActions(client: Wit,
         userPrefs,
     });
     return await _runActionsHelper(client, text, originalMessage, witData,
-                                   userPrefs, botParams, converseData, 5);
+                                   userPrefs, botParams, converseData, 10);
 }
 
 export async function _runActionsHelper(client: Wit,
@@ -113,9 +113,21 @@ export async function _runActionsHelper(client: Wit,
         });
         await resP;
         return await _runActionsHelper(client, text, originalMessage, witData,
-                                       userPrefs, botParams, newConverseData, level-1)
+                                       userPrefs, botParams, newConverseData, level-1);
 
     } else if (converseData.type === 'action') {
+        if (!converseData.action) {
+            // this is bug in wit
+            // see https://github.com/wit-ai/node-wit/issues/5
+            console.log('_runActionsHelper skipping null action');
+            const newConverseData = await client.converse(witData.sessionId, null, {
+                ...witData.context,
+                userPrefs,
+            });
+            return await _runActionsHelper(client, text, originalMessage, witData,
+                                           userPrefs, botParams, newConverseData, level-1);
+        }
+
         let actionFullName = converseData.action;
         let newWitData = witData;
         let newRequestData = requestData;

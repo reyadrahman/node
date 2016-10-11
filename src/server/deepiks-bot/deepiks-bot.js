@@ -109,7 +109,6 @@ export async function _authorizeUser(
 
     if (!user || decomposeKeys(user.botId_channel_authorizationToken)[2] !== token) {
         return await respondFn(_textToResponseMessage(strings.enterAuthorizationTokenOrEmail));
-
     }
 
     // the userId that is already in user may be a temporary placeholder
