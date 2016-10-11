@@ -317,6 +317,12 @@ export function _respondFnPreprocessorActionsMiddleware(
 
             console.log('emailAction emailParams: ', emailParams);
             await aws.sesSendEmail(emailParams);
+
+            const newResponse = {
+                ...response,
+                preprocessorActions: _.without(pas, emailAction),
+            };
+            await self(newResponse);
         }
 
         if (asUserAction) {
