@@ -157,7 +157,7 @@ export async function send(botParams: BotParams, conversationId: string,
                 files: [c.imageUrl],
                 roomId: conversationId,
             });
-            // TODO how to send images to dashbot 
+            // TODO how to send images to dashbot
 
             const cardText = removeMarkdown(actionsToStr(c.actions) || '');
             await client.messages.create({
@@ -170,7 +170,7 @@ export async function send(botParams: BotParams, conversationId: string,
 
     if (text || actions) {
         const textToSend = removeMarkdown(
-            ((text || '') + '\n' + actionsToStr(actions)).trim()
+            ((text || '') + '\n\n' + actionsToStr(actions)).trim()
         );
         await client.messages.create({
             text: textToSend,

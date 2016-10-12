@@ -227,7 +227,7 @@ export async function send(botParams: BotParams,
             resAttachments.push(card);
         } else if (actions && !supportsHeroCard) {
             const textActions = actions.filter(a => a.fallback).map(a => a.fallback);
-            resText += `\nOptions: ${textActions.join(', ')}`;
+            resText += `\n\n(${textActions.join(', ')})`;
         }
 
         let resMessage = new builder.Message(session)
