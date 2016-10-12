@@ -48,16 +48,20 @@ export async function _authorizeUser(
     const text = (message.text || '').trim().toLowerCase();
     if (!text) return;
 
-    const emailMatch = text.match(/\S+@\S+\.\S+/);
+    const emailMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
     if (emailMatch) {
         // generate a new token, store it in DB and send it to user via email
 
         const email = emailMatch[0];
+        console.log('_authorizeUser extracted email: ', email);
         user = await aws.getUserByEmail(
             botParams.publisherId, botParams.botId, message.channel, email
         );
         if (!user || user.userRole === 'none') {
             return await respondFn(_textToResponseMessage(strings.emailNotAuthorized));
+        }
+        if (user.authorized) {
+            return await respondFn(_textToResponseMessage(strings.emailAlreadyAuthorized));
         }
         const newAuthToken = shortLowerCaseRandomId();
         await aws.dynamoUpdate({
@@ -100,8 +104,12 @@ export async function _authorizeUser(
         return await respondFn(_textToResponseMessage(strings.authorizationSentFn(email)));
     }
 
+    // the userId that is already in user may be a temporary placeholder
+    // in which case it must be replaced with message.senderId and the old
+
     const token = text;
-    if (!user) {
+    const creatingNewUser = !user;
+    if (creatingNewUser) {
         user = await aws.getUserByAuthorizationToken(
             botParams.publisherId, botParams.botId, message.channel, token
         );
@@ -111,28 +119,45 @@ export async function _authorizeUser(
         return await respondFn(_textToResponseMessage(strings.enterAuthorizationTokenOrEmail));
     }
 
-    // the userId that is already in user may be a temporary placeholder
-    // in which case it must be replaced with message.senderId and the old
-
     const promises = [];
-    promises.push(aws.dynamoPut({
+
+    // promises.push(aws.dynamoPut({
+    //     TableName: CONSTANTS.DB_TABLE_USERS,
+    //     Item: {
+    //         ...user,
+    //         botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
+    //         prefs: { authorizationToken: token },
+    //         userLastMessage: message,
+    //         authorized: true,
+    //     }
+    // }));
+    promises.push(aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_USERS,
-        Item: {
-            ...user,
+        Key: {
+            publisherId: user.publisherId,
             botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
-            prefs: { authorizationToken: token },
-            userLastMessage: message,
-            authorized: true,
+        },
+        UpdateExpression: 'set authorized = :a' +
+                          ', userLastMessage = :ulm' +
+                          ', botId_channel_authorizationToken = :bca' +
+                          ', botId_channel_email = :bce' +
+                          ', userRole = :ur' +
+                          ', prefs = :p',
+        ExpressionAttributeValues: {
+            ':a': true,
+            ':ulm': message,
+            ':bca': user.botId_channel_authorizationToken,
+            ':bce': user.botId_channel_email,
+            ':ur': user.userRole,
+            ':p': { ...user.prefs, authorizationToken: token },
         }
     }));
 
-    const [,, userIdFromDB] = decomposeKeys(user.botId_channel_userId);
-    if (userIdFromDB !== message.senderId) {
-        // the userId was a temporary placeholder
+    if (creatingNewUser) {
         promises.push(aws.dynamoDelete({
             TableName: CONSTANTS.DB_TABLE_USERS,
             Key: {
-                publisherId: botParams.publisherId,
+                publisherId: user.publisherId,
                 botId_channel_userId: user.botId_channel_userId,
             }
         }));
@@ -654,7 +679,7 @@ export async function _handleWebhookMessage(
         console.log(`Message is already in the db. It won't be processed.`)
         return;
     }
-    if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none') {
+    if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none' && user.authorized) {
         // Process message, will connect to wit etc.
         await sendAsUser(dbMessage);
 

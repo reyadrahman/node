@@ -10,6 +10,8 @@ export default {
         successfullyAuthorized: `Thanks, now we can chat`,
         authTokenEmailBodyFn: token => `Here's your authentication code: ${token}`,
         authTokenEmailSubjectFn: botName => `${botName} - Authorization Code`,
+        emailAlreadyAuthorized: `Sorry, this email is already authorized. Please enter another ` +
+                                `email address or your authorization code.`,
     },
     errors: {
         general: 'Sorry, there seems to be a problem...',

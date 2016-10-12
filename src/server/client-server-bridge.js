@@ -93,7 +93,8 @@ routes.get('/fetch-user', authMiddleware, (req, res, next) => {
 
 routes.post('/save-user', authMiddleware, (req, res, next) => {
     saveUser(req.customData.identityId, req.body.botId, req.body.channel,
-             req.body.userId, req.body.email, req.body.userRole)
+             req.body.userId, req.body.email, req.body.userRole,
+             req.body.revokeAuthorization)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -249,37 +250,77 @@ async function fetchUser(identityId, botId, channel, userId) {
  * If item doesn't exist in the database, it will be created. Otherwise, it will be updated.
  * Will return the new/updated item.
  *
+ * In order to change a user's email address, provide both userId and (new) email. If the
+ * new email is different than the old one, the user's authorization will be revoked forcing
+ * him/her to request another authorization token and verify the email.
+ *
  * @param identityId
  * @param botId
  * @param channel
  * @param userId optional
- * @param email optional
+ * @param email optional.
  * @param userRole optional, defaults to 'user'
+ * @param revokeAuthorization optional, defaults to false unless a new email is provided
  */
 async function saveUser(
     identityId: string, botId: string, channel: string,
     userId?: string, email?: string, userRole?: string,
+    revokeAuthorization?: boolean,
 ) {
+    console.log('saveUser: ', arguments);
+
     if (!userRole) userRole = 'user';
+    if (email) email = email.trim().toLowerCase();
 
     if (botId && channel && (userId || email)) {
+        const oldUser = userId
+            ? await aws.getUserByUserId(identityId, botId, channel, userId)
+            : await aws.getUserByEmail(identityId, botId, channel, email);
+        console.log('saveUser oldUser: ', oldUser);
+        let oldEmail, oldUserId;
+        if (oldUser) {
+            oldEmail = decomposeKeys(oldUser.botId_channel_email || '')[2] || '';
+            oldEmail = oldEmail.toLowerCase();
+            oldUserId = decomposeKeys(oldUser.botId_channel_userId)[2];
+        }
+        let emailChanged = userId && (email || oldEmail) && email !== oldEmail;
+        const newAuthToken = (!oldUser || revokeAuthorization || emailChanged) && shortLowerCaseRandomId();
+        const prefs = oldUser && oldUser.prefs || {};
+        if (newAuthToken) {
+            prefs.authorizationToken = newAuthToken;
+        }
+        const bca = newAuthToken
+            ? composeKeys(botId, channel, newAuthToken)
+            : undefined;
+        const bce = email ? composeKeys(botId, channel, email) : undefined;
+        const authorized = Boolean(oldUser && oldUser.authorized && !newAuthToken);
+
+        console.log('saveUser oldEmail: ', oldEmail, ', oldUserId', oldUserId,
+                    ', emailChanged: ', emailChanged, ', newAuthToken: ', newAuthToken,
+                    ', prefs: ', prefs, ', bca: ', bca, ', bce: ', bce,
+                    ', authorized: ', authorized);
+
         // dynamoUpdate will create a new item if none exists
         const user = await aws.dynamoUpdate({
             TableName: CONSTANTS.DB_TABLE_USERS,
-            Key: {
+            Key:{
                 publisherId: identityId,
-                botId_channel_userId: composeKeys(botId, channel, userId || `dummy::${shortLowerCaseRandomId()}`),
+                botId_channel_userId: composeKeys(
+                    botId, channel, oldUserId || `dummy::${shortLowerCaseRandomId()}`
+                ),
             },
             UpdateExpression:
                 'set userRole = :userRole' +
-                ', prefs = if_not_exists(prefs, :defaultPrefs)' +
-                ', botId_channel_authorizationToken = if_not_exists(botId_channel_authorizationToken, :bca)' +
+                ', prefs = :prefs' +
+                ', authorized = :authorized' +
+                (newAuthToken ? ', botId_channel_authorizationToken = :bca' : '') +
                 (email ? ', botId_channel_email = :bce' : ''),
             ExpressionAttributeValues: {
                 ':userRole': userRole,
-                ':defaultPrefs': {},
-                ':bca': composeKeys(botId, channel, shortLowerCaseRandomId()),
-                ':bce': email ? composeKeys(botId, channel, email) : undefined,
+                ':prefs': prefs,
+                ':authorized': authorized,
+                ':bca': bca,
+                ':bce': bce,
             },
             ReturnValues: 'ALL_NEW'
         });

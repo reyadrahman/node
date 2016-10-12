@@ -10,7 +10,7 @@ export function composeKeys(...xs: Array<string | number>): string {
     return xs.join('__');
 }
 
-export function decomposeKeys(k: string): Array<string> {
+export function decomposeKeys(k: string): string[] {
     return k.split('__');
 }
 
