@@ -51,6 +51,7 @@ export const CONSTANTS_KEYS = [
     'PUBLIC_PATH',
     'PUBLIC_URL',
     'DEBUG',
+    'OWN_BASE_URL'
 ];
 
 export const CONSTANTS: ClientConstants = _.pick(process.env, CONSTANTS_KEYS);

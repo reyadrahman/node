@@ -3,6 +3,7 @@ import {Button, Alert, FormGroup, ControlLabel, FormControl, Checkbox, Col, Form
 import * as actions from '../../app-state/actions.js';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
+import {CONSTANTS} from '../../client/client-utils';
 
 import _ from 'lodash';
 
@@ -96,7 +97,7 @@ let BotSettingsPage = React.createClass({
         };
 
         if (bot) {
-            const baseUrl = `${window.location.origin}/webhooks/` +
+            const baseUrl = `${CONSTANTS.OWN_BASE_URL}/webhooks/` +
                             `${bot.publisherId}/${bot.botId}/`;
             content = (
                 <Form horizontal>
@@ -152,10 +153,20 @@ let BotSettingsPage = React.createClass({
                     <div>
                         <h2>Channel specific settings</h2>
                         <Tabs defaultActiveKey={1}>
-                            {['ciscospark', 'dashbot', 'messenger', 'microsoft', 'wit', 'secret'].map((channel, index) => {
+                            {[
+                                'ciscospark',
+                                'dashbot',
+                                'messenger',
+                                'microsoft',
+                                'wit',
+                                {prefix: 'secret', title: 'web chat'}
+                            ].map((settingsGroup, index) => {
                                 let settings = [];
+                                if (_.isString(settingsGroup)) {
+                                    settingsGroup = {prefix: settingsGroup, title: settingsGroup};
+                                }
                                 _.forEach(bot.settings, (value, key) => {
-                                    if (key.indexOf(channel) === 0) {
+                                    if (key.indexOf(settingsGroup.prefix) === 0) {
                                         settings.push(
                                             <FormGroup controlId={'settings_' + key}>
                                                 <Col componentClass={ControlLabel} sm={3}>
@@ -174,7 +185,7 @@ let BotSettingsPage = React.createClass({
                                     }
                                 });
 
-                                if (channel in hooks) {
+                                if (settingsGroup.prefix in hooks) {
                                     settings.push(
                                             <FormGroup>
                                                 <Col componentClass={ControlLabel} sm={3}>
@@ -182,13 +193,31 @@ let BotSettingsPage = React.createClass({
                                                 </Col>
                                                 <Col sm={9}>
                                                     <div style={{paddingTop: '7px'}}>
-                                                        { baseUrl + hooks[channel] }
+                                                        { baseUrl + hooks[settingsGroup.prefix] }
                                                     </div>
                                                 </Col>
                                             </FormGroup>
                                     );
                                 }
-                                return <Tab eventKey={index + 1} title={channel}>{settings}</Tab>
+
+                                if (settingsGroup.prefix === 'secret') {
+                                    let publicBotUrl = `${CONSTANTS.OWN_BASE_URL}/bot/${bot.publisherId}/${bot.botId}`;
+
+                                    settings.push(
+                                        <FormGroup>
+                                            <Col componentClass={ControlLabel} sm={3}>
+                                                Bot public url
+                                            </Col>
+                                            <Col sm={9}>
+                                                <div style={{paddingTop: '7px'}}>
+                                                    <Link to={publicBotUrl}>{publicBotUrl}</Link>
+                                                </div>
+                                            </Col>
+                                        </FormGroup>
+                                    );
+                                }
+
+                                return <Tab eventKey={index + 1} title={settingsGroup.title}>{settings}</Tab>
                             })}
                         </Tabs>
                     </div>
