@@ -215,6 +215,12 @@ export function fetchBots() {
     }
 }
 
+export function fetchBotPublicInfo(publisherId, botId) {
+    return async function (dispatch: Function) {
+        return bridge.fetchBotPublicInfo(publisherId, botId);
+    }
+}
+
 export function fetchUsers(botId) {
     return async function(dispatch: Function) {
         dispatch({ type: 'currentUser/resetUsersState' });

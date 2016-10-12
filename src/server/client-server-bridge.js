@@ -69,6 +69,18 @@ routes.get('/fetch-bots', authMiddleware, (req, res, next) => {
 
 });
 
+routes.get('/fetch-bot-public-info', (req, res, next) => {
+    fetchBotPublicInfo(req.query.publisherId, req.query.botId)
+        .then(x => res.send(x))
+        .catch(err => {
+            if (err.status) {
+                res.status(err.status).send(err.message);
+            } else {
+                next(err);
+            }
+        });
+});
+
 routes.get('/fetch-users', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     fetchUsers(identityId, req.query.botId)
@@ -195,6 +207,43 @@ async function sendEmail(contactFormData: ContactFormData) {
 
     console.log('sendEmail: ', params);
     await aws.sesSendEmail(params);
+}
+
+async function fetchBotPublicInfo(identityId, botId) {
+    console.log('fetchBots: ', identityId);
+    const qres = await aws.dynamoQuery({
+        TableName:                 CONSTANTS.DB_TABLE_BOTS,
+        KeyConditionExpression:    'publisherId = :pid AND botId = :bid',
+        ExpressionAttributeValues: {
+            ':pid': identityId,
+            ':bid': botId
+        },
+    });
+
+    if (qres.Items) {
+        let bot = qres.Items[0];
+        if (bot.isPublic) {
+            return {
+                botId:    bot.botId,
+                botName:  bot.botName,
+                botIcon:  bot.botIcon,
+                isPublic: bot.isPublic,
+                settings: {
+                    secretWebchatCode: bot.settings.secretWebchatCode
+                }
+            };
+        } else {
+            return Promise.reject({
+                status:  403,
+                message: 'Bot is not public'
+            });
+        }
+    }
+
+    return Promise.reject({
+        status:  404,
+        message: 'Bot does not exist'
+    });
 }
 
 async function fetchBots(identityId) {
@@ -412,12 +461,14 @@ async function updateBot(identityId, botId, model) {
         UpdateExpression:          `set botName = :botName, 
                                         botIcon = :botIcon, 
                                         onlyAllowedUsersCanChat = :onlyAllowedUsersCanChat, 
+                                        isPublic = :isPublic, 
                                         settings = :settings`,
         ExpressionAttributeValues: {
-            ':botName':                  model.botName || null,
-            ':botIcon':                  model.botIcon || null,
-            ':onlyAllowedUsersCanChat':  model.onlyAllowedUsersCanChat || false,
-            ':settings':                 aws.dynamoCleanUpObj(model.settings),
+            ':botName':                 model.botName || null,
+            ':botIcon':                 model.botIcon || null,
+            ':onlyAllowedUsersCanChat': model.onlyAllowedUsersCanChat || false,
+            ':isPublic':                model.isPublic || false,
+            ':settings':                aws.dynamoCleanUpObj(model.settings),
         },
         ReturnValues:                    'ALL_NEW'
     });

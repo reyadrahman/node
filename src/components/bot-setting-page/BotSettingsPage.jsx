@@ -18,7 +18,10 @@ let BotSettingsPage = React.createClass({
 
         if (user.botsState.hasFetched) {
             if (user.selectedBotId && (!this.state.bot || this.state.bot.botId !== user.selectedBotId)) {
-                this.setState({bot: _.cloneDeep(_.find(user.botsState.bots, {botId: user.selectedBotId}))});
+                let bot = _.cloneDeep(_.find(user.botsState.bots, {botId: user.selectedBotId}));
+                bot     = _.merge({settings: {secretWebchatCode: null}}, bot);
+
+                this.setState({bot});
             }
         } else if (user.botsState.errorMessage) {
             if (this.state.error !== user.botsState.errorMessage) {
@@ -128,10 +131,20 @@ let BotSettingsPage = React.createClass({
                         </Col>
                     </FormGroup>
 
+                    <FormGroup controlId="isPublic">
+                        <Col smOffset={2} sm={10}>
+                            <Checkbox
+                                id="isPublic"
+                                checked={!!bot.isPublic}
+                                onChange={this.onFormFieldChange}
+                            >Make this bot visible on the web</Checkbox>
+                        </Col>
+                    </FormGroup>
+
                     <div>
                         <h2>Channel specific settings</h2>
                         <Tabs defaultActiveKey={1}>
-                            {['ciscospark', 'dashbot', 'messenger', 'microsoft', 'wit'].map((channel, index) => {
+                            {['ciscospark', 'dashbot', 'messenger', 'microsoft', 'wit', 'secret'].map((channel, index) => {
                                 let settings = [];
                                 _.forEach(bot.settings, (value, key) => {
                                     if (key.indexOf(channel) === 0) {
