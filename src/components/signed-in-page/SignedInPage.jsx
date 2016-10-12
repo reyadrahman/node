@@ -170,7 +170,7 @@ let SignedInPage = React.createClass({
                 <Header
                     className="header" i18n={i18n}
                     leftItemsBeforeLogo = {[
-                        <Menu className="signed-in" i18n={i18n} menu={menu} isScroll={false} />
+                        <Menu className="signed-in" i18n={i18n} menu={menu} />
                     ]}
                     leftItemsAfterLogo={botSelector}
                 />
