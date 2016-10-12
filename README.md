@@ -307,6 +307,8 @@ Use CDN in production to serve static files. All you need to do is to create a d
 
 Once the `CDN` environment variable is set and you deploy the server, every static file will be served through the CDN. Files will be available in the CDN immediately without any delays caused by caching.
 
+**NOTE: if your website is using HTTPS, so should the CDN. Otherwise browsers will block your CDN files for security reasons**
+
 ## Setting Up Webhooks
 ### Spark
 The add-bot page automatically sets up the webhook.
