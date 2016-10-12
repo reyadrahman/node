@@ -89,7 +89,15 @@ let BotSettingsPage = React.createClass({
         let content;
         let alert = null;
 
+        const hooks = {
+            'ciscospark': 'spark',
+            'messenger': 'messenger',
+            'microsoft': 'ms'
+        };
+
         if (bot) {
+            const baseUrl = `${window.location.origin}/webhooks/` +
+                            `${bot.publisherId}/${bot.botId}/`;
             content = (
                 <Form horizontal>
                     <FormGroup controlId="botName">
@@ -165,6 +173,21 @@ let BotSettingsPage = React.createClass({
                                         );
                                     }
                                 });
+
+                                if (channel in hooks) {
+                                    settings.push(
+                                            <FormGroup>
+                                                <Col componentClass={ControlLabel} sm={3}>
+                                                    Webhook
+                                                </Col>
+                                                <Col sm={9}>
+                                                    <div style={{paddingTop: '7px'}}>
+                                                        { baseUrl + hooks[channel] }
+                                                    </div>
+                                                </Col>
+                                            </FormGroup>
+                                    );
+                                }
                                 return <Tab eventKey={index + 1} title={channel}>{settings}</Tab>
                             })}
                         </Tabs>
