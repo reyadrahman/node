@@ -130,7 +130,7 @@ export function signIn(email, password) {
             console.log('user attributes: ', attributes);
             dispatch({ type: 'currentUser/signIn', attributes });
             dispatch({ type: 'ui/closeModal' });
-            browserHistory.push('/account');
+            browserHistory.push('/test');
         } catch(error) {
             console.log('signIn thunk FAIL. error: ', error.message);
             dispatch({ type: 'signIn/failed', errorMessage: error.message });
