@@ -298,7 +298,8 @@ async function fetchUser(identityId, botId, channel, userId) {
  * If userId is not provided, a fake user will be created.
  *
  * In order to change a user's email address, provide both userId and (new) email.
- * The user will have to verify the new email
+ * If both userId and email are provided and the email is different, the user will have to
+ * verify the new email
  *
  * Will return the new/updated item.
  *
