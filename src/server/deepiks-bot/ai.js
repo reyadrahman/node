@@ -187,7 +187,7 @@ export async function _runAction(actionName: string,
 {
     console.log('_runAction: ')
     console.log('\t actionName: ', actionName);
-    console.log('\t actionRequest: ', actionRequest);
+    console.log('\t actionRequest: ', toStr(actionRequest));
     const { publisherId } = botParams;
     const { senderId } = originalMessage;
     if (!senderId) {
@@ -229,7 +229,7 @@ export async function _runAction(actionName: string,
         });
 
         if (res.statusCode === 200) {
-            console.log('_runAction url, returned: ', res.body);
+            console.log('_runAction url, returned: ', toStr(res.body));
             return res.body;
         } else {
             throw new Error(`_runAction url, returned error code ${res.statusCode}`
@@ -242,7 +242,7 @@ export async function _runAction(actionName: string,
             FunctionName: lambda,
             Payload: JSON.stringify(requestData),
         });
-        console.log('lambda returned: ', res);
+        console.log('lambda returned: ', toStr(res));
         if (res.StatusCode !== 200) {
             throw new Error(`lambda ${lambda} returned status code ${res.StatusCode}`);
         }
