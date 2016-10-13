@@ -44,11 +44,10 @@ export async function fetchUser(jwtIdToken: string, botId: string, channel, user
 
 export async function saveUser(
     jwtIdToken: string, botId: string, channel: string,
-    userId?: string, email?: string, userRole?: string,
-    revokeAuthorization?: boolean
+    userId?: string, email?: string, userRole?: string
 ) {
     return await fetchjp2j('/api/save-user', {
-        jwtIdToken, botId, channel, userId, email, userRole, revokeAuthorization,
+        jwtIdToken, botId, channel, userId, email, userRole
     });
 }
 
