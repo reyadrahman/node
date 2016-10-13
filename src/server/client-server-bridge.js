@@ -93,8 +93,7 @@ routes.get('/fetch-user', authMiddleware, (req, res, next) => {
 
 routes.post('/save-user', authMiddleware, (req, res, next) => {
     saveUser(req.customData.identityId, req.body.botId, req.body.channel,
-             req.body.userId, req.body.email, req.body.userRole,
-             req.body.revokeAuthorization)
+             req.body.userId, req.body.email, req.body.userRole)
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -247,90 +246,108 @@ async function fetchUser(identityId, botId, channel, userId) {
 
 /**
  * At least one of userId or email must be provided.
- * If item doesn't exist in the database, it will be created. Otherwise, it will be updated.
- * Will return the new/updated item.
+ * If userId is not provided, a fake user will be created.
  *
- * In order to change a user's email address, provide both userId and (new) email. If the
- * new email is different than the old one, the user's authorization will be revoked forcing
- * him/her to request another authorization token and verify the email.
+ * In order to change a user's email address, provide both userId and (new) email.
+ * The user will have to verify the new email
+ *
+ * Will return the new/updated item.
  *
  * @param identityId
  * @param botId
  * @param channel
- * @param userId optional
+ * @param userId optional. Must already exist in the database
  * @param email optional.
  * @param userRole optional, defaults to 'user'
- * @param revokeAuthorization optional, defaults to false unless a new email is provided
  */
 async function saveUser(
     identityId: string, botId: string, channel: string,
-    userId?: string, email?: string, userRole?: string,
-    revokeAuthorization?: boolean,
+    userId?: string, email?: string, userRole?: string
 ) {
     console.log('saveUser: ', arguments);
 
     if (!userRole) userRole = 'user';
     if (email) email = email.trim().toLowerCase();
 
-    if (botId && channel && (userId || email)) {
-        const oldUser = userId
-            ? await aws.getUserByUserId(identityId, botId, channel, userId)
-            : await aws.getUserByEmail(identityId, botId, channel, email);
-        console.log('saveUser oldUser: ', oldUser);
-        let oldEmail, oldUserId;
+    if (!botId || !channel || (!userId && !email)) {
+        throw new Error(`saveUser must provide botId, channel, and either userId or emailId or both. `);
+    }
+
+    if (email && !userId) {
+        // create new fake user if email doesn't exist
+        const oldUser = await aws.getUserByEmail(identityId, botId, channel, email);
         if (oldUser) {
-            oldEmail = decomposeKeys(oldUser.botId_channel_email || '')[2] || '';
-            oldEmail = oldEmail.toLowerCase();
-            oldUserId = decomposeKeys(oldUser.botId_channel_userId)[2];
+            throw new Error(`Email already exists ${email}`);
         }
-        let emailChanged = userId && (email || oldEmail) && email !== oldEmail;
-        const newAuthToken = (!oldUser || revokeAuthorization || emailChanged) && shortLowerCaseRandomId();
-        const prefs = oldUser && oldUser.prefs || {};
-        if (newAuthToken) {
-            prefs.authorizationToken = newAuthToken;
-        }
-        const bca = newAuthToken
-            ? composeKeys(botId, channel, newAuthToken)
-            : undefined;
-        const bce = email ? composeKeys(botId, channel, email) : undefined;
-        const authorized = Boolean(oldUser && oldUser.authorized && !newAuthToken);
+        const user = {
+            publisherId: identityId,
+            botId_channel_userId: composeKeys(
+                botId, channel, `dummy::${shortLowerCaseRandomId()}`
+            ),
+            botId_channel_email: composeKeys(botId, channel, email),
+            userRole,
+            prefs: {},
+            isFake: true,
+        };
+        await aws.dynamoPut({
+            TableName: CONSTANTS.DB_TABLE_USERS,
+            Item: user,
+        });
+        return user;
+    }
 
-        console.log('saveUser oldEmail: ', oldEmail, ', oldUserId', oldUserId,
-                    ', emailChanged: ', emailChanged, ', newAuthToken: ', newAuthToken,
-                    ', prefs: ', prefs, ', bca: ', bca, ', bce: ', bce,
-                    ', authorized: ', authorized);
 
-        // dynamoUpdate will create a new item if none exists
+    // we have userId now
+
+    const oldUser = await aws.getUserByUserId(identityId, botId, channel, userId);
+    if (!oldUser) {
+        throw new Error(`invalid userId: ${userId}`);
+    }
+    const oldEmail = decomposeKeys(oldUser.botId_channel_email)[2];
+    const emailHasChanged = email && email !== oldEmail;
+
+    if (!email || !emailHasChanged) {
+        // update attributes other than email
         const user = await aws.dynamoUpdate({
             TableName: CONSTANTS.DB_TABLE_USERS,
             Key:{
                 publisherId: identityId,
-                botId_channel_userId: composeKeys(
-                    botId, channel, oldUserId || `dummy::${shortLowerCaseRandomId()}`
-                ),
+                botId_channel_userId: composeKeys(botId, channel, userId),
             },
-            UpdateExpression:
-                'set userRole = :userRole' +
-                ', prefs = :prefs' +
-                ', authorized = :authorized' +
-                (newAuthToken ? ', botId_channel_authorizationToken = :bca' : '') +
-                (email ? ', botId_channel_email = :bce' : ''),
+            // ConditionExpression: 'attribute_exists(publisherId)',
+            UpdateExpression: 'SET userRole = :userRole',
             ExpressionAttributeValues: {
                 ':userRole': userRole,
-                ':prefs': prefs,
-                ':authorized': authorized,
-                ':bca': bca,
-                ':bce': bce,
             },
             ReturnValues: 'ALL_NEW'
         });
+        console.log('saveUser returning ', user.Attributes);
         return user.Attributes;
     }
 
-    throw new Error(
-        `saveUser must provide botId, channel, and either userId or emailId or both. ` +
-        `Instead got: ${botId}, ${channel}, ${userId}, ${email}`
-    );
+    // we have both email and userId
+    // update attributes including email and force user to verify
+    const user = await aws.dynamoUpdate({
+        TableName: CONSTANTS.DB_TABLE_USERS,
+        Key:{
+            publisherId: identityId,
+            botId_channel_userId: composeKeys(botId, channel, userId),
+        },
+        // ConditionExpression: 'attribute_exists(publisherId)',
+        UpdateExpression:
+            ' SET    botId_channel_email = :bce      ' +
+            ',       userRole            = :userRole ' +
+            ' REMOVE prefs.verificationToken         ' +
+            ',       isVerified                      ' +
+            ',       unverifiedVerificationToken     ',
+        ExpressionAttributeValues: {
+            ':bce': composeKeys(botId, channel, email),
+            ':userRole': userRole,
+        },
+        ReturnValues: 'ALL_NEW'
+    });
+    console.log('saveUser returning ', user.Attributes);
+    return user.Attributes;
 }
 
 async function fetchConversations(identityId, botId) {

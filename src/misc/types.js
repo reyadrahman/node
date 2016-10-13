@@ -3,11 +3,14 @@
 export type User = {
     publisherId: string,
     botId_channel_userId: string,
-    botId_channel_authorizationToken: string,
     botId_channel_email: string,
     prefs: UserPrefs,
     userRole: 'user' | 'admin' | 'none',
     userLastMessage?: DBMessage,
+    unverifiedAuthorizationToken?: string,
+    associatedFakeUserId?: string,
+    isFake?: boolean,
+    isVerified?: boolean,
 };
 
 // is that it?

@@ -1,0 +1,122 @@
+// CREATE UNIT TESTS FROM THESE
+
+// + bridge TEST 1:
+await bridge.saveUser(
+    session.getIdToken().getJwtToken(),
+    'e3a6ba00-805c-11e6-94cd-f9ef165f7fb2',
+    'messenger',
+    null,
+    'sean@plumcake.engineer',
+    'user',
+);
+
+// + bridge TEST 2:
+const fakeUser =
+{
+    "botId_channel_email": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__sean@plumcake.engineer",
+    "botId_channel_userId": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__dummy::7afd46e4f3b74575",
+    "isFake": true,
+    "prefs": {},
+    "publisherId": "us-east-1:f539ddf1-ba70-46b4-a37e-d5988c92494c",
+    "userRole": "user"
+}
+
+await bridge.saveUser(
+    session.getIdToken().getJwtToken(),
+    'e3a6ba00-805c-11e6-94cd-f9ef165f7fb2',
+    'messenger',
+    'dummy::7afd46e4f3b74575',
+    null,
+    'admin',
+);
+
+const result =
+{
+    "botId_channel_email": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__sean@plumcake.engineer",
+    "botId_channel_userId": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__dummy::7afd46e4f3b74575",
+    "isFake": true,
+    "prefs": {},
+    "publisherId": "us-east-1:f539ddf1-ba70-46b4-a37e-d5988c92494c",
+    "userRole": "admin"
+}
+
+
+// + bridge TEST 3:
+const user =
+{
+    "botId_channel_email": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__sean@plumcake.engineer",
+    "botId_channel_userId": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__1293703510654782",
+    "isVerified": true,
+    "prefs": {
+        "verificationToken": "7a0565da48f54c41"
+    },
+    "publisherId": "us-east-1:f539ddf1-ba70-46b4-a37e-d5988c92494c",
+    "userRole": "user"
+}
+
+await bridge.saveUser(
+    session.getIdToken().getJwtToken(),
+    'e3a6ba00-805c-11e6-94cd-f9ef165f7fb2',
+    'messenger',
+    '1293703510654782',
+    'shahab.sh.70@gmail.com',
+    'admin',
+);
+
+
+
+// + TEST 1:
+
+const existingPrePrivateUser =
+{
+    "botId_channel_userId": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__1293703510654782",
+    "prefs": {
+        "aa": 123
+    },
+    "publisherId": "us-east-1:f539ddf1-ba70-46b4-a37e-d5988c92494c",
+    "userRole": "user"
+}
+
+const fakeUser =
+{
+    "botId_channel_userId": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__fff",
+    "botId_channel_email": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__sean@plumcake.engineer",
+    "prefs": { },
+    "publisherId": "us-east-1:f539ddf1-ba70-46b4-a37e-d5988c92494c",
+    "userRole": "user",
+    "isFake": true
+}
+
+// + TEST 2:
+
+const fakeUser =
+{
+    "botId_channel_userId": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__fff",
+    "botId_channel_email": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__sean@plumcake.engineer",
+    "prefs": { },
+    "publisherId": "us-east-1:f539ddf1-ba70-46b4-a37e-d5988c92494c",
+    "userRole": "user",
+    "isFake": true
+}
+
+// + TEST 3:
+const changedEmailUser =
+{
+    "botId_channel_email": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__sean@plumcake.engineer",
+    "botId_channel_userId": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__1293703510654782",
+    "prefs": { },
+    "publisherId": "us-east-1:f539ddf1-ba70-46b4-a37e-d5988c92494c",
+    "userRole": "user"
+}
+
+const result =
+{
+    "botId_channel_email": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__sean@plumcake.engineer",
+    "botId_channel_userId": "e3a6ba00-805c-11e6-94cd-f9ef165f7fb2__messenger__1293703510654782",
+    "isVerified": true,
+    "prefs": {
+        "verificationToken": "7a0565da48f54c41"
+    },
+    "publisherId": "us-east-1:f539ddf1-ba70-46b4-a37e-d5988c92494c",
+    "userRole": "user"
+}

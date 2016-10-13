@@ -37,48 +37,101 @@ export async function _isMessageInDB(message: DBMessage) {
     return qres.Count > 0;
 }
 
-export async function _authorizeUser(
+export async function _verifyUser(
     botParams: BotParams, message: DBMessage, respondFn: RespondFn, user: ?User
 ) {
-    const strings = (tr[botParams.defaultLanguage] || tr[langs[0]]).authorization;
-    if (user && user.userRole === 'none') {
+    /*
+
+     Possible situations:
+     1. Existing user, verified but not allowed
+     2. Existing user in a newly private bot
+     3. Non-existing user in a private bot
+     4. real user with updated email
+     5. fake user with updated email
+
+    -------
+
+    to change email
+        update user.botId_channel_email,
+        remove user.prefs.verificationToken
+               user.isVerified
+               user.unverifiedVerificationToken
+
+     */
+
+    console.log('_verifyUser user: ', user);
+
+    const strings = (tr[botParams.defaultLanguage] || tr[langs[0]]).userVerification;
+    if (user && user.isVerified && user.userRole === 'none') {
         return await respondFn(_textToResponseMessage(strings.userNotAuthorized));
     }
+
 
     const text = (message.text || '').trim().toLowerCase();
     if (!text) return;
 
+    const { publisherId, botId } = botParams;
+    const { channel, senderId } = message;
+
     const emailMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
     if (emailMatch) {
-        // generate a new token, store it in DB and send it to user via email
-
         const email = emailMatch[0];
-        console.log('_authorizeUser extracted email: ', email);
-        user = await aws.getUserByEmail(
-            botParams.publisherId, botParams.botId, message.channel, email
+        const userWithEmail = await aws.getUserByEmail(
+            publisherId, botId, channel, email
         );
-        if (!user || user.userRole === 'none') {
-            return await respondFn(_textToResponseMessage(strings.emailNotAuthorized));
+
+        console.log('_verifyUser userWithEmail: ', userWithEmail);
+        // validate email
+        if (!userWithEmail || !userWithEmail.isFake &&
+            user && user.botId_channel_userId !== userWithEmail.botId_channel_userId)
+        {
+            return await respondFn(_textToResponseMessage(strings.invalidEmail));
         }
-        if (user.authorized) {
-            return await respondFn(_textToResponseMessage(strings.emailAlreadyAuthorized));
+
+        // given: userWithEmail === user || userWithEmail.isFake
+        //        user may exist
+
+        // update userWithEmail if it's a fake user
+        if (userWithEmail.isFake) {
+            const [,, fakeUserId] = decomposeKeys(userWithEmail.botId_channel_userId);
+            await aws.dynamoUpdate({
+                TableName: CONSTANTS.DB_TABLE_USERS,
+                Key: {
+                    publisherId,
+                    botId_channel_userId: composeKeys(botId, channel, senderId),
+                },
+                UpdateExpression:
+                    'set associatedFakeUserId = :afui' +
+                    ',   isVerified           = :iv' +
+                    ',   prefs                = if_not_exists(prefs, :p)' +
+                    ',   userRole             = if_not_exists(userRole, :ur)' +
+                    ',   lastMessage          = :lm',
+                ExpressionAttributeValues: {
+                    ':afui': fakeUserId,
+                    ':iv':   false,
+                    ':p':    {},
+                    ':ur':   'none',
+                    ':lm':   message,
+                },
+            });
         }
-        const newAuthToken = shortLowerCaseRandomId();
+
+        // update userWithEmail.unverifiedVerificationToken = new token
+        const newVerificationToken = shortLowerCaseRandomId();
+        console.log('_verifyUser newVerificationToken: ', newVerificationToken);
         await aws.dynamoUpdate({
             TableName: CONSTANTS.DB_TABLE_USERS,
             Key: {
-                publisherId: user.publisherId,
-                botId_channel_userId: user.botId_channel_userId,
+                publisherId,
+                botId_channel_userId: userWithEmail.botId_channel_userId,
             },
-            UpdateExpression:
-                'set botId_channel_authorizationToken = :bca' +
-                ', prefs.authorizationToken = :a',
+            UpdateExpression: 'set unverifiedVerificationToken = :uvt',
             ExpressionAttributeValues: {
-                ':bca': composeKeys(botParams.botId, message.channel, newAuthToken),
-                ':a': newAuthToken,
-            }
+                ':uvt': newVerificationToken,
+            },
         });
 
+        // email new verification token to user
         const emailParams = {
             Destination: {
                 ToAddresses: [ email ],
@@ -86,85 +139,211 @@ export async function _authorizeUser(
             Message: {
                 Body: {
                     Text: {
-                        Data: strings.authTokenEmailBodyFn(newAuthToken),
+                        Data: strings.verificationTokenEmailBodyFn(newVerificationToken),
                         Charset: 'UTF-8',
                     },
                 },
                 Subject: {
-                    Data: strings.authTokenEmailSubjectFn(botParams.botName),
+                    Data: strings.verificationTokenEmailSubjectFn(botParams.botName),
                     Charset: 'UTF-8'
                 },
             },
             Source: CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
         };
-
-        console.log('_authorizeUser sendEmail: ', emailParams);
+        console.log(' sendEmail: ', emailParams);
         await aws.sesSendEmail(emailParams);
 
-        return await respondFn(_textToResponseMessage(strings.authorizationSentFn(email)));
+        return await respondFn(_textToResponseMessage(strings.verificationTokenSentFn(email)));
     }
 
-    // the userId that is already in user may be a temporary placeholder
-    // in which case it must be replaced with message.senderId and the old
-
+    // got token
     const token = text;
-    const creatingNewUser = !user;
-    if (creatingNewUser) {
-        user = await aws.getUserByAuthorizationToken(
-            botParams.publisherId, botParams.botId, message.channel, token
+
+    // make sure we are expecting a verification token
+    if (!user || (!user.unverifiedVerificationToken && !user.associatedFakeUserId)) {
+        return await respondFn(_textToResponseMessage(strings.enterEmail));
+    }
+
+    // the unverifiedVerificationToken is either in user or the
+    // fake associated user. The latter takes precedence.
+    let userWithUVT = user;
+    if (user.associatedFakeUserId) {
+        userWithUVT = await aws.getUserByUserId(
+            publisherId, botId, channel, user.associatedFakeUserId
         );
+        if (!userWithUVT) {
+            throw new Error(` invalid associatedFakeUserId: ` +
+                            `${user.associatedFakeUserId}`);
+        }
+    }
+    console.log('_verifyUser userWithUVT: ', userWithUVT);
+
+    // check verification token
+    if (token !== userWithUVT.unverifiedVerificationToken) {
+        return await respondFn(_textToResponseMessage(strings.enterVerificationToken));
     }
 
-    if (!user || decomposeKeys(user.botId_channel_authorizationToken || '')[2] !== token) {
-        return await respondFn(_textToResponseMessage(strings.enterAuthorizationTokenOrEmail));
-    }
-
-    const promises = [];
-
-    // promises.push(aws.dynamoPut({
-    //     TableName: CONSTANTS.DB_TABLE_USERS,
-    //     Item: {
-    //         ...user,
-    //         botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
-    //         prefs: { authorizationToken: token },
-    //         userLastMessage: message,
-    //         authorized: true,
-    //     }
-    // }));
-    promises.push(aws.dynamoUpdate({
+    // update user
+    await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_USERS,
         Key: {
-            publisherId: user.publisherId,
-            botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
+            publisherId,
+            botId_channel_userId: composeKeys(botId, channel, senderId),
         },
-        UpdateExpression: 'set authorized = :a' +
-                          ', userLastMessage = :ulm' +
-                          ', botId_channel_authorizationToken = :bca' +
-                          ', botId_channel_email = :bce' +
-                          ', userRole = :ur' +
-                          ', prefs = :p',
+        UpdateExpression:
+            ' SET    botId_channel_email      = :bce ' +
+            ',       userRole                 = :ur  ' +
+            ',       isVerified               = :iv  ' +
+            ',       prefs.verificationToken  = :t   ' +
+            ',       lastMessage              = :lm  ' +
+            ' REMOVE associatedFakeUserId            ' +
+            ',       unverifiedVerificationToken     ',
         ExpressionAttributeValues: {
-            ':a': true,
-            ':ulm': message,
-            ':bca': user.botId_channel_authorizationToken,
-            ':bce': user.botId_channel_email,
-            ':ur': user.userRole,
-            ':p': { ...user.prefs, authorizationToken: token },
-        }
-    }));
+            ':bce': userWithUVT.botId_channel_email,
+            ':ur':  userWithUVT.userRole,
+            ':iv':  true,
+            ':t':   token,
+            ':lm':  message,
+        },
+    });
 
-    if (creatingNewUser) {
-        promises.push(aws.dynamoDelete({
+
+    // delete the fake user
+    if (userWithUVT.isFake) {
+        await aws.dynamoDelete({
             TableName: CONSTANTS.DB_TABLE_USERS,
             Key: {
-                publisherId: user.publisherId,
-                botId_channel_userId: user.botId_channel_userId,
+                publisherId,
+                botId_channel_userId: userWithUVT.botId_channel_userId,
             }
-        }));
+        });
     }
 
-    await Promise.all(promises);
-    await respondFn(_textToResponseMessage(strings.successfullyAuthorized));
+    return await respondFn(_textToResponseMessage(strings.successfullyVerified));
+
+
+
+
+
+
+
+    // const emailMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
+    // if (emailMatch) {
+    //     // generate a new token, store it in DB and send it to user via email
+    //
+    //     const email = emailMatch[0];
+    //     console.log(' extracted email: ', email);
+    //     user = await aws.getUserByEmail(
+    //         botParams.publisherId, botParams.botId, message.channel, email
+    //     );
+    //     if (!user || user.userRole === 'none') {
+    //         return await respondFn(_textToResponseMessage(strings.emailNotAuthorized));
+    //     }
+    //     if (user.authorized) {
+    //         return await respondFn(_textToResponseMessage(strings.emailAlreadyAuthorized));
+    //     }
+    //     const newAuthToken = shortLowerCaseRandomId();
+    //     await aws.dynamoUpdate({
+    //         TableName: CONSTANTS.DB_TABLE_USERS,
+    //         Key: {
+    //             publisherId: user.publisherId,
+    //             botId_channel_userId: user.botId_channel_userId,
+    //         },
+    //         UpdateExpression:
+    //             'set botId_channel_authorizationToken = :bca' +
+    //             ', prefs.authorizationToken = :a',
+    //         ExpressionAttributeValues: {
+    //             ':bca': composeKeys(botParams.botId, message.channel, newAuthToken),
+    //             ':a': newAuthToken,
+    //         }
+    //     });
+    //
+    //     const emailParams = {
+    //         Destination: {
+    //             ToAddresses: [ email ],
+    //         },
+    //         Message: {
+    //             Body: {
+    //                 Text: {
+    //                     Data: strings.authTokenEmailBodyFn(newAuthToken),
+    //                     Charset: 'UTF-8',
+    //                 },
+    //             },
+    //             Subject: {
+    //                 Data: strings.authTokenEmailSubjectFn(botParams.botName),
+    //                 Charset: 'UTF-8'
+    //             },
+    //         },
+    //         Source: CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
+    //     };
+    //
+    //     console.log('erifyUserverifyUser sendEmail: ', emailParams);
+    //     await aws.sesSendEmail(emailParams);
+    //
+    //     return await respondFn(_textToResponseMessage(strings.authorizationSentFn(email)));
+    // }
+    //
+    // // the userId that is already in user may be a temporary placeholder
+    // // in which case it must be replaced with message.senderId and the old
+    //
+    // const token = text;
+    // const creatingNewUser = !user;
+    // if (creatingNewUser) {
+    //     user = await aws.getUserByAuthorizationToken(
+    //         botParams.publisherId, botParams.botId, message.channel, token
+    //     );
+    // }
+    //
+    // if (!user || decomposeKeys(user.botId_channel_authorizationToken || '')[2] !== token) {
+    //     return await respondFn(_textToResponseMessage(strings.enterAuthorizationTokenOrEmail));
+    // }
+    //
+    // const promises = [];
+    //
+    // // promises.push(aws.dynamoPut({
+    // //     TableName: CONSTANTS.DB_TABLE_USERS,
+    // //     Item: {
+    // //         ...user,
+    // //         botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
+    // //         prefs: { authorizationToken: token },
+    // //         userLastMessage: message,
+    // //         authorized: true,
+    // //     }
+    // // }));
+    // promises.push(aws.dynamoUpdate({
+    //     TableName: CONSTANTS.DB_TABLE_USERS,
+    //     Key: {
+    //         publisherId: user.publisherId,
+    //         botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
+    //     },
+    //     UpdateExpression: 'set authorized = :a' +
+    //                       ', userLastMessage = :ulm' +
+    //                       ', botId_channel_authorizationToken = :bca' +
+    //                       ', botId_channel_email = :bce' +
+    //                       ', userRole = :ur' +
+    //                       ', prefs = :p',
+    //     ExpressionAttributeValues: {
+    //         ':a': true,
+    //         ':ulm': message,
+    //         ':bca': user.botId_channel_authorizationToken,
+    //         ':bce': user.botId_channel_email,
+    //         ':ur': user.userRole,
+    //         ':p': { ...user.prefs, authorizationToken: token },
+    //     }
+    // }));
+    //
+    // if (creatingNewUser) {
+    //     promises.push(aws.dynamoDelete({
+    //         TableName: CONSTANTS.DB_TABLE_USERS,
+    //         Key: {
+    //             publisherId: user.publisherId,
+    //             botId_channel_userId: user.botId_channel_userId,
+    //         }
+    //     }));
+    // }
+    //
+    // await Promise.all(promises);
+    // await respondFn(_textToResponseMessage(strings.successfullyAuthorized));
 }
 
 export function _createDBMessageFromResponseMessage(
@@ -679,13 +858,13 @@ export async function _handleWebhookMessage(
         console.log(`Message is already in the db. It won't be processed.`)
         return;
     }
-    if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none' && user.authorized) {
+    if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none' && user.isVerified) {
         // Process message, will connect to wit etc.
         await sendAsUser(dbMessage);
 
     } else {
         await Promise.all([
-            _authorizeUser(botParams, dbMessage, newRespondFn, user),
+            _verifyUser(botParams, dbMessage, newRespondFn, user),
             _updateConversationTable(dbMessage, botParams, channelData),
             _logMessage(dbMessage),
         ]);

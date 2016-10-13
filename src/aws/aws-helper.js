@@ -197,26 +197,6 @@ export async function getUserByEmail(
     return qres.Items && qres.Items[0];
 }
 
-export async function getUserByAuthorizationToken(
-    publisherId: string, botId: string,
-    channel: string, authorizationToken: string
-) : Promise<?User>
-{
-    console.log(`getPoll publisherId: ${publisherId}, botId: ${botId}, ` +
-                `channel: ${channel}, authorizationToken: ${authorizationToken}`);
-    const qres = await dynamoQuery({
-        TableName: CONSTANTS.DB_TABLE_USERS,
-        IndexName: 'byAuthorizationToken',
-        KeyConditionExpression: 'publisherId = :publisherId and botId_channel_authorizationToken = :bca',
-        ExpressionAttributeValues: {
-            ':publisherId': publisherId,
-            ':bca': composeKeys(botId, channel, authorizationToken),
-        },
-    });
-
-    return qres.Items && qres.Items[0];
-}
-
 export async function getIdFromJwtIdToken(jwtIdToken: string): Promise<string> {
     const res = await cognitoIdentityGetId({
         IdentityPoolId: CONSTANTS.IDENTITY_POOL_ID,
@@ -407,20 +387,9 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
             AttributeDefinitions: [
                 { AttributeName: 'publisherId', AttributeType: 'S' },
                 { AttributeName: 'botId_channel_userId', AttributeType: 'S' },
-                { AttributeName: 'botId_channel_authorizationToken', AttributeType: 'S' },
                 { AttributeName: 'botId_channel_email', AttributeType: 'S' },
             ],
             LocalSecondaryIndexes: [
-                {
-                    IndexName: 'byAuthorizationToken',
-                    KeySchema: [
-                        { AttributeName: 'publisherId', KeyType: 'HASH'},
-                        { AttributeName: 'botId_channel_authorizationToken', KeyType: 'RANGE'},
-                    ],
-                    Projection: {
-                        ProjectionType: 'ALL',
-                    },
-                },
                 {
                     IndexName: 'byEmail',
                     KeySchema: [

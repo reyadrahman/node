@@ -1,17 +1,13 @@
 export default {
-    authorization: {
+    userVerification: {
         userNotAuthorized: `I'm afraid you are not authorized. Please contact the publisher.`,
-        emailNotAuthorized: `Sorry, this email address is not authorized. Please enter another ` +
-                            `email address or your authorization code.`,
-        authorizationSentFn: email => `A new authorization token has been sent to your inbox at ${email}`,
-        enterAuthorizationTokenOrEmail: `Please provide your authorization code. ` +
-                                        `If you don't have one you can enter your email ` +
-                                        `address instead and I will send you one.`,
-        successfullyAuthorized: `Thanks, now we can chat`,
-        authTokenEmailBodyFn: token => `Here's your authentication code: ${token}`,
-        authTokenEmailSubjectFn: botName => `${botName} - Authorization Code`,
-        emailAlreadyAuthorized: `Sorry, this email is already authorized. Please enter another ` +
-                                `email address or your authorization code.`,
+        invalidEmail: `Sorry, this email address is invalid`,
+        verificationTokenEmailBodyFn: token => `Here's your verification code: ${token}`,
+        verificationTokenEmailSubjectFn: botName => `${botName} - Verification Code`,
+        verificationTokenSentFn: email => `A new verification token has been sent to your inbox at ${email}`,
+        enterEmail: `Please enter your email address`,
+        enterVerificationToken: `Please enter your verification code`,
+        successfullyVerified: `Thanks, your email address has been verified`,
     },
     errors: {
         general: 'Sorry, there seems to be a problem...',
