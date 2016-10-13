@@ -34,7 +34,7 @@ PORT=
 
 `NODE_ENV`, `DB_TABLES_PREFIX`, `CDN` and `PORT` are **optional**.
 
-`NODE_ENV` can be `production` (default) or `development`.
+`NODE_ENV` can be `production` (default) or `development`. When set to `development` you get much better error messages and debugging capability, but the output will be 10x larger. This doesn't cause a problem for the bot engine, but the website will be unusable for most people due to the size.
 
 `CALL_SERVER_LAMBDA_SECRET` should be a random string that matches the same environment variable in the `CallServer` lambda (see "CallServer Lambda" section below).
 
