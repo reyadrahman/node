@@ -24,6 +24,15 @@ export type Conversation = {
     publisherId: string,
     witData: WitData,
     channelData?: ChannelData,
+    lastParticipantProfilePic?: string,
+    participantsNames?: {
+        type: 'string',
+        values: string[],
+    },
+    participantsIds?: {
+        type: 'string',
+        values: string[],
+    },
 };
 
 export type ChannelData = {

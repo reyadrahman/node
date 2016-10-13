@@ -56,16 +56,18 @@ let Conversations = React.createClass({
 
         if (searchFilter) {
             conversations = conversations.filter(
-                conversation => conversation.lastMessage &&
-                (
-                    (conversation.lastMessage.senderName || '').toLowerCase().indexOf(searchFilter) > -1 ||
-                    (conversation.lastMessage.text || '').toLowerCase().indexOf(searchFilter) > -1
-                )
+                conversation => {
+                    const pns = (conversation.participantsNames || {});
+                    const names = pns && (pns.values || []).join(' ').toLowerCase() || '';
+                    const lm = conversation.lastMessage;
+                    const text = lm && (lm.text || '').toLowerCase();
+                    return names.includes(searchFilter) || text.includes(searchFilter);
+                }
             );
         }
 
         const convsUi = conversations.map((x, i) => {
-            const profilePic = x.lastMessage.senderProfilePic || defaultAvatarUrl;
+            const profilePic = x.lastParticipantProfilePic || defaultAvatarUrl;
             const profilePicStyle = {
                 backgroundImage: `url(${profilePic})`,
             };
@@ -81,6 +83,14 @@ let Conversations = React.createClass({
                 props.ref  = 'activeConversation';
             }
 
+            let conversationTitle = _.get(x, 'participantsNames.values', []).join(', ');
+            if (!conversationTitle) {
+                conversationTitle = '---';
+            }
+            if (conversationTitle.length > 20) {
+                conversationTitle = conversationTitle.substr(0,17) + '...';
+            }
+
             return (
                 <div
                     key={i}
@@ -91,7 +101,7 @@ let Conversations = React.createClass({
                     <div className="profile-pic" style={profilePicStyle} />
                     <div className="conversation-name-and-text">
                         <div className="name">
-                            { x.lastMessage.senderName || 'UNKNOWN' }
+                            { conversationTitle }
                         </div>
                         <div className="text">
                             { text }

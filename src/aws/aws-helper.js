@@ -35,6 +35,8 @@ const cognitoIdentity = new AWS.CognitoIdentity();
 const sts = new AWS.STS();
 const ses = new AWS.SES();
 
+export const dynamoCreateSet = x => dynamoDoc.createSet(x);
+
 export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
 export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
 export const dynamoUpdate = callbackToPromise(dynamoDoc.update, dynamoDoc);

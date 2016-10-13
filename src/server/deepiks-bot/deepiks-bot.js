@@ -766,22 +766,44 @@ export async function _updateConversationTable(message: DBMessage,
     console.log('_updateConversationTable');
     const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
+    const sets = [
+        'lastMessage = :lastMessage',
+        'botId_lastInteractiveMessageTimestamp_messageId = :blimtm',
+        'channel = :chan',
+        'botId = :botId',
+        channelData && 'channelData = :cd',
+        !message.senderIsBot && message.senderProfilePic && 'lastParticipantProfilePic = :profilePic',
+    ].filter(Boolean).join(', ');
+
+    const adds = [
+        !message.senderIsBot && 'participantsNames :senderNameSet',
+        !message.senderIsBot && 'participantsIds :senderIdSet',
+    ].filter(Boolean).join(', ');
+
+    const removes = [
+         !channelData && 'channelData',
+    ].filter(Boolean).join(', ');
+
     const res = await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
         Key: {
             publisherId,
             botId_conversationId: composeKeys(botParams.botId, conversationId),
         },
-        UpdateExpression: 'SET lastMessage = :lastMessage, ' +
-                          'botId_lastInteractiveMessageTimestamp_messageId = :blimtm, ' +
-                          'channel = :chan, botId = :botId ' +
-                          (channelData ? ', channelData = :cd' : 'REMOVE channelData'),
+        UpdateExpression: (sets ? 'SET ' + sets : '') +
+                          (adds ? ' ADD ' + adds : '') +
+                          (removes ? ' REMOVE ' + removes : ''),
         ExpressionAttributeValues: {
             ':lastMessage': aws.dynamoCleanUpObj(message),
             ':blimtm': composeKeys(botParams.botId, message.creationTimestamp, message.id),
             ':chan': message.channel,
             ':botId': botParams.botId,
             ':cd': channelData,
+            ...(message.senderIsBot ? {} : {
+                ':senderNameSet': aws.dynamoCreateSet([message.senderName]),
+                ':senderIdSet': aws.dynamoCreateSet([message.senderId]),
+                ':profilePic': message.senderProfilePic || undefined,
+            }),
         },
     });
 }
