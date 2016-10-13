@@ -80,7 +80,7 @@ export async function _verifyUser(
             publisherId, botId, channel, email
         );
 
-        console.log('_verifyUser userWithEmail: ', userWithEmail);
+        console.log(`_verifyUser email: ${email}, userWithEmail: `, userWithEmail);
         // validate email
         if (!userWithEmail || !userWithEmail.isFake &&
             user && user.botId_channel_userId !== userWithEmail.botId_channel_userId)

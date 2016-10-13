@@ -143,7 +143,7 @@ export async function getPollQuestion(
     pollId: string, questionId: string
 ) : Promise<?BotParams>
 {
-    console.log(`getPoll publisherId: ${publisherId}, botId: ${botId}, ` +
+    console.log(`getPollQuestion publisherId: ${publisherId}, botId: ${botId}, ` +
                 `pollId: ${pollId}, questionId: ${questionId}`);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
@@ -162,8 +162,8 @@ export async function getUserByUserId(
     channel: string, userId: string
 ) : Promise<?User>
 {
-    console.log(`getPoll publisherId: ${publisherId}, botId: ${botId}, ` +
-        `channel: ${channel}, userId: ${userId}`);
+    console.log(`getUserByUserId publisherId: ${publisherId}, botId: ${botId}, ` +
+                `channel: ${channel}, userId: ${userId}`);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_USERS,
         KeyConditionExpression: 'publisherId = :publisherId and botId_channel_userId = :bcu',
@@ -182,8 +182,8 @@ export async function getUserByEmail(
 ) : Promise<?User>
 {
     email = email.toLowerCase();
-    console.log(`getPoll publisherId: ${publisherId}, botId: ${botId}, ` +
-        `channel: ${channel}, email: ${email}`);
+    console.log(`getUserByEmail publisherId: ${publisherId}, botId: ${botId}, ` +
+                `channel: ${channel}, email: ${email}`);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_USERS,
         IndexName: 'byEmail',

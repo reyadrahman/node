@@ -139,18 +139,21 @@ let UserSavePage = React.createClass({
         } else {
             content = (
                 <form className="send-notifications-form">
-                    <FormGroup
-                        controlId="id"
-                    >
-                        <ControlLabel>User ID</ControlLabel>
-                        <FormControl
-                            type="text"
-                            value={user.id}
-                            placeholder="User ID"
-                            disabled={!!params.botId_channel_userId}
-                            onChange={this.onFormFieldChange}
-                        />
-                    </FormGroup>
+                    {
+                        params.botId_channel_userId &&
+                            <FormGroup
+                                controlId="id"
+                            >
+                                <ControlLabel>User ID</ControlLabel>
+                                <FormControl
+                                    type="text"
+                                    value={user.id}
+                                    placeholder="User ID"
+                                    disabled={true}
+                                    onChange={this.onFormFieldChange}
+                                />
+                            </FormGroup>
+                    }
                     <FormGroup
                         controlId="email"
                     >
