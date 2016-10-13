@@ -53,7 +53,7 @@ let TestPage = React.createClass({
                 if (this.state.bot.settings.secretWebchatCode) {
                     content = (
                         <iframe
-                            src={`https://webchat.botframework.com/embed/botframework?s=${this.state.bot.settings.secretWebchatCode}`}
+                            src={`https://webchat.botframework.com/embed/${this.state.bot.settings.secretWebchatCode}`}
                             frameborder="0"></iframe>
                     );
                 } else {
