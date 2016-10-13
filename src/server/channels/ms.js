@@ -187,6 +187,7 @@ export async function send(botParams: BotParams,
                 return card;
             })
         } else {
+            const CA = builder.CardAction;
             cards.forEach(c => {
                 const card = new builder.HeroCard(session);
                 c.fallback && card.title(c.fallback);
@@ -195,6 +196,9 @@ export async function send(botParams: BotParams,
                     builder.CardImage.create(session, c.imageUrl)
                            .tap(builder.CardAction.showImage(session, c.imageUrl)),
                 ]);
+                c.actions && card.buttons(c.actions.filter(a => a.fallback).map(a => (
+                    new CA(session).type('imBack').value(a.fallback).title(a.fallback)
+                )));
                 resAttachments.push(card);
                 console.log('adding card: ', card);
             });
