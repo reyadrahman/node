@@ -248,6 +248,7 @@ export type ClientConstants = {
     IDENTITY_POOL_ID: string,
     IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
     IDENTITY_POOL_AUTH_ROLE_ARN: string,
+    OWN_BASE_URL: string,
     SYSTEM_LANG?: string,
     DEBUG?: string,
 };
