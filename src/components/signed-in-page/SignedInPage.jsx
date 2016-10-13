@@ -82,6 +82,12 @@ let SignedInPage = React.createClass({
                 value: 'settings',
             },
             {
+                string: sideMenuStrings.tracking,
+                to: '/tracking',
+                glyph: 'list-alt',
+                value: 'tracking',
+            },
+            {
                 string: sideMenuStrings.users,
                 to: '/users',
                 glyph: 'users',

@@ -27,7 +27,7 @@ export default {
         contact:'Contact',
         test:'Test',
         surveys:'Surveys',
-        tracking:'Tracking',
+        tracking:'FR Tracking',
         settings:"Settings",
   },
     home: {

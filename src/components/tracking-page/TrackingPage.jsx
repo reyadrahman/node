@@ -4,7 +4,7 @@ import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
 import {Alert} from 'react-bootstrap';
 
-let TestPage = React.createClass({
+let TrackingPage = React.createClass({
     getInitialState(){
         return {
             bot:     null,
@@ -29,15 +29,11 @@ let TestPage = React.createClass({
     },
 
     componentDidMount(){
-        if (this.props.bot) {
-            this.setState({bot: this.props.bot, loading: false});
-        } else {
-            this.setBot();
-        }
+        this.setBot();
     },
 
-    componentDidUpdate(oldProps) {
-        if (!this.props.currentUser.signedIn || this.props.public) {
+    componentDidUpdate() {
+        if (!this.props.currentUser.signedIn) {
             return;
         }
 
@@ -48,16 +44,19 @@ let TestPage = React.createClass({
         const {className, currentUser} = this.props;
         let content;
 
-        if (this.props.public || currentUser.signedIn) {
+        if (currentUser.signedIn) {
             if (this.state.bot) {
-                if (this.state.bot.settings.secretWebchatCode) {
+                if (this.state.bot.settings.dashbotId) {
                     content = (
-                        <iframe
-                            src={`https://webchat.botframework.com/embed/${this.state.bot.settings.secretWebchatCode}`}
-                            frameborder="0"></iframe>
+                        <iframe src={`https://www.dashbot.io/reports/${this.state.bot.settings.dashbotId}/`}></iframe>
                     );
                 } else {
-                    content = <Alert bsStyle="danger">Bot configuration is missing webchat secret code</Alert>
+                    content = (
+                        <Alert bsStyle="danger">
+                            Bot configuration is missing dashbotId
+                            Please enter it on <Link to="/settings">settings page</Link>
+                        </Alert>
+                    );
                 }
             } else if (this.state.loading) {
                 content = <div className="wait"><i className="icon-spinner animate-spin"/></div>;
@@ -71,23 +70,21 @@ let TestPage = React.createClass({
         }
 
         return (
-            <div className={`test-page-comp ${className || ''}`}>
+            <div className={`tracking-page-comp ${className || ''}`}>
                 {content}
             </div>
         );
     }
 });
 
-TestPage = connect(
+TrackingPage = connect(
     state => ({
         currentUser: state.currentUser,
     }),
-    {
-        selectBot: actions.selectBot,
-    }
-)(TestPage);
+    {}
+)(TrackingPage);
 
-TestPage = withRouter(TestPage);
+TrackingPage = withRouter(TrackingPage);
 
 
-export default TestPage;
+export default TrackingPage;

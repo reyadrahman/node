@@ -1,0 +1,26 @@
+div.tracking-page-comp {
+    padding-top: 50px;
+    margin-left: -10px !important;
+
+    .alert {
+        width: 800px;
+        margin: 50px auto;
+    }
+
+    .wait {
+        top: 50%;
+        left: 50%;
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-size: 50px;
+        color: #aaa;
+        letter-spacing: 10px;
+    }
+
+    iframe {
+        width: 100%;
+        height: 649px;
+        border: none;
+    }
+
+}

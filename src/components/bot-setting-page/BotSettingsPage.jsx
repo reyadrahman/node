@@ -20,7 +20,12 @@ let BotSettingsPage = React.createClass({
         if (user.botsState.hasFetched) {
             if (user.selectedBotId && (!this.state.bot || this.state.bot.botId !== user.selectedBotId)) {
                 let bot = _.cloneDeep(_.find(user.botsState.bots, {botId: user.selectedBotId}));
-                bot     = _.merge({settings: {secretWebchatCode: null}}, bot);
+                bot     = _.merge({
+                    settings: {
+                        secretWebchatCode: null,
+                        dashbotId:         null
+                    }
+                }, bot);
 
                 this.setState({bot});
             }
