@@ -12,6 +12,7 @@ import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 import FeedsPage from './components/feeds-page/FeedsPage.jsx';
 import PollsPage from './components/polls-page/PollsPage.jsx';
 import TestPage from './components/test-page/TestPage.jsx';
+import PublicTestPage from './components/test-page/PublicTestPage.jsx';
 import NotificationsPage from './components/notifications-page/NotificationsPage.jsx';
 import TermsOfUsePage from './components/terms-of-use-page/TermsOfUsePage.jsx'
 import PrivacyPage from './components/privacy-page/PrivacyPage.jsx'
@@ -21,6 +22,7 @@ const Routes = (
         <IndexRoute component={Home} />
         <Route path="/terms" component={TermsOfUsePage} />
         <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/bot/:publisherId/:botId" component={PublicTestPage}/>
         <Route component={SignedInPage}>
             <Route path="/account" component={AccountPage} />
             <Route path="/settings" component={BotSettingsPage}/>

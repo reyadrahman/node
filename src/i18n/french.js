@@ -13,6 +13,7 @@ export default {
     },
     sideMenu: {
         account: 'FR Account',
+        admin: 'FR Admin',
         users: 'FR Users',
         polls: 'FR Polls',
         messages: 'FR Messages',

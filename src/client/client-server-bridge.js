@@ -26,6 +26,10 @@ export async function fetchBots(jwtIdToken: string) {
     return await fetchg2j('/api/fetch-bots', { jwtIdToken });
 }
 
+export async function fetchBotPublicInfo(publisherId: string, botId: string) {
+    return await fetchg2j('/api/fetch-bot-public-info', {publisherId, botId});
+}
+
 export async function fetchPolls(jwtIdToken: string, botId: string) {
     return await fetchg2j('/api/fetch-polls', {jwtIdToken, botId});
 }

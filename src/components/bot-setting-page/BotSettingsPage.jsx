@@ -3,6 +3,7 @@ import {Button, Alert, FormGroup, ControlLabel, FormControl, Checkbox, Col, Form
 import * as actions from '../../app-state/actions.js';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
+import {CONSTANTS} from '../../client/client-utils';
 
 import _ from 'lodash';
 
@@ -18,7 +19,10 @@ let BotSettingsPage = React.createClass({
 
         if (user.botsState.hasFetched) {
             if (user.selectedBotId && (!this.state.bot || this.state.bot.botId !== user.selectedBotId)) {
-                this.setState({bot: _.cloneDeep(_.find(user.botsState.bots, {botId: user.selectedBotId}))});
+                let bot = _.cloneDeep(_.find(user.botsState.bots, {botId: user.selectedBotId}));
+                bot     = _.merge({settings: {secretWebchatCode: null}}, bot);
+
+                this.setState({bot});
             }
         } else if (user.botsState.errorMessage) {
             if (this.state.error !== user.botsState.errorMessage) {
@@ -86,7 +90,15 @@ let BotSettingsPage = React.createClass({
         let content;
         let alert = null;
 
+        const hooks = {
+            'ciscospark': 'spark',
+            'messenger': 'messenger',
+            'microsoft': 'ms'
+        };
+
         if (bot) {
+            const baseUrl = `${CONSTANTS.OWN_BASE_URL}/webhooks/` +
+                            `${bot.publisherId}/${bot.botId}/`;
             content = (
                 <Form horizontal>
                     <FormGroup controlId="botName">
@@ -128,13 +140,33 @@ let BotSettingsPage = React.createClass({
                         </Col>
                     </FormGroup>
 
+                    <FormGroup controlId="isPublic">
+                        <Col smOffset={2} sm={10}>
+                            <Checkbox
+                                id="isPublic"
+                                checked={!!bot.isPublic}
+                                onChange={this.onFormFieldChange}
+                            >Make this bot visible on the web</Checkbox>
+                        </Col>
+                    </FormGroup>
+
                     <div>
                         <h2>Channel specific settings</h2>
                         <Tabs defaultActiveKey={1}>
-                            {['ciscospark', 'dashbot', 'messenger', 'microsoft', 'wit'].map((channel, index) => {
+                            {[
+                                'ciscospark',
+                                'dashbot',
+                                'messenger',
+                                'microsoft',
+                                'wit',
+                                {prefix: 'secret', title: 'web chat'}
+                            ].map((settingsGroup, index) => {
                                 let settings = [];
+                                if (_.isString(settingsGroup)) {
+                                    settingsGroup = {prefix: settingsGroup, title: settingsGroup};
+                                }
                                 _.forEach(bot.settings, (value, key) => {
-                                    if (key.indexOf(channel) === 0) {
+                                    if (key.indexOf(settingsGroup.prefix) === 0) {
                                         settings.push(
                                             <FormGroup controlId={'settings_' + key}>
                                                 <Col componentClass={ControlLabel} sm={3}>
@@ -152,7 +184,40 @@ let BotSettingsPage = React.createClass({
                                         );
                                     }
                                 });
-                                return <Tab eventKey={index + 1} title={channel}>{settings}</Tab>
+
+                                if (settingsGroup.prefix in hooks) {
+                                    settings.push(
+                                            <FormGroup>
+                                                <Col componentClass={ControlLabel} sm={3}>
+                                                    Webhook
+                                                </Col>
+                                                <Col sm={9}>
+                                                    <div style={{paddingTop: '7px'}}>
+                                                        { baseUrl + hooks[settingsGroup.prefix] }
+                                                    </div>
+                                                </Col>
+                                            </FormGroup>
+                                    );
+                                }
+
+                                if (settingsGroup.prefix === 'secret') {
+                                    let publicBotUrl = `${CONSTANTS.OWN_BASE_URL}/bot/${bot.publisherId}/${bot.botId}`;
+
+                                    settings.push(
+                                        <FormGroup>
+                                            <Col componentClass={ControlLabel} sm={3}>
+                                                Bot public url
+                                            </Col>
+                                            <Col sm={9}>
+                                                <div style={{paddingTop: '7px'}}>
+                                                    <Link to={publicBotUrl}>{publicBotUrl}</Link>
+                                                </div>
+                                            </Col>
+                                        </FormGroup>
+                                    );
+                                }
+
+                                return <Tab eventKey={index + 1} title={settingsGroup.title}>{settings}</Tab>
                             })}
                         </Tabs>
                     </div>
