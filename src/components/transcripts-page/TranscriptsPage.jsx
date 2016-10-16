@@ -11,6 +11,8 @@ import { withRouter, Link } from 'react-router';
 import _ from 'lodash';
 
 let TranscriptsPage = React.createClass({
+    heartbeatEnabled: true,
+
     getInitialState() {
         return {
         };
@@ -42,6 +44,33 @@ let TranscriptsPage = React.createClass({
         if (params.conversationId) {
             fetchMessages(params.conversationId);
         }
+
+        this.heartbeat();
+    },
+
+    async heartbeat(){
+        setTimeout(async() => {
+            if (!this.heartbeatEnabled) { return; }
+            if (this.props.currentUser.selectedBotId && this.props.currentUser.conversationsState.hasFetched) {
+                try {
+                    await this.props.updateConversations(
+                        this.props.currentUser.selectedBotId,
+                        this.props.currentUser.conversationsState.lastUpdated - 60000
+                    );
+                } catch (e) { }
+
+                if (this.props.params.conversationId) {
+                    try {
+                        await this.props.updateMessages(
+                            this.props.params.conversationId,
+                            this.props.currentUser.messagesState.lastUpdated - 60000
+                        );
+                    } catch (e) { }
+                }
+            }
+
+            this.heartbeat();
+        }, 10000);
     },
 
     componentDidUpdate(oldProps) {
@@ -69,6 +98,10 @@ let TranscriptsPage = React.createClass({
                 fetchMessages(params.conversationId);
             }
         }
+    },
+
+    componentWillUnmount() {
+        this.heartbeatEnabled = false;
     },
 
     render() {
@@ -104,9 +137,11 @@ TranscriptsPage = connect(
         currentUser: state.currentUser,
     }),
     {
-        selectBot:          actions.selectBot,
-        fetchConversations: actions.fetchConversations,
-        fetchMessages:      actions.fetchMessages,
+        selectBot:           actions.selectBot,
+        fetchConversations:  actions.fetchConversations,
+        updateConversations: actions.updateConversations,
+        fetchMessages:       actions.fetchMessages,
+        updateMessages:      actions.updateMessages,
     }
 )(TranscriptsPage);
 

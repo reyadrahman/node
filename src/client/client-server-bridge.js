@@ -51,16 +51,16 @@ export async function saveUser(
     });
 }
 
-export async function fetchConversations(jwtIdToken: string, botId: string) {
-    console.log('fetchConversations: jwtIdToken: ', jwtIdToken, 'botId:', botId);
-    return await fetchg2j('/api/fetch-conversations', { jwtIdToken, botId });
+export async function fetchConversations(jwtIdToken: string, botId: string, since: int = 0) {
+    console.log('fetchConversations: jwtIdToken: ', jwtIdToken, 'botId:', botId, 'since:', since);
+    return await fetchg2j('/api/fetch-conversations', { jwtIdToken, botId, since });
 }
 
-export async function fetchMessages(jwtIdToken: string, conversationId: string)
+export async function fetchMessages(jwtIdToken: string, conversationId: string, since: int = 0)
     : Promise<DBMessage[]>
 {
     console.log('fetchMessages: jwtIdToken: ', jwtIdToken, conversationId);
-    return await fetchg2j('/api/fetch-messages', { jwtIdToken, conversationId });
+    return await fetchg2j('/api/fetch-messages', { jwtIdToken, conversationId, since });
 }
 
 export async function addBotFeed(jwtIdToken: string, botId: string, feedConfig: FeedConfig) {

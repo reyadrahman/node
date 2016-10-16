@@ -28,14 +28,16 @@ const initAppState = {
             errorMessage: '',
         },
         conversationsState: {
-            hasFetched: false,
+            hasFetched:    false,
             conversations: [],
-            errorMessage: '',
+            errorMessage:  '',
+            lastUpdated:   0
         },
         messagesState: {
-            hasFetched: false,
-            messages: [],
+            hasFetched:   false,
+            messages:     [],
             errorMessage: '',
+            lastUpdated:  0
         },
         updateAttrsAndPassState: {
             successMessage: '',

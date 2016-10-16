@@ -113,7 +113,7 @@ routes.post('/save-user', authMiddleware, (req, res, next) => {
 
 routes.get('/fetch-conversations', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    fetchConversations(identityId, req.query.botId)
+    fetchConversations(identityId, req.query.botId, req.query.since && parseInt(req.query.since))
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -121,7 +121,7 @@ routes.get('/fetch-conversations', authMiddleware, (req, res, next) => {
 
 routes.get('/fetch-messages', authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    fetchMessages(identityId, req.query.conversationId)
+    fetchMessages(identityId, req.query.conversationId, req.query.since && parseInt(req.query.since))
         .then(x => res.send(x))
         .catch(err => next(err));
 
@@ -400,35 +400,50 @@ async function saveUser(
     return user.Attributes;
 }
 
-async function fetchConversations(identityId, botId) {
-    console.log('fetchConversations: identityId=', identityId, 'botId=', botId);
+async function fetchConversations(identityId, botId, since: int = 0) {
+    console.log('fetchConversations: identityId=', identityId, 'botId=', botId, 'since=', since);
     // TODO paging
     // see dynamoAccumulatePages in aws-helper.js
-    const qres = await aws.dynamoQuery({
+
+    let query = {
         TableName:                 CONSTANTS.DB_TABLE_CONVERSATIONS,
         IndexName:                 'byLastInteractiveMessage',
         KeyConditionExpression:    'publisherId = :pid and ' +
-            'begins_with(botId_lastInteractiveMessageTimestamp_messageId, :bid)',
+                                   'begins_with(botId_lastInteractiveMessageTimestamp_messageId, :bid)',
         ExpressionAttributeValues: {
             ':pid': identityId,
             ':bid': botId,
         },
         // Limit: 50,
         ScanIndexForward:          false,
-    });
+    };
+
+    if (since) {
+        query.FilterExpression                    = 'lastMessage.creationTimestamp > :since';
+        query.ExpressionAttributeValues[':since'] = since;
+    }
+
+    const qres = await aws.dynamoQuery(query);
 
     return qres.Items || [];
 }
 
-async function fetchMessages(identityId, conversationId) {
-    console.log('fetchMessages: ', identityId);
-    const qres = await aws.dynamoQuery({
+async function fetchMessages(identityId, conversationId, since: int = 0) {
+    console.log('fetchMessages: ', identityId, 'conversationId:', conversationId, 'since=', since);
+    let query = {
         TableName: CONSTANTS.DB_TABLE_MESSAGES,
         KeyConditionExpression: 'publisherId_conversationId = :pc',
         ExpressionAttributeValues: {
             ':pc': composeKeys(identityId, conversationId),
         },
-    });
+    };
+
+    if (since) {
+        query.KeyConditionExpression                    += ' AND creationTimestamp >= :since';
+        query.ExpressionAttributeValues[':since'] = since;
+    }
+
+    const qres = await aws.dynamoQuery(query);
 
     // console.log('qres: ', qres);
     return qres.Items || [];

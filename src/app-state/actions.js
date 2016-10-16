@@ -274,6 +274,27 @@ export function saveUser(botId, channel, userId, email, role) {
     }
 }
 
+export function updateConversations(botId, since: int = 0) {
+    return async function (dispatch: Function) {
+        try {
+            const session       = await aws.getCurrentSession();
+            const conversations = await bridge.fetchConversations(
+                session.getIdToken().getJwtToken(),
+                botId, since
+            );
+            if (conversations.length) {
+                dispatch({
+                    type:        'currentUser/updateConversationsState',
+                                 conversations,
+                    lastUpdated: moment().format('x')
+                });
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+}
+
 export function fetchConversations(botId) {
     return async function(dispatch: Function) {
         dispatch({ type: 'currentUser/resetConversationsState' });
@@ -284,8 +305,9 @@ export function fetchConversations(botId) {
                 botId
             );
             dispatch({
-                type: 'currentUser/setConversationsState',
-                conversations,
+                type:        'currentUser/setConversationsState',
+                             conversations,
+                lastUpdated: moment().format('x')
             });
         } catch(error) {
             console.error(error);
@@ -293,6 +315,31 @@ export function fetchConversations(botId) {
                 type: 'currentUser/fetchConversationsFailed',
                 errorMessage: 'Could not fetch the bots',
             });
+        }
+    }
+
+}
+
+export function updateMessages(conversationId: string, since: int = 0) {
+    console.log('action: fetchMessages');
+    return async function (dispatch: Function) {
+        try {
+            const session  = await aws.getCurrentSession();
+            const messages = await bridge.fetchMessages(
+                session.getIdToken().getJwtToken(),
+                conversationId, since
+            );
+
+            if (messages.length) {
+                const messagesWithSignedUrls = await signS3UrlsInMesssages(messages);
+                dispatch({
+                    type:        'currentUser/updateMessagesState',
+                    messages:    messagesWithSignedUrls,
+                    lastUpdated: moment().format('x')
+                });
+            }
+        } catch (error) {
+            console.error(error);
         }
     }
 
@@ -312,8 +359,9 @@ export function fetchMessages(conversationId: string) {
             const messagesWithSignedUrls = await signS3UrlsInMesssages(messages);
             console.log('fetchMessages after signing: ', messagesWithSignedUrls);
             dispatch({
-                type: 'currentUser/setMessagesState',
-                messages: messagesWithSignedUrls,
+                type:        'currentUser/setMessagesState',
+                messages:    messagesWithSignedUrls,
+                lastUpdated: moment().format('x')
             });
         } catch(error) {
             console.error(error);

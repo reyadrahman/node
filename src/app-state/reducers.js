@@ -1,6 +1,7 @@
 /* @flow */
 
 import initAppState from './init-app-state.js';
+import _ from 'lodash';
 
 export function lang(state = initAppState.lang, action) {
     if (action.type === 'lang/set') {
@@ -146,9 +147,32 @@ export function currentUser(state = initAppState.currentUser, action) {
         return {
             ...state,
             conversationsState: {
-                hasFetched: true,
+                hasFetched:    true,
                 conversations: action.conversations,
-                errorMessage: '',
+                errorMessage:  '',
+                lastUpdated:   action.lastUpdated
+            }
+        };
+    } else if (action.type === 'currentUser/updateConversationsState') {
+
+        let conversations = _.cloneDeep(state.conversationsState.conversations);
+
+        conversations = conversations.filter(conversation => {
+            return _.findIndex(action.conversations, {
+                    publisherId:          conversation.publisherId,
+                    botId_conversationId: conversation.botId_conversationId
+                }) === -1;
+        });
+
+        conversations = action.conversations.concat(conversations);
+
+        return {
+            ...state,
+            conversationsState: {
+                hasFetched:    true,
+                conversations: conversations,
+                errorMessage:  '',
+                lastUpdated:   action.lastUpdated
             }
         };
     } else if (action.type === 'currentUser/resetMessagesState') {
@@ -169,9 +193,29 @@ export function currentUser(state = initAppState.currentUser, action) {
         return {
             ...state,
             messagesState: {
-                hasFetched: true,
-                messages: action.messages,
+                hasFetched:   true,
+                messages:     action.messages,
                 errorMessage: '',
+                lastUpdated:  action.lastUpdated
+            }
+        };
+    } else if (action.type === 'currentUser/updateMessagesState') {
+
+        let messages = _.cloneDeep(state.messagesState.messages);
+
+        messages = messages.filter(message => {
+            return _.findIndex(action.messages, {id: message.id}) === -1;
+        });
+
+        messages = messages.concat(action.messages);
+
+        return {
+            ...state,
+            messagesState: {
+                hasFetched:   true,
+                messages:     messages,
+                errorMessage: '',
+                lastUpdated:  action.lastUpdated
             }
         };
     } else if (action.type === 'currentUser/updateAttrsAndPassSucceeded') {
