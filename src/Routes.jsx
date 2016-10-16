@@ -7,7 +7,7 @@ import AccountPage from './components/account-page/AccountPage.jsx';
 import BotSettingsPage from './components/bot-setting-page/BotSettingsPage.jsx';
 import UsersPage from './components/users/UsersPage.jsx';
 import UserSavePage from './components/users/UserSavePage.jsx';
-import MessagesPage from './components/messages-page/MessagesPage.jsx';
+import TranscriptsPage from './components/transcripts-page/TranscriptsPage';
 import AddBotPage from './components/add-bot-page/AddBotPage.jsx';
 import FeedsPage from './components/feeds-page/FeedsPage.jsx';
 import PollsPage from './components/polls-page/PollsPage.jsx';
@@ -31,7 +31,7 @@ const Routes = (
             <Route path="/users" component={UsersPage} />
             <Route path="/users/add" component={UserSavePage}/>
             <Route path="/users/edit/:botId_channel_userId" component={UserSavePage}/>
-            <Route path="/messages(/:selectedBotId)(/:conversationId)" component={MessagesPage} />
+            <Route path="/transcripts(/:selectedBotId)(/:conversationId)" component={TranscriptsPage} />
             <Route path="/feeds" component={FeedsPage} />
             <Route path="/polls" component={PollsPage}/>
             <Route path="/add-bot" component={AddBotPage} />

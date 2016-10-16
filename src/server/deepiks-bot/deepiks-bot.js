@@ -487,7 +487,7 @@ export function _respondFnPreprocessorActionsMiddleware(
             }
 
             const message = `See the full conversation at:\n\n${CONSTANTS.OWN_BASE_URL}` +
-                            `/messages/${botParams.botId}/${conversationId}`;
+                            `/transcripts/${botParams.botId}/${conversationId}`;
 
             const emailParams = {
                 Destination: {

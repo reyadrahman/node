@@ -10,7 +10,7 @@ import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
 import _ from 'lodash';
 
-let MessagesPage = React.createClass({
+let TranscriptsPage = React.createClass({
     getInitialState() {
         return {
         };
@@ -22,7 +22,7 @@ let MessagesPage = React.createClass({
     // },
 
     conversationSelected(conversationId) {
-        this.props.router.push(`/messages/${this.props.currentUser.selectedBotId}/${conversationId}`)
+        this.props.router.push(`/transcripts/${this.props.currentUser.selectedBotId}/${conversationId}`)
     },
 
     componentDidMount() {
@@ -51,7 +51,7 @@ let MessagesPage = React.createClass({
         }
 
         if (currentUser.selectedBotId && params.selectedBotId != currentUser.selectedBotId) {
-            this.props.router.push(`/messages/${currentUser.selectedBotId}`);
+            this.props.router.push(`/transcripts/${currentUser.selectedBotId}`);
         }
 
         if (currentUser.selectedBotId != oldProps.currentUser.selectedBotId) {
@@ -64,7 +64,7 @@ let MessagesPage = React.createClass({
 
         if (currentUser.attributes.sub !== oldProps.currentUser.attributes.sub) {
             fetchConversations(currentUser.selectedBotId);
-            console.log('MessagesPage componentDidUpdate params.conversationId', params.conversationId);
+            console.log('TranscriptsPage componentDidUpdate params.conversationId', params.conversationId);
             if (params.conversationId) {
                 fetchMessages(params.conversationId);
             }
@@ -73,7 +73,7 @@ let MessagesPage = React.createClass({
 
     render() {
         const { className, params, currentUser, i18n,
-                i18n: { strings: { messagesPage: strings } } } = this.props;
+                i18n: { strings: { TranscriptsPage: strings } } } = this.props;
 
         if (!currentUser.signedIn) {
             return null;
@@ -99,7 +99,7 @@ let MessagesPage = React.createClass({
     }
 });
 
-MessagesPage = connect(
+TranscriptsPage = connect(
     state => ({
         currentUser: state.currentUser,
     }),
@@ -108,9 +108,9 @@ MessagesPage = connect(
         fetchConversations: actions.fetchConversations,
         fetchMessages:      actions.fetchMessages,
     }
-)(MessagesPage);
+)(TranscriptsPage);
 
-MessagesPage = withRouter(MessagesPage);
+TranscriptsPage = withRouter(TranscriptsPage);
 
 
-export default MessagesPage;
+export default TranscriptsPage;

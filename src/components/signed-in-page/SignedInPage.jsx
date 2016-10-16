@@ -88,10 +88,10 @@ let SignedInPage = React.createClass({
                 value: 'users',
             },
             {
-                string: sideMenuStrings.messages,
-                to: '/messages',
+                string: sideMenuStrings.transcripts,
+                to: '/transcripts',
                 glyph: 'comment',
-                value: 'messages',
+                value: 'transcripts',
             },
             {
                 string: sideMenuStrings.tracking,

@@ -16,7 +16,7 @@ export default {
         admin: 'Admin',
         users: 'Users',
         polls: 'Polls',
-        messages: 'Messages',
+        transcripts: 'Transcripts',
         feeds: 'Feeds',
         notifications: 'Notifications',
         features:'Features',

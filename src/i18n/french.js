@@ -16,7 +16,7 @@ export default {
         admin: 'FR Admin',
         users: 'FR Users',
         polls: 'FR Polls',
-        messages: 'FR Messages',
+        transcripts: 'FR Transcripts',
         feeds: 'FR Feeds',
         notifications: 'FR Notifications',
         features:'Fonctionalités',

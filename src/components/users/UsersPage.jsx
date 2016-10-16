@@ -129,7 +129,7 @@ let UsersPage = React.createClass({
                             <td>
                                 {lastConversationId
                                     ?
-                                    <Link to={`/messages/${currentUser.selectedBotId}/${lastConversationId}`}>
+                                    <Link to={`/transcripts/${currentUser.selectedBotId}/${lastConversationId}`}>
                                         [{ simpleTimeFormat(user.userLastMessage.creationTimestamp) }]
                                     &nbsp;<b>{user.userLastMessage.senderName}:</b>&nbsp;
                                         {text}
