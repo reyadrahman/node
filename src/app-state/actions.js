@@ -174,6 +174,7 @@ export function updateUserAttrsAndPass(attrs: Object,
 
 export function sendEmail(data) {
     return async function(dispatch: Function) {
+        dispatch({ type: 'contacts/sending' });
         try {
             await bridge.sendEmail(data);
             dispatch({ type:'contacts/succeded', successMessage: 'Message was sent, thanks' });

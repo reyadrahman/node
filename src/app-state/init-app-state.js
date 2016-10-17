@@ -49,6 +49,7 @@ const initAppState = {
         modalComponent: null,
     },
     contacts: {
+        sendingInProgress: false,
         errorMessage: '',
         successMessage: '',
     },

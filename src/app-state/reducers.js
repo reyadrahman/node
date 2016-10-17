@@ -261,13 +261,20 @@ export function ui(state = initAppState.ui, action) {
 export function contacts(state = initAppState.contacts, action) {
     if (action.type === 'contacts/reset') {
         return initAppState;
-    } else if (action.type === 'contacts/succeeded') {
+    } else if (action.type === 'contacts/sending') {
         return {
+            ...state,
+            sendingInProgress: true,
+        }
+    } else if (action.type === 'contacts/succeded') {
+        return {
+            sendingInProgress: false,
             errorMessage: '',
             successMessage: action.successMessage,
         };
     } else if (action.type === 'contacts/failed') {
         return {
+            sendingInProgress: false,
             errorMessage: action.errorMessage,
             successMessage: '',
         };
