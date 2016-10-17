@@ -11,6 +11,8 @@ import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Glyphicon,
          Carousel, FormGroup, ControlLabel, FormControl,
          InputGroup, Dropdown } from 'react-bootstrap';
 import Lightbox from 'react-images';
+import { Link as ScrollLink } from 'react-scroll';
+
 
 
 
@@ -42,6 +44,8 @@ const screenshots = [
     require('../../resources/screenshots/7.jpg'),
     require('../../resources/screenshots/8.jpg'),
 ];
+
+const Link = ScrollLink;
 
 
 let Home = React.createClass({
@@ -208,7 +212,7 @@ let Home = React.createClass({
                                 bsStyle="success"
                                 header={'Personnal'}
                                 footer={
-                                    <Button bsStyle="primary" bsSize="large" block>Test</Button>
+                                    <Link href="#" to="contact" spy={true} smooth={true} duration={500}><Button bsStyle="primary" bsSize="large" block>Contact</Button></Link>
                                 }
                             >
                                 <div className="price">
@@ -245,11 +249,11 @@ let Home = React.createClass({
                                 bsStyle="success"
                                 header={'Business'}
                                 footer={
-                                    <Button bsStyle="primary" bsSize="large" block>Contact</Button>
+                                    <Link href="#" to="contact" spy={true} smooth={true} duration={500}><Button bsStyle="primary" bsSize="large" block>Contact</Button></Link>
                                 }
                             >
                                 <div className="price">
-                                    $99<span className="subscript">/mo</span>
+                                    149€<span className="subscript">/m</span>
                                 </div>
                                 <ul className="feature-list">
                                   <li>
@@ -285,11 +289,11 @@ let Home = React.createClass({
                                     'Reseller'
                                 ]}
                                 footer={
-                                    <Button bsStyle="primary" bsSize="large" block>Contact</Button>
+                                    <Link href="#" to="contact" spy={true} smooth={true} duration={500}><Button bsStyle="primary" bsSize="large" block>Contact</Button></Link>
                                 }
                             >
                                 <div className="price">
-                                    $350<span className="subscript">/mo</span>
+                                    499€<span className="subscript">/m</span>
                                 </div>
                                 <ul className="feature-list">
                                  <li>
@@ -322,7 +326,7 @@ let Home = React.createClass({
                                 bsStyle="danger"
                                 header={'Enterprise'}
                                 footer={
-                                    <Button bsStyle="primary" bsSize="large" block>Contact</Button>
+                                    <Link href="#" to="contact" spy={true} smooth={true} duration={500}><Button bsStyle="primary" bsSize="large" block>Contact</Button></Link>
                                 }
                             >
                                 <div className="price">{ strings.price_4}</div>

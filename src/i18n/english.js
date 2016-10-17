@@ -1,6 +1,6 @@
 export default {
     app: {
-        pageTitle: 'Deepiks',
+        pageTitle: 'Deepiks: advanced chatbot platform',
     },
     header: {
     },
@@ -32,8 +32,8 @@ export default {
     },
     home: {
     	hello: 'Hello.',
-    	baseline: 'We are a smart chatbot platform.',
-    	services_h: 'Premium Bot Platform',
+    	baseline: 'We are an advanced chatbot platform.',
+    	services_h: 'Advanced Bot Platform',
         services_t : 'Our platform provides a wide range of features that are simple and ready to use',
     	universal_h: 'Universal',
 		universal_t : 'Deploy your bot to all major channels: Messenger, Skype, Slack, Telegram and more ...',
