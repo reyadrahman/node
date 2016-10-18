@@ -1,15 +1,15 @@
 export default {
     userVerification: {
-        userNotAuthorized: `FR I'm afraid you are not authorized. Please contact the publisher.`,
-        invalidEmail: `FR Sorry, this email address is invalid`,
-        verificationTokenEmailBodyFn: token => `FR Here's your verification code: ${token}`,
-        verificationTokenEmailSubjectFn: botName => `FR ${botName} - Verification Code`,
-        verificationTokenSentFn: email => `FR A new verification token has been sent to your inbox at ${email}`,
-        enterEmail: `FR Please enter your email address`,
-        enterVerificationToken: `FR Please enter your verification code`,
-        successfullyVerified: `FR Thanks, your email address has been verified`,
+        userNotAuthorized: `Désolé, vous n'êtes pas autorisé. Veuillez contacter l'administrateur de ce bot`,
+        invalidEmail: `Désolé, cette adresse mail n'est pas valide`,
+        verificationTokenEmailBodyFn: token => `Voici votre code de vérification: ${token}`,
+        verificationTokenEmailSubjectFn: botName => `${botName} - Code de vérification`,
+        verificationTokenSentFn: email => `Un nouveau code de vérification a été envoyé à ${email}`,
+        enterEmail: `Veullez entrer votre mail`,
+        enterVerificationToken: `Veuillez entrer votre code de vérification`,
+        successfullyVerified: `Merci, vous êtes autorisé à dialoguer avec ce bot`,
     },
     errors: {
-        general: 'FR Sorry, there seems to be a problem...',
+        general: 'Désolé, il semble qu'il y ait un problème...',
     },
 };
