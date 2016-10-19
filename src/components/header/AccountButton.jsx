@@ -30,7 +30,7 @@ let AccountButton = React.createClass({
     },
 
     onToggle(open) {
-        console.log('onToggle: ', open);
+
     },
 
     render() {

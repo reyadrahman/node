@@ -18,13 +18,11 @@ let Header = React.createClass({
     },
 
     onMenuToggleEnter() {
-        console.log('onMenuToggleEnter');
         clearTimeout(this.menuToggleTimeout)
         this.setState({ isMenuHovered: true });
     },
 
     onMenuToggleLeave() {
-        console.log('onMenuToggleLeave');
         this.menuToggleTimeout = setTimeout(() => {
             this.setState({
                 isMenuHovered: false,
@@ -33,13 +31,11 @@ let Header = React.createClass({
     },
 
     onMenuEnter() {
-        console.log('onMenuEnter');
         clearTimeout(this.menuHoverTimeout)
         this.setState({ isMenuOpen: true });
     },
 
     onMenuLeave() {
-        console.log('onMenuLeave');
         this.menuHoverTimeout = setTimeout(() => {
             this.setState({
                 isMenuOpen: false,

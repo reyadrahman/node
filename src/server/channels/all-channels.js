@@ -10,6 +10,8 @@ import { CONSTANTS } from '../server-utils.js';
 import { toStr, decomposeKeys } from '../../misc/utils.js';
 import { coldSend as deepiksColdSend } from '../deepiks-bot/deepiks-bot.js';
 import _ from 'lodash';
+const reportDebug = require('debug')('deepiks:all-channels');
+const reportError = require('debug')('deepiks:all-channels:error');
 
 export const webhooks = {
     messenger: messenger.webhook,
@@ -43,7 +45,7 @@ export async function send(botParams: BotParams, conversation: Conversation,
 }
 
 export async function sendToMany(botParams: BotParams, message: ResponseMessage, categories?: string[]) {
-    console.log('sendAll: botParams: ', botParams, ', message: ', message, ', categories: ', categories);
+    reportDebug('sendAll: botParams: ', botParams, ', message: ', message, ', categories: ', categories);
     let qItems = await aws.dynamoAccumulatePages(
         startKey => aws.dynamoQuery({
             TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
@@ -59,7 +61,7 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
     );
 
     if (qItems.length === 0) {
-        console.log('sendAll: no conversation found')
+        reportDebug('sendAll: no conversation found')
         return;
     }
 
@@ -71,11 +73,11 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
         );
     }
 
-    console.log('sendAll: sending to (showing first 10): ', toStr(qItems.slice(0, 10)));
+    reportDebug('sendAll: sending to (showing first 10): ', toStr(qItems.slice(0, 10)));
 
     await waitForAll(qItems.map(
         x => send(botParams, x, message)
     ));
 
-    console.log('sendAll: sent all messages');
+    reportDebug('sendAll: sent all messages');
 }

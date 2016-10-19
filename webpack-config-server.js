@@ -23,6 +23,7 @@ const VALID_ENV_VARS = [
     { name: 'CALL_SERVER_LAMBDA_SECRET',      required: true  },
     { name: 'CDN',                            required: false },
     { name: 'PORT',                           required: false },
+    { name: 'DEBUG',                          required: false },
 ];
 
 const INCLUDE_MODULES = ['normalize.css'];
@@ -54,13 +55,12 @@ const defaultEnv = {
     NODE_ENV: 'production',
     PLATFORM: 'node',
     PORT: 3000,
-    DEBUG: 'app:*',
+    DEBUG: 'deepiks:*',
 };
 
 
 const publicPathAndUrlEnv = createPublicPathAndUrl(process.env.CDN, process.env.TIMESTAMP);
 _.defaults(process.env, defaultEnv, publicPathAndUrlEnv);
-console.log('process.env: ', _.pick(process.env, _.map(VALID_ENV_VARS, 'name')));
 const missingEnvVars = VALID_ENV_VARS.filter(x => x.required && !process.env[x.name]);
 if (!_.isEmpty(missingEnvVars)) {
     console.error('\n\nThe following environment variables are missing:');

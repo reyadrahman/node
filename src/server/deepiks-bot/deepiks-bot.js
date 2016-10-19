@@ -7,12 +7,14 @@ import { callbackToPromise, toStr, destructureS3Url, timeout,
 import { request, CONSTANTS } from '../server-utils.js';
 import aiRoute from './ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
-              ChannelData, Conversation, RespondFn, UserPrefs, User } from '../../misc/types.js';
+              ChannelData, Conversation, RespondFn, User } from '../../misc/types.js';
 import { translations as tr, languages as langs } from '../i18n/translations.js';
 import URL from 'url';
 import gm from 'gm';
 import _ from 'lodash';
 import uuid from 'node-uuid';
+const reportDebug = require('debug')('deepiks:deepiks-bot');
+const reportError = require('debug')('deepiks:deepiks-bot:error');
 
 type ProcessedAttachment = {
     urlP: Promise<string>,
@@ -20,12 +22,12 @@ type ProcessedAttachment = {
     format: string,
 };
 
-export function _textToResponseMessage(text: string): ResponseMessage {
+function textToResponseMessage(text: string): ResponseMessage {
     return { text, creationTimestamp: Date.now() };
 }
 
-export async function _isMessageInDB(message: DBMessage) {
-    console.log('_isMessageInDB');
+async function isMessageInDB(message: DBMessage) {
+    reportDebug('isMessageInDB');
     const qres = await aws.dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_MESSAGES,
         KeyConditionExpression: 'publisherId_conversationId = :pc and creationTimestamp = :t',
@@ -37,14 +39,14 @@ export async function _isMessageInDB(message: DBMessage) {
     return qres.Count > 0;
 }
 
-export async function _verifyUser(
+async function verifyUser(
     botParams: BotParams, message: DBMessage, respondFn: RespondFn, user: ?User
 ) {
     /*
 
      Possible situations:
      1. Existing user, verified but not allowed
-     2. Existing user in a newly private bot
+     2. Existing user in a new private bot
      3. Non-existing user in a private bot
      4. real user with updated email
      5. fake user with updated email
@@ -59,11 +61,11 @@ export async function _verifyUser(
 
      */
 
-    console.log('_verifyUser user: ', user);
+    reportDebug('verifyUser user: ', user);
 
     const strings = (tr[botParams.defaultLanguage] || tr[langs[0]]).userVerification;
     if (user && user.isVerified && user.userRole === 'none') {
-        return await respondFn(_textToResponseMessage(strings.userNotAuthorized));
+        return await respondFn(textToResponseMessage(strings.userNotAuthorized));
     }
 
 
@@ -80,12 +82,12 @@ export async function _verifyUser(
             publisherId, botId, channel, email
         );
 
-        console.log(`_verifyUser email: ${email}, userWithEmail: `, userWithEmail);
+        reportDebug(`verifyUser email: ${email}, userWithEmail: `, userWithEmail);
         // validate email
         if (!userWithEmail || !userWithEmail.isFake &&
             user && user.botId_channel_userId !== userWithEmail.botId_channel_userId)
         {
-            return await respondFn(_textToResponseMessage(strings.invalidEmail));
+            return await respondFn(textToResponseMessage(strings.invalidEmail));
         }
 
         // given: userWithEmail === user || userWithEmail.isFake
@@ -118,7 +120,7 @@ export async function _verifyUser(
 
         // update userWithEmail.unverifiedVerificationToken = new token
         const newVerificationToken = shortLowerCaseRandomId();
-        console.log('_verifyUser newVerificationToken: ', newVerificationToken);
+        reportDebug('verifyUser newVerificationToken: ', newVerificationToken);
         await aws.dynamoUpdate({
             TableName: CONSTANTS.DB_TABLE_USERS,
             Key: {
@@ -150,10 +152,10 @@ export async function _verifyUser(
             },
             Source: CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
         };
-        console.log(' sendEmail: ', emailParams);
+        reportDebug(' sendEmail: ', toStr(emailParams));
         await aws.sesSendEmail(emailParams);
 
-        return await respondFn(_textToResponseMessage(strings.verificationTokenSentFn(email)));
+        return await respondFn(textToResponseMessage(strings.verificationTokenSentFn(email)));
     }
 
     // got token
@@ -161,7 +163,7 @@ export async function _verifyUser(
 
     // make sure we are expecting a verification token
     if (!user || (!user.unverifiedVerificationToken && !user.associatedFakeUserId)) {
-        return await respondFn(_textToResponseMessage(strings.enterEmail));
+        return await respondFn(textToResponseMessage(strings.enterEmail));
     }
 
     // the unverifiedVerificationToken is either in user or the
@@ -173,14 +175,14 @@ export async function _verifyUser(
         );
         if (!userWithUVT) {
             throw new Error(` invalid associatedFakeUserId: ` +
-                            `${user.associatedFakeUserId}`);
+                            `${user.associatedFakeUserId || ''}`);
         }
     }
-    console.log('_verifyUser userWithUVT: ', userWithUVT);
+    reportDebug('verifyUser userWithUVT: ', userWithUVT);
 
     // check verification token
     if (token !== userWithUVT.unverifiedVerificationToken) {
-        return await respondFn(_textToResponseMessage(strings.enterVerificationToken));
+        return await respondFn(textToResponseMessage(strings.enterVerificationToken));
     }
 
     // update user
@@ -219,141 +221,19 @@ export async function _verifyUser(
         });
     }
 
-    return await respondFn(_textToResponseMessage(strings.successfullyVerified));
+    return await respondFn(textToResponseMessage(strings.successfullyVerified));
 
 
-
-
-
-
-
-    // const emailMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
-    // if (emailMatch) {
-    //     // generate a new token, store it in DB and send it to user via email
-    //
-    //     const email = emailMatch[0];
-    //     console.log(' extracted email: ', email);
-    //     user = await aws.getUserByEmail(
-    //         botParams.publisherId, botParams.botId, message.channel, email
-    //     );
-    //     if (!user || user.userRole === 'none') {
-    //         return await respondFn(_textToResponseMessage(strings.emailNotAuthorized));
-    //     }
-    //     if (user.authorized) {
-    //         return await respondFn(_textToResponseMessage(strings.emailAlreadyAuthorized));
-    //     }
-    //     const newAuthToken = shortLowerCaseRandomId();
-    //     await aws.dynamoUpdate({
-    //         TableName: CONSTANTS.DB_TABLE_USERS,
-    //         Key: {
-    //             publisherId: user.publisherId,
-    //             botId_channel_userId: user.botId_channel_userId,
-    //         },
-    //         UpdateExpression:
-    //             'set botId_channel_authorizationToken = :bca' +
-    //             ', prefs.authorizationToken = :a',
-    //         ExpressionAttributeValues: {
-    //             ':bca': composeKeys(botParams.botId, message.channel, newAuthToken),
-    //             ':a': newAuthToken,
-    //         }
-    //     });
-    //
-    //     const emailParams = {
-    //         Destination: {
-    //             ToAddresses: [ email ],
-    //         },
-    //         Message: {
-    //             Body: {
-    //                 Text: {
-    //                     Data: strings.authTokenEmailBodyFn(newAuthToken),
-    //                     Charset: 'UTF-8',
-    //                 },
-    //             },
-    //             Subject: {
-    //                 Data: strings.authTokenEmailSubjectFn(botParams.botName),
-    //                 Charset: 'UTF-8'
-    //             },
-    //         },
-    //         Source: CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
-    //     };
-    //
-    //     console.log('erifyUserverifyUser sendEmail: ', emailParams);
-    //     await aws.sesSendEmail(emailParams);
-    //
-    //     return await respondFn(_textToResponseMessage(strings.authorizationSentFn(email)));
-    // }
-    //
-    // // the userId that is already in user may be a temporary placeholder
-    // // in which case it must be replaced with message.senderId and the old
-    //
-    // const token = text;
-    // const creatingNewUser = !user;
-    // if (creatingNewUser) {
-    //     user = await aws.getUserByAuthorizationToken(
-    //         botParams.publisherId, botParams.botId, message.channel, token
-    //     );
-    // }
-    //
-    // if (!user || decomposeKeys(user.botId_channel_authorizationToken || '')[2] !== token) {
-    //     return await respondFn(_textToResponseMessage(strings.enterAuthorizationTokenOrEmail));
-    // }
-    //
-    // const promises = [];
-    //
-    // // promises.push(aws.dynamoPut({
-    // //     TableName: CONSTANTS.DB_TABLE_USERS,
-    // //     Item: {
-    // //         ...user,
-    // //         botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
-    // //         prefs: { authorizationToken: token },
-    // //         userLastMessage: message,
-    // //         authorized: true,
-    // //     }
-    // // }));
-    // promises.push(aws.dynamoUpdate({
-    //     TableName: CONSTANTS.DB_TABLE_USERS,
-    //     Key: {
-    //         publisherId: user.publisherId,
-    //         botId_channel_userId: composeKeys(botParams.botId, message.channel, message.senderId),
-    //     },
-    //     UpdateExpression: 'set authorized = :a' +
-    //                       ', userLastMessage = :ulm' +
-    //                       ', botId_channel_authorizationToken = :bca' +
-    //                       ', botId_channel_email = :bce' +
-    //                       ', userRole = :ur' +
-    //                       ', prefs = :p',
-    //     ExpressionAttributeValues: {
-    //         ':a': true,
-    //         ':ulm': message,
-    //         ':bca': user.botId_channel_authorizationToken,
-    //         ':bce': user.botId_channel_email,
-    //         ':ur': user.userRole,
-    //         ':p': { ...user.prefs, authorizationToken: token },
-    //     }
-    // }));
-    //
-    // if (creatingNewUser) {
-    //     promises.push(aws.dynamoDelete({
-    //         TableName: CONSTANTS.DB_TABLE_USERS,
-    //         Key: {
-    //             publisherId: user.publisherId,
-    //             botId_channel_userId: user.botId_channel_userId,
-    //         }
-    //     }));
-    // }
-    //
-    // await Promise.all(promises);
-    // await respondFn(_textToResponseMessage(strings.successfullyAuthorized));
 }
 
-export function _createDBMessageFromResponseMessage(
+function createDBMessageFromResponseMessage(
     m: ResponseMessage, botParams: BotParams,
     conversationId: string, channel: string
 ) : DBMessage
 {
     const ct = m.creationTimestamp;
     if (!ct) {
-        throw new Error(`_createDBMessageFromResponseMessage message is ` +
+        throw new Error(`createDBMessageFromResponseMessage message is ` +
                         `missing creationTimestamp: ${toStr(m)}`)
     }
     return {
@@ -375,45 +255,36 @@ export function _createDBMessageFromResponseMessage(
     }
 }
 
-export async function _logResponseMessage(ms: ResponseMessage | Array<ResponseMessage>,
+async function logResponseMessage(ms: ResponseMessage | Array<ResponseMessage>,
                                           botParams: BotParams, conversationId: string,
                                           channel: string)
 {
     const messages = Array.isArray(ms)
         ? ms : [ms];
 
-    await _logMessage(messages.map(
-        x => _createDBMessageFromResponseMessage(x, botParams, conversationId, channel)
+    await logMessage(messages.map(
+        x => createDBMessageFromResponseMessage(x, botParams, conversationId, channel)
     ));
 }
 
-export async function _logMessage(ms: DBMessage | Array<DBMessage>) {
+async function logMessage(ms: DBMessage | Array<DBMessage>) {
     const messages = Array.isArray(ms)
         ? ms : [ms];
-    console.log('_logMessage: ', toStr(messages));
-    if (messages.length === 0) return;
+    reportDebug('logMessage: ', toStr(messages));
 
-    // dynamodb batch write limit is 25
-    const chunks = _.chunk(messages, 25);
-    for (let i=0; i<chunks.length; i++) {
-        const chunk = chunks[i];
-        await aws.dynamoBatchWrite({
-            RequestItems: {
-                [CONSTANTS.DB_TABLE_MESSAGES]: chunk.map(x => {
-                    return {
-                        PutRequest: {
-                            Item: aws.dynamoCleanUpObj(x),
-                        },
-                    };
-                })
-            }
-        });
-    }
-    console.log('_logMessage end');
+    await aws.dynamoBatchWriteHelper(
+        CONSTANTS.DB_TABLE_MESSAGES,
+        messages.map(x => ({
+            PutRequest: {
+                Item: aws.dynamoCleanUpObj(x),
+            },
+        }))
+    );
 
+    reportDebug('logMessage end');
 }
 
-export function _respondFnPreprocessorActionsMiddleware(
+function respondFnPreprocessorActionsMiddleware(
     next: RespondFn,
     botParams: BotParams,
     conversationId: string,
@@ -427,7 +298,7 @@ export function _respondFnPreprocessorActionsMiddleware(
             await next(response);
             return;
         }
-        console.log('_respondFnPreprocessorActionsMiddleware self: ', pas);
+        reportDebug('respondFnPreprocessorActionsMiddleware self: ', pas);
 
         const delayAction = pas.find(x => x.action === 'delay' && Number(x.args[0]));
         const pollAction = pas.find(x => x.action === 'poll' && x.args[0] && x.args[1]);
@@ -436,14 +307,14 @@ export function _respondFnPreprocessorActionsMiddleware(
 
         if (delayAction && pollAction) {
             const m = `Cannot use 'delay' and 'poll' preprocessor actions together`;
-            console.error(m);
+            reportError(m);
             await next({ text: m, creationTimestamp: Date.now() });
             return;
         }
 
         if (emailAction && asUserAction) {
             const m = `Cannot user 'email' and 'as user' preprocessor actions together`;
-            console.error(m);
+            reportError(m);
             await next({ text: m, creationTimestamp: Date.now() });
             return;
         }
@@ -483,7 +354,7 @@ export function _respondFnPreprocessorActionsMiddleware(
         if (emailAction) {
             let [ email, subject = 'Conversation' ] = emailAction.args;
             if (!email) {
-                console.log('emailAction invalid email: ', email);
+                reportDebug('emailAction invalid email: ', email);
             }
 
             const message = `See the full conversation at:\n\n${CONSTANTS.OWN_BASE_URL}` +
@@ -510,7 +381,7 @@ export function _respondFnPreprocessorActionsMiddleware(
                 Source: CONSTANTS.EMAIL_ACTION_FROM_ADDRESS,
             };
 
-            console.log('emailAction emailParams: ', emailParams);
+            reportDebug('emailAction emailParams: ', emailParams);
             await aws.sesSendEmail(emailParams);
 
             const newResponse = {
@@ -521,8 +392,8 @@ export function _respondFnPreprocessorActionsMiddleware(
         }
 
         if (asUserAction) {
-            console.log('asUserAction: ', response.text);
-            const message = _createDBMessageFromResponseMessage({
+            reportDebug('asUserAction: ', response.text);
+            const message = createDBMessageFromResponseMessage({
                 text: response.text,
                 creationTimestamp: Date.now(),
             }, botParams, conversationId, channel);
@@ -535,21 +406,21 @@ export function _respondFnPreprocessorActionsMiddleware(
     };
 }
 
-export function _respondFnCollectorMiddleware(next: RespondFn, toCollection: ResponseMessage[]): RespondFn {
+function respondFnCollectorMiddleware(next: RespondFn, toCollection: ResponseMessage[]): RespondFn {
     return response => {
         toCollection.push(response);
         return next(response);
     }
 }
 
-export function _respondFnSignS3UrlsMiddleware(next: RespondFn): RespondFn {
+function respondFnSignS3UrlsMiddleware(next: RespondFn): RespondFn {
     return async function(response) {
-        const newResponse = await _signS3Urls(response)
+        const newResponse = await signS3Urls(response)
         await next(newResponse);
     }
 }
 
-export async function _signS3Urls(response: ResponseMessage): Promise<ResponseMessage> {
+async function signS3Urls(response: ResponseMessage): Promise<ResponseMessage> {
     const clone = { ...response };
     let cardsP;
     if (clone.cards) {
@@ -577,21 +448,21 @@ export async function _signS3Urls(response: ResponseMessage): Promise<ResponseMe
     return clone;
 }
 
-export async function _uploadToS3(key: string, buffer: Buffer) {
+async function uploadToS3(key: string, buffer: Buffer) {
     const startTime = Date.now();
-    console.log('_uploadToS3: key: ', key);
+    reportDebug('uploadToS3: key: ', key);
 
     const res = await aws.s3Upload({
         Bucket: CONSTANTS.S3_BUCKET_NAME,
         Key: key,
         Body: buffer,
     });
-    console.log('PROFILING: s3 time upload: %s ms', Date.now() - startTime);
-    console.log(`Location: ${res.Location}`)
+    reportDebug('PROFILING: s3 time upload: %s ms', Date.now() - startTime);
+    reportDebug(`Location: ${res.Location}`)
     return res.Location;
 }
 
-async function _getFileFormat(buffer: Buffer): Promise<string> {
+async function getFileFormat(buffer: Buffer): Promise<string> {
     const gmImg = gm(buffer);
     const formatFn = callbackToPromise(gmImg.format, gmImg);
     try {
@@ -600,10 +471,10 @@ async function _getFileFormat(buffer: Buffer): Promise<string> {
     return '';
 }
 
-export async function _processAttachments(message: WebhookMessage):
+async function processAttachments(message: WebhookMessage):
     Promise<?Array<ProcessedAttachment>>
 {
-    console.log('_processAttachments');
+    reportDebug('processAttachments');
     const { cards, fetchCardImages } = message;
 
     if (!cards && !fetchCardImages) {
@@ -619,14 +490,14 @@ export async function _processAttachments(message: WebhookMessage):
                 encoding: null,
             })
         ));
-        console.log('PROFILING: raw download time: %s ms', Date.now() - startTime);
+        reportDebug('PROFILING: raw download time: %s ms', Date.now() - startTime);
         downloads = rawDownloads.map(x => x.body);
     } else if (fetchCardImages) {
         const startTime = Date.now();
         downloads = await Promise.all(fetchCardImages.map(f => f()));
-        console.log('PROFILING: raw download time: %s ms', Date.now() - startTime);
+        reportDebug('PROFILING: raw download time: %s ms', Date.now() - startTime);
     }
-    const formats = await Promise.all(downloads.map(_getFileFormat));
+    const formats = await Promise.all(downloads.map(getFileFormat));
 
     const s3LocationAndFormatPs = _.zip(downloads, formats).map(([buffer, format], i) => {
         const [pid] = decomposeKeys(message.publisherId_conversationId);
@@ -636,7 +507,7 @@ export async function _processAttachments(message: WebhookMessage):
         const t = message.creationTimestamp;
         const extension = format ? '.' + format : '';
         return {
-            urlP: _uploadToS3(`${pid}/${sid}/${t}_${i}${extension}`, buffer),
+            urlP: uploadToS3(`${pid}/${sid}/${t}_${i}${extension}`, buffer),
             format,
         };
     });
@@ -648,12 +519,12 @@ export async function _processAttachments(message: WebhookMessage):
     }));
 }
 
-export function _webhookMessageToDBMessage(message: WebhookMessage): DBMessage {
+function webhookMessageToDBMessage(message: WebhookMessage): DBMessage {
     const { fetchCardImages, ...rest } = message;
     return rest;
 }
 
-export async function _insertAttachmentsIntoMessage(
+async function insertAttachmentsIntoMessage(
     message: DBMessage,
     attachments: Array<ProcessedAttachment>
 ): Promise<DBMessage> {
@@ -669,13 +540,13 @@ export async function _insertAttachmentsIntoMessage(
 
 // if the message is a poll answer, it'll store the answer for the poll in DB
 // and return the same message with its `poll` field set appropriately
-export async function _pollMiddleware(
+async function pollMiddleware(
     message: DBMessage,
     botParams: BotParams,
     respondFn: RespondFn
 ) : Promise<DBMessage>
 {
-    const lastMessage = await _getLastMessageInConversation(
+    const lastMessage = await getLastMessageInConversation(
         message.publisherId_conversationId,
         message.creationTimestamp);
     if (!lastMessage || !lastMessage.poll || !lastMessage.poll.isQuestion) {
@@ -684,16 +555,16 @@ export async function _pollMiddleware(
 
     const { pollId, questionId } = lastMessage.poll;
 
-    console.log(`_pollMiddleware pollId: ${pollId}, ` +
+    reportDebug(`pollMiddleware pollId: ${pollId}, ` +
                 `questionId: ${questionId}, ` +
                 `answer: ${message.text || ''}`);
 
     const pollQuestion = await aws.getPollQuestion(botParams.publisherId, botParams.botId, pollId, questionId);
-    console.log('_pollMiddleware pollQuestion: ', pollQuestion);
+    reportDebug('pollMiddleware pollQuestion: ', pollQuestion);
     const pollAnswer = (message.text || '').trim().substr(0, 100).toLowerCase();
 
     // if (!pollQuestion.validAnswers.find(x => String(x).toLowerCase() === pollAnswer)) {
-    //     console.log('_pollMiddleware got ', pollAnswer, ', but expected one of ', pollQuestion.validAnswers);
+    //     reportDebug('pollMiddleware got ', pollAnswer, ', but expected one of ', pollQuestion.validAnswers);
     //     respondFn({ text: 'Invalid answer', creationTimestamp: Date.now() });
     //     return message;
     // }
@@ -739,7 +610,7 @@ export async function _pollMiddleware(
     };
 }
 
-export async function _getLastMessageInConversation(
+async function getLastMessageInConversation(
     publisherId_conversationId: string,
     before: number
 ) : Promise<?DBMessage>
@@ -759,11 +630,11 @@ export async function _getLastMessageInConversation(
 /**
  * updates the conversation table, creating a new item if necessary
  */
-export async function _updateConversationTable(message: DBMessage,
-                                               botParams: BotParams,
-                                               channelData?: ChannelData)
+async function updateConversationTable(message: DBMessage,
+                                       botParams: BotParams,
+                                       channelData?: ChannelData)
 {
-    console.log('_updateConversationTable');
+    reportDebug('updateConversationTable');
     const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
     const sets = [
@@ -812,11 +683,13 @@ export async function _updateConversationTable(message: DBMessage,
  * updates the users table, creating a new item if necessary.
  * The `message` must be a message from user, not from bot.
  */
-export async function _updateUsersTable(
+async function updateUsersTable(
     message: DBMessage, botParams: BotParams,
 ) {
-    console.log('_updateUsersTable');
-    // const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
+    reportDebug('updateUsersTable');
+    if (message.senderIsBot) {
+        throw new Error('updateUsersTable message.senderIsBot must be false');
+    }
 
     const res = await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_USERS,
@@ -835,49 +708,49 @@ export async function _updateUsersTable(
     });
 }
 
-export async function _handleWebhookMessage(
+async function handleWebhookMessage(
     rawMessage: WebhookMessage,
     botParams: BotParams,
     respondFn: RespondFn,
     channelData?: ChannelData
 ) {
-    console.log('_handleWebhookMessage');
+    reportDebug('handleWebhookMessage');
 
     // create DBMessage from WebhookMessage
-    const attachments = await _processAttachments(rawMessage);
-    let dbMessage = _webhookMessageToDBMessage(rawMessage);
+    const attachments = await processAttachments(rawMessage);
+    let dbMessage = webhookMessageToDBMessage(rawMessage);
     dbMessage = attachments
-        ? await _insertAttachmentsIntoMessage(dbMessage, attachments)
+        ? await insertAttachmentsIntoMessage(dbMessage, attachments)
         : dbMessage;
 
-    console.log('dbMessage: ', dbMessage);
+    reportDebug('dbMessage: ', dbMessage);
 
 
     // set up
     const [, conversationId] = decomposeKeys(dbMessage.publisherId_conversationId);
     let newRespondFn;
     const sendAsUser = (msg: DBMessage) => {
-        return _handleProcessedDBMessage(
+        return handleProcessedDBMessage(
             msg, botParams, newRespondFn, conversationId, channelData
         );
     };
     const responses = [];
     newRespondFn = respondFn;
-    newRespondFn = _respondFnSignS3UrlsMiddleware(newRespondFn);
-    newRespondFn = _respondFnCollectorMiddleware(newRespondFn, responses);
-    newRespondFn = _respondFnPreprocessorActionsMiddleware(
+    newRespondFn = respondFnSignS3UrlsMiddleware(newRespondFn);
+    newRespondFn = respondFnCollectorMiddleware(newRespondFn, responses);
+    newRespondFn = respondFnPreprocessorActionsMiddleware(
         newRespondFn, botParams, conversationId, dbMessage.channel, sendAsUser
     );
 
     // Ensure the message is not already processed
     // and the sender is allowed to chat
     const [alreadyInDB, user] = await Promise.all([
-        _isMessageInDB(dbMessage),
+        isMessageInDB(dbMessage),
         aws.getUserByUserId(botParams.publisherId, botParams.botId,
                             dbMessage.channel, dbMessage.senderId),
     ]);
     if (alreadyInDB) {
-        console.log(`Message is already in the db. It won't be processed.`)
+        reportDebug(`Message is already in the db. It won't be processed.`)
         return;
     }
     if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none' && user.isVerified) {
@@ -886,39 +759,38 @@ export async function _handleWebhookMessage(
 
     } else {
         await Promise.all([
-            _verifyUser(botParams, dbMessage, newRespondFn, user),
-            _updateConversationTable(dbMessage, botParams, channelData),
-            _logMessage(dbMessage),
+            verifyUser(botParams, dbMessage, newRespondFn, user),
+            updateConversationTable(dbMessage, botParams, channelData),
+            logMessage(dbMessage),
         ]);
     }
 
     // log responses and update conversations table
     if (responses.length > 0) {
         const responsesAsDBMessages = responses.map(
-            x => _createDBMessageFromResponseMessage(x, botParams, conversationId, dbMessage.channel)
+            x => createDBMessageFromResponseMessage(x, botParams, conversationId, dbMessage.channel)
         );
 
         await waitForAll([
-            _logMessage(responsesAsDBMessages),
-            _updateConversationTable(_.last(responsesAsDBMessages), botParams, channelData),
+            logMessage(responsesAsDBMessages),
+            updateConversationTable(_.last(responsesAsDBMessages), botParams, channelData),
         ]);
     }
 }
 
-export async function _handleProcessedDBMessage(
+async function handleProcessedDBMessage(
     dbMessage: DBMessage,
     botParams: BotParams,
     respondFn: RespondFn,
     conversationId: string,
     channelData?: ChannelData,
 ) {
-    // await _updateTablesAfterReceivingMessage(dbMessage, botParams, channelData);
     await Promise.all([
-        _updateConversationTable(dbMessage, botParams, channelData),
-        _updateUsersTable(dbMessage, botParams),
-        _logMessage(dbMessage),
+        updateConversationTable(dbMessage, botParams, channelData),
+        updateUsersTable(dbMessage, botParams),
+        logMessage(dbMessage),
     ]);
-    dbMessage = await _pollMiddleware(dbMessage, botParams, respondFn);
+    dbMessage = await pollMiddleware(dbMessage, botParams, respondFn);
     await aiRoute(dbMessage, botParams, respondFn);
 }
 
@@ -927,16 +799,16 @@ export async function deepiksBot(message: WebhookMessage,
                                  respondFn: RespondFn,
                                  channelData?: ChannelData)
 {
-    console.log('deepiksBot');
+    reportDebug('deepiksBot');
     try {
-        await _handleWebhookMessage(message, botParams, respondFn, channelData);
+        await handleWebhookMessage(message, botParams, respondFn, channelData);
     } catch(error) {
         const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
-        const m = _textToResponseMessage((tr[botParams.defaultLanguage] || tr[langs[0]]).errors.general);
+        const m = textToResponseMessage((tr[botParams.defaultLanguage] || tr[langs[0]]).errors.general);
         // don't await, let them fail silently
         respondFn(m);
-        _logResponseMessage(m, botParams, conversationId, message.channel);
+        logResponseMessage(m, botParams, conversationId, message.channel);
 
         throw error;
     }
@@ -950,20 +822,29 @@ export async function coldSend(message: ResponseMessage, botParams: BotParams,
 {
     const [, conversationId] = decomposeKeys(conversation.botId_conversationId);
     let newRespondFn;
-    const sendAsUser = (msg: DBMessage) => _handleProcessedDBMessage(
+    const sendAsUser = (msg: DBMessage) => handleProcessedDBMessage(
         msg, botParams, newRespondFn, conversationId, conversation.channelData
     );
     const responses = [];
     newRespondFn = respondFn;
-    newRespondFn = _respondFnSignS3UrlsMiddleware(newRespondFn);
-    newRespondFn = _respondFnCollectorMiddleware(newRespondFn, responses);
-    newRespondFn = _respondFnPreprocessorActionsMiddleware(
+    newRespondFn = respondFnSignS3UrlsMiddleware(newRespondFn);
+    newRespondFn = respondFnCollectorMiddleware(newRespondFn, responses);
+    newRespondFn = respondFnPreprocessorActionsMiddleware(
         newRespondFn, botParams, conversationId,
         conversation.channel, sendAsUser
     );
 
     await newRespondFn(message);
-    await _logResponseMessage(responses, botParams, conversationId, conversation.channel);
+    await logResponseMessage(responses, botParams, conversationId, conversation.channel);
 }
 
-export default deepiksBot;
+// exports for testing
+export {
+    logMessage as _logMessage,
+    isMessageInDB as _isMessageInDB,
+    uploadToS3 as _uploadToS3,
+    updateConversationTable as _updateConversationTable,
+    updateUsersTable as _updateUsersTable,
+    processAttachments as _processAttachments,
+    verifyUser as _verifyUser,
+};

@@ -1,6 +1,6 @@
 /* @flow */
 
-import deepiksBot from '../deepiks-bot/deepiks-bot.js';
+import { deepiksBot } from '../deepiks-bot/deepiks-bot.js';
 import { request } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import { toStr, waitForAll, composeKeys, decomposeKeys } from '../../misc/utils.js';
@@ -10,6 +10,8 @@ import ciscospark from 'ciscospark';
 import type { Request, Response } from 'express';
 import memoize from 'lodash/memoize';
 import crypto from 'crypto';
+const reportDebug = require('debug')('deepiks:spark');
+const reportError = require('debug')('deepiks:spark:error');
 
 type SparkReqBody = {
     id: string,
@@ -27,12 +29,9 @@ type SparkReqBody = {
 
 
 export async function webhook(req: Request, res: Response) {
-    // respond immediately
-    res.send();
-
     const body: SparkReqBody = (req.body: any);
 
-    console.log('------- spark-webhook: req.body: ', toStr(body));
+    reportDebug('------- spark-webhook: req.body: ', toStr(body));
 
     if (body.resource !== 'messages' || body.event !== 'created') {
         return;
@@ -54,7 +53,7 @@ export async function webhook(req: Request, res: Response) {
         res.status(403).send('Access denied');
         throw new Error(`ERROR: exprected signatue: ${expectedSig} but received ${sig || ''}`);
     }
-    console.log(`X-Spark-Signature successfully verified ${sig || ''}`);
+    reportDebug(`X-Spark-Signature successfully verified ${sig || ''}`);
 
     if (!ciscosparkBotPersonId) {
         res.status(500).send('Error');
@@ -65,8 +64,12 @@ export async function webhook(req: Request, res: Response) {
         throw new Error(`ciscosparkWebhookId doesn't match. Got: ${body.id}` +
                         `, but expected: ${ciscosparkWebhookId}`);
     }
+
+    // respond immediately
+    res.send();
+
     if (ciscosparkBotPersonId === body.data.personId) {
-        console.log('skipping own message, personId: ', body.data.personId);
+        reportDebug('skipping own message, personId: ', body.data.personId);
         return;
     }
 
@@ -79,9 +82,10 @@ export async function webhook(req: Request, res: Response) {
     });
 
     const rawMessage = await client.messages.get(messageId);
+    reportDebug('rawMessage:', rawMessage);
     const fetchCardImages = !rawMessage.files ? undefined : rawMessage.files.map(
         a => memoize(async function () {
-            console.log('spark-webhook: attachment download requested');
+            reportDebug('spark-webhook: attachment download requested');
             const buffer = await request({
                 url: URL.parse(a),
                 encoding: null,
@@ -89,7 +93,7 @@ export async function webhook(req: Request, res: Response) {
                     Authorization: `Bearer ${ciscosparkAccessToken}`,
                 },
             });
-            console.log('spark-webhook: successfully downloaded attachment');
+            reportDebug('spark-webhook: successfully downloaded attachment');
             return buffer.body;
         })
     );
@@ -106,7 +110,7 @@ export async function webhook(req: Request, res: Response) {
         fetchCardImages,
     };
 
-    console.log('got message: ', message);
+    reportDebug('got message: ', message);
 
     let dashbotPromise;
     if (botParams.settings.dashbotGenericKey) {
@@ -143,7 +147,7 @@ export async function send(botParams: BotParams, conversationId: string,
         },
     });
 
-    console.log('send sending message: ', message);
+    reportDebug('send sending message: ', message);
     const actionsToStr = xs =>
         (xs || []).filter(x => x.fallback).map(x => x.fallback).join(', ');
     // ciscospark can only send 1 file at a time
@@ -160,17 +164,23 @@ export async function send(botParams: BotParams, conversationId: string,
             // TODO how to send images to dashbot
 
             const cardText = removeMarkdown(actionsToStr(c.actions) || '');
-            await client.messages.create({
-                text: cardText,
-                roomId: conversationId,
-            });
-            dashbotPromises.push(dashbotSend(botParams, conversationId, cardText));
+            if (cardText) {
+                await client.messages.create({
+                    text: cardText,
+                    roomId: conversationId,
+                });
+                dashbotPromises.push(dashbotSend(botParams, conversationId, cardText));
+            }
         }
     }
 
     if (text || actions) {
+        let actionsText = actionsToStr(actions);
+        if (actionsText) {
+            actionsText = `(${actionsText})`;
+        }
         const textToSend = removeMarkdown(
-            ((text || '') + '\n\n' + actionsToStr(actions)).trim()
+            ((text || '') + '\n\n' + actionsText).trim()
         );
         await client.messages.create({
             text: textToSend,

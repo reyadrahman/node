@@ -4,6 +4,8 @@ import { toStr, waitForAll, waitForAllOmitErrors } from '../../misc/utils.js';
 import { CONSTANTS } from '../server-utils.js';
 import { send } from '../channels/all-channels.js';
 import _ from 'lodash';
+const reportDebug = require('debug')('deepiks:scheduled-tasks');
+const reportError = require('debug')('deepiks:scheduled-tasks:error');
 
 export default async function updateScheduledTasks() {
     const qres = await aws.dynamoQuery({
@@ -15,7 +17,7 @@ export default async function updateScheduledTasks() {
         },
     });
 
-    console.log('updateScheduledTasks qres.Items: ', qres.Items);
+    reportDebug('updateScheduledTasks qres.Items: ', qres.Items);
     if (qres.Count === 0) return;
 
     const allTasks = qres.Items;
@@ -40,12 +42,12 @@ export default async function updateScheduledTasks() {
         };
         await send(botParams, conversation, message);
     });
-    
+
     // delete tasks
     // dynamodb batch write limit is 25
     const keys = _.map(allTasks, 'scheduleTimestamp_taskId');
     const chunks = _.chunk(keys, 25);
-    console.log('chunks: ', chunks);
+    reportDebug('chunks: ', chunks);
     const deletePromises = chunks.map(
         chunk => aws.dynamoBatchWrite({
             RequestItems: {

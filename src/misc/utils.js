@@ -4,6 +4,8 @@ import map from 'lodash/map';
 import omitBy from 'lodash/omitBy';
 import isUndefined from 'lodash/isUndefined';
 import uuid from 'node-uuid';
+const reportDebug = require('debug')('deepiks:utils');
+const reportError = require('debug')('deepiks:utils:error');
 
 
 export function composeKeys(...xs: Array<string | number>): string {
@@ -98,7 +100,7 @@ export async function waitForAll(promises: Promise<*>[]): Promise<*> {
     return await Promise.all(promises.map(x => x.then(
         v => ({v}),
         e => {
-            console.error(e);
+            reportError(e);
             return {e};
         }
     )));
@@ -158,7 +160,7 @@ export function catchPromise(fn: Function) {
         try {
             return await fn.apply(this, arguments);
         } catch(error) {
-            console.error(error);
+            reportError(error);
             throw error;
         }
     });

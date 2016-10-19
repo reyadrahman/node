@@ -4,6 +4,7 @@ import { Glyphicon, Button } from 'react-bootstrap';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../app-state/actions.js';
+const reportDebug = require('debug')('deepiks:SignIn');
 
 let SignIn = React.createClass({
 
@@ -16,7 +17,7 @@ let SignIn = React.createClass({
 
     signIn(e) {
         e.preventDefault();
-        console.log('signIn: ', this.state);
+        reportDebug('signIn: ', this.state);
         this.props.signIn(this.state.email, this.state.password);
     },
 

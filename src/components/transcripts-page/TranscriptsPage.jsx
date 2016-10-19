@@ -9,6 +9,7 @@ import Messages from './Messages.jsx';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
 import _ from 'lodash';
+const reportDebug = require('debug')('deepiks:TranscriptsPage');
 
 let TranscriptsPage = React.createClass({
     heartbeatEnabled: true,
@@ -93,7 +94,7 @@ let TranscriptsPage = React.createClass({
 
         if (currentUser.attributes.sub !== oldProps.currentUser.attributes.sub) {
             fetchConversations(currentUser.selectedBotId);
-            console.log('TranscriptsPage componentDidUpdate params.conversationId', params.conversationId);
+            reportDebug('TranscriptsPage componentDidUpdate params.conversationId', params.conversationId);
             if (params.conversationId) {
                 fetchMessages(params.conversationId);
             }

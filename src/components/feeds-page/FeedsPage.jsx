@@ -168,7 +168,6 @@ let NewFeed = React.createClass({
             (type === 'twitter' && twitterScreenName ||
              type === 'rss' && rssUrl))
         {
-            console.log('NewFeed createClicked: ', newFeed);
             this.props.addBotFeed(this.props.currentUser.selectedBotId, newFeed);
             this.props.closeModal();
         }

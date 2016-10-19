@@ -11,6 +11,8 @@ import uuid from 'node-uuid';
 import u from 'util';
 import crypto from 'crypto';
 import { Server as WebSocketServer } from 'ws';
+const reportDebug = require('debug')('deepiks:web');
+const reportError = require('debug')('deepiks:web:error');
 
 async function handleWebsocketMessage(
     messageReceived: WebchannelMessage, wss: WebSocketServer)
@@ -35,7 +37,7 @@ async function handleWebsocketMessage(
         text: text,
     };
 
-    console.log('Got message: ', message);
+    reportDebug('Got message: ', message);
 
     await deepiksBot(message, botParams, wss, m => {
         responses.push(send(botParams, conversationId, m))
@@ -54,13 +56,13 @@ export function websocketMessage(messageReceived: WebchannelMessage,
     wss: WebSocketServer)
 {
     res.send(); // respond immediately ???
-    console.log('webChannel-message...');
+    reportDebug('webChannel-message...');
     handleWebhookRequest(messageReceived, wss)
     .then(() => {
-        console.log('Success')
+        reportDebug('Success')
     })
     .catch(err => {
-        console.log('Error: ', err || '-');
+        reportError('Error: ', err || '-');
         if (err instanceof Error) {
             throw err;
         }

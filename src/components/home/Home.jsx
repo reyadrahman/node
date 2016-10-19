@@ -59,7 +59,6 @@ let Home = React.createClass({
     },
 
     quotesOnSelect(selectedIndex, e) {
-        console.log('quote selected=' + selectedIndex + ', direction=' + e.direction);
         this.setState({
             quotesIndex: selectedIndex,
             quotesDirection: e.direction,
@@ -74,7 +73,6 @@ let Home = React.createClass({
     },
 
     closeLightbox() {
-        console.log('close lightbox');
     },
 
     lightboxHandleClickImage() {
@@ -105,7 +103,6 @@ let Home = React.createClass({
 
 
     render() {
-        console.log('Home render');
         const { className, currentUser, i18n, i18n: { strings: { home: strings } } } = this.props;
 
         const sideMenuStrings = i18n.strings.sideMenu;

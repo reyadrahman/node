@@ -11,6 +11,8 @@ import FeedParser from 'feedparser';
 import request_ from 'request';
 import Twit from 'twit';
 import type { Request, Response } from 'express';
+const reportDebug = require('debug')('deepiks:feeds-periodic-task');
+const reportError = require('debug')('deepiks:feeds-periodic-task:error');
 
 type BotFeed = {
     categories?: string[],
@@ -29,7 +31,7 @@ export default async function updateFeedsPeriodicTask() {
         TableName: CONSTANTS.DB_TABLE_BOTS,
     });
 
-    console.log('updateFeedsPeriodicTask botsScanRes: ', toStr(botsScanRes));
+    reportDebug('updateFeedsPeriodicTask botsScanRes: ', toStr(botsScanRes));
 
     if (botsScanRes.Count === 0) return;
 
@@ -37,7 +39,7 @@ export default async function updateFeedsPeriodicTask() {
     const processFeedConfigsResults =
         await waitForAllOmitErrors(botsWithFeeds.map(processFeedConfigs));
     const validProcessFeedConfigsResults = processFeedConfigsResults.filter(Boolean);
-    console.log('updateFeedsPeriodicTask validProcessFeedConfigsResults: ',
+    reportDebug('updateFeedsPeriodicTask validProcessFeedConfigsResults: ',
         toStr(validProcessFeedConfigsResults));
 
     // now publish feeds
@@ -117,7 +119,7 @@ async function processFeedConfigs(botParams: BotParams)
                     botFeeds.push(botFeed);
                 }
             } catch(error) {
-                console.log('processFeedConfigs error while calling processFeedConfig: ', error);
+                reportDebug('processFeedConfigs error while calling processFeedConfig: ', error);
             }
         }
         newFeedConfigs.push(newFeedConfig);
@@ -133,7 +135,7 @@ async function processFeedConfigs(botParams: BotParams)
 async function processFeedConfig(botParams: BotParams, feedConfig: FeedConfig)
     : Promise<BotFeed>
 {
-    console.log('processFeedConfig: botParams: ', botParams, ', feedConfig: ', feedConfig);
+    reportDebug('processFeedConfig: botParams: ', botParams, ', feedConfig: ', feedConfig);
     if (feedConfig.type === 'twitter') {
         return await processTwitterFeedConfig(botParams, feedConfig);
     } else if (feedConfig.type === 'rss') {
@@ -160,7 +162,7 @@ async function processTwitterFeedConfig(botParams, feedConfig): Promise<BotFeed>
     const unreadTweets = tweets.filter(
         x => new Date(x.created_at).getTime() > lpt
     );
-    console.log('unreadTweets: ', unreadTweets);
+    reportDebug('unreadTweets: ', unreadTweets);
     const now = Date.now();
     const messages = unreadTweets.map(x => ({
         text: x.text,
@@ -175,7 +177,7 @@ async function processTwitterFeedConfig(botParams, feedConfig): Promise<BotFeed>
 
 function processRssFeedConfig(botParams, feedConfig): Promise<BotFeed> {
     return new Promise((resolve, reject) => {
-        console.log('processRssFeed');
+        reportDebug('processRssFeed');
         const req = request_(feedConfig.rssUrl);
         const feedParser = new FeedParser({
             feedurl: feedConfig.rssUrl,

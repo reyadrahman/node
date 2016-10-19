@@ -2,27 +2,29 @@
 
 import { fetchjp, fetchjp2j, fetchg2j } from './client-utils.js';
 import type { DBMessage, ContactFormData, FeedConfig } from '../misc/types.js';
+const reportDebug = require('debug')('deepiks:client-server-bridge');
+const reportError = require('debug')('deepiks:client-server-bridge:error');
 
 export async function addBot(jwtIdToken: string, botName: string, settings) {
-    console.log('client-server-bridge addBot:');
-    console.log('\tjwtIdToken: ', jwtIdToken);
-    console.log('\tbotName: ', botName);
-    console.log('\tsettings: ', settings);
+    reportDebug('client-server-bridge addBot:');
+    reportDebug('\tjwtIdToken: ', jwtIdToken);
+    reportDebug('\tbotName: ', botName);
+    reportDebug('\tsettings: ', settings);
 
     return await fetchjp('/api/add-bot', { jwtIdToken, botName, settings })
 }
 
 export async function updateBot(jwtIdToken: string, botId: string, settings) {
-    console.log('client-server-bridge addBot:');
-    console.log('\tjwtIdToken: ', jwtIdToken);
-    console.log('\tbotId: ', botId);
-    console.log('\tsettings: ', settings);
+    reportDebug('client-server-bridge addBot:');
+    reportDebug('\tjwtIdToken: ', jwtIdToken);
+    reportDebug('\tbotId: ', botId);
+    reportDebug('\tsettings: ', settings);
 
     return await fetchjp2j('/api/update-bot', { jwtIdToken, botId, settings })
 }
 
 export async function fetchBots(jwtIdToken: string) {
-    console.log('fetchBots: jwtIdToken: ', jwtIdToken);
+    reportDebug('fetchBots: jwtIdToken: ', jwtIdToken);
     return await fetchg2j('/api/fetch-bots', { jwtIdToken });
 }
 
@@ -52,14 +54,14 @@ export async function saveUser(
 }
 
 export async function fetchConversations(jwtIdToken: string, botId: string, since: int = 0) {
-    console.log('fetchConversations: jwtIdToken: ', jwtIdToken, 'botId:', botId, 'since:', since);
+    reportDebug('fetchConversations: jwtIdToken: ', jwtIdToken, 'botId:', botId, 'since:', since);
     return await fetchg2j('/api/fetch-conversations', { jwtIdToken, botId, since });
 }
 
 export async function fetchMessages(jwtIdToken: string, conversationId: string, since: int = 0)
     : Promise<DBMessage[]>
 {
-    console.log('fetchMessages: jwtIdToken: ', jwtIdToken, conversationId);
+    reportDebug('fetchMessages: jwtIdToken: ', jwtIdToken, conversationId);
     return await fetchg2j('/api/fetch-messages', { jwtIdToken, conversationId, since });
 }
 

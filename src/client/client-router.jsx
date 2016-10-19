@@ -16,7 +16,8 @@ import _ from 'lodash';
 
 const initAppStateFromServer = JSON.parse(document.getElementById('initAppState').innerHTML);
 const systemLang = document.getElementsByTagName('body')[0].dataset.systemLang;
-console.log('systemLang: ', systemLang);
+const reportDebug = require('debug')('deepiks:client-router');
+const reportError = require('debug')('deepiks:client-router:error');
 
 const loggerMiddleware = createLogger();
 
@@ -64,10 +65,10 @@ let initAndRender = userAttributes => {
 
 aws.getCurrentUserAttributes()
    .then(attrs => {
-       console.log('client-router: gotAttributes: ', attrs);
+       reportDebug('client-router: gotAttributes: ', attrs);
        initAndRender(attrs);
    })
    .catch(err => {
-       console.log('client-router: ', err);
+       reportError('client-router: ', err);
        initAndRender();
    });

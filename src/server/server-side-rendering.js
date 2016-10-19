@@ -1,3 +1,5 @@
+/* @flow */
+
 import Html from '../components/html/Html.jsx';
 import Routes from '../Routes.jsx';
 import { languages, translations } from '../i18n/translations.js';
@@ -13,6 +15,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/server';
 import { RouterContext, match } from 'react-router';
 import _ from 'lodash';
+const reportDebug = require('debug')('deepiks:server-side-rendering');
+const reportError = require('debug')('deepiks:server-side-rendering:error');
 
 
 const loggerMiddleware = createLogger();
@@ -34,7 +38,7 @@ export default function render(full, req, res, next) {
                 PLATFORM: 'browser',
             };
             const systemLang = req.acceptsLanguages(...languages);
-            console.log('systemLang: ', systemLang);
+            reportDebug('systemLang: ', systemLang);
             if (full) {
                 renderFull(req, res, next, renderProps, envVars, systemLang);
             } else {
@@ -47,11 +51,11 @@ export default function render(full, req, res, next) {
 function renderTemplate(req, res, next, envVars, systemLang) {
 
     if (templateCache[systemLang]) {
-        console.log('serving template from cache');
+        reportDebug('serving template from cache');
         res.status(200).send(templateCache[systemLang]);
 
     } else {
-        console.log('rendering template.');
+        reportDebug('rendering template.');
         const html = ReactDOM.renderToStaticMarkup(
             <Html
                 body=""
@@ -67,7 +71,7 @@ function renderTemplate(req, res, next, envVars, systemLang) {
 }
 
 function renderFull(req, res, next, renderProps, envVars, systemLang) {
-    console.log('renderFull. req.url: ', req.url, 'req.cookies: ', req.cookies);
+    reportDebug('renderFull. req.url: ', req.url, 'req.cookies: ', req.cookies);
     let lang = req.cookies.language || systemLang;
     const appState = {
         ...initAppState,
@@ -80,7 +84,7 @@ function renderFull(req, res, next, renderProps, envVars, systemLang) {
                                   thunkMiddleware,
                                   loggerMiddleware));
 
-    console.log('renderFull renderProps: ', renderProps);
+    reportDebug('renderFull renderProps: ', renderProps);
 
     let pageTitle = '';
 

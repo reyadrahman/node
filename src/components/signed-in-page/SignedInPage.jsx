@@ -52,7 +52,6 @@ let SignedInPage = React.createClass({
                 i18n: { strings: { signedInPage: strings } },
         } = this.props;
 
-        console.log('SignedInPage: props', this.props);
         let cs;
         if (currentUser.signedIn) {
             cs = React.cloneElement(children, {

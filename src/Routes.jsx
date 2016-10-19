@@ -18,6 +18,12 @@ import TermsOfUsePage from './components/terms-of-use-page/TermsOfUsePage.jsx'
 import PrivacyPage from './components/privacy-page/PrivacyPage.jsx';
 import TrackingPage from './components/tracking-page/TrackingPage';
 
+let DevTestsPage = () => <h1>Only available in development mode</h1>;
+
+if (process.env.NODE_ENV === 'development') {
+    DevTestsPage = require('./components/dev-tests-page/DevTestsPage.jsx').default;
+}
+
 const Routes = (
     <Route path="/" component={App}>
         <IndexRoute component={Home} />
@@ -38,6 +44,7 @@ const Routes = (
             <Route path="/notifications" component={NotificationsPage} />
             <Route path="/test" component={TestPage} />
         </Route>
+        <Route path="/dev/tests" component={DevTestsPage} />
     </Route>
 );
 

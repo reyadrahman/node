@@ -12,8 +12,9 @@ In this project, we use the following terms
 
 ## Config
 ### .env file or Environment variables in console
+Here are the the list of environment variables with their default values:
 ```
-NODE_ENV=
+NODE_ENV=production
 AWS_REGION=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
@@ -29,10 +30,11 @@ CONTACT_EMAIL=
 EMAIL_ACTION_FROM_ADDRESS=
 OWN_BASE_URL=
 CDN=
-PORT=
+PORT=3000
+DEBUG=deepiks:*
 ```
 
-`NODE_ENV`, `DB_TABLES_PREFIX`, `CDN` and `PORT` are **optional**.
+`NODE_ENV`, `DB_TABLES_PREFIX`, `CDN`, `PORT` and `DEBUG` are **optional**.
 
 `NODE_ENV` can be `production` (default) or `development`. When set to `development` you get much better error messages and debugging capability, but the output will be 10x larger. This doesn't cause a problem for the bot engine, but the website will be unusable for most people due to the size.
 
@@ -41,11 +43,7 @@ PORT=
 `OWN_BASE_URL` is the full address of your server (e.g. https://deepiks.io) and is used to, for example, set up webhooks automatically.
 
 ### .test.env file or environment variables in console
-This is mostly the same as `.env` but only used for running the tests (see below). So pick different names for the database tables and s3 buckets as they will be modified. `.test.env` needs the following variables in addition to those of `.env`:
-
-```
-WIT_ACCESS_TOKEN=
-```
+This is the same as `.env` but only used for running the **server side** tests (the "Tests" secion below). So pick different names for the database tables and s3 buckets as they will be modified.
 
 Since tests are only run locally, `.ebextensions/*` files have no effect here.
 
@@ -346,12 +344,20 @@ git submodule update --init
 You also need to run the above command after `git pull` if the submodule has been modified.
 
 ### Tests
-Make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for real use.
+For **server-side** tests, make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for production use.
+
+The tests are located in `src/server/tests/`. Any file in that directory that has the `.test.js` suffix will be executed.
 
 ```
 npm install
 npm test
 ```
+
+For **client-side** tests, build and run the server as usual, with `NODE_ENV=development`. Then go to `localhost:XXX/dev/tests` in your browser.
+
+The tests are located at `src/client/tests/` and the entry point which is supposed to run all tests is at `src/client/tests/tests.js`.
+
+**Please note that the client-side tests use `.env`, whereas server-side tests use `.test.env`. This is currently not a problem as client-side tests aren't supposed to manipulate the database. However in the future, it's best to use `.test.env` in both cases for consistency.**
 
 ### Workflow
 After `npm install`, you can open 3 terminals and run the following commands in each:
@@ -465,4 +471,15 @@ const res = await aws.dynamoUpdate({
     },
 });
 
+```
+
+#### Use `debug.js` instead of `console.log`, `console.error` etc.
+Please pick a meaningful name when creating the report functions. The name of the file is a good choice.
+
+```js
+const reportDebug = require('debug')('deepiks:this-file-name');
+const reportError = require('debug')('deepiks:this-file-name:error');
+
+reportDebug('here is a message');
+reportError('here is an error');
 ```

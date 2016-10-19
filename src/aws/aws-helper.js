@@ -9,6 +9,8 @@ import type { BotParams, AIActionInfo, Conversation, User,
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
+const reportDebug = require('debug')('deepiks:aws');
+const reportError = require('debug')('deepiks:aws:error');
 
 // this is used to verify signatures for user pool's JWT
 let _userPoolPems_;
@@ -61,7 +63,7 @@ export const cognitoIdentityGetId = callbackToPromise(cognitoIdentity.getId, cog
 export const stsGetFederationToken = callbackToPromise(sts.getFederationToken, sts);
 export const sesSendEmail = callbackToPromise(ses.sendEmail, ses);
 
-export async function dynamoBatchWriteHelper(tableName, operations) {
+export async function dynamoBatchWriteHelper(tableName: string, operations: Object[]) {
     // TODO retry unprocessedItems
     // TODO use an exponential backoff algorithm
 
@@ -101,7 +103,7 @@ export async function dynamoAccumulatePages(getOnePage: (start?: Object) => Prom
     let pageRes = await getOnePage();
     let accumulator = pushMany([], pageRes.Items || []);
     while (pageRes.LastEvaluatedKey) {
-        console.log('dynamoAccumulatePages: LastEvaluatedKey: ',
+        reportDebug('dynamoAccumulatePages: LastEvaluatedKey: ',
                     pageRes.LastEvaluatedKey);
         pageRes = await getOnePage(pageRes.LastEvaluatedKey);
         pushMany(accumulator, pageRes.Items || []);
@@ -110,7 +112,7 @@ export async function dynamoAccumulatePages(getOnePage: (start?: Object) => Prom
 }
 
 export async function getBot(publisherId: string, botId: string): Promise<?BotParams> {
-    console.log('getBot publisherId: ', publisherId, ', botId: ', botId);
+    reportDebug('getBot publisherId: ', publisherId, ', botId: ', botId);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_BOTS,
         KeyConditionExpression: 'publisherId = :publisherId and botId = :botId',
@@ -125,7 +127,7 @@ export async function getBot(publisherId: string, botId: string): Promise<?BotPa
 export async function getConversation(publisherId: string, botId: string, conversationId: string)
 : Promise<?Conversation>
 {
-    console.log('getConversation publisherId: ', publisherId,
+    reportDebug('getConversation publisherId: ', publisherId,
                 ', botId: ', botId,
                 ', conversationId: ', conversationId);
     const qres = await dynamoQuery({
@@ -145,7 +147,7 @@ export async function getPollQuestion(
     pollId: string, questionId: string
 ) : Promise<?BotParams>
 {
-    console.log(`getPollQuestion publisherId: ${publisherId}, botId: ${botId}, ` +
+    reportDebug(`getPollQuestion publisherId: ${publisherId}, botId: ${botId}, ` +
                 `pollId: ${pollId}, questionId: ${questionId}`);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_POLL_QUESTIONS,
@@ -164,7 +166,7 @@ export async function getUserByUserId(
     channel: string, userId: string
 ) : Promise<?User>
 {
-    console.log(`getUserByUserId publisherId: ${publisherId}, botId: ${botId}, ` +
+    reportDebug(`getUserByUserId publisherId: ${publisherId}, botId: ${botId}, ` +
                 `channel: ${channel}, userId: ${userId}`);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_USERS,
@@ -184,7 +186,7 @@ export async function getUserByEmail(
 ) : Promise<?User>
 {
     email = email.toLowerCase();
-    console.log(`getUserByEmail publisherId: ${publisherId}, botId: ${botId}, ` +
+    reportDebug(`getUserByEmail publisherId: ${publisherId}, botId: ${botId}, ` +
                 `channel: ${channel}, email: ${email}`);
     const qres = await dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_USERS,
@@ -212,12 +214,12 @@ export async function getIdFromJwtIdToken(jwtIdToken: string): Promise<string> {
 // verifies and returns token's payload
 // throws errors
 export function verifyJwt(token: string) {
-    console.log('verifyJwt');
+    reportDebug('verifyJwt');
     const decoded = jwt.decode(token, {complete: true});
     if (!decoded) {
         throw new Error(`verifyJwt: Could not decode JWT: ${token}`);
     }
-    console.log('verifyJwt decoded: ', decoded);
+    reportDebug('verifyJwt decoded: ', decoded);
     const iss = `https://cognito-idp.${CONSTANTS.AWS_REGION}.amazonaws.com/${CONSTANTS.USER_POOL_ID}`;
 
     if (decoded.payload.iss !== iss) {
@@ -234,7 +236,7 @@ export function verifyJwt(token: string) {
     }
 
     const payload = jwt.verify(token, pem, { issuer: iss });
-    console.log('verifyJwt: successfully verified');
+    reportDebug('verifyJwt: successfully verified');
 }
 
 export const getAIAction = _createGetAIAction();
@@ -246,17 +248,17 @@ export function _createGetAIAction() {
     return async function getAIActionHelper(actionName: string): Promise<AIActionInfo> {
         const dt = (Date.now() - lastCacheTimestamp)/1000;
         if (cache && dt < CONSTANTS.AI_ACTION_CACHE_VALID_TIME_S && cache[actionName]) {
-            console.log('getAIActionHelper: returning from cache');
+            reportDebug('getAIActionHelper: returning from cache');
             return cache[actionName];
         }
-        console.log('getAIActionHelper: making DB request');
+        reportDebug('getAIActionHelper: making DB request');
 
         const qres = await dynamoScan({
             TableName: CONSTANTS.DB_TABLE_AI_ACTIONS,
         });
 
         cache = _.fromPairs(qres.Items.map(x => [x.action, x]));
-        console.log('new cache: ', cache);
+        reportDebug('new cache: ', cache);
         lastCacheTimestamp = Date.now();
 
         if (!cache[actionName]) {
@@ -288,7 +290,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
 
     const creatingTables = [];
     if (!tables.includes(CONSTANTS.DB_TABLE_BOTS)) {
-        console.log('creating table: CONSTANTS.DB_TABLE_BOTS');
+        reportDebug('creating table: CONSTANTS.DB_TABLE_BOTS');
         const tableParams = {
             TableName : CONSTANTS.DB_TABLE_BOTS,
             KeySchema: [
@@ -308,7 +310,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         creatingTables.push(CONSTANTS.DB_TABLE_BOTS);
     }
     if (!tables.includes(CONSTANTS.DB_TABLE_CONVERSATIONS)) {
-        console.log('creating table: CONSTANTS.DB_TABLE_CONVERSATIONS');
+        reportDebug('creating table: CONSTANTS.DB_TABLE_CONVERSATIONS');
         const tableParams = {
             TableName : CONSTANTS.DB_TABLE_CONVERSATIONS,
             KeySchema: [
@@ -341,7 +343,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         creatingTables.push(CONSTANTS.DB_TABLE_CONVERSATIONS);
     }
     if (!tables.includes(CONSTANTS.DB_TABLE_MESSAGES)) {
-        console.log('creating table: CONSTANTS.DB_TABLE_MESSAGES');
+        reportDebug('creating table: CONSTANTS.DB_TABLE_MESSAGES');
         const tableParams = {
             TableName : CONSTANTS.DB_TABLE_MESSAGES,
             KeySchema: [
@@ -361,7 +363,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         creatingTables.push(CONSTANTS.DB_TABLE_MESSAGES);
     }
     if (!tables.includes(CONSTANTS.DB_TABLE_AI_ACTIONS)) {
-        console.log('creating table: CONSTANTS.DB_TABLE_AI_ACTIONS');
+        reportDebug('creating table: CONSTANTS.DB_TABLE_AI_ACTIONS');
         const tableParams = {
             TableName : CONSTANTS.DB_TABLE_AI_ACTIONS,
             KeySchema: [
@@ -379,7 +381,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         creatingTables.push(CONSTANTS.DB_TABLE_AI_ACTIONS);
     }
     if (!tables.includes(CONSTANTS.DB_TABLE_USERS)) {
-        console.log('creating table: CONSTANTS.DB_TABLE_USERS');
+        reportDebug('creating table: CONSTANTS.DB_TABLE_USERS');
         const tableParams = {
             TableName : CONSTANTS.DB_TABLE_USERS,
             KeySchema: [
@@ -412,7 +414,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         creatingTables.push(CONSTANTS.DB_TABLE_USERS);
     }
     if (!tables.includes(CONSTANTS.DB_TABLE_SCHEDULED_TASKS)) {
-        console.log('creating table: CONSTANTS.DB_TABLE_SCHEDULED_TASKS');
+        reportDebug('creating table: CONSTANTS.DB_TABLE_SCHEDULED_TASKS');
         const tableParams = {
             TableName : CONSTANTS.DB_TABLE_SCHEDULED_TASKS,
             KeySchema: [
@@ -432,7 +434,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
         creatingTables.push(CONSTANTS.DB_TABLE_SCHEDULED_TASKS);
     }
     if (!tables.includes(CONSTANTS.DB_TABLE_POLL_QUESTIONS)) {
-        console.log('creating table: CONSTANTS.DB_TABLE_POLL_QUESTIONS');
+        reportDebug('creating table: CONSTANTS.DB_TABLE_POLL_QUESTIONS');
         const tableParams = {
             TableName : CONSTANTS.DB_TABLE_POLL_QUESTIONS,
             KeySchema: [
@@ -455,7 +457,7 @@ async function initResourcesDB(readCapacityUnits: number, writeCapacityUnits: nu
     await Promise.all(creatingTables.map(
         x => dynamoWaitFor('tableExists', { TableName: x })
     ));
-    console.log('All DynamoDB tables are ready');
+    reportDebug('All DynamoDB tables are ready');
 }
 
 async function initResourcesS3() {
@@ -463,7 +465,7 @@ async function initResourcesS3() {
     const bucketNames = buckets.map(x => x.Name);
 
     if (!bucketNames.includes(CONSTANTS.S3_BUCKET_NAME)) {
-        console.log('creating s3 bucket ', CONSTANTS.S3_BUCKET_NAME);
+        reportDebug('creating s3 bucket ', CONSTANTS.S3_BUCKET_NAME);
         await s3CreateBucket({
             Bucket: CONSTANTS.S3_BUCKET_NAME,
         });
@@ -488,7 +490,7 @@ async function initResourcesS3() {
             Bucket: CONSTANTS.S3_BUCKET_NAME,
         });
     }
-    console.log('All S3 buckets ready');
+    reportDebug('All S3 buckets ready');
 }
 
 
@@ -499,11 +501,11 @@ async function initResourcesUserPoolJwt() {
         json: true,
     });
     const userPoolJwtByKid = _.keyBy(req.body.keys, 'kid');
-    // console.log('_userPoolJwtByKid_: ', _userPoolJwtByKid_);
+    // reportDebug('_userPoolJwtByKid_: ', _userPoolJwtByKid_);
 
     _userPoolPems_ = _.mapValues(userPoolJwtByKid,
         x => jwkToPem(_.pick(x, ['kty', 'n', 'e']))
     );
 
-    console.log('_userPoolPems_: ', _userPoolPems_);
+    reportDebug('_userPoolPems_: ', _userPoolPems_);
 }

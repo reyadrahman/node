@@ -5,6 +5,7 @@ import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../app-state/actions.js';
+const reportDebug = require('debug')('deepiks:SignUp');
 
 let SignUp = React.createClass({
     getInitialState() {
@@ -18,7 +19,7 @@ let SignUp = React.createClass({
 
     signUp(e) {
         e.preventDefault();
-        console.log('signUp: ', this.state);
+        reportDebug('signUp: ', this.state);
         const { firstName, lastName, email, password } = this.state;
         this.props.signUp(firstName, lastName, email, password);
     },

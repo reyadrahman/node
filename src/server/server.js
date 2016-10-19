@@ -1,10 +1,5 @@
 /* @flow */
 
-if (process.env.NODE_ENV === 'development') {
-    console.log('registering source-map-support');
-    require('source-map-support').install();
-}
-
 import express from 'express';
 import path from 'path';
 import favicon from 'serve-favicon';
@@ -19,14 +14,15 @@ import { Server as WebSocketServer } from 'ws';
 import initializeRoutes from './server-router.js';
 import { websocketMessage } from './channels/web.js';
 import uuid from 'node-uuid';
-const debug = require('debug')('app:server');
+const reportDebug = require('debug')('deepiks:server');
+const reportError = require('debug')('deepiks:server:error');
 
 const ROOT_DIR = path.join(__dirname, '../');
 
 const DEV = process.env.NODE_ENV === 'development';
 
 
-debug(`running server in ${DEV ? 'development' : 'production'} mode`);
+reportDebug(`running server in ${DEV ? 'development' : 'production'} mode`);
 
 const app = express();
 const server = http.createServer(app);
@@ -38,9 +34,6 @@ app.use((req, res, next) => {
 });
 
 app.use(compression());
-
-// view engine setup
-debug('views directory: ', path.join(ROOT_DIR, 'src/views'));
 
 app.use(logger('short'));
 // save raw body and then parse as json
@@ -65,22 +58,22 @@ app.use(function(req, res, next) {
 // error handlers
 
 app.use(function(err, req, res, next) {
-    debug(err);
+    reportError(err);
     res.status(err.status || 500);
     res.send(`Error ${err.status || 500}\n\n${err.message || ''}`);
 });
 
-debug('Initializing resources...');
+reportDebug('Initializing resources...');
 initResources(5, 5).then(() => {
-    debug('Successfully initialized resources');
+    reportDebug('Successfully initialized resources');
     server.listen(parseInt(CONSTANTS.PORT));
     server.on('error', onError);
     server.on('listening', () => {
-        debug(`Listening on ${CONSTANTS.PORT}`);
+        reportDebug(`Listening on ${CONSTANTS.PORT}`);
     });
 
 }).catch(err => {
-    debug('Failed initializing resources: ', err);
+    reportError('Failed initializing resources: ', err);
 })
 
 
@@ -94,11 +87,11 @@ function onError(error) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      debug(bind + ' requires elevated privileges');
+      reportDebug(bind + ' requires elevated privileges');
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      debug(bind + ' is already in use');
+      reportDebug(bind + ' is already in use');
       process.exit(1);
       break;
     default:

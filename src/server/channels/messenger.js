@@ -3,7 +3,7 @@
 import { request, CONSTANTS } from '../server-utils.js';
 import { toStr, waitForAll, timeout, composeKeys, decomposeKeys } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
-import deepiksBot from '../deepiks-bot/deepiks-bot.js';
+import { deepiksBot } from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
 import type { Request, Response } from 'express';
 import _ from 'lodash';
@@ -11,6 +11,8 @@ import uuid from 'node-uuid';
 import u from 'util';
 import crypto from 'crypto';
 import createDashbot from 'dashbot';
+const reportDebug = require('debug')('deepiks:messenger');
+const reportError = require('debug')('deepiks:messenger:error');
 
 type MessengerReqBody = {
     object: string,
@@ -60,7 +62,7 @@ export async function webhook(req: Request, res: Response) {
         req.query['hub.mode'] === 'subscribe' &&
         req.query['hub.verify_token'] === 'boohoo')
     {
-        console.log('Validating webhook');
+        reportDebug('Validating webhook');
         res.send(req.query['hub.challenge']);
         return;
     }
@@ -88,7 +90,7 @@ export async function webhook(req: Request, res: Response) {
         res.status(403).send('Access denied');
         throw new Error(`ERROR: exprected signatue: ${expectedSig} but received ${sig}`);
     }
-    console.log(`X-Hub-Signatue successfully verified ${sig}`);
+    reportDebug(`X-Hub-Signatue successfully verified ${sig}`);
 
 
     const body: MessengerReqBody = (req.body: any);
@@ -120,7 +122,7 @@ async function processMessages(body: MessengerReqBody, botParams: BotParams) {
             } else if (messagingEvent.postback) {
                 await receivedPostback(entry, (messagingEvent: any), botParams);
             } else {
-                console.error('Webhook received unknown messagingEvent: ', messagingEvent);
+                reportError('Webhook received unknown messagingEvent: ', messagingEvent);
             }
 
         }
@@ -147,12 +149,12 @@ async function receivedMessage(entry: MessengerReqEntry,
                                messagingEvent: MessengerReqMessaging,
                                botParams: BotParams)
 {
-    console.log('messenger receivedMessage: ', u.inspect(entry, {depth:null}));
+    reportDebug('messenger receivedMessage: ', u.inspect(entry, {depth:null}));
     let userProfile = {};
     try {
         userProfile = await getUserProfile(messagingEvent.sender.id, botParams);
     } catch(error) {
-        console.error(error);
+        reportError(error);
     }
     const {attachments} = messagingEvent.message;
     const cards = !attachments ? undefined :
@@ -174,7 +176,7 @@ async function receivedMessage(entry: MessengerReqEntry,
         senderProfilePic: userProfile.profile_pic || null,
     };
 
-    console.log('messenger sending deepiks-bot: ', message);
+    reportDebug('messenger sending deepiks-bot: ', message);
 
     let responseCount = 0;
     // will await later
@@ -195,7 +197,7 @@ async function receivedMessage(entry: MessengerReqEntry,
 export async function send(botParams: BotParams, conversationId: string,
                            message: ResponseMessage)
 {
-    console.log('send: ', conversationId, toStr(message));
+    reportDebug('send: ', conversationId, toStr(message));
 
     // conversationId is constructed by [pageId, senderId].join('::')
     const [ pageId, to ] = conversationId.split('::');
@@ -268,7 +270,7 @@ export async function send(botParams: BotParams, conversationId: string,
 }
 
 async function sendHelper(botParams: BotParams, messageData) {
-    console.log('messenger sendHelper: ',
+    reportDebug('messenger sendHelper: ',
         u.inspect(messageData, { depth: null}));
 
     const requestData = {
@@ -302,7 +304,7 @@ async function getUserProfile(userId, botParams) {
         method: 'GET',
         json: true,
     };
-    console.log('messenger getUserProfile: ', reqData);
+    reportDebug('messenger getUserProfile: ', reqData);
     const r = await request(reqData);
     if (r.statusCode !== 200) {
         throw new Error(`getUserProfile failed with code ${r.statusCode} msg ` +

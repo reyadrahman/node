@@ -23,7 +23,6 @@ let AddBotPage = React.createClass({
         };
     },
     addBot(e) {
-        console.log('AddBotPage: addBot');
         e.preventDefault();
         const { botName, ...settings } = this.state;
         this.props.addBot(botName, settings).then(() => {
@@ -32,7 +31,6 @@ let AddBotPage = React.createClass({
         });
     },
     cancel(e) {
-        console.log('AddBotPage: cancel');
         e.preventDefault();
         this.props.router.goBack();
     },

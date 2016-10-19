@@ -45,26 +45,10 @@ function createBaseConfig(NODE_ENV) {
                     include: path.join(__dirname, 'src'),
                     query: {
                         presets: ['es2015', 'react', 'stage-0'],
-                        plugins: [
+                        plugins: (DEV ? [
+                        ] : []).concat([
                             'transform-flow-strip-types',
-                        ].concat(DEV ? [
-                            // 'rewire',
-                            // [
-                            //     "react-transform", {
-                            //         "transforms": [
-                            //             {
-                            //                 "transform": "react-transform-hmr",
-                            //                 // if you use React Native, pass "react-native" instead:
-                            //                 "imports": ["react"],
-                            //                 // this is important for Webpack HMR:
-                            //                 "locals": ["module"]
-                            //             }
-                            //         ]
-                            //         // note: you can put more transforms into array
-                            //         // this is just one of them!
-                            //     }
-                            // ]
-                        ] : [])
+                        ]),
                     },
                 },
                 {

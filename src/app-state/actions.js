@@ -8,10 +8,11 @@ import SignIn from '../components/sign-in/SignIn.jsx';
 import SignUp from '../components/sign-up/SignUp.jsx';
 import VerifyRegistration from '../components/verify-registration/VerifyRegistration.jsx';
 import type { DBMessage, ResponseMessage, FeedConfig } from '../misc/types.js';
-
 import type { Component } from 'react';
 import { browserHistory } from 'react-router'
 import Cookies from 'js-cookie';
+const reportDebug = require('debug')('deepiks:actions');
+const reportError = require('debug')('deepiks:actions:error');
 
 export function closeModal() {
     return { type: 'ui/closeModal' };
@@ -74,7 +75,7 @@ export function setLanguage(lang: string) {
         if (CONSTANTS.PLATFORM === 'browser') {
             Cookies.set('language', lang,
                         {expires: 1000, path: '/'});
-            console.log('cookies: ', document.cookie);
+            reportDebug('cookies: ', document.cookie);
         }
         return Promise.resolve();
     }
@@ -84,12 +85,12 @@ export function signUp(firstName, lastName, email, password) {
     return async function(dispatch: Function) {
         try {
             const res = await aws.signUp(firstName, lastName, email, password);
-            console.log('signUp thunk SUCCESS. res: ', res);
+            reportDebug('signUp thunk SUCCESS. res: ', res);
             if (!res.userConfirmed) {
                dispatch(openVerifyRegistration(email, password));
             }
         } catch(error) {
-            console.log('signUp thunk FAIL. error: ', error.message);
+            reportDebug('signUp thunk FAIL. error: ', error.message);
             dispatch({ type: 'signUp/failed', errorMessage: error.message });
         }
     };
@@ -100,18 +101,18 @@ export function verifyRegistration(data) {
         try {
             var res = await aws.verifyRegistration(data.email, data.code);
         } catch(error) {
-            console.log('verifyRegistration FAILED. error: ', error);
+            reportDebug('verifyRegistration FAILED. error: ', error);
             dispatch({ type: 'verifyRegistration/failed', errorMessage: error.message });
             return;
         }
 
-        console.log('verifyRegistration SUCCESS. res: ', res);
+        reportDebug('verifyRegistration SUCCESS. res: ', res);
         let password = getState().verifyRegistration.password;
         if (password) {
             try {
                 await dispatch(signIn(data.email, password));
             } catch(error) {
-                console.log(`verifyRegistration couldn't sign in after verification`, error);
+                reportDebug(`verifyRegistration couldn't sign in after verification`, error);
             }
         }
         dispatch({ type: 'verifyRegistration/reset' });
@@ -123,16 +124,16 @@ export function signIn(email, password) {
     return async function (dispatch: Function) {
         try {
             const res = await aws.signIn(email, password);
-            console.log('signIn thunk SUCCESS. res: ', res,
+            reportDebug('signIn thunk SUCCESS. res: ', res,
                         ', res.getAccessToken(): ', res.getAccessToken(),
                         ', res.getIdToken(): ', res.getIdToken());
             const attributes = await aws.getCurrentUserAttributes();
-            console.log('user attributes: ', attributes);
+            reportDebug('user attributes: ', attributes);
             dispatch({ type: 'currentUser/signIn', attributes });
             dispatch({ type: 'ui/closeModal' });
             browserHistory.push('/test');
         } catch(error) {
-            console.log('signIn thunk FAIL. error: ', error.message);
+            reportDebug('signIn thunk FAIL. error: ', error.message);
             dispatch({ type: 'signIn/failed', errorMessage: error.message });
         }
     };
@@ -166,7 +167,7 @@ export function updateUserAttrsAndPass(attrs: Object,
             dispatch({ type: 'updateAttrsAndPassSucceeded', successMessage: 'Successfully updated' });
 
         } catch(error) {
-            console.log('actions.updateUserAttrsAndPass failed: ', error);
+            reportDebug('actions.updateUserAttrsAndPass failed: ', error);
             dispatch({ type: 'updateAttrsAndPassFailed', errorMessage: error.message });
         }
     };
@@ -179,7 +180,7 @@ export function sendEmail(data) {
             await bridge.sendEmail(data);
             dispatch({ type:'contacts/succeded', successMessage: 'Message was sent, thanks' });
         } catch(error) {
-            console.log('ERROR: sendEmail failed: ', error);
+            reportDebug('ERROR: sendEmail failed: ', error);
             dispatch({ type: 'contacts/failed', errorMessage: `Sorry, couldn't send your message` });
         }
     }
@@ -207,7 +208,7 @@ export function fetchBots() {
             const bots = await bridge.fetchBots(session.getIdToken().getJwtToken());
             dispatch(setBots(bots));
         } catch(err) {
-            console.error(err);
+            reportError(err);
             dispatch({
                 type:         'currentUser/fetchBotsFailed',
                 errorMessage: 'Could not fetch the bots ' + err.message
@@ -236,7 +237,7 @@ export function fetchUsers(botId) {
                       users,
             });
         } catch(error) {
-            console.error(error);
+            reportError(error);
             dispatch({
                 type: 'currentUser/fetchUsersFailed',
                 errorMessage: 'Could not fetch users for selected bot',
@@ -291,7 +292,7 @@ export function updateConversations(botId, since: int = 0) {
                 });
             }
         } catch (error) {
-            console.error(error);
+            reportError(error);
         }
     }
 }
@@ -311,7 +312,7 @@ export function fetchConversations(botId) {
                 lastUpdated: moment().format('x')
             });
         } catch(error) {
-            console.error(error);
+            reportError(error);
             dispatch({
                 type: 'currentUser/fetchConversationsFailed',
                 errorMessage: 'Could not fetch the bots',
@@ -322,7 +323,7 @@ export function fetchConversations(botId) {
 }
 
 export function updateMessages(conversationId: string, since: int = 0) {
-    console.log('action: fetchMessages');
+    reportDebug('action: fetchMessages');
     return async function (dispatch: Function) {
         try {
             const session  = await aws.getCurrentSession();
@@ -340,14 +341,14 @@ export function updateMessages(conversationId: string, since: int = 0) {
                 });
             }
         } catch (error) {
-            console.error(error);
+            reportError(error);
         }
     }
 
 }
 
 export function fetchMessages(conversationId: string) {
-    console.log('action: fetchMessages');
+    reportDebug('action: fetchMessages');
     return async function(dispatch: Function) {
         dispatch({ type: 'currentUser/resetMessagesState' });
         try {
@@ -356,16 +357,16 @@ export function fetchMessages(conversationId: string) {
                 session.getIdToken().getJwtToken(),
                 conversationId
             );
-            console.log('fetchMessages before signing: ', messages);
+            reportDebug('fetchMessages before signing: ', messages);
             const messagesWithSignedUrls = await signS3UrlsInMesssages(messages);
-            console.log('fetchMessages after signing: ', messagesWithSignedUrls);
+            reportDebug('fetchMessages after signing: ', messagesWithSignedUrls);
             dispatch({
                 type:        'currentUser/setMessagesState',
                 messages:    messagesWithSignedUrls,
                 lastUpdated: moment().format('x')
             });
         } catch(error) {
-            console.error(error);
+            reportError(error);
             dispatch({
                 type: 'currentUser/fetchMessagesFailed',
                 errorMessage: 'Could not fetch the bots',
@@ -422,7 +423,7 @@ export function addBotFeed(botId: string, feedConfig: FeedConfig) {
             const session = await aws.getCurrentSession();
             await bridge.addBotFeed(session.getIdToken().getJwtToken(), botId, feedConfig);
         } catch(error) {
-            console.error(error);
+            reportError(error);
             // TODO show error message to user
         }
         dispatch(fetchBots());

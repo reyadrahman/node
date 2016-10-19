@@ -15,7 +15,6 @@ const CookieConsent = React.createClass({
     },
 
     componentDidMount() {
-        console.log('CookieConsent componentDidMount');
         if (Cookies.get('cookie-notice-dismissed') !== 'yes') {
             this.setState({ show: true });
         }

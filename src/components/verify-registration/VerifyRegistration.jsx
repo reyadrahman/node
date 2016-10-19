@@ -17,7 +17,6 @@ let VerifyRegistration = React.createClass({
     verify(e) {
         let { email, code } = this.state;
         e.preventDefault();
-        console.log('verify: ', this.state);
         this.props.verifyRegistration({ email, code });
     },
 
@@ -30,9 +29,7 @@ let VerifyRegistration = React.createClass({
     },
 
     componentWillReceiveProps(newProps) {
-        console.log('componentWillReceiveProps', this.props, newProps);
         if (newProps.initialEmail !== this.props.initialEmail) {
-            console.log('!!!');
             this.setState({ email: newProps.initialEmail });
         }
     },

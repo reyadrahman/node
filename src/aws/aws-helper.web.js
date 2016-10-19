@@ -1,11 +1,11 @@
 /* @flow weak */
 
-console.log('======== AWS CLIENT...');
-
 import { CONSTANTS } from '../client/client-utils.js';
 import { callbackToPromise } from '../misc/utils.js';
 import _ from 'lodash';
 import Cookies from 'js-cookie';
+const reportDebug = require('debug')('deepiks:aws');
+const reportError = require('debug')('deepiks:aws:error');
 
 const XMLHttpRequest = require('xhr2');
 global.XMLHttpRequest = XMLHttpRequest;
@@ -48,15 +48,15 @@ class AutoRefreshCredential extends AWS.CognitoIdentityCredentials {
     }
 
     refresh(cb) {
-        console.log('AutoRefreshCredential refresh');
+        reportDebug('AutoRefreshCredential refresh');
         this.getSession()
             .then(session => {
                 console.group();
-                console.log('AutoRefreshCredential got session: ', session);
+                reportDebug('AutoRefreshCredential got session: ', session);
                 console.groupEnd();
                 this.params.Logins[`cognito-idp.${CONSTANTS.AWS_REGION}.amazonaws.com/${CONSTANTS.USER_POOL_ID}`] =
                     session.getIdToken().getJwtToken();
-                console.log('AutoRefreshCredential params: ', this.params);
+                reportDebug('AutoRefreshCredential params: ', this.params);
                 super.refresh(cb);
             })
             .catch(cb);
@@ -178,12 +178,12 @@ export async function updateCurrentUserAttrsAndPass(attrs: Object,
                                                     oldPassword?: string,
                                                     newPassword?: string)
 {
-    console.log('aws.updateCurrentUserAttrsAndPass attrs: ', attrs);
+    reportDebug('aws.updateCurrentUserAttrsAndPass attrs: ', attrs);
     const cognitoUser = await getCurrentUser();
     const cp = callbackToPromise(cognitoUser.changePassword, cognitoUser);
     if (newPassword) {
         const cpRes = await cp(oldPassword, newPassword);
-        console.log('aws.updateCurrentUserAttrsAndPass password update res: ', cpRes);
+        reportDebug('aws.updateCurrentUserAttrsAndPass password update res: ', cpRes);
     }
 
     const attributeList = _.map(attrs, (v, k) =>
@@ -194,7 +194,7 @@ export async function updateCurrentUserAttrsAndPass(attrs: Object,
     );
     const ua = callbackToPromise(cognitoUser.updateAttributes, cognitoUser);
     const res = await ua(attributeList);
-    console.log('aws.updateCurrentUserAttrsAndPass attrs update res: ', res);
+    reportDebug('aws.updateCurrentUserAttrsAndPass attrs update res: ', res);
 }
 
 function updateCredentials(session) {
@@ -213,12 +213,12 @@ function updateCredentials(session) {
         // TODO ensure refresh is called automatically by AWS
         AWS.config.credentials.refresh(error => {
             if (error) {
-                console.error('updateCredentials AWS.config.credentials.get error: ', error);
+                reportError('updateCredentials AWS.config.credentials.get error: ', error);
                 return reject(error);
             }
-            console.log('updateCredentials AWS.config.credentials updated: ', AWS.config.credentials);
+            reportDebug('updateCredentials AWS.config.credentials updated: ', AWS.config.credentials);
             // const et = AWS.config.credentials.expireTime;
-            // console.log('updateCredentials: expireTime: ', et instanceof Date, et);
+            // reportDebug('updateCredentials: expireTime: ', et instanceof Date, et);
             resolve();
         });
     });
@@ -227,15 +227,15 @@ function updateCredentials(session) {
 
 export async function getSession(cognitoUser) {
     console.group();
-    console.log('getSession cognitoUser: ', JSON.stringify(cognitoUser, null, ' '));
+    reportDebug('getSession cognitoUser: ', JSON.stringify(cognitoUser, null, ' '));
     console.groupEnd();
     // if session is valid
     if (cognitoUser.getSignInUserSession() != null && cognitoUser.getSignInUserSession().isValid()) {
-        console.log('getSession: signInUserSession is already valid');
+        reportDebug('getSession: signInUserSession is already valid');
         return cognitoUser.getSignInUserSession();
     }
-    console.log('getSession: signInUserSession is NOT valid');
-    console.log('getSession: signInUserSession: ', JSON.stringify(cognitoUser.getSignInUserSession, null, ' '));
+    reportDebug('getSession: signInUserSession is NOT valid');
+    reportDebug('getSession: signInUserSession: ', JSON.stringify(cognitoUser.getSignInUserSession, null, ' '));
 
     // if session has expired:
 
@@ -244,17 +244,17 @@ export async function getSession(cognitoUser) {
     await updateCredentials(session);
     return session;
 
-    // console.log('getSession cognitoUser: ', JSON.stringify(cognitoUser, null, ' '));
-    // console.log('getSession session: ', JSON.stringify(session, null, ' '));
-    // console.log('getSession AWS.config.credentials before: ', JSON.stringify(AWS.config.credentials, null, ' '));
+    // reportDebug('getSession cognitoUser: ', JSON.stringify(cognitoUser, null, ' '));
+    // reportDebug('getSession session: ', JSON.stringify(session, null, ' '));
+    // reportDebug('getSession AWS.config.credentials before: ', JSON.stringify(AWS.config.credentials, null, ' '));
     // updateCredentials(session);
-    // console.log('getSession AWS.config.credentials updating: ', JSON.stringify(AWS.config.credentials, null, ' '));
+    // reportDebug('getSession AWS.config.credentials updating: ', JSON.stringify(AWS.config.credentials, null, ' '));
     // AWS.config.credentials.get(error => {
     //     if (error) {
-    //         console.error('getSession AWS.config.credentials.get error: ', error);
+    //         reportError('getSession AWS.config.credentials.get error: ', error);
     //         return;
     //     }
-    //     console.log('getSession AWS.config.credentials updated: ', AWS.config.credentials);
+    //     reportDebug('getSession AWS.config.credentials updated: ', AWS.config.credentials);
     // });
 }
 
@@ -287,7 +287,7 @@ export async function getCurrentUserAttributes() {
     const cognitoUser = await getCurrentUser();
     const getAttrs = callbackToPromise(cognitoUser.getUserAttributes, cognitoUser);
     const res = await getAttrs();
-    console.log('getCurrentUserAttributes: ', res);
+    reportDebug('getCurrentUserAttributes: ', res);
     return _.fromPairs(res.map(x => [ x.getName(), x.getValue() ]));
 }
 

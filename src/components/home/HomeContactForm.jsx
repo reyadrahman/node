@@ -30,7 +30,6 @@ let HomeContactForm = React.createClass({
     },
 
     render() {
-        console.log('Home render');
         const { className, i18n, i18n: { strings: { homeContactForm: strings } },
                 successMessage, errorMessage, sendingInProgress
         } = this.props;

@@ -6,6 +6,8 @@ import bridge from './client-server-bridge.js';
 import { webhooks } from './channels/all-channels.js';
 import periodicTasksUpdate from './periodic-tasks/all-periodic-tasks.js';
 import { Server as WebSocketServer } from 'ws';
+const reportDebug = require('debug')('deepiks:server-router');
+const reportError = require('debug')('deepiks:server-router:error');
 
 export default function initializeRoutes(server) {
     const routes = express.Router();
@@ -14,10 +16,10 @@ export default function initializeRoutes(server) {
 
     routes.use('/webhooks/:publisherId/:botId/:channel', (req, res, next) => {
         const { channel } = req.params;
-        console.log('server-routes');
-        console.log('channel: ', channel);
-        console.log('publisherId: ', req.params.publisherId);
-        console.log('botId: ', req.params.botId);
+        reportDebug('server-routes');
+        reportDebug('channel: ', channel);
+        reportDebug('publisherId: ', req.params.publisherId);
+        reportDebug('botId: ', req.params.botId);
 
         if (!webhooks[channel]) {
             return next(new Error(`Unknown channel: ${channel}`));
@@ -25,10 +27,10 @@ export default function initializeRoutes(server) {
 
         webhooks[channel](req, res)
             .then(() => {
-                console.log(`The webhook of ${channel} completed successfully`);
+                reportDebug(`The webhook of ${channel} completed successfully`);
             })
             .catch(error => {
-                console.error(`The webhook of ${channel} failed with error: `, error);
+                reportError(`The webhook of ${channel} failed with error: `, error);
             });
     });
 
@@ -37,7 +39,7 @@ export default function initializeRoutes(server) {
     });
 
     routes.use('/', (req, res, next) => {
-        console.log('server-router: /, cookies: ', req.cookies);
+        reportDebug('server-router: /, cookies: ', req.cookies);
         render(!req.cookies.signedIn, req, res, next);
     });
 
@@ -45,7 +47,7 @@ export default function initializeRoutes(server) {
     const wss = new WebSocketServer({ server });
 
     wss.on('connection', function(ws) {
-      console.log('Conversation on web channel initialized (server side).');
+      reportDebug('Conversation on web channel initialized (server side).');
     });
 
     wss.on('message', function incoming(message: WebReqBody) {
@@ -55,7 +57,7 @@ export default function initializeRoutes(server) {
     });
 
     wss.on('close', function close() {
-      console.log('Conversation on web channel ended (server side).');
+      reportDebug('Conversation on web channel ended (server side).');
     })
 */
 

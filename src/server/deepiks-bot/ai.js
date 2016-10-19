@@ -10,6 +10,8 @@ import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
 import URL from 'url';
 import uuid from 'node-uuid';
+const reportDebug = require('debug')('deepiks:ai');
+const reportError = require('debug')('deepiks:ai:error');
 
 type ActionRequestIncomplete = {
     sessionId: string,
@@ -26,7 +28,7 @@ type RunActionsRes = {
     userPrefs: UserPrefs,
 };
 
-export function _mkClient(accessToken: string, respondFn: RespondFn) {
+function mkClient(accessToken: string, respondFn: RespondFn) {
     return new Wit({
         accessToken,
         respondFn,
@@ -38,35 +40,37 @@ export function _mkClient(accessToken: string, respondFn: RespondFn) {
     });
 }
 
-export async function _runActions(client: Wit,
-                                  text: string,
-                                  originalMessage: DBMessage,
-                                  witData: WitData,
-                                  userPrefs: UserPrefs,
-                                  botParams: BotParams
+async function runActions(
+    client: Wit,
+    text: string,
+    originalMessage: DBMessage,
+    witData: WitData,
+    userPrefs: UserPrefs,
+    botParams: BotParams
 ) : Promise<RunActionsRes>
 {
     let converseData = await client.converse(witData.sessionId, text, {
         ...witData.context,
         userPrefs,
     });
-    return await _runActionsHelper(client, text, originalMessage, witData,
+    return await runActionsHelper(client, text, originalMessage, witData,
                                    userPrefs, botParams, converseData, 10);
 }
 
-export async function _runActionsHelper(client: Wit,
-                                        text: string,
-                                        originalMessage: DBMessage,
-                                        witData: WitData,
-                                        userPrefs: UserPrefs,
-                                        botParams: BotParams,
-                                        converseData: Object,
-                                        level: number
+async function runActionsHelper(
+    client: Wit,
+    text: string,
+    originalMessage: DBMessage,
+    witData: WitData,
+    userPrefs: UserPrefs,
+    botParams: BotParams,
+    converseData: Object,
+    level: number
 ) : Promise<RunActionsRes>
 {
-    console.log('_runActionsHelper: converseData: ', converseData);
+    reportDebug('runActionsHelper: converseData: ', converseData);
     if (level < 0) {
-        console.log('_runActionsHelper: Max steps reached, stopping.');
+        reportDebug('runActionsHelper: Max steps reached, stopping.');
         return { userPrefs, witData };
     }
 
@@ -74,8 +78,8 @@ export async function _runActionsHelper(client: Wit,
         throw new Error(`Couldn't find type in Wit response`);
     }
 
-    console.log('witData: ', witData);
-    console.log('Response type: ', converseData.type);
+    reportDebug('witData: ', witData);
+    reportDebug('Response type: ', converseData.type);
 
     // backwards-cpmpatibility with API version 20160516
     if (converseData.type === 'merge') {
@@ -112,20 +116,20 @@ export async function _runActionsHelper(client: Wit,
             userPrefs,
         });
         await resP;
-        return await _runActionsHelper(client, text, originalMessage, witData,
-                                       userPrefs, botParams, newConverseData, level-1);
+        return await runActionsHelper(client, text, originalMessage, witData,
+                                      userPrefs, botParams, newConverseData, level-1);
 
     } else if (converseData.type === 'action') {
         if (!converseData.action) {
             // this is bug in wit
             // see https://github.com/wit-ai/node-wit/issues/5
-            console.log('_runActionsHelper skipping null action');
+            reportDebug('runActionsHelper skipping null action');
             const newConverseData = await client.converse(witData.sessionId, null, {
                 ...witData.context,
                 userPrefs,
             });
-            return await _runActionsHelper(client, text, originalMessage, witData,
-                                           userPrefs, botParams, newConverseData, level-1);
+            return await runActionsHelper(client, text, originalMessage, witData,
+                                          userPrefs, botParams, newConverseData, level-1);
         }
 
         let actionFullName = converseData.action;
@@ -134,11 +138,11 @@ export async function _runActionsHelper(client: Wit,
         const sepIndex = actionFullName.indexOf('_');
         const prefix = sepIndex > 0 ? actionFullName.split('_')[0] : '';
         const action = sepIndex > 0 ? actionFullName.substr(sepIndex+1) : actionFullName;
-        console.log(`prefix: ${prefix}`);
-        console.log(`action: ${action}`);
+        reportDebug(`prefix: ${prefix}`);
+        reportDebug(`action: ${action}`);
         if (prefix !== witData.lastActionPrefix && (prefix || witData.lastActionPrefix)) {
-            console.log(`Story changed from "${witData.lastActionPrefix || 'N/A'}" to "${prefix}"`);
-            console.log(`Resetting context...`);
+            reportDebug(`Story changed from "${witData.lastActionPrefix || 'N/A'}" to "${prefix}"`);
+            reportDebug(`Resetting context...`);
             newWitData = {
                 ...witData,
                 context: {},
@@ -150,9 +154,9 @@ export async function _runActionsHelper(client: Wit,
             }
         }
         const actionRes =
-            await _runAction(action, newRequestData, originalMessage, botParams,
-                             client.config.actions) || {};
-        console.log('action returned: ', actionRes);
+            await runAction(action, newRequestData, originalMessage, botParams,
+                            client.config.actions) || {};
+        reportDebug('action returned: ', actionRes);
         newWitData.context = actionRes.context || {};
         const newUserPrefs = _.has(actionRes, 'userPrefs')
             ? actionRes.userPrefs || {}
@@ -170,36 +174,37 @@ export async function _runActionsHelper(client: Wit,
             userPrefs,
         });
         await resP;
-        return await _runActionsHelper(client, text, originalMessage, newWitData,
-                                       newUserPrefs, botParams, newConverseData,
-                                       level-1)
+        return await runActionsHelper(client, text, originalMessage, newWitData,
+                                      newUserPrefs, botParams, newConverseData,
+                                      level-1)
     } else {
-        console.error('unknown response type', converseData);
+        reportError('unknown response type', converseData);
         throw new Error(`unknown response type ${converseData.type}`);
     }
 }
 
-export async function _runAction(actionName: string,
-                                 actionRequest: ActionRequestIncomplete,
-                                 originalMessage: DBMessage,
-                                 botParams: BotParams,
-                                 localActions: {[key: string]: Function})
+async function runAction(
+    actionName: string,
+    actionRequest: ActionRequestIncomplete,
+    originalMessage: DBMessage,
+    botParams: BotParams,
+    localActions: {[key: string]: Function})
 {
-    console.log('_runAction: ')
-    console.log('\t actionName: ', actionName);
-    console.log('\t actionRequest: ', toStr(actionRequest));
+    reportDebug('runAction: ')
+    reportDebug('\t actionName: ', actionName);
+    reportDebug('\t actionRequest: ', toStr(actionRequest));
     const { publisherId } = botParams;
     const { senderId } = originalMessage;
     if (!senderId) {
-        throw new Error(`ERROR: _runAction senderId: ${senderId || ''}`);
+        throw new Error(`ERROR: runAction senderId: ${senderId || ''}`);
     }
     const federationToken = await aws.stsGetFederationToken({
         Name: uuid.v4().substr(0, 30),
         DurationSeconds: 15 * 60,
-        Policy: _generateS3Policy(publisherId, senderId),
+        Policy: generateS3Policy(publisherId, senderId),
     });
     const credentials = federationToken.Credentials;
-    console.log('got federationToken: ', federationToken);
+    reportDebug('got federationToken: ', federationToken);
     const requestData: ActionRequest = {
         ...actionRequest,
         // action: actionName,
@@ -219,7 +224,7 @@ export async function _runAction(actionName: string,
     }
 
     const action = await aws.getAIAction(actionName);
-    console.log('_runAction: ', action);
+    reportDebug('runAction: ', action);
     if (action.url) {
         const res = await request({
             uri: action.url,
@@ -229,10 +234,10 @@ export async function _runAction(actionName: string,
         });
 
         if (res.statusCode === 200) {
-            console.log('_runAction url, returned: ', toStr(res.body));
+            reportDebug('runAction url, returned: ', toStr(res.body));
             return res.body;
         } else {
-            throw new Error(`_runAction url, returned error code ${res.statusCode}`
+            throw new Error(`runAction url, returned error code ${res.statusCode}`
                           + ` and body: ${JSON.stringify(res.body)}`);
         }
     }
@@ -242,7 +247,7 @@ export async function _runAction(actionName: string,
             FunctionName: lambda,
             Payload: JSON.stringify(requestData),
         });
-        console.log('lambda returned: ', toStr(res));
+        reportDebug('lambda returned: ', toStr(res));
         if (res.StatusCode !== 200) {
             throw new Error(`lambda ${lambda} returned status code ${res.StatusCode}`);
         }
@@ -257,7 +262,7 @@ export async function _runAction(actionName: string,
     throw new Error(`Unknown action: ${toStr(action)}`);
 }
 
-export function _generateS3Policy(publisherId: string, senderId: string): string {
+function generateS3Policy(publisherId: string, senderId: string): string {
     return JSON.stringify({
         Version: '2012-10-17',
         Statement: [
@@ -305,7 +310,7 @@ export async function ai(message: DBMessage,
                          botParams: BotParams,
                          respondFn: RespondFn)
 {
-    console.log('ai message: ', message);
+    reportDebug('ai message: ', message);
     if (!botParams.settings.witAccessToken) {
         throw new Error(`Bot doesn't have witAccessToken: ${toStr(botParams)}`);
     }
@@ -324,7 +329,7 @@ export async function ai(message: DBMessage,
         }),
         aws.getUserByUserId(publisherId, botParams.botId, message.channel, message.senderId),
     ]);
-    convQueryRes.Items.map((x, i) => console.log(`ai: convQueryRes ${i}`, x));
+    convQueryRes.Items.map((x, i) => reportDebug(`ai: convQueryRes ${i}`, x));
 
     if (convQueryRes.Count === 0) {
         throw new Error('ai: couldn\'t find the conversation');
@@ -334,11 +339,11 @@ export async function ai(message: DBMessage,
         sessionId: uuid.v4(),
         context: {},
     }, convQueryRes.Items[0].witData);
-    console.log('ai: witData: ', witData);
+    reportDebug('ai: witData: ', witData);
 
 
     const userPrefs = user && user.prefs || {};
-    console.log('ai user preferences: ', userPrefs);
+    reportDebug('ai user preferences: ', userPrefs);
 
 
     let text = message.text;
@@ -350,9 +355,9 @@ export async function ai(message: DBMessage,
     }
 
 
-    const client = _mkClient(botParams.settings.witAccessToken, respondFn);
+    const client = mkClient(botParams.settings.witAccessToken, respondFn);
     const { witData: newWitData, userPrefs: newUserPrefs } =
-        await _runActions(client, text, message, witData, userPrefs, botParams);
+        await runActions(client, text, message, witData, userPrefs, botParams);
 
     await Promise.all([
         aws.dynamoUpdate({
@@ -381,3 +386,4 @@ export async function ai(message: DBMessage,
 }
 
 export default ai;
+

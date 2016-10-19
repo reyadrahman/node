@@ -12,6 +12,8 @@ import type { Request, Response } from 'express';
 import express from 'express';
 import ciscospark from 'ciscospark';
 import _ from 'lodash';
+const reportDebug = require('debug')('deepiks:client-server-bridge');
+const reportError = require('debug')('deepiks:client-server-bridge:error');
 
 const routes = express.Router();
 
@@ -36,7 +38,7 @@ routes.use('/', (req, res, next) => {
         try {
             idTokenPayload = aws.verifyJwt(jwtIdTokenRaw);
         } catch(error) {
-            console.error('Error verifying JWT: ', error);
+            reportError('Error verifying JWT: ', error);
             return res.status(403).send('Invalid JWT');
         }
         aws.getIdFromJwtIdToken(jwtIdTokenRaw)
@@ -204,12 +206,12 @@ async function sendEmail(contactFormData: ContactFormData) {
         ],
     };
 
-    console.log('sendEmail: ', params);
+    reportDebug('sendEmail: ', params);
     await aws.sesSendEmail(params);
 }
 
 async function fetchBotPublicInfo(identityId, botId) {
-    console.log('fetchBots: ', identityId);
+    reportDebug('fetchBots: ', identityId);
     const qres = await aws.dynamoQuery({
         TableName:                 CONSTANTS.DB_TABLE_BOTS,
         KeyConditionExpression:    'publisherId = :pid AND botId = :bid',
@@ -246,7 +248,7 @@ async function fetchBotPublicInfo(identityId, botId) {
 }
 
 async function fetchBots(identityId) {
-    console.log('fetchBots: ', identityId);
+    reportDebug('fetchBots: ', identityId);
     const qres = await aws.dynamoQuery({
         TableName: CONSTANTS.DB_TABLE_BOTS,
         KeyConditionExpression: 'publisherId = :pid',
@@ -254,12 +256,12 @@ async function fetchBots(identityId) {
             ':pid': identityId,
         },
     });
-    console.log('qres: ', qres);
+    reportDebug('qres: ', qres);
     return qres.Items || [];
 }
 
 async function fetchUsers(identityId, botId) {
-    console.log('fetchUsers: identityId=', identityId, 'botId=', botId);
+    reportDebug('fetchUsers: identityId=', identityId, 'botId=', botId);
     const qres = await aws.dynamoQuery({
         TableName:                 CONSTANTS.DB_TABLE_USERS,
         KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_channel_userId, :bid)',
@@ -274,7 +276,7 @@ async function fetchUsers(identityId, botId) {
 }
 
 async function fetchPolls(identityId, botId) {
-    console.log('fetchPolls: identityId=', identityId, 'botId=', botId);
+    reportDebug('fetchPolls: identityId=', identityId, 'botId=', botId);
     const qres = await aws.dynamoQuery({
         TableName:                 CONSTANTS.DB_TABLE_POLL_QUESTIONS,
         KeyConditionExpression:    'publisherId = :pid AND begins_with(botId_pollId_questionId, :bid)',
@@ -289,7 +291,7 @@ async function fetchPolls(identityId, botId) {
 }
 
 async function fetchUser(identityId, botId, channel, userId) {
-    console.log('fetchUsers: identityId=', identityId, ', channel=', channel, ', botId=', botId);
+    reportDebug('fetchUsers: identityId=', identityId, ', channel=', channel, ', botId=', botId);
     return await aws.getUserByUserId(identityId, botId, channel, userId);
 }
 
@@ -314,7 +316,7 @@ async function saveUser(
     identityId: string, botId: string, channel: string,
     userId?: string, email?: string, userRole?: string
 ) {
-    console.log('saveUser: ', arguments);
+    reportDebug('saveUser: ', arguments);
 
     if (!userRole) userRole = 'user';
     if (email) email = email.trim().toLowerCase();
@@ -371,7 +373,7 @@ async function saveUser(
             },
             ReturnValues: 'ALL_NEW'
         });
-        console.log('saveUser returning ', user.Attributes);
+        reportDebug('saveUser returning ', user.Attributes);
         return user.Attributes;
     }
 
@@ -396,12 +398,12 @@ async function saveUser(
         },
         ReturnValues: 'ALL_NEW'
     });
-    console.log('saveUser returning ', user.Attributes);
+    reportDebug('saveUser returning ', user.Attributes);
     return user.Attributes;
 }
 
 async function fetchConversations(identityId, botId, since: int = 0) {
-    console.log('fetchConversations: identityId=', identityId, 'botId=', botId, 'since=', since);
+    reportDebug('fetchConversations: identityId=', identityId, 'botId=', botId, 'since=', since);
     // TODO paging
     // see dynamoAccumulatePages in aws-helper.js
 
@@ -429,7 +431,7 @@ async function fetchConversations(identityId, botId, since: int = 0) {
 }
 
 async function fetchMessages(identityId, conversationId, since: int = 0) {
-    console.log('fetchMessages: ', identityId, 'conversationId:', conversationId, 'since=', since);
+    reportDebug('fetchMessages: ', identityId, 'conversationId:', conversationId, 'since=', since);
     let query = {
         TableName: CONSTANTS.DB_TABLE_MESSAGES,
         KeyConditionExpression: 'publisherId_conversationId = :pc',
@@ -445,12 +447,12 @@ async function fetchMessages(identityId, conversationId, since: int = 0) {
 
     const qres = await aws.dynamoQuery(query);
 
-    // console.log('qres: ', qres);
+    // reportDebug('qres: ', qres);
     return qres.Items || [];
 }
 
 async function addBot(identityId, botName, settings) {
-    console.log('addBot: ', identityId, botName, settings);
+    reportDebug('addBot: ', identityId, botName, settings);
     const botId = uuid.v4();
     const ciscosparkWebhookSecret = uuid.v4();
 
@@ -486,7 +488,7 @@ async function addBot(identityId, botName, settings) {
 }
 
 async function updateBot(identityId, botId, model) {
-    console.log('updateBot: ', identityId, botId, model);
+    reportDebug('updateBot: ', identityId, botId, model);
 
     let bot = await aws.dynamoUpdate({
         TableName:                 CONSTANTS.DB_TABLE_BOTS,
@@ -529,7 +531,7 @@ async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
 
 
 async function sendNotification(identityId, botId, message, categories) {
-    console.log('sendNotification: ', identityId, botId, message);
+    reportDebug('sendNotification: ', identityId, botId, message);
     const botParams = await aws.getBot(identityId, botId);
     if (!botParams) {
         throw new Error(`Did not find bot with publisherId ${identityId} and botId ${botId}`);
@@ -541,31 +543,5 @@ async function sendNotification(identityId, botId, message, categories) {
     await channels.sendToMany(botParams, msg, categories);
 }
 
-// async function createInvitationTokens(identityId, botId, count) {
-//     console.log('createInvitationTokens: ', identityId, botId, count);
-//     count = Number(count);
-//     if (!botId || !Number.isInteger(count) || count <= 0 || count > 1000) {
-//         throw new Error(`createInvitationTokens invalid parameters ${botId}, ${count}`);
-//     }
-//     const botParams = await aws.getBot(identityId, botId);
-//     if (!botParams) {
-//         throw new Error(`createInvitationTokens did not find bot with ` +
-//                         `publisherId ${identityId} and botId ${botId}`);
-//     }
-//
-//     const tokens = _.range(count).map(shortLowerCaseRandomId);
-//
-//     const res = await aws.dynamoBatchWriteHelper(CONSTANTS.DB_TABLE_INVITATION_TOKENS,
-//         tokens.map(x => ({
-//             PutRequest: {
-//                 Item: {
-//                     publisherId: identityId,
-//                     botId_invitationToken: composeKeys(botId, x),
-//                 },
-//             },
-//         }))
-//     );
-//     console.log(`createInvitationTokens res: `, inspect(res, { depth: null}));
-// }
 
 export default routes;
