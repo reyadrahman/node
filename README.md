@@ -359,7 +359,7 @@ The tests are located at `src/client/tests/` and the entry point which is suppos
 
 **Please note that the client-side tests use `.env`, whereas server-side tests use `.test.env`. This is currently not a problem as client-side tests aren't supposed to manipulate the database. However in the future, it's best to use `.test.env` in both cases for consistency.**
 
-Another point is that the code at `src/client/tests/tests.js` and all of its dependencies will be excluded from the bundle when in production code. So you don't have to worry about how heavy a library you'd like to use there.
+Another point worth remembering is that the code at `src/client/tests/tests.js` and all of its dependencies will be excluded from the bundle when in production mode. So you don't have to worry about how heavy a library you'd like to use there.
 
 ### Workflow
 After `npm install`, you can open 3 terminals and run the following commands in each:
