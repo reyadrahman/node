@@ -22,6 +22,66 @@ type ProcessedAttachment = {
     format: string,
 };
 
+
+class FunctionQueue {
+    queue: Array<{ fn: Function, resolve: Function, reject: Function }>;
+    isActive: boolean;
+
+    constructor() {
+        this.queue = [];
+        this.isActive = false;
+    }
+
+    enqueue(fn: Function) {
+        let x;
+        const p = new Promise((resolve, reject) => {
+            x = { fn, resolve, reject };
+        });
+        reportDebug('FunctionQueue enqueue x: ', x);
+        this.queue.push(x);
+        if (!this.isActive) {
+            this.isActive = true;
+            process.nextTick(() => this._run());
+        }
+        return p;
+    }
+
+    _run() {
+        if (this.queue.length === 0) {
+            reportDebug('FunctionQueue is now empty');
+            this.isActive = false;
+            return;
+        }
+        reportDebug('FunctionQueue executing an item');
+
+        const item = this.queue.shift();
+
+        let ret;
+        try {
+            ret = item.fn();
+        } catch(error) {
+            item.reject(error);
+            return process.nextTick(() => this._run());
+        }
+
+        ret = Promise.resolve(ret);
+        ret.then(x => {
+            item.resolve(x);
+            process.nextTick(() => this._run());
+        }, error => {
+            item.reject(error);
+            process.nextTick(() => this._run());
+        });
+
+        // make it a promise if it's not already one
+        // ret = Promise.resolve(ret);
+        // ret.then(item.resolve, item.reject);
+        // this._run();
+    }
+}
+
+const _functionQueue_ = new FunctionQueue();
+
 function textToResponseMessage(text: string): ResponseMessage {
     return { text, creationTimestamp: Date.now() };
 }
@@ -398,7 +458,8 @@ function respondFnPreprocessorActionsMiddleware(
                 creationTimestamp: Date.now(),
             }, botParams, conversationId, channel);
 
-            // TODO investigate why the strange behaviours occur without this timeout
+            // TODO Now that we're using FunctionQueue, this timeout should be unnecessary
+            // testing required.
             await timeout(3000);
             await sendAsUser(message);
         }
@@ -681,15 +742,11 @@ async function updateConversationTable(message: DBMessage,
 
 /**
  * updates the users table, creating a new item if necessary.
- * The `message` must be a message from user, not from bot.
  */
 async function updateUsersTable(
     message: DBMessage, botParams: BotParams,
 ) {
     reportDebug('updateUsersTable');
-    if (message.senderIsBot) {
-        throw new Error('updateUsersTable message.senderIsBot must be false');
-    }
 
     const res = await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_USERS,
@@ -729,11 +786,11 @@ async function handleWebhookMessage(
     // set up
     const [, conversationId] = decomposeKeys(dbMessage.publisherId_conversationId);
     let newRespondFn;
-    const sendAsUser = (msg: DBMessage) => {
+    const sendAsUser = (msg: DBMessage) => _functionQueue_.enqueue(() => {
         return handleProcessedDBMessage(
             msg, botParams, newRespondFn, conversationId, channelData
         );
-    };
+    });
     const responses = [];
     newRespondFn = respondFn;
     newRespondFn = respondFnSignS3UrlsMiddleware(newRespondFn);
@@ -750,7 +807,7 @@ async function handleWebhookMessage(
                             dbMessage.channel, dbMessage.senderId),
     ]);
     if (alreadyInDB) {
-        reportDebug(`Message is already in the db. It won't be processed.`)
+        reportDebug(`Message is already in the db. It won't be processed.`);
         return;
     }
     if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none' && user.isVerified) {
@@ -822,9 +879,11 @@ export async function coldSend(message: ResponseMessage, botParams: BotParams,
 {
     const [, conversationId] = decomposeKeys(conversation.botId_conversationId);
     let newRespondFn;
-    const sendAsUser = (msg: DBMessage) => handleProcessedDBMessage(
-        msg, botParams, newRespondFn, conversationId, conversation.channelData
-    );
+    const sendAsUser = (msg: DBMessage) => _functionQueue_.enqueue(() => {
+        return handleProcessedDBMessage(
+            msg, botParams, newRespondFn, conversationId, conversation.channelData
+        );
+    });
     const responses = [];
     newRespondFn = respondFn;
     newRespondFn = respondFnSignS3UrlsMiddleware(newRespondFn);
