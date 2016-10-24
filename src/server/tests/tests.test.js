@@ -246,7 +246,7 @@ describe('::', function() {
                     }
                 ],
             };
-            const res = await deepiksBot._processAttachments(message);
+            const res = await deepiksBot._processAttachments(message, sampleBotParams1);
             expect(res, 'res must exist').exist();
             if (!res) return; // keep flow happy
             expect(res.length, 'res must have length 1').eql(1);
