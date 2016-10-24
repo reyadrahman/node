@@ -18,7 +18,7 @@ export type ActionRequestIncomplete = {
     entities?: Object,
 };
 
-export function generateS3Policy(publisherId: string, senderId: string): string {
+function generateS3Policy(publisherId: string, botId: string, senderId: string): string {
     return JSON.stringify({
         Version: '2012-10-17',
         Statement: [
@@ -29,7 +29,7 @@ export function generateS3Policy(publisherId: string, senderId: string): string 
                     's3:PutObject',
                 ],
                 Resource: [
-                    `arn:aws:s3:::${CONSTANTS.S3_BUCKET_NAME}/${publisherId}/${senderId}/*`,
+                    `arn:aws:s3:::${CONSTANTS.S3_BUCKET_NAME}/${publisherId}/${botId}/${senderId}/*`,
                 ]
             }
         ]
@@ -44,7 +44,7 @@ export async function runAction(
     localActions: {[key: string]: Function}
 ) {
     reportDebug('runAction ', actionName, toStr(actionRequest));
-    const { publisherId } = botParams;
+    const { publisherId, botId } = botParams;
     const { senderId } = originalMessage;
     if (!senderId) {
         throw new Error(`ERROR: runAction senderId: ${senderId || ''}`);
@@ -52,7 +52,7 @@ export async function runAction(
     const federationToken = await aws.stsGetFederationToken({
         Name: uuid.v4().substr(0, 30),
         DurationSeconds: 15 * 60,
-        Policy: generateS3Policy(publisherId, senderId),
+        Policy: generateS3Policy(publisherId, botId, senderId),
     });
     const credentials = federationToken.Credentials;
     reportDebug('got federationToken: ', federationToken);

@@ -520,7 +520,7 @@ async function uploadToS3(key: string, buffer: Buffer) {
         Body: buffer,
     });
     reportDebug('PROFILING: s3 time upload: %s ms', Date.now() - startTime);
-    reportDebug(`Location: ${res.Location}`)
+    reportDebug(`Location: ${res.Location}`);
     return res.Location;
 }
 
@@ -533,8 +533,8 @@ async function getFileFormat(buffer: Buffer): Promise<string> {
     return '';
 }
 
-async function processAttachments(message: WebhookMessage):
-    Promise<?Array<ProcessedAttachment>>
+async function processAttachments(message: WebhookMessage, botParams: BotParams)
+: Promise<?Array<ProcessedAttachment>>
 {
     reportDebug('processAttachments');
     const { cards, fetchCardImages } = message;
@@ -563,13 +563,13 @@ async function processAttachments(message: WebhookMessage):
 
     const s3LocationAndFormatPs = _.zip(downloads, formats).map(([buffer, format], i) => {
         const [pid] = decomposeKeys(message.publisherId_conversationId);
-        // const bid = botParams.botId;
-        const mid = message.id;
+        const bid = botParams.botId;
+        // const mid = message.id;
         const sid = message.senderId;
         const t = message.creationTimestamp;
         const extension = format ? '.' + format : '';
         return {
-            urlP: uploadToS3(`${pid}/${sid}/${t}_${i}${extension}`, buffer),
+            urlP: uploadToS3(`${pid}/${bid}/${sid}/${t}_${i}${extension}`, buffer),
             format,
         };
     });
@@ -717,7 +717,7 @@ async function updateConversationTable(message: DBMessage,
          !channelData && 'channelData',
     ].filter(Boolean).join(', ');
 
-    const res = await aws.dynamoUpdate({
+    await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
         Key: {
             publisherId,
@@ -749,7 +749,7 @@ async function updateUsersTable(
 ) {
     reportDebug('updateUsersTable');
 
-    const res = await aws.dynamoUpdate({
+    await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_USERS,
         Key: {
             publisherId: botParams.publisherId,
@@ -775,7 +775,7 @@ async function handleWebhookMessage(
     reportDebug('handleWebhookMessage');
 
     // create DBMessage from WebhookMessage
-    const attachments = await processAttachments(rawMessage);
+    const attachments = await processAttachments(rawMessage, botParams);
     let dbMessage = webhookMessageToDBMessage(rawMessage);
     dbMessage = attachments
         ? await insertAttachmentsIntoMessage(dbMessage, attachments)
@@ -849,7 +849,7 @@ async function handleProcessedDBMessage(
         logMessage(dbMessage),
     ]);
     dbMessage = await pollMiddleware(dbMessage, botParams, respondFn);
-    if (botParams.witAccessToken) {
+    if (botParams.settings.witAccessToken) {
         await witAI(dbMessage, botParams, respondFn);
     } else {
         await customAI(dbMessage, botParams, respondFn);
