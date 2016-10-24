@@ -20,6 +20,7 @@ const VALID_ENV_VARS = [
     { name: 'CONTACT_EMAIL',                  required: true  },
     { name: 'EMAIL_ACTION_FROM_ADDRESS',      required: true  },
     { name: 'OWN_BASE_URL',                   required: true  },
+    { name: 'CONVERSATIONAL_ENGINE_LAMBDA',   required: true  },
     { name: 'CALL_SERVER_LAMBDA_SECRET',      required: true  },
     { name: 'CDN',                            required: false },
     { name: 'PORT',                           required: false },

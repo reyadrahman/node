@@ -5,7 +5,8 @@ import { callbackToPromise, toStr, destructureS3Url, timeout,
          composeKeys, decomposeKeys, waitForAll,
          shortLowerCaseRandomId } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
-import aiRoute from './ai.js';
+import witAI from './wit-ai.js';
+import customAI from './custom-ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
               ChannelData, Conversation, RespondFn, User } from '../../misc/types.js';
 import { translations as tr, languages as langs } from '../i18n/translations.js';
@@ -848,7 +849,11 @@ async function handleProcessedDBMessage(
         logMessage(dbMessage),
     ]);
     dbMessage = await pollMiddleware(dbMessage, botParams, respondFn);
-    await aiRoute(dbMessage, botParams, respondFn);
+    if (botParams.witAccessToken) {
+        await witAI(dbMessage, botParams, respondFn);
+    } else {
+        await customAI(dbMessage, botParams, respondFn);
+    }
 }
 
 export async function deepiksBot(message: WebhookMessage,

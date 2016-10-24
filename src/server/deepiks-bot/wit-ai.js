@@ -1,27 +1,17 @@
 /* @flow */
 
 import * as aws from '../../aws/aws.js';
-import type { DBMessage, ResponseMessage, BotParams, ActionRequest,
-              ActionResponse, UserPrefs, WitData, RespondFn } from '../../misc/types.js';
-import { CONSTANTS, request } from '../server-utils.js';
-import { toStr, catchPromise, callbackToPromise,
-         composeKeys, decomposeKeys } from '../../misc/utils.js';
+import type { DBMessage, BotParams, UserPrefs, WitData,
+              RespondFn } from '../../misc/types.js';
+import { CONSTANTS } from '../server-utils.js';
+import { toStr, composeKeys, decomposeKeys } from '../../misc/utils.js';
+import { runAction } from './ai-helpers.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
-import URL from 'url';
 import uuid from 'node-uuid';
-const reportDebug = require('debug')('deepiks:ai');
-const reportError = require('debug')('deepiks:ai:error');
-
-type ActionRequestIncomplete = {
-    sessionId: string,
-    context: Object,
-    userPrefs: UserPrefs,
-    text: string,
-    entities: Object,
-    publisherId: string,
-    botId: string,
-};
+const reportDebug = require('debug')('deepiks:wit-ai');
+const reportError = require('debug')('deepiks:wit-ai:error');
+const witLogger = require('debug')('deepiks:wit');
 
 type RunActionsRes = {
     witData: WitData,
@@ -34,9 +24,9 @@ function mkClient(accessToken: string, respondFn: RespondFn) {
         respondFn,
         actions: {
             // dummy
-            send() {}
+            send(a,b) {}
         },
-        logger: new witLog.Logger(witLog.DEBUG)
+        logger: new witLog.Logger(witLogger)
     });
 }
 
@@ -183,103 +173,6 @@ async function runActionsHelper(
     }
 }
 
-async function runAction(
-    actionName: string,
-    actionRequest: ActionRequestIncomplete,
-    originalMessage: DBMessage,
-    botParams: BotParams,
-    localActions: {[key: string]: Function})
-{
-    reportDebug('runAction: ')
-    reportDebug('\t actionName: ', actionName);
-    reportDebug('\t actionRequest: ', toStr(actionRequest));
-    const { publisherId } = botParams;
-    const { senderId } = originalMessage;
-    if (!senderId) {
-        throw new Error(`ERROR: runAction senderId: ${senderId || ''}`);
-    }
-    const federationToken = await aws.stsGetFederationToken({
-        Name: uuid.v4().substr(0, 30),
-        DurationSeconds: 15 * 60,
-        Policy: generateS3Policy(publisherId, senderId),
-    });
-    const credentials = federationToken.Credentials;
-    reportDebug('got federationToken: ', federationToken);
-    const requestData: ActionRequest = {
-        ...actionRequest,
-        // action: actionName,
-        credentials: {
-            accessKeyId: credentials.AccessKeyId,
-            secretAccessKey: credentials.SecretAccessKey,
-            sessionToken: credentials.SessionToken,
-            expiration: credentials.Expiration,
-        },
-        s3: {
-            bucket: CONSTANTS.S3_BUCKET_NAME,
-            prefix: `${publisherId}/${senderId}/`,
-        }
-    }
-    if (localActions[actionName]) {
-        return await localActions[actionName](requestData);
-    }
-
-    const action = await aws.getAIAction(actionName);
-    reportDebug('runAction: ', action);
-    if (action.url) {
-        const res = await request({
-            uri: action.url,
-            method: 'POST',
-            json: true,
-            body: requestData,
-        });
-
-        if (res.statusCode === 200) {
-            reportDebug('runAction url, returned: ', toStr(res.body));
-            return res.body;
-        } else {
-            throw new Error(`runAction url, returned error code ${res.statusCode}`
-                          + ` and body: ${JSON.stringify(res.body)}`);
-        }
-    }
-    else if (action.lambda){
-        const { lambda } = action;
-        const res = await aws.lambdaInvoke({
-            FunctionName: lambda,
-            Payload: JSON.stringify(requestData),
-        });
-        reportDebug('lambda returned: ', toStr(res));
-        if (res.StatusCode !== 200) {
-            throw new Error(`lambda ${lambda} returned status code ${res.StatusCode}`);
-        }
-        const resPayload = JSON.parse(res.Payload);
-        if (!resPayload.context){
-            throw new Error(`lambda ai action named ${lambda} did not return a context: ` +
-                            toStr(resPayload));
-        }
-        return resPayload;
-    }
-
-    throw new Error(`Unknown action: ${toStr(action)}`);
-}
-
-function generateS3Policy(publisherId: string, senderId: string): string {
-    return JSON.stringify({
-        Version: '2012-10-17',
-        Statement: [
-            {
-                Effect: 'Allow',
-                Action: [
-                    's3:GetObject',
-                    's3:PutObject',
-                ],
-                Resource: [
-                    `arn:aws:s3:::${CONSTANTS.S3_BUCKET_NAME}/${publisherId}/${senderId}/*`,
-                ]
-            }
-        ]
-    });
-}
-
 function converseDataToResponseMessage(converseData) {
     const response = {};
     // check for preprocessor actions inside the message
@@ -306,10 +199,11 @@ function converseDataToResponseMessage(converseData) {
     return response;
 }
 
-export async function ai(message: DBMessage,
-                         botParams: BotParams,
-                         respondFn: RespondFn)
-{
+export async function ai(
+    message: DBMessage,
+    botParams: BotParams,
+    respondFn: RespondFn
+) {
     reportDebug('ai message: ', message);
     if (!botParams.settings.witAccessToken) {
         throw new Error(`Bot doesn't have witAccessToken: ${toStr(botParams)}`);
@@ -318,32 +212,20 @@ export async function ai(message: DBMessage,
     const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
 
-    const [convQueryRes, user] = await Promise.all([
-        aws.dynamoQuery({
-            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
-            KeyConditionExpression: 'publisherId = :publisherId and botId_conversationId = :bc',
-            ExpressionAttributeValues: {
-                ':publisherId': publisherId,
-                ':bc': composeKeys(botParams.botId, conversationId),
-            },
-        }),
+    const [conversation, user] = await Promise.all([
+        aws.getConversation(publisherId, botParams.botId, conversationId),
         aws.getUserByUserId(publisherId, botParams.botId, message.channel, message.senderId),
     ]);
-    convQueryRes.Items.map((x, i) => reportDebug(`ai: convQueryRes ${i}`, x));
-
-    if (convQueryRes.Count === 0) {
-        throw new Error('ai: couldn\'t find the conversation');
-    }
 
     const witData = Object.assign({
         sessionId: uuid.v4(),
         context: {},
-    }, convQueryRes.Items[0].witData);
+    }, conversation.witData);
     reportDebug('ai: witData: ', witData);
 
 
     const userPrefs = user && user.prefs || {};
-    reportDebug('ai user preferences: ', userPrefs);
+    reportDebug('ai userPrefs: ', userPrefs);
 
 
     let text = message.text;

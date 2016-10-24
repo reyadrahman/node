@@ -22,7 +22,8 @@ export type Conversation = {
     lastMessage: DBMessage,
     botId_lastInteractiveMessageTimestamp_messageId: string,
     publisherId: string,
-    witData: WitData,
+    witData?: WitData,
+    customAIData?: CustomAIData,
     channelData?: ChannelData,
     lastParticipantProfilePic?: string,
     participantsNames?: {
@@ -43,6 +44,11 @@ export type WitData = {
     context: Object,
     sessionId: string,
     lastActionPrefix?: string,
+};
+
+export type CustomAIData = {
+    context: Object,
+    session: Object,
 };
 
 
@@ -247,6 +253,7 @@ export type ServerConstants = {
     EMAIL_ACTION_FROM_ADDRESS: string,
     PORT: string,
     OWN_BASE_URL: string,
+    CONVERSATIONAL_ENGINE_LAMBDA: string,
     CALL_SERVER_LAMBDA_SECRET: string,
     CDN?: string,
     DEBUG?: string,

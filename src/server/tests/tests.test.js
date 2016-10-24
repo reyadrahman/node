@@ -10,7 +10,8 @@ import { CONSTANTS, request } from '../server-utils.js';
 import * as serverUtils from '../server-utils.js';
 import * as aws from '../../aws/aws.js';
 import * as deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import * as ais from '../deepiks-bot/ai.js';
+import * as witAI from '../deepiks-bot/wit-ai.js';
+import * as customAI from '../deepiks-bot/custom-ai.js';
 import { translations, languages } from '../i18n/translations.js';
 import * as messenger from '../channels/messenger.js';
 import * as spark from '../channels/spark.js';
@@ -568,7 +569,7 @@ describe('::', function() {
         });
     });
 
-    describe('=> AI', function() {
+    describe('=> Wit AI', function() {
         it('=> responds to hello', async function () {
             await logSampleDBMessage1();
             await updateConversationsTable1();
@@ -578,7 +579,7 @@ describe('::', function() {
                 responses.push(m);
                 return Promise.resolve();
             };
-            await ais.ai(sampleDBMessage1, sampleBotParams1, respondFn);
+            await witAI.ai(sampleDBMessage1, sampleBotParams1, respondFn);
 
             expect(responses.length, 'must have a response').gte(1);
             expect(responses[0].text, 'hi back');
@@ -636,7 +637,7 @@ describe('::', function() {
                 return Promise.reject('uri must be xxx');
             });
 
-            await ais.ai(message, sampleBotParams1, respondFn);
+            await witAI.ai(message, sampleBotParams1, respondFn);
 
             expect(_.omit(responses[0], 'creationTimestamp')).eql(actionMessage);
             expect(responses[0].creationTimestamp, 'must add creationTimestamp').gt(0);
@@ -661,6 +662,46 @@ describe('::', function() {
             // restore request
             // $FlowFixMe
             serverUtils.request.restore();
+        });
+    });
+
+    describe('=> Custom AI', function() {
+        it('=> echo messages', async function () {
+            const botParams = {
+                ...sampleBotParams1,
+                settings: {
+                    ...sampleBotParams1.settings,
+                    witAccessToken: undefined,
+                }
+            };
+            await logSampleDBMessage1();
+            await updateConversationsTable1();
+
+            const responses = [];
+            const respondFn = (m) => {
+                responses.push(m);
+                return Promise.resolve();
+            };
+
+            await customAI.ai(_.omit(sampleDBMessage1, 'cards'), botParams, respondFn);
+            await customAI.ai(_.omit(sampleDBMessage1, 'cards'), botParams, respondFn);
+
+            expect(responses.map(x => _.omit(x, 'creationTimestamp'))).eql([
+                { text: `You wrote: ${sampleDBMessage1.text || ''}` },
+                { text: 'Write something (1)' },
+                { text: `You wrote: ${sampleDBMessage1.text || ''}` },
+                { text: 'Write something (2)' },
+            ]);
+
+            // const conversation = await aws.getConversation(
+            //     botParams.publisherId, botParams.botId, sampleConversationId1
+            // );
+            // expect(conversation.customAIData).eql({
+            //     session: {
+            //         count: 0
+            //     },
+            //     context: {},
+            // });
         });
     });
 
