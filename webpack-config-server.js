@@ -1,7 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const fs = require('fs');
-//const mapKeys = require('lodash/mapKeys');
 const _ = require('lodash');
 const { createBaseConfig, createPublicPathAndUrl } = require('./webpack-config-base.js');
 

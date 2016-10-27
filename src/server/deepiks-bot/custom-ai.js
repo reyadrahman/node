@@ -14,7 +14,8 @@ const reportError = require('debug')('deepiks:custom-ai:error');
 type ConverseData =
     | { type: 'error', session: Object }
     | { type: 'stop', session: Object }
-    | { type: 'msg', session: Object, msg: ResponseMessage };
+    | { type: 'msg', session: Object, msg: ResponseMessage }
+    | { type: 'action', session: Object, action: string };
 
 type ConverseRes = {
     userPrefs: UserPrefs,
@@ -73,7 +74,7 @@ async function converseHelper(
     if (converseData.type === 'msg') {
         // will wait later
         const resP = respondFn({
-            ...converseData.msg,
+            ...parseResponseMessage(converseData.msg),
             creationTimestamp: Date.now(),
         });
         const newConverseData = await aiEngineConverse(
@@ -123,6 +124,27 @@ async function converseHelper(
 
     reportError('unknown response type', converseData);
     throw new Error(`unknown response type ${converseData.type}`);
+}
+
+function parseResponseMessage(msg) {
+    const response = { ...msg };
+    // check for preprocessor actions inside the message
+    // e.g. "<[DELAY:60]> some message"
+    const preprocessorMatch = (msg.text || '').match(/^\s*<\[(.*?)\]>\s*(.*)/);
+    if (preprocessorMatch) {
+        response.preprocessorActions = preprocessorMatch[1]
+            .split(';')
+            .map(command => command
+                .split(':')
+                .map(x => x.trim().toLowerCase())
+                .filter(Boolean)
+            )
+            .filter(x => x.length > 0)
+            .map(([ action, ...args ]) => ({ action, args }))
+        response.text = preprocessorMatch[2];
+    }
+
+    return response;
 }
 
 async function aiEngineConverse(
