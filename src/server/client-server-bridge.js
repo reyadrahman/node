@@ -451,15 +451,13 @@ async function fetchMessages(identityId, conversationId, since: int = 0) {
     return qres.Items || [];
 }
 
-async function addBot(identityId, botName, settings) {
-    reportDebug('addBot: ', identityId, botName, settings);
-    const botId = uuid.v4();
+async function registerCiscosparkWebhook(
+    identityId, botName, botId, ciscosparkAccessToken
+) {
     const ciscosparkWebhookSecret = uuid.v4();
-
-    // register webhook for cisco spark
     const csClient = ciscospark.init({
         credentials: {
-            access_token: settings.ciscosparkAccessToken,
+            access_token: ciscosparkAccessToken,
         },
     });
     const webhook = await csClient.webhooks.create({
@@ -470,6 +468,41 @@ async function addBot(identityId, botName, settings) {
         secret: ciscosparkWebhookSecret,
     });
     const me = await csClient.people.get('me');
+    const ret = {
+        ciscosparkWebhookSecret,
+        ciscosparkWebhookId: webhook.id,
+        ciscosparkBotPersonId: me.id,
+    };
+    reportDebug(`registered ciscospark webhook: `, ret);
+    return ret;
+}
+
+
+async function unregisterCiscosparkWebhook(ciscosparkWebhookId, ciscosparkAccessToken) {
+    const csClient = ciscospark.init({
+        credentials: {
+            access_token: ciscosparkAccessToken,
+        },
+    });
+    await csClient.webhooks.remove(ciscosparkWebhookId);
+    reportDebug(`removed ciscospark webhook ${ciscosparkWebhookId}`)
+    return {
+        ciscosparkWebhookSecret: null,
+        ciscosparkWebhookId: null,
+        ciscosparkBotPersonId: null,
+    }
+
+}
+
+async function addBot(identityId, botName, settings) {
+    reportDebug('addBot: ', identityId, botName, settings);
+    const botId = uuid.v4();
+    let ciscosparkSettings = {};
+    if (settings.ciscosparkAccessToken) {
+        ciscosparkSettings = await registerCiscosparkWebhook(
+            identityId, botName, botId, settings.ciscosparkAccessToken
+        );
+    }
 
     await aws.dynamoPut({
         TableName: CONSTANTS.DB_TABLE_BOTS,
@@ -479,9 +512,7 @@ async function addBot(identityId, botName, settings) {
             botName,
             settings: {
                 ...settings,
-                ciscosparkWebhookSecret,
-                ciscosparkWebhookId: webhook.id,
-                ciscosparkBotPersonId: me.id,
+                ...ciscosparkSettings,
             },
         })
     });
@@ -489,8 +520,31 @@ async function addBot(identityId, botName, settings) {
 
 async function updateBot(identityId, botId, model) {
     reportDebug('updateBot: ', identityId, botId, model);
+    const bot = await aws.getBot(identityId, botId);
+    if (!bot) {
+        throw new Error(`no bot with id ${botId} exists`);
+    }
 
-    let bot = await aws.dynamoUpdate({
+    let ciscosparkSettings = {};
+    if (model.settings.ciscosparkAccessToken != bot.settings.ciscosparkAccessToken) {
+        if (bot.settings.ciscosparkAccessToken) {
+            ciscosparkSettings = await unregisterCiscosparkWebhook(
+                bot.settings.ciscosparkWebhookId, bot.settings.ciscosparkAccessToken
+            );
+        }
+        if (model.settings.ciscosparkAccessToken) {
+            ciscosparkSettings = await registerCiscosparkWebhook(
+                identityId, model.botName || '', botId, model.settings.ciscosparkAccessToken
+            );
+        }
+    }
+
+    const settings = {
+        ...model.settings,
+        ...ciscosparkSettings,
+    };
+    reportDebug('updateBot settings: ', settings);
+    let newBot = await aws.dynamoUpdate({
         TableName:                 CONSTANTS.DB_TABLE_BOTS,
         Key:                       {publisherId: identityId, botId},
         UpdateExpression:          `set botName = :botName, 
@@ -503,11 +557,11 @@ async function updateBot(identityId, botId, model) {
             ':botIcon':                 model.botIcon || null,
             ':onlyAllowedUsersCanChat': model.onlyAllowedUsersCanChat || false,
             ':isPublic':                model.isPublic || false,
-            ':settings':                aws.dynamoCleanUpObj(model.settings),
+            ':settings':                aws.dynamoCleanUpObj(settings),
         },
         ReturnValues:                    'ALL_NEW'
     });
-    return bot.Attributes;
+    return newBot.Attributes;
 }
 
 async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
