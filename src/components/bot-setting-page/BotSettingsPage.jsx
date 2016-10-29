@@ -5,6 +5,9 @@ import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
 import {CONSTANTS} from '../../client/client-utils';
 
+const reportDebug = require('debug')('deepiks:BotSettingsPage');
+const reportError = require('debug')('deepiks:BotSettingsPage:error');
+
 import _ from 'lodash';
 
 let BotSettingsPage = React.createClass({
@@ -108,7 +111,7 @@ let BotSettingsPage = React.createClass({
                 <Form horizontal>
                     <FormGroup controlId="botName">
                         <Col componentClass={ControlLabel} sm={2}>
-                            Bot Name
+                            Name
                         </Col>
                         <Col sm={10}>
                             <FormControl
@@ -123,7 +126,7 @@ let BotSettingsPage = React.createClass({
 
                     <FormGroup controlId="botIcon">
                         <Col componentClass={ControlLabel} sm={2}>
-                            Bot Icon
+                            Icon
                         </Col>
                         <Col sm={10}>
                             <FormControl
@@ -132,6 +135,23 @@ let BotSettingsPage = React.createClass({
                                 placeholder="Bot Icon"
                                 onChange={this.onFormFieldChange}
                             />
+                        </Col>
+                    </FormGroup>
+
+                    <FormGroup controlId="defaultLanguage">
+                        <Col componentClass={ControlLabel} sm={2}>
+                            Default language
+                        </Col>
+                        <Col sm={10}>
+                            <FormControl
+                                componentClass="select"
+                                placeholder="select"
+                                value={bot.defaultLanguage}
+                                onChange={this.onFormFieldChange}
+                            >
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                            </FormControl>
                         </Col>
                     </FormGroup>
 
