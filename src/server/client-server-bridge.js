@@ -485,7 +485,7 @@ async function unregisterCiscosparkWebhook(ciscosparkWebhookId, ciscosparkAccess
         },
     });
     await csClient.webhooks.remove(ciscosparkWebhookId);
-    reportDebug(`removed ciscospark webhook ${ciscosparkWebhookId}`);
+    reportDebug(`removed ciscospark webhook ${ciscosparkWebhookId}`)
     return {
         ciscosparkWebhookSecret: null,
         ciscosparkWebhookId: null,
@@ -549,14 +549,13 @@ async function updateBot(identityId, botId, model) {
         Key:                       {publisherId: identityId, botId},
         UpdateExpression:          `set botName = :botName, 
                                         botIcon = :botIcon, 
-                                        defaultLanguage = :defaultLanguage, 
                                         onlyAllowedUsersCanChat = :onlyAllowedUsersCanChat, 
                                         isPublic = :isPublic, 
                                         settings = :settings`,
         ExpressionAttributeValues: {
             ':botName':                 model.botName || null,
             ':botIcon':                 model.botIcon || null,
-            ':defaultLanguage':         model.defaultLanguage || null,
+            ':defaultLanguage':         model.botIcon || null,
             ':onlyAllowedUsersCanChat': model.onlyAllowedUsersCanChat || false,
             ':isPublic':                model.isPublic || false,
             ':settings':                aws.dynamoCleanUpObj(settings),

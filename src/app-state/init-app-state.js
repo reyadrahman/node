@@ -3,15 +3,15 @@
 const initAppState = {
     lang: '',
     signIn: {
-        errorMessage: '',
+        errorCode: '',
     },
     signUp: {
-        errorMessage: '',
+        errorCode: '',
     },
     verifyRegistration: {
         initialEmail: '',
         password: '',
-        errorMessage: '',
+        errorCode: '',
     },
     currentUser: {
         signedIn: false,
@@ -20,28 +20,28 @@ const initAppState = {
         botsState: {
             hasFetched: false,
             bots: [],
-            errorMessage: '',
+            errorCode: '',
         },
         usersState: {
             hasFetched: false,
             users: [],
-            errorMessage: '',
+            errorCode: '',
         },
         conversationsState: {
             hasFetched:    false,
             conversations: [],
-            errorMessage:  '',
+            errorCode:  '',
             lastUpdated:   0
         },
         messagesState: {
             hasFetched:   false,
             messages:     [],
-            errorMessage: '',
+            errorCode: '',
             lastUpdated:  0
         },
         updateAttrsAndPassState: {
-            successMessage: '',
-            errorMessage: '',
+            successCode: '',
+            errorCode: '',
         }
     },
     ui: {
@@ -50,8 +50,8 @@ const initAppState = {
     },
     contacts: {
         sendingInProgress: false,
-        errorMessage: '',
-        successMessage: '',
+        errorCode: '',
+        successCode: '',
     },
 };
 

@@ -73,7 +73,7 @@ let AddBotPage = React.createClass({
 
     render() {
         const { className, i18n: { strings: { addBot: strings } },
-                currentUser, successMessage, errorMessage } = this.props;
+                currentUser, successCode, errorCode } = this.props;
         const { state } = this;
 
         if (!currentUser || !currentUser.attributes || !currentUser.attributes.sub) {
@@ -178,8 +178,8 @@ let AddBotPage = React.createClass({
                             />
                         </div>
                         <div className="messages">
-                            <ErrorMessage message={errorMessage} />
-                            <SuccessMessage className="success" message={successMessage} />
+                            <ErrorMessage message={errorCode} />
+                            <SuccessMessage className="success" message={successCode} />
                         </div>
                         <div className="button-area">
                             <Button
@@ -206,8 +206,8 @@ let AddBotPage = React.createClass({
 AddBotPage = connect(
     state => ({
         currentUser: state.currentUser,
-        successMessage: state.addBotSuccessMessage,
-        errorMessage: state.addBotErrorMessage,
+        successCode: state.addBotSuccessMessage,
+        errorCode: state.addBotErrorMessage,
     }),
     {
         addBot: actions.addBot,

@@ -32,9 +32,9 @@ let BotSettingsPage = React.createClass({
 
                 this.setState({bot});
             }
-        } else if (user.botsState.errorMessage) {
-            if (this.state.error !== user.botsState.errorMessage) {
-                this.setState({error: user.botsState.errorMessage})
+        } else if (user.botsState.errorCode) {
+            if (this.state.error !== user.botsState.errorCode) {
+                this.setState({error: user.botsState.errorCode})
             }
         }
     },

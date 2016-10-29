@@ -36,7 +36,7 @@ let VerifyRegistration = React.createClass({
 
     render() {
         const { isOpen, i18n: { strings: { verifyRegistration: strings } },
-                errorMessage, successMessage,
+                errorCode, successCode,
                 closeVerifyRegistration } = this.props;
         const { state } = this;
 
@@ -62,8 +62,8 @@ let VerifyRegistration = React.createClass({
                             onChange={this.verificationCodeChanged}
                         />
                     </div>
-                    <ErrorMessage message={errorMessage} />
-                    <SuccessMessage message={successMessage} />
+                    <ErrorMessage message={errorCode} />
+                    <SuccessMessage message={successCode} />
                     <Button
                         className="button"
                         bsStyle="primary"
@@ -80,8 +80,8 @@ let VerifyRegistration = React.createClass({
 
 VerifyRegistration = connect(
     state => ({
-        errorMessage: state.verifyRegistration.errorMessage,
-        successMessage: state.verifyRegistration.successMessage,
+        errorCode: state.verifyRegistration.errorCode,
+        successCode: state.verifyRegistration.successCode,
         initialEmail: state.verifyRegistration.initialEmail,
     }),
     {

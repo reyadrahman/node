@@ -29,9 +29,10 @@ let SignIn = React.createClass({
     },
 
     render() {
-        const { i18n: { strings: { signIn: strings } },
-                errorMessage, successMessage } = this.props;
+        const { i18n: { strings: { errors, signIn: strings } },
+                errorCode } = this.props;
         const { state } = this;
+        const errorMessage = errorCode && (errors[errorCode] || errors.DefaultSignIn);
 
         return (
             <div className="sign-in-modal-comp">
@@ -59,7 +60,6 @@ let SignIn = React.createClass({
                         />
                     </div>
                     <ErrorMessage message={errorMessage} />
-                    <SuccessMessage message={successMessage} />
                     <Button
                         className="button"
                         bsStyle="primary"
@@ -75,8 +75,8 @@ let SignIn = React.createClass({
 
 SignIn = connect(
     state => ({
-        errorMessage: state.signIn.errorMessage,
-        successMessage: state.signIn.successMessage,
+        errorCode: state.signIn.errorCode,
+        successCode: state.signIn.successCode,
     }),
     {
         signIn: actions.signIn,

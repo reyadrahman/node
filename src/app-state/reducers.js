@@ -15,7 +15,7 @@ export function signIn(state = initAppState.signIn, action) {
         return initAppState.signIn;
     } else if (action.type === 'signIn/failed') {
         return {
-            errorMessage: action.errorMessage,
+            errorCode: action.errorCode,
         };
     }
     return state;
@@ -26,7 +26,7 @@ export function signUp(state = initAppState.signUp, action) {
         return initAppState.signUp;
     } else if (action.type === 'signUp/failed') {
         return {
-            errorMessage: action.errorMessage,
+            errorCode: action.errorCode,
         };
     }
     return state;
@@ -45,7 +45,7 @@ export function verifyRegistration(state = initAppState.verifyRegistration, acti
     } else if (action.type === 'verifyRegistration/failed') {
         return {
             ...init,
-            errorMessage: action.errorMessage,
+            errorCode: action.errorCode,
         };
     }
     return state;
@@ -72,7 +72,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             usersState: {
                 hasFetched:    true,
                 users: action.users,
-                errorMessage:  '',
+                errorCode:  '',
             }
         };
     }
@@ -90,7 +90,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             usersState: {
                 hasFetched:   false,
                 users:         [],
-                errorMessage: action.errorMessage,
+                errorCode: action.errorCode,
             },
         }
     }
@@ -107,7 +107,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             botsState: {
                 hasFetched: false,
                 bots: [],
-                errorMessage: action.errorMessage,
+                errorCode: action.errorCode,
             },
         }
     } else if (action.type === 'currentUser/setBotsAndUpdateSelectedBotId') {
@@ -120,7 +120,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             botsState: {
                 hasFetched: true,
                 bots: action.bots,
-                errorMessage: '',
+                errorCode: '',
             },
             selectedBotId,
         };
@@ -140,7 +140,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             conversationsState: {
                 hasFetched: false,
                 conversations: [],
-                errorMessage: action.errorMessage,
+                errorCode: action.errorCode,
             }
         };
     } else if (action.type === 'currentUser/setConversationsState') {
@@ -149,7 +149,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             conversationsState: {
                 hasFetched:    true,
                 conversations: action.conversations,
-                errorMessage:  '',
+                errorCode:  '',
                 lastUpdated:   action.lastUpdated
             }
         };
@@ -171,7 +171,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             conversationsState: {
                 hasFetched:    true,
                 conversations: conversations,
-                errorMessage:  '',
+                errorCode:  '',
                 lastUpdated:   action.lastUpdated
             }
         };
@@ -186,7 +186,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             conversationsState: {
                 hasFetched: false,
                 messages: [],
-                errorMessage: action.errorMessage,
+                errorCode: action.errorCode,
             }
         };
     } else if (action.type === 'currentUser/setMessagesState') {
@@ -195,7 +195,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             messagesState: {
                 hasFetched:   true,
                 messages:     action.messages,
-                errorMessage: '',
+                errorCode: '',
                 lastUpdated:  action.lastUpdated
             }
         };
@@ -214,7 +214,7 @@ export function currentUser(state = initAppState.currentUser, action) {
             messagesState: {
                 hasFetched:   true,
                 messages:     messages,
-                errorMessage: '',
+                errorCode: '',
                 lastUpdated:  action.lastUpdated
             }
         };
@@ -222,16 +222,16 @@ export function currentUser(state = initAppState.currentUser, action) {
         return {
             ...state,
             updateAttrsAndPassState: {
-                successMessage: action.successMessage,
-                errorMessage: '',
+                successCode: action.successCode,
+                errorCode: '',
             },
         };
     } else if (action.type === 'currentUser/updateAttrsAndPassFailed') {
         return {
             ...state,
             updateAttrsAndPassState: {
-                successMessage: '',
-                errorMessage: action.errorMessage,
+                successCode: '',
+                errorCode: action.errorCode,
             },
         };
     }
@@ -269,14 +269,14 @@ export function contacts(state = initAppState.contacts, action) {
     } else if (action.type === 'contacts/succeded') {
         return {
             sendingInProgress: false,
-            errorMessage: '',
-            successMessage: action.successMessage,
+            errorCode: '',
+            successCode: action.successCode,
         };
     } else if (action.type === 'contacts/failed') {
         return {
             sendingInProgress: false,
-            errorMessage: action.errorMessage,
-            successMessage: '',
+            errorCode: action.errorCode,
+            successCode: '',
         };
     }
     return state;

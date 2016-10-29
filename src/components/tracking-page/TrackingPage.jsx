@@ -21,9 +21,9 @@ let TrackingPage = React.createClass({
                 let bot = _.cloneDeep(_.find(user.botsState.bots, {botId: user.selectedBotId}));
                 this.setState({bot, loading: false});
             }
-        } else if (user.botsState.errorMessage) {
-            if (this.state.error !== user.botsState.errorMessage) {
-                this.setState({error: user.botsState.errorMessage, loading: false})
+        } else if (user.botsState.errorCode) {
+            if (this.state.error !== user.botsState.errorCode) {
+                this.setState({error: user.botsState.errorCode, loading: false})
             }
         }
     },

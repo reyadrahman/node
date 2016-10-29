@@ -30,17 +30,22 @@ let HomeContactForm = React.createClass({
     },
 
     render() {
-        const { className, i18n, i18n: { strings: { homeContactForm: strings } },
-                successMessage, errorMessage, sendingInProgress
+        const { className, i18n,
+                i18n: { strings: { errors, successes, homeContactForm: strings } },
+                successCode, errorCode, sendingInProgress
         } = this.props;
 
         const { state } = this;
 
         let statusUi;
-        if (errorMessage) {
-            statusUi = <div className="error-message">{ errorMessage }</div>
-        } else if (successMessage) {
-            statusUi = <div className="success-message">{ successMessage }</div>
+        if (errorCode) {
+            statusUi = <div className="error-message">
+                {
+                    errors[errorCode] || errors.DefaultSendEmail
+                }
+                </div>
+        } else if (successCode) {
+            statusUi = <div className="success-message">{ successes[successCode] }</div>
         }
 
         return (
@@ -127,8 +132,8 @@ let HomeContactForm = React.createClass({
 
 HomeContactForm = connect(
     state => ({
-        errorMessage: state.contacts.errorMessage,
-        successMessage: state.contacts.successMessage,
+        errorCode: state.contacts.errorCode,
+        successCode: state.contacts.successCode,
         sendingInProgress: state.contacts.sendingInProgress,
     }),
     {

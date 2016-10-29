@@ -39,7 +39,7 @@ let SignUp = React.createClass({
 
     render() {
         const { isOpen, i18n: { strings: { signUp: strings } },
-                errorMessage, successMessage, closeSignUp } = this.props;
+                errorCode, successCode, closeSignUp } = this.props;
         const { state } = this;
         //const buttons = [
         //    { label: strings.signUp, type: 'submit' },
@@ -85,8 +85,8 @@ let SignUp = React.createClass({
                             onChange={this.passwordChanged}
                         />
                     </div>
-                    <ErrorMessage message={errorMessage} />
-                    <SuccessMessage message={successMessage} />
+                    <ErrorMessage message={errorCode} />
+                    <SuccessMessage message={successCode} />
                     <Button
                         className="button"
                         bsStyle="primary"
@@ -102,8 +102,8 @@ let SignUp = React.createClass({
 
 SignUp = connect(
     state => ({
-        errorMessage: state.signUp.errorMessage,
-        successMessage: state.signUp.successMessage,
+        errorCode: state.signUp.errorCode,
+        successCode: state.signUp.successCode,
     }),
     {
         signUp: actions.signUp,

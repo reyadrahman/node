@@ -90,8 +90,8 @@ export function signUp(firstName, lastName, email, password) {
                dispatch(openVerifyRegistration(email, password));
             }
         } catch(error) {
-            reportDebug('signUp thunk FAIL. error: ', error.message);
-            dispatch({ type: 'signUp/failed', errorMessage: error.message });
+            reportError('signUp thunk FAIL. error: ', error.code, error.message);
+            dispatch({ type: 'signUp/failed', errorCode: error.code });
         }
     };
 }
@@ -101,8 +101,8 @@ export function verifyRegistration(data) {
         try {
             var res = await aws.verifyRegistration(data.email, data.code);
         } catch(error) {
-            reportDebug('verifyRegistration FAILED. error: ', error);
-            dispatch({ type: 'verifyRegistration/failed', errorMessage: error.message });
+            reportError('verifyRegistration FAILED. error: ', error.code, error.message);
+            dispatch({ type: 'verifyRegistration/failed', errorCode: error.code });
             return;
         }
 
@@ -133,8 +133,8 @@ export function signIn(email, password) {
             dispatch({ type: 'ui/closeModal' });
             browserHistory.push('/test');
         } catch(error) {
-            reportDebug('signIn thunk FAIL. error: ', error.message);
-            dispatch({ type: 'signIn/failed', errorMessage: error.message });
+            reportDebug('signIn thunk FAIL. error: ', error.code, error.message);
+            dispatch({ type: 'signIn/failed', errorCode: error.code });
         }
     };
 }
@@ -164,11 +164,11 @@ export function updateUserAttrsAndPass(attrs: Object,
                     ...attrs,
                 }
             });
-            dispatch({ type: 'updateAttrsAndPassSucceeded', successMessage: 'Successfully updated' });
+            dispatch({ type: 'currentUser/updateAttrsAndPassSucceeded', successCode: 'UserUpdateSuccess' });
 
         } catch(error) {
-            reportDebug('actions.updateUserAttrsAndPass failed: ', error);
-            dispatch({ type: 'updateAttrsAndPassFailed', errorMessage: error.message });
+            reportDebug('actions.updateUserAttrsAndPass failed: ', error.code, error);
+            dispatch({ type: 'currentUser/updateAttrsAndPassFailed', errorCode: error.code });
         }
     };
 }
@@ -178,10 +178,10 @@ export function sendEmail(data) {
         dispatch({ type: 'contacts/sending' });
         try {
             await bridge.sendEmail(data);
-            dispatch({ type:'contacts/succeded', successMessage: 'Message was sent, thanks' });
+            dispatch({ type:'contacts/succeded', successCode: 'SendEmailSuccess' });
         } catch(error) {
-            reportDebug('ERROR: sendEmail failed: ', error);
-            dispatch({ type: 'contacts/failed', errorMessage: `Sorry, couldn't send your message` });
+            reportDebug('ERROR: sendEmail failed: ', error.code, error.message);
+            dispatch({ type: 'contacts/failed', errorCode: error.code });
         }
     }
 }
@@ -207,11 +207,11 @@ export function fetchBots() {
             const session = await aws.getCurrentSession();
             const bots = await bridge.fetchBots(session.getIdToken().getJwtToken());
             dispatch(setBots(bots));
-        } catch(err) {
-            reportError(err);
+        } catch(error) {
+            reportError('fetchBots', error.code, error.message);
             dispatch({
                 type:         'currentUser/fetchBotsFailed',
-                errorMessage: 'Could not fetch the bots ' + err.message
+                errorCode: error.code,
             });
         }
     }
@@ -237,10 +237,10 @@ export function fetchUsers(botId) {
                       users,
             });
         } catch(error) {
-            reportError(error);
+            reportError('fetchUsers', error.code, error.messsage);
             dispatch({
                 type: 'currentUser/fetchUsersFailed',
-                errorMessage: 'Could not fetch users for selected bot',
+                errorCode: error.code,
             });
         }
     }
@@ -312,10 +312,10 @@ export function fetchConversations(botId) {
                 lastUpdated: moment().format('x')
             });
         } catch(error) {
-            reportError(error);
+            reportError('fetchConversations', error.code, error.message);
             dispatch({
                 type: 'currentUser/fetchConversationsFailed',
-                errorMessage: 'Could not fetch the bots',
+                errorCode: error.code,
             });
         }
     }
@@ -366,10 +366,10 @@ export function fetchMessages(conversationId: string) {
                 lastUpdated: moment().format('x')
             });
         } catch(error) {
-            reportError(error);
+            reportError('fetchMessage', error.code, error.message);
             dispatch({
                 type: 'currentUser/fetchMessagesFailed',
-                errorMessage: 'Could not fetch the bots',
+                errorCode: error.code,
             });
         }
     }

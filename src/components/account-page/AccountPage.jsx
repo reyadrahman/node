@@ -84,14 +84,18 @@ let AccountPage = React.createClass({
     },
 
     render() {
-        const { className, currentUser, i18n: { strings: { accountPage: strings } } } = this.props;
+        const { className, currentUser,
+                i18n: { strings: { errors, successes, accountPage: strings } } } = this.props;
 
         if (!currentUser.signedIn) {
             return null;
         }
 
         const { userAttrs, newPassword, oldPassword } = this.state;
-        const { successMessage, errorMessage } = currentUser.updateAttrsAndPassState;
+        const { successCode, errorCode } = currentUser.updateAttrsAndPassState;
+        const errorMessage = errors[errorCode] || errors.DefaultUpdateAttrsAndPass;
+        const successMessage = successes[successCode] || successes.DefaultUpdateAttrsAndPass;
+
         const profileInfoUi = (
             <Form
                 className="profile-form"
@@ -148,11 +152,11 @@ let AccountPage = React.createClass({
                         </div>
                 }
                 {
-                    errorMessage &&
+                    errorCode &&
                         <ErrorMessage message={errorMessage} />
                 }
                 {
-                    successMessage &&
+                    successCode &&
                         <SuccessMessage message={successMessage} />
                 }
                 <Button

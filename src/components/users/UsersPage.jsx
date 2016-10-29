@@ -61,11 +61,11 @@ let UsersPage = React.createClass({
         let pagination = '';
 
         if (!currentUser.usersState.hasFetched) {
-            if (currentUser.usersState.errorMessage) {
+            if (currentUser.usersState.errorCode) {
                 content = (
                     <tr>
                         <td colSpan="6" className="text-center">
-                            <Alert bsStyle="danger">{currentUser.usersState.errorMessage}</Alert>
+                            <Alert bsStyle="danger">{currentUser.usersState.errorCode}</Alert>
                         </td>
                     </tr>
                 );

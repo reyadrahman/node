@@ -1,4 +1,15 @@
 export default {
+    errors: {
+        NotAuthorizedException: 'FR Wrong email or password',
+        UserNotFoundException: 'FR User not found',
+        DefaultSignIn: `FR Sorry, couldn't sign in`,
+        DefaultSendEmail: `FR Sorry, couldn't send email`,
+        DefaultUpdateAttrsAndPass: `FR Sorry, couldn't update your information`,
+    },
+    successes: {
+        SendEmailSuccess: `FR Email successfully sent, thanks.`,
+        DefaultUpdateAttrsAndPass: 'FR Successfully updated',
+    },
     app: {
         pageTitle: 'Deepiks: plateforme de chatbots avancée',
     },
