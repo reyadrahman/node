@@ -276,7 +276,7 @@ export function saveUser(botId, channel, userId, email, role) {
     }
 }
 
-export function updateConversations(botId, since: int = 0) {
+export function updateConversations(botId, since: number = 0) {
     return async function (dispatch: Function) {
         try {
             const session       = await aws.getCurrentSession();
@@ -322,7 +322,7 @@ export function fetchConversations(botId) {
 
 }
 
-export function updateMessages(conversationId: string, since: int = 0) {
+export function updateMessages(conversationId: string, since: number = 0) {
     reportDebug('action: fetchMessages');
     return async function (dispatch: Function) {
         try {

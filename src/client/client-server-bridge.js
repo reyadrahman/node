@@ -53,12 +53,12 @@ export async function saveUser(
     });
 }
 
-export async function fetchConversations(jwtIdToken: string, botId: string, since: int = 0) {
+export async function fetchConversations(jwtIdToken: string, botId: string, since: number = 0) {
     reportDebug('fetchConversations: jwtIdToken: ', jwtIdToken, 'botId:', botId, 'since:', since);
     return await fetchg2j('/api/fetch-conversations', { jwtIdToken, botId, since });
 }
 
-export async function fetchMessages(jwtIdToken: string, conversationId: string, since: int = 0)
+export async function fetchMessages(jwtIdToken: string, conversationId: string, since: number = 0)
     : Promise<DBMessage[]>
 {
     reportDebug('fetchMessages: jwtIdToken: ', jwtIdToken, conversationId);

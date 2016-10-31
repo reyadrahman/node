@@ -402,7 +402,7 @@ async function saveUser(
     return user.Attributes;
 }
 
-async function fetchConversations(identityId, botId, since: int = 0) {
+async function fetchConversations(identityId, botId, since: number = 0) {
     reportDebug('fetchConversations: identityId=', identityId, 'botId=', botId, 'since=', since);
     // TODO paging
     // see dynamoAccumulatePages in aws-helper.js
@@ -430,7 +430,7 @@ async function fetchConversations(identityId, botId, since: int = 0) {
     return qres.Items || [];
 }
 
-async function fetchMessages(identityId, conversationId, since: int = 0) {
+async function fetchMessages(identityId, conversationId, since: number = 0) {
     reportDebug('fetchMessages: ', identityId, 'conversationId:', conversationId, 'since=', since);
     let query = {
         TableName: CONSTANTS.DB_TABLE_MESSAGES,
