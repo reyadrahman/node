@@ -1,0 +1,14 @@
+.chatBotContainer {
+    .chatBot {
+        width: 300px;
+        padding: 10px;
+
+        .received {
+            color: red;
+        }
+
+        .sent {
+            color: green;
+        }
+    }
+}

@@ -11,10 +11,9 @@ let MessagesFeed = React.createClass({
   render: function() {
     let messages = this.props.data.map(m => {
       return (
-        <Message text={ m.text } receivedOrSent="received"/>
+        <Message message={ m } receivedOrSent="received"/>
       );
     });
-    console.log('MessagesFeed rendered');
     return (
       <div className="messagesFeed">
         { messages }

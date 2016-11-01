@@ -5,9 +5,11 @@ import render from './server-side-rendering.js';
 import bridge from './client-server-bridge.js';
 import { webhooks } from './channels/all-channels.js';
 import periodicTasksUpdate from './periodic-tasks/all-periodic-tasks.js';
-import { Server as WebSocketServer } from 'ws';
 const reportDebug = require('debug')('deepiks:server-router');
 const reportError = require('debug')('deepiks:server-router:error');
+
+import {Server as WebSocketServer} from 'ws';
+import {websocketMessage} from './channels/web.js';
 
 export default function initializeRoutes(server) {
     const routes = express.Router();
@@ -43,23 +45,27 @@ export default function initializeRoutes(server) {
         render(!req.cookies.signedIn, req, res, next);
     });
 
-/*
+
     const wss = new WebSocketServer({ server });
 
-    wss.on('connection', function(ws) {
-      reportDebug('Conversation on web channel initialized (server side).');
+    wss.on('connection', function (ws) {
+        reportDebug('Conversation on web channel initialized (server side).');
+
+        ws.on('message', function incoming(message) {
+            try {
+                reportDebug('Websocket message received', message);
+                message = JSON.parse(message);
+                websocketMessage(message, ws);
+            } catch (e) {
+                reportError('Error processing websocket message: ', e.message);
+            }
+        });
+
+        ws.on('close', function close() {
+            reportDebug('Conversation on web channel ended (server side).');
+        });
     });
 
-    wss.on('message', function incoming(message: WebReqBody) {
-      if (message.sender === 'user') {
-        websocketMessage(message, wss);
-      }
-    });
-
-    wss.on('close', function close() {
-      reportDebug('Conversation on web channel ended (server side).');
-    })
-*/
 
     return routes;
 }
