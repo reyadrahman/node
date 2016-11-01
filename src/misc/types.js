@@ -1,19 +1,54 @@
 /* @flow */
 
-export type Conversation = {
-    botId: string,
-    channel: string,
-    conversationId: string,
-    lastMessage: DBMessage,
-    lastMessageTimestamp: number,
+export type User = {
     publisherId: string,
-    witData: WitData
+    botId_channel_userId: string,
+    prefs: UserPrefs,
+    userRole: 'user' | 'admin' | 'none',
+    botId_channel_email?: string,
+    userLastMessage?: DBMessage,
+    unverifiedVerificationToken?: string,
+    associatedFakeUserId?: string,
+    isFake?: boolean,
+    isVerified?: boolean,
+};
+
+// is that it?
+export type UserPrefs = Object;
+
+export type Conversation = {
+    channel: string,
+    botId_conversationId: string,
+    lastMessage: DBMessage,
+    botId_lastInteractiveMessageTimestamp_messageId: string,
+    publisherId: string,
+    witData?: WitData,
+    customAIData?: CustomAIData,
+    channelData?: ChannelData,
+    lastParticipantProfilePic?: string,
+    participantsNames?: {
+        type: 'string',
+        values: string[],
+    },
+    participantsIds?: {
+        type: 'string',
+        values: string[],
+    },
+};
+
+export type ChannelData = {
+    address: Object, // microsoft bot framework specific
 };
 
 export type WitData = {
     context: Object,
     sessionId: string,
     lastActionPrefix?: string,
+};
+
+export type CustomAIData = {
+    context: Object,
+    session: Object,
 };
 
 
@@ -27,7 +62,7 @@ export type MessageCard = {
     imageUrl: string,
     title?: string,
     subtitle?: string,
-    actions?: Array<MessageAction>,
+    actions?: MessageAction[],
 };
 
 export type DBMessage = {
@@ -36,12 +71,17 @@ export type DBMessage = {
     senderIsBot: boolean,
     senderId: string,
     channel: string,
+    id: string,
     senderName?: string,
-    id?: string,
     text?: string,
-    cards?: Array<MessageCard>,
-    actions?: Array<MessageAction>,
+    cards?: MessageCard[],
+    actions?: MessageAction[],
     senderProfilePic?: string,
+    poll?: {
+        pollId: string,
+        questionId: string,
+        isQuestion: boolean,
+    },
 };
 
 export type WebhookMessage = {
@@ -53,7 +93,7 @@ export type WebhookMessage = {
     senderId: string,
     senderName?: string,
     text?: string,
-    cards?: Array<MessageCard>,
+    cards?: MessageCard[],
     fetchCardImages?: Array<() => Promise<Buffer>>,
     senderProfilePic?: string,
 };
@@ -69,14 +109,27 @@ export type WebchannelMessage = {
         text: string,
         timestamp: number,
     }
-}
-
-export type ResponseMessage = string | {
-    text?: string,
-    cards?: Array<MessageCard>,
-    actions?: Array<MessageAction>,
-    typingOn?: boolean,
 };
+
+export type ResponseMessage = {
+    text?: string,
+    cards?: MessageCard[],
+    actions?: MessageAction[],
+    typingOn?: boolean,
+    creationTimestamp?: number,
+    poll?: {
+        pollId: string,
+        questionId: string,
+    },
+    preprocessorActions?: MessagePreprocessorAction[],
+};
+
+export type MessagePreprocessorAction = {
+    action: string,
+    args: string[],
+};
+
+export type RespondFn = (response: ResponseMessage) => Promise<void>;
 
 export type ActionRequest = {
     sessionId: string,
@@ -137,22 +190,26 @@ export type FeedConfigRss = {
 export type BotParams = {
     botId: string,
     botName: string,
+    defaultLanguage: string,
     publisherId: string,
+    onlyAllowedUsersCanChat: boolean,
     settings: {
         ciscosparkAccessToken: string,
+        ciscosparkBotPersonId: string,
+        ciscosparkBotEmail: string,
+        ciscosparkWebhookSecret: string,
+        ciscosparkWebhookId: string,
         messengerPageAccessToken: string,
+        messengerAppSecret: string,
         microsoftAppId: string,
         microsoftAppPassword: string,
-        ciscosparkBotEmail: string,
         witAccessToken: string,
         twitterConsumerKey: string,
         twitterConsumerSecret: string,
+        dashbotFacebookKey?: string,
+        dashbotGenericKey?: string,
     },
-    feeds: FeedConfig[],
-};
-
-export type ChannelData = {
-    address: Object, // microsoft bot framework specific
+    feeds?: FeedConfig[],
 };
 
 export type AIActionInfo = {
@@ -161,9 +218,6 @@ export type AIActionInfo = {
     lambda?: string,
 };
 
-// is that it?
-export type UserPrefs = Object;
-
 export type ContactFormData = {
     name: string,
     email: string,
@@ -171,18 +225,23 @@ export type ContactFormData = {
     message: string,
 };
 
-export type ServerEnv = {
+export type ServerConstants = {
     NODE_ENV: string,
     PLATFORM: string,
     AWS_REGION: string,
     AWS_ACCESS_KEY_ID: string,
     AWS_SECRET_ACCESS_KEY: string,
+    DB_TABLES_PREFIX: string,
     DB_TABLE_BOTS: string,
     DB_TABLE_CONVERSATIONS: string,
     DB_TABLE_MESSAGES: string,
     DB_TABLE_AI_ACTIONS: string,
-    DB_TABLE_USER_PREFS: string,
+    DB_TABLE_USERS: string,
+    DB_TABLE_SCHEDULED_TASKS: string,
+    DB_TABLE_POLL_QUESTIONS: string,
     S3_BUCKET_NAME: string,
+    AI_ACTION_CACHE_VALID_TIME_S: number,
+    TYPING_INDICATOR_DELAY_S: number,
     PUBLIC_PATH: string,
     PUBLIC_URL: string,
     USER_POOL_ID: string,
@@ -190,23 +249,19 @@ export type ServerEnv = {
     IDENTITY_POOL_ID: string,
     IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
     IDENTITY_POOL_AUTH_ROLE_ARN: string,
-    WIZARD_BOT_WEB_CHAT_SECRET: string,
     CONTACT_EMAIL: string,
+    EMAIL_ACTION_FROM_ADDRESS: string,
     PORT: string,
     OWN_BASE_URL: string,
+    CONVERSATIONAL_ENGINE_LAMBDA: string,
     CALL_SERVER_LAMBDA_SECRET: string,
     CDN?: string,
     DEBUG?: string,
 };
-export type ClientEnv = {
+export type ClientConstants = {
     NODE_ENV: string,
     PLATFORM: string,
     AWS_REGION: string,
-    DB_TABLE_BOTS: string,
-    DB_TABLE_CONVERSATIONS: string,
-    DB_TABLE_MESSAGES: string,
-    DB_TABLE_AI_ACTIONS: string,
-    DB_TABLE_USER_PREFS: string,
     S3_BUCKET_NAME: string,
     PUBLIC_URL: string,
     USER_POOL_ID: string,
@@ -214,6 +269,7 @@ export type ClientEnv = {
     IDENTITY_POOL_ID: string,
     IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
     IDENTITY_POOL_AUTH_ROLE_ARN: string,
+    OWN_BASE_URL: string,
     SYSTEM_LANG?: string,
     DEBUG?: string,
 };

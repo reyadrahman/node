@@ -27,12 +27,13 @@
     .left-right-split {
         flex: 1 0 0;
         display: flex;
+        width: 100%;
 
-        .conversations {
+        .conversations-comp {
             flex: 0 0 auto;
             width: 300px;
         }
-        .messages {
+        .messages-comp {
             flex: 1 0 0;
         }
     }

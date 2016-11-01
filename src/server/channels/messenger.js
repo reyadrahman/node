@@ -1,17 +1,18 @@
 /* @flow */
 
-import { request, ENV, CONSTANTS } from '../server-utils.js';
-import { toStr, waitForAll } from '../../misc/utils.js';
+import { request, CONSTANTS } from '../server-utils.js';
+import { toStr, waitForAll, timeout, composeKeys, decomposeKeys } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
-import deepiksBot from '../deepiks-bot/deepiks-bot.js';
+import { deepiksBot } from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
 import type { Request, Response } from 'express';
 import _ from 'lodash';
 import uuid from 'node-uuid';
 import u from 'util';
 import crypto from 'crypto';
-
-//const { MESSENGER_PAGE_ACCESS_TOKEN } = process.env;
+import createDashbot from 'dashbot';
+const reportDebug = require('debug')('deepiks:messenger');
+const reportError = require('debug')('deepiks:messenger:error');
 
 type MessengerReqBody = {
     object: string,
@@ -55,13 +56,13 @@ type MessengerReqAttachment = {
     },
 };
 
-async function handleWebhookRequest(req: Request, res: Response) {
+export async function webhook(req: Request, res: Response) {
     // webhook verification
     if (req.method === 'GET' &&
         req.query['hub.mode'] === 'subscribe' &&
         req.query['hub.verify_token'] === 'boohoo')
     {
-        console.log('Validating webhook');
+        reportDebug('Validating webhook');
         res.send(req.query['hub.challenge']);
         return;
     }
@@ -71,24 +72,25 @@ async function handleWebhookRequest(req: Request, res: Response) {
     // see https://developers.facebook.com/docs/messenger-platform/webhook-reference#security
     const sig = req.get('X-Hub-Signature');
     if (!sig) {
-        console.error('No X-Hub-Signature provided');
         res.status(403).send('Access denied');
-        return;
+        throw new Error('No X-Hub-Signature provided');
     }
 
     const { publisherId, botId } = req.params;
     const botParams = await aws.getBot(publisherId, botId);
+    if (!botParams) {
+        throw new Error(`Did not find bot with publisherId ${publisherId} and botId ${botId}`);
+    }
 
     const hmac = crypto.createHmac('sha1', botParams.settings.messengerAppSecret);
     hmac.update(req.rawBody, 'utf-8');
     const expectedSig = 'sha1=' + hmac.digest('hex');
 
     if (sig !== expectedSig) {
-        console.error(`ERROR: exprected signatue: ${expectedSig} but received ${sig}`);
         res.status(403).send('Access denied');
-        return;
+        throw new Error(`ERROR: exprected signatue: ${expectedSig} but received ${sig}`);
     }
-    console.log(`X-Hub-Signatue successfully verified ${sig}`);
+    reportDebug(`X-Hub-Signatue successfully verified ${sig}`);
 
 
     const body: MessengerReqBody = (req.body: any);
@@ -98,6 +100,12 @@ async function handleWebhookRequest(req: Request, res: Response) {
         return;
     }
 
+    if (botParams.settings.dashbotFacebookKey) {
+        const dashbot = createDashbot(botParams.settings.dashbotFacebookKey).facebook;
+        dashbot.logIncoming(body);
+    }
+
+    // respond immediately
     res.send();
     await processMessages(body, botParams);
 }
@@ -114,7 +122,7 @@ async function processMessages(body: MessengerReqBody, botParams: BotParams) {
             } else if (messagingEvent.postback) {
                 await receivedPostback(entry, (messagingEvent: any), botParams);
             } else {
-                console.error('Webhook received unknown messagingEvent: ', messagingEvent);
+                reportError('Webhook received unknown messagingEvent: ', messagingEvent);
             }
 
         }
@@ -130,7 +138,7 @@ async function receivedPostback(entry: MessengerReqEntry,
         recipient: messagingEvent.recipient,
         timestamp: messagingEvent.timestamp,
         message: {
-            mid: uuid.v1(),
+            mid: uuid.v4(),
             text: messagingEvent.postback.payload,
         },
     };
@@ -141,21 +149,22 @@ async function receivedMessage(entry: MessengerReqEntry,
                                messagingEvent: MessengerReqMessaging,
                                botParams: BotParams)
 {
+    reportDebug('messenger receivedMessage: ', u.inspect(entry, {depth:null}));
     let userProfile = {};
     try {
         userProfile = await getUserProfile(messagingEvent.sender.id, botParams);
     } catch(error) {
-        console.error(error);
+        reportError(error);
     }
     const {attachments} = messagingEvent.message;
     const cards = !attachments ? undefined :
         attachments.filter(x => x.type === 'image')
                    .map(x => ({ imageUrl: x.payload.url }));
 
-    const pageId_senderId = aws.composeKeys(entry.id, messagingEvent.sender.id);
+    const conversationId = [entry.id, messagingEvent.sender.id].join('::');
     const message: WebhookMessage = {
         publisherId_conversationId:
-            aws.composeKeys(botParams.publisherId, pageId_senderId),
+            composeKeys(botParams.publisherId, conversationId),
         creationTimestamp: new Date(messagingEvent.timestamp).getTime(),
         id: messagingEvent.message.mid,
         senderId: messagingEvent.sender.id,
@@ -167,48 +176,31 @@ async function receivedMessage(entry: MessengerReqEntry,
         senderProfilePic: userProfile.profile_pic || null,
     };
 
-    console.log('messenger-webhook sending deepiks-bot: ', message);
+    reportDebug('messenger sending deepiks-bot: ', message);
 
-    const responses = [];
-    setTimeout(() => {
-        if (responses.length === 0) {
-            send(botParams, pageId_senderId, {
-                typingOn: true,
-            }).catch(error => console.error(error));
-        }
-    }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
+    let responseCount = 0;
+    // will await later
+    const sendTypingOnPromise = timeout(CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000)
+        .then(() => {
+            if (responseCount > 0) return;
+            return send(botParams, conversationId, { typingOn: true });
+        });
 
     await deepiksBot(message, botParams, m => {
-        responses.push(send(botParams, pageId_senderId, m));
+        responseCount++;
+        return send(botParams, conversationId, m);
     });
 
-    await waitForAll(responses);
+    await sendTypingOnPromise;
 }
 
 export async function send(botParams: BotParams, conversationId: string,
                            message: ResponseMessage)
 {
-    console.log('send: ', conversationId, toStr(message));
+    reportDebug('send: ', conversationId, toStr(message));
 
-    // conversationId is constructed by aws.composeKeys(pageId, senderId)
-    const [ pageId, to ] = aws.decomposeKeys(conversationId);
-
-    if (typeof message === 'string' && message.trim()) {
-        await sendHelper(botParams, {
-            recipient: {
-                id: to,
-            },
-            message: {
-                text: message,
-            }
-        });
-        return;
-
-    }
-    if (typeof message !== 'object') {
-        throw new Error('send: message is not an object');
-    }
-
+    // conversationId is constructed by [pageId, senderId].join('::')
+    const [ pageId, to ] = conversationId.split('::');
     const { typingOn, text, cards, actions } = message;
 
     if (typingOn) {
@@ -270,7 +262,7 @@ export async function send(botParams: BotParams, conversationId: string,
                 id: to,
             },
             message: {
-                text: text || ' ', // text cannot be empty when using quick_replies
+                text: removeMarkdown(text || ' '), // text cannot be empty when using quick_replies
                 quick_replies: quickReplies,
             }
         });
@@ -278,18 +270,28 @@ export async function send(botParams: BotParams, conversationId: string,
 }
 
 async function sendHelper(botParams: BotParams, messageData) {
-    console.log('messenger-webhook sendHelper: ',
+    reportDebug('messenger sendHelper: ',
         u.inspect(messageData, { depth: null}));
-    const r = await request({
+
+    const requestData = {
         uri: 'https://graph.facebook.com/v2.6/me/messages',
         qs: { access_token: botParams.settings.messengerPageAccessToken },
         method: 'POST',
         json: messageData
-    });
-    if (r.statusCode !== 200) {
-        throw new Error('Sending message failed with code %s msg %s and body: ',
-                        r.statusCode, r.statusMessage, r.body);
+    };
+    const r = await request(requestData);
+    if (botParams.settings.dashbotFacebookKey) {
+        const dashbot = createDashbot(botParams.settings.dashbotFacebookKey).facebook;
+        dashbot.logOutgoing(requestData, r.body);
     }
+    if (r.statusCode !== 200) {
+        throw new Error(`Sending message failed with code ${r.statusCode} msg ` +
+                        `${r.statusMessage} and body: ${toStr(r.body)}`);
+    }
+}
+
+function removeMarkdown(text) {
+    return text.replace(/\n\n/g, '\n');
 }
 
 async function getUserProfile(userId, botParams) {
@@ -302,7 +304,7 @@ async function getUserProfile(userId, botParams) {
         method: 'GET',
         json: true,
     };
-    console.log('messenger-webhook getUserProfile: ', reqData);
+    reportDebug('messenger getUserProfile: ', reqData);
     const r = await request(reqData);
     if (r.statusCode !== 200) {
         throw new Error(`getUserProfile failed with code ${r.statusCode} msg ` +
@@ -311,23 +313,6 @@ async function getUserProfile(userId, botParams) {
 
     return r.body;
 }
-
-
-export function webhook(req: Request, res: Response) {
-    console.log('messenger-webhook...');
-    handleWebhookRequest(req, res)
-        .then(() => {
-            console.log('Success');
-        })
-        .catch(err => {
-            console.log('Error: ', err || '-');
-            if (err instanceof Error) {
-                throw err;
-            }
-        });
-}
-
-
 
 
 /*

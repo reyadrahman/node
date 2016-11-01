@@ -1,15 +1,17 @@
 /* @flow */
 
-import deepiksBot from '../deepiks-bot/deepiks-bot.js';
+import { deepiksBot } from '../deepiks-bot/deepiks-bot.js';
 import { request } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
-import { toStr, waitForAll } from '../../misc/utils.js';
+import { toStr, waitForAll, composeKeys, decomposeKeys } from '../../misc/utils.js';
 import * as aws from '../../aws/aws.js';
 import URL from 'url';
 import ciscospark from 'ciscospark';
 import type { Request, Response } from 'express';
 import memoize from 'lodash/memoize';
 import crypto from 'crypto';
+const reportDebug = require('debug')('deepiks:spark');
+const reportError = require('debug')('deepiks:spark:error');
 
 type SparkReqBody = {
     id: string,
@@ -23,12 +25,13 @@ type SparkReqBody = {
         personEmail: string,
         created: string,
     }
-}
+};
 
-async function handleWebhookRequest(req: Request, res: Response) {
+
+export async function webhook(req: Request, res: Response) {
     const body: SparkReqBody = (req.body: any);
 
-    console.log('------- spark-webhook: req.body: ', toStr(body));
+    reportDebug('------- spark-webhook: req.body: ', toStr(body));
 
     if (body.resource !== 'messages' || body.event !== 'created') {
         return;
@@ -36,6 +39,9 @@ async function handleWebhookRequest(req: Request, res: Response) {
 
     const { publisherId, botId } = req.params;
     const botParams = await aws.getBot(publisherId, botId);
+    if (!botParams) {
+        throw new Error(`Did not find bot with publisherId ${publisherId} and botId ${botId}`);
+    }
     const { settings: { ciscosparkBotPersonId, ciscosparkAccessToken,
                         ciscosparkWebhookSecret, ciscosparkWebhookId } } = botParams;
 
@@ -44,24 +50,26 @@ async function handleWebhookRequest(req: Request, res: Response) {
     const expectedSig = hmac.digest('hex');
     const sig = req.get('X-Spark-Signature');
     if (sig !== expectedSig) {
-        console.error(`ERROR: exprected signatue: ${expectedSig} but received ${sig || ''}`);
         res.status(403).send('Access denied');
-        return;
+        throw new Error(`ERROR: exprected signatue: ${expectedSig} but received ${sig || ''}`);
     }
-    console.log(`X-Spark-Signature successfully verified ${sig || ''}`);
-
+    reportDebug(`X-Spark-Signature successfully verified ${sig || ''}`);
 
     if (!ciscosparkBotPersonId) {
-        console.error('ciscosparkBotPersonId is empty');
-        return;
+        res.status(500).send('Error');
+        throw new Error('ciscosparkBotPersonId is empty');
     }
     if (ciscosparkWebhookId !== body.id) {
-        console.error(`ciscosparkWebhookId doesn't match. Got: `, body.id,
-                      `, but expected: `, ciscosparkWebhookId)
-        return;
+        res.status(500).send('Error');
+        throw new Error(`ciscosparkWebhookId doesn't match. Got: ${body.id}` +
+                        `, but expected: ${ciscosparkWebhookId}`);
     }
+
+    // respond immediately
+    res.send();
+
     if (ciscosparkBotPersonId === body.data.personId) {
-        console.log('skipping own message, personId: ', body.data.personId);
+        reportDebug('skipping own message, personId: ', body.data.personId);
         return;
     }
 
@@ -74,9 +82,10 @@ async function handleWebhookRequest(req: Request, res: Response) {
     });
 
     const rawMessage = await client.messages.get(messageId);
+    reportDebug('rawMessage:', rawMessage);
     const fetchCardImages = !rawMessage.files ? undefined : rawMessage.files.map(
         a => memoize(async function () {
-            console.log('spark-webhook: attachment download requested');
+            reportDebug('spark-webhook: attachment download requested');
             const buffer = await request({
                 url: URL.parse(a),
                 encoding: null,
@@ -84,13 +93,13 @@ async function handleWebhookRequest(req: Request, res: Response) {
                     Authorization: `Bearer ${ciscosparkAccessToken}`,
                 },
             });
-            console.log('spark-webhook: successfully downloaded attachment');
+            reportDebug('spark-webhook: successfully downloaded attachment');
             return buffer.body;
         })
     );
     const senderProfile = await client.people.get(rawMessage.personId);
     const message: WebhookMessage = {
-        publisherId_conversationId: aws.composeKeys(botParams.publisherId, rawMessage.roomId),
+        publisherId_conversationId: composeKeys(botParams.publisherId, rawMessage.roomId),
         creationTimestamp: new Date(rawMessage.created).getTime(),
         id: rawMessage.id,
         senderId: rawMessage.personId,
@@ -101,14 +110,29 @@ async function handleWebhookRequest(req: Request, res: Response) {
         fetchCardImages,
     };
 
-    console.log('got message: ', message);
+    reportDebug('got message: ', message);
 
-    const responses = [];
-    await deepiksBot(message, botParams, m => {
-        responses.push(send(botParams, roomId, m))
-    });
+    let dashbotPromise;
+    if (botParams.settings.dashbotGenericKey) {
+        dashbotPromise = request({
+            uri: 'https://tracker.dashbot.io/track',
+            qs : {
+                type: 'outgoing',
+                platform: 'generic',
+                apiKey: botParams.settings.dashbotGenericKey,
+                v: '0.7.4-rest',
+            },
+            method: 'POST',
+            json: {
+                text: message.text,
+                userId: rawMessage.roomId,
+            }
+        });
+    }
 
-    await waitForAll(responses);
+    await deepiksBot(message, botParams, m => send(botParams, roomId, m));
+
+    if (dashbotPromise) await dashbotPromise;
 }
 
 // roomId is the same as conversationId
@@ -123,22 +147,11 @@ export async function send(botParams: BotParams, conversationId: string,
         },
     });
 
-    console.log('send sending message: ', message);
-    if (typeof message === 'string' && message.trim()) {
-        await client.messages.create({
-            text: message,
-            roomId: conversationId,
-        });
-        return;
-    }
-    if (typeof message !== 'object') {
-        console.log('send: message is not an object');
-        return;
-    }
-
+    reportDebug('send sending message: ', message);
     const actionsToStr = xs =>
         (xs || []).filter(x => x.fallback).map(x => x.fallback).join(', ');
     // ciscospark can only send 1 file at a time
+    const dashbotPromises = [];
     const { typingOn, text, cards, actions } = message;
     if (cards) {
         for (let i=0; i<cards.length; i++) {
@@ -148,37 +161,56 @@ export async function send(botParams: BotParams, conversationId: string,
                 files: [c.imageUrl],
                 roomId: conversationId,
             });
-            const cardText = actionsToStr(c.actions);
-            await client.messages.create({
-                text: cardText || '',
-                roomId: conversationId,
-            });
+            // TODO how to send images to dashbot
+
+            const cardText = removeMarkdown(actionsToStr(c.actions) || '');
+            if (cardText) {
+                await client.messages.create({
+                    text: cardText,
+                    roomId: conversationId,
+                });
+                dashbotPromises.push(dashbotSend(botParams, conversationId, cardText));
+            }
         }
     }
 
     if (text || actions) {
-        const textToSend = (
-            (text || '') + '\n' + actionsToStr(actions)
-        ).trim();
+        let actionsText = actionsToStr(actions);
+        if (actionsText) {
+            actionsText = `(${actionsText})`;
+        }
+        const textToSend = removeMarkdown(
+            ((text || '') + '\n\n' + actionsText).trim()
+        );
         await client.messages.create({
-            text: textToSend || '',
+            text: textToSend,
             roomId: conversationId,
         });
+        dashbotPromises.push(dashbotSend(botParams, conversationId, textToSend));
     }
+
+    await waitForAll(dashbotPromises);
 };
 
-export function webhook(req: Request, res: Response) {
-    // respond immediately
-    res.send();
+function removeMarkdown(text) {
+    return text.replace(/\n\n/g, '\n');
+}
 
-    handleWebhookRequest(req, res)
-        .then(() => {
-            console.log('Success');
-        })
-        .catch(err => {
-            console.log('Error: ', err || '-');
-            if (err instanceof Error) {
-                throw err;
-            }
-        });
+async function dashbotSend(botParams, roomId, text) {
+    if (!botParams.settings.dashbotGenericKey) return;
+
+    await request({
+        uri: 'https://tracker.dashbot.io/track',
+        qs : {
+            type: 'outgoing',
+            platform: 'generic',
+            apiKey: botParams.settings.dashbotGenericKey,
+            v: '0.7.4-rest',
+        },
+        method: 'POST',
+        json: {
+            text: text,
+            userId: roomId,
+        }
+    });
 }

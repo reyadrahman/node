@@ -8,6 +8,8 @@ import { Glyphicon, Grid, Col, Row, Panel, Button,
          FormGroup, ControlLabel, FormControl,
          InputGroup, Dropdown } from 'react-bootstrap';
 
+import spinnerUrl from '../../resources/spinner.svg';
+
 let HomeContactForm = React.createClass({
     getInitialState() {
         return {
@@ -28,18 +30,22 @@ let HomeContactForm = React.createClass({
     },
 
     render() {
-        console.log('Home render');
-        const { className, i18n, i18n: { strings: { homeContactForm: strings } },
-                successMessage, errorMessage,
+        const { className, i18n,
+                i18n: { strings: { errors, successes, homeContactForm: strings } },
+                successCode, errorCode, sendingInProgress
         } = this.props;
 
         const { state } = this;
 
         let statusUi;
-        if (errorMessage) {
-            statusUi = <div className="error-message">{ errorMessage }</div>
-        } else if (successMessage) {
-            statusUi = <div className="success-message">{ successMessage }</div>
+        if (errorCode) {
+            statusUi = <div className="error-message">
+                {
+                    errors[errorCode] || errors.DefaultSendEmail
+                }
+                </div>
+        } else if (successCode) {
+            statusUi = <div className="success-message">{ successes[successCode] }</div>
         }
 
         return (
@@ -110,7 +116,8 @@ let HomeContactForm = React.createClass({
                                 { statusUi }
                             </Col>
                             <Col md={4} className="send-col">
-                                <Button onClick={this.send}>
+                                <Button onClick={this.send} disabled={sendingInProgress}>
+                                    { sendingInProgress ? <img src={spinnerUrl} /> : null }
                                     { strings.send }
                                 </Button>
                             </Col>
@@ -125,8 +132,9 @@ let HomeContactForm = React.createClass({
 
 HomeContactForm = connect(
     state => ({
-        errorMessage: state.contacts.errorMessage,
-        successMessage: state.contacts.successMessage,
+        errorCode: state.contacts.errorCode,
+        successCode: state.contacts.successCode,
+        sendingInProgress: state.contacts.sendingInProgress,
     }),
     {
         sendEmail: actions.sendEmail,

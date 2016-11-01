@@ -4,12 +4,24 @@ import translations from '../../i18n/translations.js';
 import * as actions from '../../app-state/actions.js';
 import * as utils from '../../client/client-utils.js';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
+import CookieConsent from '../cookie-consent/CookieConsent.jsx';
+const reportDebug = require('debug')('deepiks:App');
 
 import '../../styles/theme-1/theme-1.scss';
 
 export const App_ = React.createClass({
     fullscreenHandler(e) {
         this.props.setFullscreen(utils.isFullscreen());
+    },
+
+    componentWillMount() {
+        this.props.setPageTitle(translations[this.props.lang].app.pageTitle);
+    },
+
+    componentWillReceiveProps(newProps) {
+        if (newProps.lang !== this.props.lang) {
+            this.props.setPageTitle(translations[newProps.lang].app.pageTitle);
+        }
     },
 
     componentDidMount() {
@@ -21,7 +33,7 @@ export const App_ = React.createClass({
 
     render() {
         const { currentUser, children, lang, ui, closeModal } = this.props;
-        console.log('App render, lang', lang, ', props: ', this.props);
+        reportDebug('App render, lang', lang, ', props: ', this.props);
         const i18n = {
             lang,
             strings: translations[lang],
@@ -38,6 +50,7 @@ export const App_ = React.createClass({
                 <ModalBox i18n={i18n} isOpen={!!ModalChild} onRequestClose={closeModal}>
                     { ModalChild && <ModalChild i18n={i18n} /> }
                 </ModalBox>
+                <CookieConsent i18n={i18n} />
             </div>
         );
     },

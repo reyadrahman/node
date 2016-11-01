@@ -5,12 +5,13 @@ import * as messenger from './messenger.js';
 import * as ms from './ms.js';
 import * as aws from '../../aws/aws.js';
 import { waitForAll } from '../../misc/utils.js';
-import type { ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
-import { ENV } from '../server-utils.js';
-import { toStr } from '../../misc/utils.js';
+import type { ResponseMessage, BotParams, Conversation } from '../../misc/types.js';
+import { CONSTANTS } from '../server-utils.js';
+import { toStr, decomposeKeys } from '../../misc/utils.js';
+import { coldSend as deepiksColdSend } from '../deepiks-bot/deepiks-bot.js';
 import _ from 'lodash';
-
-const { DB_TABLE_CONVERSATIONS } = ENV;
+const reportDebug = require('debug')('deepiks:all-channels');
+const reportError = require('debug')('deepiks:all-channels:error');
 
 export const webhooks = {
     messenger: messenger.webhook,
@@ -19,47 +20,51 @@ export const webhooks = {
     // web.webhook not here, handled with websocket
 };
 
-export async function send(botParams: BotParams, conversationId: string,
-                           channel: string, message: ResponseMessage,
-                           channelData?: ChannelData)
+export async function send(botParams: BotParams, conversation: Conversation,
+                           message: ResponseMessage)
 {
+    const { channel, botId_conversationId, channelData } = conversation;
+    const [, conversationId] = decomposeKeys(botId_conversationId);
+    let sendFn;
     if (channel === 'messenger') {
-        return messenger.send(botParams, conversationId, message);
+        sendFn = m => messenger.send(botParams, conversationId, m);
     } else if (channel === 'ciscospark') {
-        return spark.send(botParams, conversationId, message);
+        sendFn = m => spark.send(botParams, conversationId, m);
     } else if (['skype', 'slack', 'telegram', 'webchat'].includes(channel)) {
         if (!channelData) {
             throw new Error('send: channelData is missing');
         }
-        return ms.sendCold(botParams, channelData, message);
+        sendFn = m => ms.coldSend(botParams, conversationId, channelData, m);
     }
 
-    throw new Error(`send: unsupported channel ${channel}`);
+    if (!sendFn) {
+        throw new Error(`send: unsupported channel ${channel}`);
+    }
+
+    await deepiksColdSend(message, botParams, conversation, sendFn);
 }
 
 export async function sendToMany(botParams: BotParams, message: ResponseMessage, categories?: string[]) {
-    console.log('sendAll: botParams: ', botParams, ', message: ', message, ', categories: ', categories);
-    // TODO paging
-    const qres = await aws.dynamoQuery({
-        TableName: DB_TABLE_CONVERSATIONS,
-        KeyConditionExpression: 'publisherId = :pid',
-        FilterExpression: 'botId = :bid and subscribed <> :s',
-        ProjectionExpression: 'publisherId, conversationId, channel, channelData, subscriptions',
-        ExpressionAttributeValues: {
-            ':pid': botParams.publisherId,
-            ':bid': botParams.botId,
-            ':s': false,
-        },
-    });
+    reportDebug('sendAll: botParams: ', botParams, ', message: ', message, ', categories: ', categories);
+    let qItems = await aws.dynamoAccumulatePages(
+        startKey => aws.dynamoQuery({
+            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+            KeyConditionExpression: 'publisherId = :pid and begins_with(botId_conversationId, :bid)',
+            FilterExpression: 'subscribed <> :s',
+            ExclusiveStartKey: startKey,
+            ExpressionAttributeValues: {
+                ':pid': botParams.publisherId,
+                ':bid': botParams.botId,
+                ':s': false,
+            },
+        })
+    );
 
-    console.log('sendToMany, got qres');
-
-    if (qres.Count === 0) {
-        console.log('sendAll: no conversation found')
+    if (qItems.length === 0) {
+        reportDebug('sendAll: no conversation found')
         return;
     }
 
-    let qItems = qres.Items;
     if (categories && categories.length > 0) {
         const categoriesLC = categories.map(x => x.toLowerCase());
         const inCategories = x => categoriesLC.find(y => y.toLowerCase);
@@ -68,11 +73,11 @@ export async function sendToMany(botParams: BotParams, message: ResponseMessage,
         );
     }
 
-    console.log('sendAll: sending to (showing first 10): ', toStr(qItems.slice(0, 10)));
+    reportDebug('sendAll: sending to (showing first 10): ', toStr(qItems.slice(0, 10)));
 
     await waitForAll(qItems.map(
-        x => send(botParams, x.conversationId, x.channel, message, x.channelData)
+        x => send(botParams, x, message)
     ));
 
-    console.log('sendAll: successfully send all messages');
+    reportDebug('sendAll: sent all messages');
 }

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Form, Input, Button, ButtonArea, TextArea, SuccessMessage,
+import { Form, Input, TextArea, SuccessMessage,
          ErrorMessage } from '../form/Form.jsx';
+import { Button } from 'react-bootstrap';
 import * as actions from '../../app-state/actions.js';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import { connect } from 'react-redux';
@@ -20,13 +21,7 @@ let AccountPage = React.createClass({
             isUserAttrsDirty: false,
         };
     },
-    // send(e) {
-    //     e.preventDefault();
-    //     // TODO
-    // },
-    // botNameChanged(e) {
-    //     this.setState({ botName: e.target.value });
-    // },
+
     addBot(e) {
         e.preventDefault();
         this.props.router.push('/add-bot');
@@ -77,27 +72,30 @@ let AccountPage = React.createClass({
         }
     },
 
-    componentDidMount() {
-        const { currentUser, fetchBots } = this.props;
-        if (currentUser.signedIn) {
-            fetchBots();
-        }
-    },
+    // componentDidMount() {
+    //     const { currentUser, fetchBots } = this.props;
+    //     if (currentUser.signedIn && currentUser.botsState.bots) {
+    //         fetchBots();
+    //     }
+    // },
 
     componentDidUpdate() {
         // TODO
     },
 
     render() {
-        const { className, currentUser, i18n: { strings: { accountPage: strings } },
-        } = this.props;
+        const { className, currentUser,
+                i18n: { strings: { errors, successes, accountPage: strings } } } = this.props;
 
         if (!currentUser.signedIn) {
             return null;
         }
 
         const { userAttrs, newPassword, oldPassword } = this.state;
-        const { successMessage, errorMessage } = currentUser.updateAttrsAndPassState;
+        const { successCode, errorCode } = currentUser.updateAttrsAndPassState;
+        const errorMessage = errors[errorCode] || errors.DefaultUpdateAttrsAndPass;
+        const successMessage = successes[successCode] || successes.DefaultUpdateAttrsAndPass;
+
         const profileInfoUi = (
             <Form
                 className="profile-form"
@@ -154,20 +152,19 @@ let AccountPage = React.createClass({
                         </div>
                 }
                 {
-                    errorMessage &&
+                    errorCode &&
                         <ErrorMessage message={errorMessage} />
                 }
                 {
-                    successMessage &&
+                    successCode &&
                         <SuccessMessage message={successMessage} />
                 }
-                <ButtonArea className="profile-info-button-area">
-                    <Button
-                        className="profile-info-save-button"
-                        label={strings.save}
-                        type='submit'
-                    />
-                </ButtonArea>
+                <Button
+                    className="button"
+                    bsSize='large'
+                    type='submit'
+                    > { strings.save }
+                </Button>
             </Form>
         );
 
@@ -229,13 +226,11 @@ let AccountPage = React.createClass({
                         fetchingBots || emptyBotList || botGridUi
                     }
                     <Form className="add-bot-form" onSubmit={this.addBot}>
-                        <ButtonArea>
                             <Button
-                                className="add-bot-button"
-                                label={strings.addBot}
+                                className="button"
+                                bsSize='large'
                                 type='submit'
-                            />
-                        </ButtonArea>
+                            >{ strings.addBot }</Button>
                     </Form>
                 </div>
             </div>
@@ -248,7 +243,7 @@ AccountPage = connect(
         currentUser: state.currentUser,
     }),
     {
-        fetchBots: actions.fetchBots,
+        // fetchBots: actions.fetchBots,
         updateUserAttrsAndPass: actions.updateUserAttrsAndPass,
         closeModal: actions.closeModal,
         setModal: actions.setModal,

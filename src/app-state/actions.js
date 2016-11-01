@@ -2,18 +2,17 @@
 
 import * as aws from '../aws/aws.js';
 import { destructureS3Url } from '../misc/utils.js';
-import * as utils from '../client/client-utils.js';
+import { CONSTANTS } from '../client/client-utils.js';
 import * as bridge from '../client/client-server-bridge.js';
 import SignIn from '../components/sign-in/SignIn.jsx';
 import SignUp from '../components/sign-up/SignUp.jsx';
 import VerifyRegistration from '../components/verify-registration/VerifyRegistration.jsx';
-import type { DBMessage, ResponseMessage } from '../misc/types.js';
-
+import type { DBMessage, ResponseMessage, FeedConfig } from '../misc/types.js';
 import type { Component } from 'react';
 import { browserHistory } from 'react-router'
 import Cookies from 'js-cookie';
-
-const { PLATFORM, S3_BUCKET_NAME } = utils.ENV;
+const reportDebug = require('debug')('deepiks:actions');
+const reportError = require('debug')('deepiks:actions:error');
 
 export function closeModal() {
     return { type: 'ui/closeModal' };
@@ -23,12 +22,16 @@ export function setModal(modalComponent) {
     return { type: 'ui/setModal', modalComponent };
 }
 
-export function setLanguage(lang) {
-    return { type: 'lang/set', lang };
-}
-
 export function toggleSideMenu() {
     return { type: 'ui/toggleSideMenu' };
+}
+
+export function selectBot(botId) {
+    return { type: 'currentUser/selectBot', botId };
+}
+
+export function setBots(bots) {
+    return {type: 'currentUser/setBotsAndUpdateSelectedBotId', bots};
 }
 
 // ==================================================
@@ -60,7 +63,7 @@ export function openVerifyRegistration(email?: string, password?: string) {
     }
 }
 
-export function changeLang(lang: string) {
+export function setLanguage(lang: string) {
     return (dispatch: Function) => {
         dispatch({
             type: 'lang/set',
@@ -69,10 +72,10 @@ export function changeLang(lang: string) {
 
         // TODO if logged in, store in AWS Cognito attributes
 
-        if (PLATFORM === 'browser') {
+        if (CONSTANTS.PLATFORM === 'browser') {
             Cookies.set('language', lang,
                         {expires: 1000, path: '/'});
-            console.log('cookies: ', document.cookie);
+            reportDebug('cookies: ', document.cookie);
         }
         return Promise.resolve();
     }
@@ -82,13 +85,13 @@ export function signUp(firstName, lastName, email, password) {
     return async function(dispatch: Function) {
         try {
             const res = await aws.signUp(firstName, lastName, email, password);
-            console.log('signUp thunk SUCCESS. res: ', res);
+            reportDebug('signUp thunk SUCCESS. res: ', res);
             if (!res.userConfirmed) {
                dispatch(openVerifyRegistration(email, password));
             }
         } catch(error) {
-            console.log('signUp thunk FAIL. error: ', error.message);
-            dispatch({ type: 'signUp/failed', errorMessage: error.message });
+            reportError('signUp thunk FAIL. error: ', error.code, error.message);
+            dispatch({ type: 'signUp/failed', errorCode: error.code });
         }
     };
 }
@@ -98,18 +101,18 @@ export function verifyRegistration(data) {
         try {
             var res = await aws.verifyRegistration(data.email, data.code);
         } catch(error) {
-            console.log('verifyRegistration FAILED. error: ', error);
-            dispatch({ type: 'verifyRegistration/failed', errorMessage: error.message });
+            reportError('verifyRegistration FAILED. error: ', error.code, error.message);
+            dispatch({ type: 'verifyRegistration/failed', errorCode: error.code });
             return;
         }
 
-        console.log('verifyRegistration SUCCESS. res: ', res);
+        reportDebug('verifyRegistration SUCCESS. res: ', res);
         let password = getState().verifyRegistration.password;
         if (password) {
             try {
                 await dispatch(signIn(data.email, password));
             } catch(error) {
-                console.log(`verifyRegistration couldn't sign in after verification`, error);
+                reportDebug(`verifyRegistration couldn't sign in after verification`, error);
             }
         }
         dispatch({ type: 'verifyRegistration/reset' });
@@ -121,17 +124,17 @@ export function signIn(email, password) {
     return async function (dispatch: Function) {
         try {
             const res = await aws.signIn(email, password);
-            console.log('signIn thunk SUCCESS. res: ', res,
+            reportDebug('signIn thunk SUCCESS. res: ', res,
                         ', res.getAccessToken(): ', res.getAccessToken(),
                         ', res.getIdToken(): ', res.getIdToken());
             const attributes = await aws.getCurrentUserAttributes();
-            console.log('user attributes: ', attributes);
+            reportDebug('user attributes: ', attributes);
             dispatch({ type: 'currentUser/signIn', attributes });
             dispatch({ type: 'ui/closeModal' });
-            browserHistory.push('/account');
+            browserHistory.push('/test');
         } catch(error) {
-            console.log('signIn thunk FAIL. error: ', error.message);
-            dispatch({ type: 'signIn/failed', errorMessage: error.message });
+            reportDebug('signIn thunk FAIL. error: ', error.code, error.message);
+            dispatch({ type: 'signIn/failed', errorCode: error.code });
         }
     };
 }
@@ -161,23 +164,24 @@ export function updateUserAttrsAndPass(attrs: Object,
                     ...attrs,
                 }
             });
-            dispatch({ type: 'updateAttrsAndPassSucceeded', successMessage: 'Successfully updated' });
+            dispatch({ type: 'currentUser/updateAttrsAndPassSucceeded', successCode: 'UserUpdateSuccess' });
 
         } catch(error) {
-            console.log('actions.updateUserAttrsAndPass failed: ', error);
-            dispatch({ type: 'updateAttrsAndPassFailed', errorMessage: error.message });
+            reportDebug('actions.updateUserAttrsAndPass failed: ', error.code, error);
+            dispatch({ type: 'currentUser/updateAttrsAndPassFailed', errorCode: error.code });
         }
     };
 }
 
 export function sendEmail(data) {
     return async function(dispatch: Function) {
+        dispatch({ type: 'contacts/sending' });
         try {
             await bridge.sendEmail(data);
-            dispatch({ type:'contacts/succeded', successMessage: 'Message was sent, thanks' });
+            dispatch({ type:'contacts/succeded', successCode: 'SendEmailSuccess' });
         } catch(error) {
-            console.log('ERROR: sendEmail failed: ', error);
-            dispatch({ type: 'contacts/failed', errorMessage: `Sorry, couldn't send your message` });
+            reportDebug('ERROR: sendEmail failed: ', error.code, error.message);
+            dispatch({ type: 'contacts/failed', errorCode: error.code });
         }
     }
 }
@@ -189,46 +193,162 @@ export function addBot(botName: string, data) {
     }
 }
 
+export function updateBot(botId: string, data) {
+    return async function (dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        return await bridge.updateBot(session.getIdToken().getJwtToken(), botId, data);
+    }
+}
+
 export function fetchBots() {
-    return async function(dispatch: Function) {
+    return async function(dispatch: Function, getState: Function) {
         dispatch({ type: 'currentUser/resetBotsState' });
         try {
             const session = await aws.getCurrentSession();
             const bots = await bridge.fetchBots(session.getIdToken().getJwtToken());
-            dispatch({ type: 'currentUser/setBotsState', bots });
-        } catch(err) {
+            dispatch(setBots(bots));
+        } catch(error) {
+            reportError('fetchBots', error.code, error.message);
             dispatch({
-                type: 'currentUser/fetchBotsFailed',
-                errorMessage: 'Could not fetch the bots'
+                type:         'currentUser/fetchBotsFailed',
+                errorCode: error.code,
             });
         }
     }
 }
 
-export function fetchConversations() {
+export function fetchBotPublicInfo(publisherId, botId) {
+    return async function (dispatch: Function) {
+        return bridge.fetchBotPublicInfo(publisherId, botId);
+    }
+}
+
+export function fetchUsers(botId) {
+    return async function(dispatch: Function) {
+        dispatch({ type: 'currentUser/resetUsersState' });
+        try {
+            const session = await aws.getCurrentSession();
+            const users = await bridge.fetchUsers(
+                session.getIdToken().getJwtToken(),
+                botId
+            );
+            dispatch({
+                type: 'currentUser/setUsersState',
+                      users,
+            });
+        } catch(error) {
+            reportError('fetchUsers', error.code, error.messsage);
+            dispatch({
+                type: 'currentUser/fetchUsersFailed',
+                errorCode: error.code,
+            });
+        }
+    }
+}
+
+export function fetchPolls(botId) {
+    return async function (dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        return bridge.fetchPolls(
+            session.getIdToken().getJwtToken(),
+            botId
+        );
+    }
+}
+
+export function fetchUser(botId, channel, userId) {
+    return async function (dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        return bridge.fetchUser(
+            session.getIdToken().getJwtToken(),
+            botId, channel, userId
+        );
+    }
+}
+
+export function saveUser(botId, channel, userId, email, role) {
+    return async function (dispatch: Function) {
+        const session = await aws.getCurrentSession();
+        return bridge.saveUser(
+            session.getIdToken().getJwtToken(),
+            botId, channel, userId, email, role
+        );
+    }
+}
+
+export function updateConversations(botId, since: number = 0) {
+    return async function (dispatch: Function) {
+        try {
+            const session       = await aws.getCurrentSession();
+            const conversations = await bridge.fetchConversations(
+                session.getIdToken().getJwtToken(),
+                botId, since
+            );
+            if (conversations.length) {
+                dispatch({
+                    type:        'currentUser/updateConversationsState',
+                                 conversations,
+                    lastUpdated: moment().format('x')
+                });
+            }
+        } catch (error) {
+            reportError(error);
+        }
+    }
+}
+
+export function fetchConversations(botId) {
     return async function(dispatch: Function) {
         dispatch({ type: 'currentUser/resetConversationsState' });
         try {
             const session = await aws.getCurrentSession();
             const conversations = await bridge.fetchConversations(
-                session.getIdToken().getJwtToken()
+                session.getIdToken().getJwtToken(),
+                botId
             );
             dispatch({
-                type: 'currentUser/setConversationsState',
-                conversations,
+                type:        'currentUser/setConversationsState',
+                             conversations,
+                lastUpdated: moment().format('x')
             });
         } catch(error) {
+            reportError('fetchConversations', error.code, error.message);
             dispatch({
                 type: 'currentUser/fetchConversationsFailed',
-                errorMessage: 'Could not fetch the bots',
+                errorCode: error.code,
             });
+        }
+    }
+
+}
+
+export function updateMessages(conversationId: string, since: number = 0) {
+    reportDebug('action: fetchMessages');
+    return async function (dispatch: Function) {
+        try {
+            const session  = await aws.getCurrentSession();
+            const messages = await bridge.fetchMessages(
+                session.getIdToken().getJwtToken(),
+                conversationId, since
+            );
+
+            if (messages.length) {
+                const messagesWithSignedUrls = await signS3UrlsInMesssages(messages);
+                dispatch({
+                    type:        'currentUser/updateMessagesState',
+                    messages:    messagesWithSignedUrls,
+                    lastUpdated: moment().format('x')
+                });
+            }
+        } catch (error) {
+            reportError(error);
         }
     }
 
 }
 
 export function fetchMessages(conversationId: string) {
-    console.log('action: fetchMessages');
+    reportDebug('action: fetchMessages');
     return async function(dispatch: Function) {
         dispatch({ type: 'currentUser/resetMessagesState' });
         try {
@@ -237,17 +357,19 @@ export function fetchMessages(conversationId: string) {
                 session.getIdToken().getJwtToken(),
                 conversationId
             );
-            console.log('fetchMessages before signing: ', messages);
+            reportDebug('fetchMessages before signing: ', messages);
             const messagesWithSignedUrls = await signS3UrlsInMesssages(messages);
-            console.log('fetchMessages after signing: ', messagesWithSignedUrls);
+            reportDebug('fetchMessages after signing: ', messagesWithSignedUrls);
             dispatch({
-                type: 'currentUser/setMessagesState',
-                messages: messagesWithSignedUrls,
+                type:        'currentUser/setMessagesState',
+                messages:    messagesWithSignedUrls,
+                lastUpdated: moment().format('x')
             });
         } catch(error) {
+            reportError('fetchMessage', error.code, error.message);
             dispatch({
                 type: 'currentUser/fetchMessagesFailed',
-                errorMessage: 'Could not fetch the bots',
+                errorCode: error.code,
             });
         }
     }
@@ -261,7 +383,7 @@ async function signS3UrlsInMesssages(messages: DBMessage[]): Promise<DBMessage[]
         if (clone.cards) {
             cardsP = Promise.all(clone.cards.map(async function(c) {
                 const bucketAndKey = destructureS3Url(c.imageUrl);
-                if (!bucketAndKey || bucketAndKey.bucket !== S3_BUCKET_NAME) {
+                if (!bucketAndKey || bucketAndKey.bucket !== CONSTANTS.S3_BUCKET_NAME) {
                     return c;
                 }
 
@@ -294,3 +416,17 @@ export function sendNotification(botId: string,
                                       botId, message, categories);
     }
 }
+
+export function addBotFeed(botId: string, feedConfig: FeedConfig) {
+    return async function(dispatch: Function) {
+        try {
+            const session = await aws.getCurrentSession();
+            await bridge.addBotFeed(session.getIdToken().getJwtToken(), botId, feedConfig);
+        } catch(error) {
+            reportError(error);
+            // TODO show error message to user
+        }
+        dispatch(fetchBots());
+    };
+}
+

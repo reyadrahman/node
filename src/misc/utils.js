@@ -1,6 +1,25 @@
 /* @flow */
 
 import map from 'lodash/map';
+import omitBy from 'lodash/omitBy';
+import isUndefined from 'lodash/isUndefined';
+import uuid from 'node-uuid';
+const reportDebug = require('debug')('deepiks:utils');
+const reportError = require('debug')('deepiks:utils:error');
+
+
+export function composeKeys(...xs: Array<string | number>): string {
+    return xs.join('__');
+}
+
+export function decomposeKeys(k: string): string[] {
+    return k.split('__');
+}
+
+// 64 bit random number in hex format
+export function shortLowerCaseRandomId() {
+    return uuid.v4(null, new Buffer(16)).slice(0,8).toString('hex');
+}
 
 export function toStr(obj: any): string {
     return JSON.stringify(obj, null, ' ');
@@ -10,8 +29,22 @@ export function toStr(obj: any): string {
  * splitOmitWhitespace(' , a ,, ', ',') will return ['a']
  * @return {[type]} [description]
  */
-export function splitOmitWhitespace(str: string, sep: string): string {
+export function splitOmitWhitespace(str: string, sep: string): string[] {
     return str.split(sep).map(x => x.trim()).filter(Boolean);
+}
+
+/**
+ * see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply
+ * for why we need this and the limits of Function.prototyp.apply
+ */
+export function pushMany<T>(arr: T[], newElems: T[]): T[] {
+  const CHUNK_LENGTH = 32768;
+  const n = newElems.length;
+  for (let i = 0; i < n; i += CHUNK_LENGTH) {
+    arr.push(...newElems.slice(i, Math.min(i+CHUNK_LENGTH, n)));
+  }
+
+  return arr;
 }
 
 export function leftPad(x: string | number, pad: string, n: number): string {
@@ -35,16 +68,26 @@ export function simpleTimeFormat(timeRaw: Date | number | string) {
     return `${leftPad(time.getDate(), '0', 2)} ${monthNames[time.getMonth()]}`;
 }
 
+/**
+ * Converts key-value map into query string.
+ * Omits keys with undefined values.
+ *
+ * @param {object.<string, any>} obj
+ * @returns {string}
+ */
 export function createUrlQuery(obj: {[key: string]: any}): string {
     const euc = encodeURIComponent;
-    // $FlowFixMe
-    return map(obj, (v, k) => `${euc(k)}=${euc(v)}`)
+    return map(omitBy(obj, (value, key) => isUndefined(value)), (v, k) => `${euc(k)}=${euc(v)}`)
            .join('&');
 }
 
 export function destructureS3Url(url: string): ?{ bucket: string, key: string} {
-    let res = url.match(/https:\/\/(.*?)\.s3\.amazonaws\.com\/(.*)/) ||
-              url.match(/https:\/\/s3\.amazonaws.com\/(.*?)\/(.*)/);
+    // examples
+    // https://s3.amazonaws.com/BUCKET/KEY
+    // https://BUCKET.s3-eu-west-1.amazonaws.com/KEY
+    // https://BUCKET.s3.amazonaws.com/KEY
+    let res = url.match(/https:\/\/s3\.amazonaws\.com\/(.+?)\/(.+)/i) ||
+              url.match(/https:\/\/(.+?)\.s3.*?\.amazonaws\.com\/(.+)/i);
     if (!res) return null;
     return { bucket: decodeURIComponent(res[1]), key: decodeURIComponent(res[2]) };
 }
@@ -57,7 +100,7 @@ export async function waitForAll(promises: Promise<*>[]): Promise<*> {
     return await Promise.all(promises.map(x => x.then(
         v => ({v}),
         e => {
-            console.error(e);
+            reportError(e);
             return {e};
         }
     )));
@@ -117,7 +160,7 @@ export function catchPromise(fn: Function) {
         try {
             return await fn.apply(this, arguments);
         } catch(error) {
-            console.error(error);
+            reportError(error);
             throw error;
         }
     });

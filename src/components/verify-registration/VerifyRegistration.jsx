@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Button } from 'react-bootstrap';
 import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
@@ -16,7 +17,6 @@ let VerifyRegistration = React.createClass({
     verify(e) {
         let { email, code } = this.state;
         e.preventDefault();
-        console.log('verify: ', this.state);
         this.props.verifyRegistration({ email, code });
     },
 
@@ -29,28 +29,22 @@ let VerifyRegistration = React.createClass({
     },
 
     componentWillReceiveProps(newProps) {
-        console.log('componentWillReceiveProps', this.props, newProps);
         if (newProps.initialEmail !== this.props.initialEmail) {
-            console.log('!!!');
             this.setState({ email: newProps.initialEmail });
         }
     },
 
     render() {
         const { isOpen, i18n: { strings: { verifyRegistration: strings } },
-                errorMessage, successMessage,
+                errorCode, successCode,
                 closeVerifyRegistration } = this.props;
         const { state } = this;
-        const buttons = [
-            { label: strings.verify, type: 'submit' },
-        ];
 
         return (
             <div>
                 <Title title={strings.title} />
                 <Form
                     onSubmit={this.verify}
-                    buttons={buttons}
                 >
                     <div className="inputs-row">
                         <label>{strings.email}</label>
@@ -68,8 +62,15 @@ let VerifyRegistration = React.createClass({
                             onChange={this.verificationCodeChanged}
                         />
                     </div>
-                    <ErrorMessage message={errorMessage} />
-                    <SuccessMessage message={successMessage} />
+                    <ErrorMessage message={errorCode} />
+                    <SuccessMessage message={successCode} />
+                    <Button
+                        className="button"
+                        bsStyle="primary"
+                        bsSize='large'
+                        type='submit'
+                        > { strings.verify }
+                    </Button>
                 </Form>
             </div>
         );
@@ -79,8 +80,8 @@ let VerifyRegistration = React.createClass({
 
 VerifyRegistration = connect(
     state => ({
-        errorMessage: state.verifyRegistration.errorMessage,
-        successMessage: state.verifyRegistration.successMessage,
+        errorCode: state.verifyRegistration.errorCode,
+        successCode: state.verifyRegistration.successCode,
         initialEmail: state.verifyRegistration.initialEmail,
     }),
     {

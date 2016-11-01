@@ -77,10 +77,27 @@
                     &:hover {
                         background: #e8e8e8;
                     }
+
                     .icon {
                         padding: 20px 28px 0 23px;
                     }
 
+                }
+            }
+        }
+    }
+    &.signed-in {
+        nav.left-navbar {
+            ul li a {
+                background-color: transparent;
+                color: #fff;
+
+                &:hover {
+                    background-color: #222;
+                }
+
+                .icon {
+                    color: #fff;
                 }
             }
         }

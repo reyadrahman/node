@@ -1,9 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Glyphicon } from 'react-bootstrap';
+import { Glyphicon, Button } from 'react-bootstrap';
 import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import * as actions from '../../app-state/actions.js';
+const reportDebug = require('debug')('deepiks:SignIn');
 
 let SignIn = React.createClass({
 
@@ -16,7 +17,7 @@ let SignIn = React.createClass({
 
     signIn(e) {
         e.preventDefault();
-        console.log('signIn: ', this.state);
+        reportDebug('signIn: ', this.state);
         this.props.signIn(this.state.email, this.state.password);
     },
 
@@ -28,19 +29,16 @@ let SignIn = React.createClass({
     },
 
     render() {
-        const { i18n: { strings: { signIn: strings } },
-                errorMessage, successMessage } = this.props;
+        const { i18n: { strings: { errors, signIn: strings } },
+                errorCode } = this.props;
         const { state } = this;
-        const buttons = [
-            { label: strings.signIn, type: 'submit' },
-        ];
+        const errorMessage = errorCode && (errors[errorCode] || errors.DefaultSignIn);
 
         return (
             <div className="sign-in-modal-comp">
                 <Title title={strings.title} />
                 <Form
                     onSubmit={this.signIn}
-                    buttons={buttons}
                 >
                     <div className="inputs-row">
                         <label>{strings.email}</label>
@@ -62,7 +60,13 @@ let SignIn = React.createClass({
                         />
                     </div>
                     <ErrorMessage message={errorMessage} />
-                    <SuccessMessage message={successMessage} />
+                    <Button
+                        className="button"
+                        bsStyle="primary"
+                        bsSize='large'
+                        type='submit'
+                        > { strings.signIn }
+                    </Button>
                 </Form>
             </div>
         );
@@ -71,8 +75,8 @@ let SignIn = React.createClass({
 
 SignIn = connect(
     state => ({
-        errorMessage: state.signIn.errorMessage,
-        successMessage: state.signIn.successMessage,
+        errorCode: state.signIn.errorCode,
+        successCode: state.signIn.successCode,
     }),
     {
         signIn: actions.signIn,

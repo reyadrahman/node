@@ -1,7 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const fs = require('fs');
-//const mapKeys = require('lodash/mapKeys');
 const _ = require('lodash');
 const { createBaseConfig, createPublicPathAndUrl } = require('./webpack-config-base.js');
 
@@ -10,23 +9,21 @@ const VALID_ENV_VARS = [
     { name: 'AWS_REGION',                     required: true  },
     { name: 'AWS_ACCESS_KEY_ID',              required: true  },
     { name: 'AWS_SECRET_ACCESS_KEY',          required: true  },
-    { name: 'DB_TABLE_BOTS',                  required: true  },
-    { name: 'DB_TABLE_CONVERSATIONS',         required: true  },
-    { name: 'DB_TABLE_MESSAGES',              required: true  },
-    { name: 'DB_TABLE_AI_ACTIONS',            required: true  },
-    { name: 'DB_TABLE_USER_PREFS',            required: true  },
+    { name: 'DB_TABLES_PREFIX',               required: false },
     { name: 'S3_BUCKET_NAME',                 required: true  },
     { name: 'IDENTITY_POOL_ID',               required: true  },
     { name: 'IDENTITY_POOL_UNAUTH_ROLE_ARN',  required: true  },
     { name: 'IDENTITY_POOL_AUTH_ROLE_ARN',    required: true  },
     { name: 'USER_POOL_ID',                   required: true  },
     { name: 'USER_POOL_APP_CLIENT_ID',        required: true  },
-    { name: 'WIZARD_BOT_WEB_CHAT_SECRET',     required: true  },
     { name: 'CONTACT_EMAIL',                  required: true  },
+    { name: 'EMAIL_ACTION_FROM_ADDRESS',      required: true  },
     { name: 'OWN_BASE_URL',                   required: true  },
+    { name: 'CONVERSATIONAL_ENGINE_LAMBDA',   required: true  },
     { name: 'CALL_SERVER_LAMBDA_SECRET',      required: true  },
     { name: 'CDN',                            required: false },
     { name: 'PORT',                           required: false },
+    { name: 'DEBUG',                          required: false },
 ];
 
 const INCLUDE_MODULES = ['normalize.css'];
@@ -58,13 +55,12 @@ const defaultEnv = {
     NODE_ENV: 'production',
     PLATFORM: 'node',
     PORT: 3000,
-    DEBUG: 'app:*',
+    DEBUG: 'deepiks:*',
 };
 
 
 const publicPathAndUrlEnv = createPublicPathAndUrl(process.env.CDN, process.env.TIMESTAMP);
 _.defaults(process.env, defaultEnv, publicPathAndUrlEnv);
-console.log('process.env: ', _.pick(process.env, _.map(VALID_ENV_VARS, 'name')));
 const missingEnvVars = VALID_ENV_VARS.filter(x => x.required && !process.env[x.name]);
 if (!_.isEmpty(missingEnvVars)) {
     console.error('\n\nThe following environment variables are missing:');

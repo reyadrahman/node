@@ -12,6 +12,9 @@ import u from 'util';
 import crypto from 'crypto';
 import { Server as WebSocketServer } from 'ws';
 
+const reportDebug = require('debug')('deepiks:web');
+const reportError = require('debug')('deepiks:web:error');
+
 const conversationIdToWebsocket = {};
 
 async function handleWebsocketMessage(
@@ -37,7 +40,7 @@ async function handleWebsocketMessage(
         text: text,
     };
 
-    console.log('Got message: ', message);
+    reportDebug('Got message: ', message);
 
     let responses = [];
     await deepiksBot(message, botParams, wss, m => {
@@ -48,24 +51,23 @@ async function handleWebsocketMessage(
 }
 
 export async function send(botParams: BotParams, conversationId: string,
-    message: ResponseMessage)
+                           message: ResponseMessage)
 {
     conversationIdToWebsocket[conversationId].send(message);
 }
 
-export function websocketMessage(messageReceived: WebchannelMessage,
-    wss: WebSocketServer)
-{
+export function websocketMessage(messageReceived: WebchannelMessage, wss: WebSocketServer) {
     res.send(); // respond immediately ???
-    console.log('webChannel-message...');
+    reportDebug('webChannel-message...');
     handleWebhookRequest(messageReceived, wss)
-    .then(() => {
-        console.log('Success')
-    })
-    .catch(err => {
-        console.log('Error: ', err || '-');
-        if (err instanceof Error) {
-            throw err;
-        }
-    });
+        .then(() => {
+            reportDebug('Success')
+        })
+        .catch(err => {
+            reportDebug('Error: ', err || '-');
+            if (err instanceof Error) {
+                throw err;
+            }
+        });
 }
+

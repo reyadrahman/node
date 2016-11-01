@@ -1,7 +1,8 @@
 /* @flow */
 
-import deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import { callbackToPromise, waitForAll } from '../../misc/utils.js';
+import { deepiksBot } from '../deepiks-bot/deepiks-bot.js';
+import { callbackToPromise, waitForAll, timeout,
+         composeKeys, decomposeKeys } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
@@ -10,14 +11,24 @@ import type { Request, Response } from 'express';
 import memoize from 'lodash/memoize';
 import { inspect } from 'util';
 import _ from 'lodash';
+const reportDebug = require('debug')('deepiks:ms');
+const reportError = require('debug')('deepiks:ms:error');
 
 const MAX_MS_CAROUSEL_ITEM_COUNT = 5;
 
-async function handleWebhookRequest(req: Request, res: Response) {
-    console.log('ms-webhook raw req.body: ', inspect(req.body, {depth:null}));
-    console.log('ms-webhook raw req.headers: ', inspect(req.headers, {depth:null}));
+export async function webhook(req: Request, res: Response) {
+    if (req.method !== 'POST') {
+        res.send();
+        throw new Error(`req.method is ${req.method}`);
+    }
+    reportDebug('ms-webhook raw req.body: ', inspect(req.body, {depth:null}));
+    reportDebug('ms-webhook raw req.headers: ', inspect(req.headers, {depth:null}));
     const { publisherId, botId } = req.params;
     const botParams = await aws.getBot(publisherId, botId);
+    if (!botParams) {
+        throw new Error(`Did not find bot with publisherId ${publisherId} and botId ${botId}`);
+    }
+
 
     const connector = new builder.ChatConnector({
         appId: botParams.settings.microsoftAppId,
@@ -31,9 +42,9 @@ async function handleWebhookRequest(req: Request, res: Response) {
     ubot.dialog('/', async function(session) {
         try {
             await processMessage(session, authRequest, botParams);
-            console.log('Success');
+            reportDebug('Success');
         } catch(err) {
-            console.log('Error: ', err || '-');
+            reportError('Error: ', err || '-');
         }
     });
 
@@ -41,27 +52,27 @@ async function handleWebhookRequest(req: Request, res: Response) {
 }
 
 async function processMessage(session, authRequest, botParams) {
-    console.log('ms-webhook m.sourceEvent: ', inspect(session.message.sourceEvent, {depth:null}));
-    console.log('ms-webhook session: ', inspect(session, {depth:null}));
+    reportDebug('ms-webhook m.sourceEvent: ', inspect(session.message.sourceEvent, {depth:null}));
+    reportDebug('ms-webhook session: ', inspect(session, {depth:null}));
 
     const m = session.message;
     const atts = m.attachments;
     const fetchCardImages_ = !atts ? undefined :
         atts.filter(a => a.contentType && a.contentType.startsWith('image')).map(
             a => memoize(async function () {
-                console.log('ms-webhook: attachment download requested');
+                reportDebug('ms-webhook: attachment download requested');
                 let buffer;
                 // some services such as slack do not accept Authenticated requests
                 // for downloading attachments. But some services require it.
                 const cid = m.address.channelId;
-                console.log('ms-webhook, processMessage, channelId: ', cid);
+                reportDebug('ms-webhook, processMessage, channelId: ', cid);
                 // perhaps we could use session.message.address.useAuth ?
                 if (cid === 'skype') {
                     buffer = await getBinary(authRequest, a.contentUrl);
                 } else {
                     buffer = await getBinary(request, a.contentUrl);
                 }
-                console.log('ms-webhook: successfully downloaded attachment');
+                reportDebug('ms-webhook: successfully downloaded attachment');
                 return buffer;
             })
         );
@@ -85,7 +96,7 @@ async function processMessage(session, authRequest, botParams) {
 
     const message: WebhookMessage = {
         publisherId_conversationId:
-            aws.composeKeys(botParams.publisherId, m.address.conversation.id),
+            composeKeys(botParams.publisherId, m.address.conversation.id),
         creationTimestamp: new Date(m.timestamp).getTime(),
         id: m.address.id,
         senderId: m.user.id,
@@ -96,23 +107,46 @@ async function processMessage(session, authRequest, botParams) {
         fetchCardImages,
     };
 
-    console.log('ms-webhook: got message: ', message);
-    console.log('ms-webhook: attachments: ', atts);
+    reportDebug('ms-webhook: got message: ', message);
+    reportDebug('ms-webhook: attachments: ', atts);
 
-    const responses = [];
-    setTimeout(() => {
-        if (responses.length === 0) {
+    let responseCount = 0;
+    // will await later
+    const sendTypingOnPromise = timeout(CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000)
+        .then(() => {
+            if (responseCount > 0) return;
+            // TODO return a promise that resolves when sendTyping is sent
             session.sendTyping();
-        }
-    }, CONSTANTS.TYPING_INDICATOR_DELAY_S * 1000);
+        });
+
+    let dashbotPromise;
+    if (botParams.settings.dashbotGenericKey) {
+        dashbotPromise = request({
+            uri: 'https://tracker.dashbot.io/track',
+            qs : {
+                type: 'outgoing',
+                platform: 'generic',
+                apiKey: botParams.settings.dashbotGenericKey,
+                v: '0.7.4-rest',
+            },
+            method: 'POST',
+            json: {
+                text: message.text,
+                userId: m.address.conversation.id,
+            }
+        });
+    }
+
     await deepiksBot(message, botParams, x => {
-        responses.push(send(m.address.channelId, x, y => session.send(y), session));
+        responseCount++;
+        return send(botParams, m.address.conversation.id,
+                    m.address.channelId, x, y => session.send(y), session);
     }, {
         address: _.omit(m.address, 'user'),
     });
 
-    console.log('ms-webhook: await all responses');
-    await waitForAll(responses);
+    if (dashbotPromise) await dashbotPromise;
+    await sendTypingOnPromise;
 };
 
 async function getBinary(requestFn, url) {
@@ -127,24 +161,15 @@ async function getBinary(requestFn, url) {
     return r.body;
 }
 
-export async function send(channel: string, message: ResponseMessage,
+export async function send(botParams: BotParams,
+                           conversationId: string,
+                           channel: string,
+                           message: ResponseMessage,
                            sendHelperFn: Function, session?: Object)
 {
-    console.log('send: ', message);
-
-    if (typeof message === 'string' && message.trim()) {
-        let resMessage = new builder.Message()
-        resMessage.text(message);
-        sendHelperFn(resMessage);
-        return;
-    }
-    if (typeof message !== 'object') {
-        console.log('send: message is not an object');
-        return;
-    }
+    reportDebug('send: ', message);
 
     const { text, cards, actions } = message;
-
     const supportsHeroCard = ['telegram', 'skype', 'slack'].includes(channel);
 
     if (cards) {
@@ -164,6 +189,7 @@ export async function send(channel: string, message: ResponseMessage,
                 return card;
             })
         } else {
+            const CA = builder.CardAction;
             cards.forEach(c => {
                 const card = new builder.HeroCard(session);
                 c.fallback && card.title(c.fallback);
@@ -172,12 +198,15 @@ export async function send(channel: string, message: ResponseMessage,
                     builder.CardImage.create(session, c.imageUrl)
                            .tap(builder.CardAction.showImage(session, c.imageUrl)),
                 ]);
+                c.actions && card.buttons(c.actions.filter(a => a.fallback).map(a => (
+                    new CA(session).type('imBack').value(a.fallback).title(a.fallback)
+                )));
                 resAttachments.push(card);
-                console.log('adding card: ', card);
+                reportDebug('adding card: ', card);
             });
         }
 
-        console.log('send: resAttachments: ', resAttachments);
+        reportDebug('send: resAttachments: ', resAttachments);
 
         let resMessage = new builder.Message(session)
         if (resAttachments.length > 1 &&
@@ -204,20 +233,23 @@ export async function send(channel: string, message: ResponseMessage,
             resAttachments.push(card);
         } else if (actions && !supportsHeroCard) {
             const textActions = actions.filter(a => a.fallback).map(a => a.fallback);
-            resText += `\nOptions: ${textActions.join(', ')}`;
+            resText += `\n(${textActions.join(', ')})`;
         }
 
         let resMessage = new builder.Message(session)
         resText && resMessage.text(resText);
         resAttachments.length > 0 && resMessage.attachments(resAttachments);
         sendHelperFn(resMessage);
+        await dashbotSend(botParams, conversationId, resText || '');
     }
 }
 
-export async function sendCold(botParams: BotParams, channelData: ChannelData,
+export async function coldSend(botParams: BotParams,
+                               conversationId: string,
+                               channelData: ChannelData,
                                message: ResponseMessage)
 {
-    console.log('sendCold: channelData: ', channelData, ', message: ', message);
+    reportDebug('coldSend: channelData: ', channelData, ', message: ', message);
 
     const connector = new builder.ChatConnector({
         appId: botParams.settings.microsoftAppId,
@@ -229,25 +261,26 @@ export async function sendCold(botParams: BotParams, channelData: ChannelData,
         ubot.send(m.address(channelData.address));
     };
 
-    await send(channelData.address.channelId, message, sendHelper);
+    await send(botParams, conversationId, channelData.address.channelId, message, sendHelper);
 }
 
-export function webhook(req: Request, res: Response) {
-    if (req.method !== 'POST') {
-        res.send();
-        return;
-    }
+async function dashbotSend(botParams, conversationId, text) {
+    if (!botParams.settings.dashbotGenericKey) return;
 
-    handleWebhookRequest(req, res)
-        .then(() => {
-            console.log('Success');
-        })
-        .catch(err => {
-            console.log('Error: ', err || '-');
-            if (err instanceof Error) {
-                throw err;
-            }
-        });
+    await request({
+        uri: 'https://tracker.dashbot.io/track',
+        qs : {
+            type: 'outgoing',
+            platform: 'generic',
+            apiKey: botParams.settings.dashbotGenericKey,
+            v: '0.7.4-rest',
+        },
+        method: 'POST',
+        json: {
+            text: text,
+            userId: conversationId,
+        }
+    });
 }
 
 /*

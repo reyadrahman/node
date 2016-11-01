@@ -1,10 +1,12 @@
+/* @flow */
+
 import Html from '../components/html/Html.jsx';
 import Routes from '../Routes.jsx';
-import { languages } from '../i18n/translations.js';
-import { ENV as CLIENT_ENV } from '../client/client-utils.js';
+import { languages, translations } from '../i18n/translations.js';
+import { CONSTANTS_KEYS as CLIENT_CONSTANTS_KEYS } from '../client/client-utils.js';
+import { CONSTANTS } from './server-utils.js'
 import initAppState from '../app-state/init-app-state.js';
 import * as reducers from '../app-state/reducers.js';
-import acceptLanguage from 'accept-language';
 import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'
 import { createStore, applyMiddleware, combineReducers } from 'redux';
@@ -12,8 +14,10 @@ import { Provider } from 'react-redux';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import { RouterContext, match } from 'react-router';
+import _ from 'lodash';
+const reportDebug = require('debug')('deepiks:server-side-rendering');
+const reportError = require('debug')('deepiks:server-side-rendering:error');
 
-acceptLanguage.languages(languages);
 
 const loggerMiddleware = createLogger();
 
@@ -30,27 +34,28 @@ export default function render(full, req, res, next) {
             next();
         } else {
             const envVars = {
-                ...CLIENT_ENV,
+                ...(_.pick(CONSTANTS, CLIENT_CONSTANTS_KEYS)),
                 PLATFORM: 'browser',
             };
+            const systemLang = req.acceptsLanguages(...languages);
+            reportDebug('systemLang: ', systemLang);
             if (full) {
-                renderFull(req, res, next, renderProps, envVars);
+                renderFull(req, res, next, renderProps, envVars, systemLang);
             } else {
-                renderTemplate(req, res, next, envVars);
+                renderTemplate(req, res, next, envVars, systemLang);
             }
         }
     });
 }
 
-function renderTemplate(req, res, next, envVars) {
-    const systemLang = acceptLanguage.get(req.headers['accept-language']);
+function renderTemplate(req, res, next, envVars, systemLang) {
 
     if (templateCache[systemLang]) {
-        console.log('serving template from cache');
+        reportDebug('serving template from cache');
         res.status(200).send(templateCache[systemLang]);
 
     } else {
-        console.log('rendering template.');
+        reportDebug('rendering template.');
         const html = ReactDOM.renderToStaticMarkup(
             <Html
                 body=""
@@ -65,9 +70,8 @@ function renderTemplate(req, res, next, envVars) {
     }
 }
 
-function renderFull(req, res, next, renderProps, envVars) {
-    console.log('renderFull. req.url: ', req.url, 'req.cookies: ', req.cookies);
-    let systemLang = acceptLanguage.get(req.headers['accept-language']);
+function renderFull(req, res, next, renderProps, envVars, systemLang) {
+    reportDebug('renderFull. req.url: ', req.url, 'req.cookies: ', req.cookies);
     let lang = req.cookies.language || systemLang;
     const appState = {
         ...initAppState,
@@ -80,12 +84,22 @@ function renderFull(req, res, next, renderProps, envVars) {
                                   thunkMiddleware,
                                   loggerMiddleware));
 
-    console.log('renderFull renderProps: ', renderProps);
+    reportDebug('renderFull renderProps: ', renderProps);
+
+    let pageTitle = '';
 
     const renderFullHelper = () => {
+        const createElement = (comp, props) => {
+            return React.createElement(comp, {
+                ...props,
+                setPageTitle(title) {
+                    pageTitle = title;
+                },
+            });
+        };
         let body = ReactDOM.renderToString(
             <Provider store={store}>
-                <RouterContext {...renderProps} />
+                <RouterContext {...renderProps} createElement={createElement} />
             </Provider>
         );
         let html = ReactDOM.renderToStaticMarkup(
@@ -94,6 +108,7 @@ function renderFull(req, res, next, renderProps, envVars) {
                 initAppState={store.getState()}
                 envVars={envVars}
                 systemLang={systemLang}
+                title={pageTitle}
             />
         );
         let doc = '<!doctype html>\n' + html;

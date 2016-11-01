@@ -24,21 +24,40 @@ $navbarHeight: 50px;
     }
     section:nth-child(even) {
         background: #f8f8f8;
+        &:nth-child(2) {
+            background-color: rgba(0, 0, 0, .2);
+            background-blend-mode: multiply;
+        }
         // background: red;
     }
 
     .intro {
         height: 100vh;
         padding-top: $navbarHeight;
+        position: relative;
+        overflow: hidden;
 
         display: flex;
         align-items: center;
         justify-content: center;
 
-        .intro-message {
-            font-size: 40px;
-            text-align: center;
+        .video {
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+            -webkit-transform: translateX(-50%) translateY(-50%);
+            transform: translateX(-50%) translateY(-50%);
+            height: 100%;
+            width: 177.77777778vh;
+            min-width: 100%;
+            min-height: 56.25vw;
+            z-index: -1;
+        }
 
+        .intro-message {
+            color: white;
+            font-size: 40px;
+            margin: 0 10px;
         }
     }
 
@@ -126,6 +145,7 @@ $navbarHeight: 50px;
 
             }
             .avatar img {
+                border-radius: 5px;
                 margin: 0 auto;
             }
         }
@@ -153,26 +173,61 @@ $navbarHeight: 50px;
     }
 
     .screenshots {
+
         .screenshots-grid {
-            img {
-                width: 100%;
-                cursor: pointer;
-                margin-top: 10px;
+
+            .screenshot {
+                display: flex;
+                justify-content: center;
+            }
+
+            a {
+                background-repeat: no-repeat;
+                background-size: contain;
                 border: 1px solid #bbb;
                 border-radius: 5px;
+                cursor: pointer;
+                display: block;
+                height: 460px;
+                margin-top: 25px;
+                // -left: 45px;
+                width: 260px;
+
+                &.messenger {
+                    background-image: url('../../resources/channels/deepiks-painting-messenger.png');
+                }
+
+                &.slack {
+                    background-image: url('../../resources/channels/deepiks-painting-slack.png');
+                }
+
+                &.web {
+                    background-image: url('../../resources/channels/deepiks-painting-web.png');
+                }
+
+                &.telegram {
+                    background-image: url('../../resources/channels/deepiks-painting-telegram.png');
+                }
+
+                &.skype {
+                    background-image: url('../../resources/channels/deepiks-painting-skype.png');
+                }
+
+                &.spark {
+                    background-image: url('../../resources/channels/deepiks-painting-spark.png');
+                }
             }
         }
-
     }
 
     .updates {
         padding-left: 30px;
         padding-right: 30px;
 
-        .img-rounded
-        {
+        .img-rounded {
             border-radius: 3px;
         }
+
         .img-thumbnail
         {
             background-color: #fff;
@@ -263,9 +318,15 @@ $navbarHeight: 50px;
             margin-right: -18px;
         }
 
+        .timeline-centered .timeline-entry.left-aligned:nth-child(2) .timeline-entry-inner .timeline-time {
+            left: auto;
+            right: -110px;
+            text-align: left;
+        }
+
         .timeline-centered .timeline-entry.left-aligned .timeline-entry-inner .timeline-time {
             left: auto;
-            right: -100px;
+            right: -150px;
             text-align: left;
         }
 
@@ -309,9 +370,18 @@ $navbarHeight: 50px;
             clear: both;
         }
 
+
         .timeline-centered .timeline-entry .timeline-entry-inner .timeline-time {
             position: absolute;
-            left: -100px;
+            left: -110px;
+            text-align: right;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .timeline-centered .timeline-entry:nth-child(1) .timeline-entry-inner .timeline-time {
+            position: absolute;
+            left: -140px;
             text-align: right;
             padding: 10px;
             box-sizing: border-box;
@@ -469,7 +539,7 @@ $navbarHeight: 50px;
 
                 }
                 img {
-                    margin: 40px auto 0 auto;
+                    margin: 30px auto 0 auto;
                     border-radius: 50%;
                     width: 100px;
                     height: 100px;
@@ -482,7 +552,7 @@ $navbarHeight: 50px;
     }
 
     .purchase {
-        background: url(../../public/home-bg-1.png) center center, #ECECEC !important;
+        background: url(../../resources/home-bg-1.png) center center, #ECECEC !important;
         text-align: center;
 
         .purchase-button {

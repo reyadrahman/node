@@ -3,37 +3,45 @@
 const initAppState = {
     lang: '',
     signIn: {
-        errorMessage: '',
+        errorCode: '',
     },
     signUp: {
-        errorMessage: '',
+        errorCode: '',
     },
     verifyRegistration: {
         initialEmail: '',
         password: '',
-        errorMessage: '',
+        errorCode: '',
     },
     currentUser: {
-        isSignedIn: false,
+        signedIn: false,
+        selectedBotId: '',
         attrs: {},
         botsState: {
             hasFetched: false,
             bots: [],
-            errorMessage: '',
+            errorCode: '',
+        },
+        usersState: {
+            hasFetched: false,
+            users: [],
+            errorCode: '',
         },
         conversationsState: {
-            hasFetched: false,
+            hasFetched:    false,
             conversations: [],
-            errorMessage: '',
+            errorCode:  '',
+            lastUpdated:   0
         },
         messagesState: {
-            hasFetched: false,
-            messages: [],
-            errorMessage: '',
+            hasFetched:   false,
+            messages:     [],
+            errorCode: '',
+            lastUpdated:  0
         },
         updateAttrsAndPassState: {
-            successMessage: '',
-            errorMessage: '',
+            successCode: '',
+            errorCode: '',
         }
     },
     ui: {
@@ -41,8 +49,9 @@ const initAppState = {
         modalComponent: null,
     },
     contacts: {
-        errorMessage: '',
-        successMessage: '',
+        sendingInProgress: false,
+        errorCode: '',
+        successCode: '',
     },
 };
 

@@ -4,48 +4,47 @@ In this project, we use the following terms
 - `publisher` represents the owner of a bot. A `publisher`can have several bots.
 - `person`is someone represented by one or several e-mail addresses
 - `user`represents someone talking with a bot owned by a `publisher`. It is important to note that we need to segregate the data between `publishers`. So, basically, a `user`of a given bot is always different from a `user`of another bot, even if it is the same `person`.
+- `reseller`is an organization which resells Deepiks services. At this time, we do not have any reseller, except Deepiks itself. We will probably have some in the future, and provide them a white label version of this `platform`. Technically speaking, a `publisher`working with a given `reseller`is always different from a `publisher`working with another `reseller`, there should be no link between the 2 accounts.
 - `channel`represents the different types of bots implemented, for example Messenger, Skype, Spark ... We previously used the word `platform`that now use for our own service as a whole
-- `environment` represents the environment from where the admin site is accessed. Examples of existing or upcoming `environments`are Browser, Wordpress Plugin, iOS App, Android App ...   
+- `environment` represents the environment from where the admin site is accessed. Examples of exsting or upcoming `environments`are Browser, Wordpress Plugin, iOS App, Android App ...   
 - `agent`represents a set of stories, intents, entities used by one or more `bots`. In wit.ai, an `agent`is called an "app".
 
 
 ## Config
 ### .env file or Environment variables in console
+Here are the the list of environment variables with their default values:
 ```
-NODE_ENV=
+NODE_ENV=production
 AWS_REGION=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-DB_TABLE_BOTS=
-DB_TABLE_CONVERSATIONS=
-DB_TABLE_MESSAGES=
-DB_TABLE_AI_ACTIONS=
-DB_TABLE_USER_PREFS=
+DB_TABLES_PREFIX=
 S3_BUCKET_NAME=
 IDENTITY_POOL_ID=
 IDENTITY_POOL_UNAUTH_ROLE_ARN=
 IDENTITY_POOL_AUTH_ROLE_ARN=
 USER_POOL_ID=
 USER_POOL_APP_CLIENT_ID=
-WIZARD_BOT_WEB_CHAT_SECRET=
+CONVERSATIONAL_ENGINE_LAMBDA=
+CALL_SERVER_LAMBDA_SECRET=
 CONTACT_EMAIL=
+EMAIL_ACTION_FROM_ADDRESS=
 OWN_BASE_URL=
 CDN=
-PORT=
+PORT=3000
+DEBUG=deepiks:*
 ```
 
-`NODE_ENV`, `CDN` and `PORT` are **optional**.
+`NODE_ENV`, `DB_TABLES_PREFIX`, `CDN`, `PORT` and `DEBUG` are **optional**.
 
-`NODE_ENV` can be `production` (default) or `development`.
+`NODE_ENV` can be `production` (default) or `development`. When set to `development` you get much better error messages and debugging capability, but the output will be 10x larger. This doesn't cause a problem for the bot engine, but the website will be unusable for most people due to the size.
+
+`CALL_SERVER_LAMBDA_SECRET` should be a random string that matches the same environment variable in the `CallServer` lambda (see "CallServer Lambda" section below).
 
 `OWN_BASE_URL` is the full address of your server (e.g. https://deepiks.io) and is used to, for example, set up webhooks automatically.
 
 ### .test.env file or environment variables in console
-This is mostly the same as `.env` but only used for running the tests (see below). So pick different names for the database tables and s3 buckets as they will be modified. `.test.env` needs the following variables in addition to those of `.env`:
-
-```
-WIT_ACCESS_TOKEN=
-```
+This is the same as `.env` but only used for running the **server side** tests (the "Tests" secion below). So pick different names for the database tables and s3 buckets as they will be modified.
 
 Since tests are only run locally, `.ebextensions/*` files have no effect here.
 
@@ -58,8 +57,6 @@ Environment variables defined in these config files will overwrite those in `.en
 No need to configure the database or s3 buckets. They are created automatically if none exists.
 
 NOTE: Existing database tables and s3 buckets are never overwritten.
-
-Temporarily, until we have a UI for adding AI actions, we can enter them directly into the DynamoDB table named by `DB_TABLE_AI_ACTIONS`. See "AI Actions" section for more details.
 
 ### User Pool & Identity Pool
 In [AWS Cognito Console](https://console.aws.amazon.com/cognito) you need to create an a user pool by going to "Manage your user pools" and an identity pool by going to "Manage federated identities". Then add their IDs to the environment variables `USER_POOL_ID` and `IDENTITY_POOL_ID`.
@@ -119,8 +116,17 @@ Then go to [AWS IAM Console -> Roles](https://console.aws.amazon.com/iam/home#ro
 ### Amazon Simple Email Service (SES)
 In order to get the contact form to work, you must provide an email address as an environment variable named `CONTACT_EMAIL` and then have it verified in the SES. To verify the email, please go to your [AWS console -> SES](https://console.aws.amazon.com/ses) and in the "Email Addresses" section select "Verify a new email address".
 
+### `CallServer` Lambda
+Some tasks such as feeds processor tasks need to run periodically and some tasks are scheduled to run in the future. In order for them to work you need to deploy the `CallServer` lambda (from the micro-services repository). Then go to AWS console -> CloudWatch -> Events, create a rule of type "Schedule" and **set it to a fixed rate of 1 minute** and select the name of the `CallServer` lambda as the target.
+
+The lambda (as mentioned in its own README), has an environment variable called `CALL_SERVER_LAMBDA_SECRET`. It must be a long random string and must match the `CALL_SERVER_LAMBDA_SECRET` that you provide here (the bot engine).
+
+The `CallServer` lambda also takes another environment variable called `ENDPOINT_URL` which should be the url of the bot engine with the suffix `/run-periodic-tasks`. For example `https://deepiks.io/run-periodic-tasks`.
+
 ### AI Actions (Config)
-Each item in the `DB_TABLE_AI_ACTIONS` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
+Temporarily, until we have a UI for adding AI actions, we can enter them directly into the DynamoDB table `actions`.
+
+Each item in the `actions` table represents 1 action, its name and target. The target could be a lambda function (mentioned by its name) or a URL. For example:
 ``` json
 {
     "action": "getForecast",
@@ -265,7 +271,7 @@ function handler() {
 ```
 
 ## Deploy
-We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule, because it is not available in npm. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
+We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
 ```
 git submodule update --init
 ```
@@ -295,11 +301,16 @@ eb open
 
 **NOTE: `eb deploy` [deploys git's HEAD commit](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-cli-git.html). You can use `eb deploy --staged` to deploy the staged changes (those that are `git add`'ed)**
 
+### Notes for Production
+Use CDN in production to serve static files. All you need to do is to create a distribution in AWS CloudFront, set its origin to your server's domain and set the `CDN` environment variable of your server to your CloudFront's distribution domain.
+
+Once the `CDN` environment variable is set and you deploy the server, every static file will be served through the CDN. Files will be available in the CDN immediately without any delays caused by caching.
+
+**NOTE: if your website is using HTTPS, so should the CDN. Otherwise browsers will block your CDN files for security reasons**
+
 ## Setting Up Webhooks
 ### Spark
-The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/spark
-Where `SOME_DOMAIN`, `PUBLISHER_ID` and `BOT_ID` must be replaced with appropriate values.
-Use SparkWebHookManager to set up webhooks.
+The add-bot page automatically sets up the webhook.
 
 ### Messenger
 The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/messenger
@@ -326,13 +337,30 @@ Then go to [my bots](https://dev.botframework.com/bots?id=botframework) and unde
 Currently Skype and Slack are supported.
 
 ## Development
+### Git submodules
+We are using [amazon-cognito-identity-js](https://github.com/aws/amazon-cognito-identity-js) as a git submodule. So after running `git clone` for this repository, you need to also populate the submodule using the following command:
+```
+git submodule update --init
+```
+You also need to run the above command after `git pull` if the submodule has been modified.
+
 ### Tests
-Make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for real use.
+For **server-side** tests, make sure you have `.test.env` file. The database table names and s3 bucket names are used for automated testing and therefore must be different from those in `.env` which are meant for production use.
+
+The tests are located in `src/server/tests/`. Any file in that directory that has the `.test.js` suffix will be executed.
 
 ```
 npm install
 npm test
 ```
+
+For **client-side** tests, build and run the server as usual, with `NODE_ENV=development`. Then go to `localhost:XXX/dev/tests` in your browser.
+
+The tests are located at `src/client/tests/` and the entry point which is supposed to run all tests is at `src/client/tests/tests.js`.
+
+**Please note that the client-side tests use `.env`, whereas server-side tests use `.test.env`. This is currently not a problem as client-side tests aren't supposed to manipulate the database. However in the future, it's best to use `.test.env` in both cases for consistency.**
+
+Another point worth remembering is that the code at `src/client/tests/tests.js` and all of its dependencies will be excluded from the bundle when in production mode. So you don't have to worry about how heavy a library you'd like to use there.
 
 ### Workflow
 After `npm install`, you can open 3 terminals and run the following commands in each:
@@ -367,7 +395,94 @@ Where `DEEPIKS_ROOT` is the root directory of this repository.
 
 For more information see [aws-sdk-js's docs](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/browser-building.html).
 
-## TODO
-Customize icons using Fontello to include only the used icons.
 
-Customize flag icons using www.flag-sprites.com
+### Development Notes
+
+#### Static Files
+The server serves the static files from `dist-client`. This directory is created by Webpack after a build. There are 3 ways for a file to end up in `dist-client`:
+
+1. Webpack's output: these are the Javascript and CSS files that Webpack produces
+2. Files that are `require`d **from the client code**. For example if in the client code you have `const logoURL = require('./resources/logo.png')`, then the file `./resources/logo.png` (relative to the source file) will be copied to `dist-client` under a **unique name**. You can then use the `logoURL` to refer to the file. The `logoURL` could be a relative path or prefixed with CDN's domain depending on the the configurations you set via the environment variables.
+3. The contents of `resources/copy-to-dist/` will be copy **as-is** to the `dist-client`.
+
+
+Please note that all `url`s inside CSS/SCSS/LESS files will be treated as if they were `require`d (second method above).
+
+In the client code you can use the second method above (`require(...)`) to get the URL of a static file. However, in the server-only code (e.g. `src/components/html/Html.jsx`), you cannot do that. Instead use the 3rd method above. That is, put the file in `resources/copy-to-dist/` and then you can refer to it as in the following example from `Html.jsx` (assuming `resources/copy-to-dist/favicon.png` exists):
+
+```js
+import { CONSTANTS } from '../../client/client-utils.js';
+const faviconURL = `${CONSTANTS.PUBLIC_URL}favicon.png`;
+```
+
+Now depending on your configurations, faviconURL could be a relative path to `dist-client` or the URL to the corresponding file in CDN.
+
+**Please use CDN in production to serve static files.** See "Deploy" section for more details.
+
+#### Front-End - Immutable Props
+**The entire application state and all `props` of every component are immutable.** Please ensure that you do not ever modify them directly. Always use actions to update the application state and let Redux+React propagate the props down to each component.
+
+Please see [Redux](http://redux.js.org/) for more details.
+
+#### Promises and Async
+Please remember that by default promises swallow errors and **silently fail**:
+
+```js
+async function f() {
+    throw new Error('You will not see this message');
+}
+
+function bad() {
+    f();
+}
+
+function good1() {
+    f().catch(err => console.error(err));
+}
+
+async function good2() {
+    try {
+        await f();
+    } catch(err) {
+        console.error(err);
+    }
+}
+```
+
+#### Compose/Decompose keys for DynamoDB
+As you can see in `src/misc/types.js`, some properties are composed of multiple keys, for example `publisherId_botId`. Please always use the functions `composeKeys` and `decomposeKeys` located at `src/misc/utils.js` to create or parse these keys. The reason is that the separator is subject to change and later we may need to use nested composition.
+
+#### `dynamoCleanUpObj`
+
+From DynamoDB's docs:
+
+> When you add an item, [...] attribute values cannot be null. String and Binary type attributes must have lengths greater than zero. Set type attributes cannot be empty. **Requests with empty values will be rejected with a ValidationException exception.**
+
+So when adding/updating an item, always wrap your values with `dynamoCleanUpObj` from `src/aws/aws.js` to ensure that empty values will be removed.
+
+For example:
+
+```js
+const res = await aws.dynamoUpdate({
+    TableName: /*...*/,
+    Key: {
+        /*...*/
+    },
+    UpdateExpression: /*...*/,
+    ExpressionAttributeValues: {
+        ':userLastMessage': aws.dynamoCleanUpObj(message),
+    },
+});
+
+```
+
+#### Use `debug.js` instead of `console.log`, `console.error` etc.
+Please pick a meaningful name when creating the report functions. The name of the file is a good choice.
+
+```js
+const reportDebug = require('debug')('deepiks:this-file-name');
+const reportError = require('debug')('deepiks:this-file-name:error');
+
+reportDebug('here is a message');
+reportError('here is an error');
+```

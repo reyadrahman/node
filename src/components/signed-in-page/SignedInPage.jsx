@@ -1,30 +1,33 @@
 import * as actions from '../../app-state/actions.js';
 import Header from '../header/Header.jsx';
-import SideMenu from '../side-menu/SideMenu.jsx';
+import Menu from '../home/Menu.jsx';
 
 import React from 'react';
-import { Glyphicon } from 'react-bootstrap';
+import { Dropdown, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
+import _ from 'lodash';
 
 
 let SignedInPage = React.createClass({
-    isSignedIn(props) {
-        const { currentUser } = props || this.props;
-        return currentUser && currentUser.attributes && currentUser.attributes.sub;
-    },
-
     componentDidMount() {
-        if (!this.isSignedIn()) {
-            // this.props.router.push('/');
+        if (!this.props.currentUser.signedIn) {
             this.props.openSignIn();
+            return;
         }
+
+        this.props.fetchBots();
     },
 
     componentDidUpdate(oldProps) {
-        if (this.isSignedIn(oldProps) && !this.isSignedIn()) {
-            // this.props.router.push('/');
+        // if signed out
+        if (oldProps.currentUser.signedIn && !this.props.currentUser.signedIn) {
             this.props.openSignIn();
+        }
+
+        // if signed in
+        if (!oldProps.currentUser.signedIn && this.props.currentUser.signedIn) {
+            this.props.fetchBots();
         }
     },
 
@@ -32,14 +35,25 @@ let SignedInPage = React.createClass({
         this.props.toggleSideMenu();
     },
 
+    onBotSelect(eventKey) {
+        if (eventKey === 'add-new') {
+            this.props.router.push('/add-bot');
+        } else {
+            this.props.selectBot(eventKey);
+        }
+    },
+
+    onNewBot() {
+        this.props.router.push('/add-bot')
+    },
+
     render() {
         const { className, children, currentUser, ui, location, i18n,
                 i18n: { strings: { signedInPage: strings } },
         } = this.props;
 
-        console.log('SignedInPage: props', this.props);
         let cs;
-        if (this.isSignedIn()) {
+        if (currentUser.signedIn) {
             cs = React.cloneElement(children, {
                 i18n,
                 className: `signed-in-page-content ${ui.sideMenu ? 'side-menu-open' : ''}`,
@@ -55,44 +69,109 @@ let SignedInPage = React.createClass({
         const sideMenuStrings = i18n.strings.sideMenu;
         const menu = [
             {
-                label: sideMenuStrings.account,
-                link: '/account',
-                icon: 'user',
-                value: 'account',
+                string: sideMenuStrings.test,
+                to: '/test',
+                glyph: 'play',
+                value: 'test',
             },
             {
-                label: sideMenuStrings.messages,
-                link: '/messages',
-                icon: 'comment',
-                value: 'messages',
+                string: sideMenuStrings.settings,
+                to: '/settings',
+                glyph: 'cog',
+                value: 'settings',
             },
             {
-                label: sideMenuStrings.notifications,
-                link: '/notifications',
-                icon: 'comment',
+                string: sideMenuStrings.users,
+                to: '/users',
+                glyph: 'users',
+                value: 'users',
+            },
+            {
+                string: sideMenuStrings.transcripts,
+                to: '/transcripts',
+                glyph: 'comment',
+                value: 'transcripts',
+            },
+            {
+                string: sideMenuStrings.tracking,
+                to: '/tracking',
+                glyph: 'signal',
+                value: 'tracking',
+            },
+            {
+                string: sideMenuStrings.polls,
+                to:     '/polls',
+                glyph:   'thumbs-up',
+                value:  'polls',
+            },
+            {
+                string: sideMenuStrings.feeds,
+                to: '/feeds',
+                glyph: 'rss',
+                value: 'feeds',
+            },
+            {
+                string: sideMenuStrings.notifications,
+                to: '/notifications',
+                glyph: 'bell',
                 value: 'notifications',
             },
         ];
 
         const menuToggle = (
-            <Glyphicon
-                glyph="menu-hamburger"
-                className={`menu-toggle ${ui.sideMenu ? 'open' : ''}`}
+            <i  className="menu-toggle fa fa-bars"
                 onClick={this.onMenuToggle}
-            />
+                onMouseEnter={this.onMenuToggleEnter}
+                onMouseLeave={this.onMenuToggleLeave}
+                ></i>
         );
-        console.log('SignedInPage: ui: ', ui);
 
+        const { selectedBotId, botsState: { bots, hasFetched } } = currentUser;
+        const selectedBot = bots.find(x => x.botId === selectedBotId);
+
+        let botSelector;
+        if (!hasFetched) {
+            botSelector = <div className="bot-selector-fetching">{strings.fetchingBots}</div>;
+        } else if (_.isEmpty(bots)) {
+            botSelector = (
+                <Button
+                    onClick={this.onNewBot}
+                    className="bot-selector-new-bot"
+                >
+                    {strings.newBot}
+                </Button>
+            );
+        } else {
+            botSelector = (
+                <Dropdown
+                    className="bot-selector-dropdown"
+                    disabled={!selectedBot}
+                    onSelect={this.onBotSelect}
+                >
+                    <Dropdown.Toggle>
+                        { selectedBot.botName }
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                        {
+                            currentUser.botsState.bots.map(
+                                x => <MenuItem eventKey={x.botId}>{x.botName}</MenuItem>
+                            )
+                        }
+                        <MenuItem divider />
+                        <MenuItem eventKey="add-new">{strings.newBot}</MenuItem>
+                    </Dropdown.Menu>
+                </Dropdown>
+            );
+        }
 
         return (
             <div className={`${className || ''} signed-in-page-comp`}>
                 <Header
-                    className="header" i18n={i18n} extraItemsLeft={menuToggle}
-                />
-                <SideMenu
-                    i18n={i18n} menu={menu}
-                    value={location.pathname.split('/')[1] || ''}
-                    isOpen={ui.sideMenu}
+                    className="header" i18n={i18n}
+                    leftItemsBeforeLogo = {[
+                        <Menu className="signed-in" i18n={i18n} menu={menu} />
+                    ]}
+                    leftItemsAfterLogo={botSelector}
                 />
             { cs }
             </div>
@@ -108,6 +187,8 @@ SignedInPage = connect(
     {
         openSignIn: actions.openSignIn,
         toggleSideMenu: actions.toggleSideMenu,
+        fetchBots: actions.fetchBots,
+        selectBot: actions.selectBot,
     }
 )(SignedInPage);
 

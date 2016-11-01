@@ -1,6 +1,7 @@
 /* @flow */
 
 import initAppState from './init-app-state.js';
+import _ from 'lodash';
 
 export function lang(state = initAppState.lang, action) {
     if (action.type === 'lang/set') {
@@ -11,10 +12,10 @@ export function lang(state = initAppState.lang, action) {
 
 export function signIn(state = initAppState.signIn, action) {
     if (action.type === 'signIn/reset') {
-        return initAppState.signIn; 
+        return initAppState.signIn;
     } else if (action.type === 'signIn/failed') {
         return {
-            errorMessage: action.errorMessage,
+            errorCode: action.errorCode,
         };
     }
     return state;
@@ -22,10 +23,10 @@ export function signIn(state = initAppState.signIn, action) {
 
 export function signUp(state = initAppState.signUp, action) {
     if (action.type === 'signUp/reset') {
-        return initAppState.signUp; 
+        return initAppState.signUp;
     } else if (action.type === 'signUp/failed') {
         return {
-            errorMessage: action.errorMessage,
+            errorCode: action.errorCode,
         };
     }
     return state;
@@ -44,7 +45,7 @@ export function verifyRegistration(state = initAppState.verifyRegistration, acti
     } else if (action.type === 'verifyRegistration/failed') {
         return {
             ...init,
-            errorMessage: action.errorMessage,
+            errorCode: action.errorCode,
         };
     }
     return state;
@@ -65,6 +66,36 @@ export function currentUser(state = initAppState.currentUser, action) {
     // the rest of these actions require an active user
     if (!state.signedIn) return state;
 
+    if (action.type === 'currentUser/setUsersState') {
+        return {
+            ...state,
+            usersState: {
+                hasFetched:    true,
+                users: action.users,
+                errorCode:  '',
+            }
+        };
+    }
+
+    if (action.type === 'currentUser/resetUsersState') {
+        return {
+            ...state,
+            usersState: init.usersState,
+        };
+    }
+
+    if (action.type === 'currentUser/fetchUsersFailed') {
+        return {
+            ...state,
+            usersState: {
+                hasFetched:   false,
+                users:         [],
+                errorCode: action.errorCode,
+            },
+        }
+    }
+
+
     if (action.type === 'currentUser/resetBotsState') {
         return {
             ...state,
@@ -76,17 +107,27 @@ export function currentUser(state = initAppState.currentUser, action) {
             botsState: {
                 hasFetched: false,
                 bots: [],
-                errorMessage: action.errorMessage,
+                errorCode: action.errorCode,
             },
         }
-    } else if (action.type === 'currentUser/setBotsState') {
+    } else if (action.type === 'currentUser/setBotsAndUpdateSelectedBotId') {
+        let { selectedBotId } = state;
+        if (!selectedBotId || !action.bots.find(x => x.botId === selectedBotId)) {
+            selectedBotId = action.bots[0] && action.bots[0].botId || '';
+        }
         return {
             ...state,
             botsState: {
                 hasFetched: true,
                 bots: action.bots,
-                errorMessage: '',
-            }
+                errorCode: '',
+            },
+            selectedBotId,
+        };
+    } else if (action.type === 'currentUser/selectBot') {
+        return {
+            ...state,
+            selectedBotId: action.botId,
         };
     } else if (action.type === 'currentUser/resetConversationsState') {
         return {
@@ -99,16 +140,39 @@ export function currentUser(state = initAppState.currentUser, action) {
             conversationsState: {
                 hasFetched: false,
                 conversations: [],
-                errorMessage: action.errorMessage,
+                errorCode: action.errorCode,
             }
         };
     } else if (action.type === 'currentUser/setConversationsState') {
         return {
             ...state,
             conversationsState: {
-                hasFetched: true,
+                hasFetched:    true,
                 conversations: action.conversations,
-                errorMessage: '',
+                errorCode:  '',
+                lastUpdated:   action.lastUpdated
+            }
+        };
+    } else if (action.type === 'currentUser/updateConversationsState') {
+
+        let conversations = _.cloneDeep(state.conversationsState.conversations);
+
+        conversations = conversations.filter(conversation => {
+            return _.findIndex(action.conversations, {
+                    publisherId:          conversation.publisherId,
+                    botId_conversationId: conversation.botId_conversationId
+                }) === -1;
+        });
+
+        conversations = action.conversations.concat(conversations);
+
+        return {
+            ...state,
+            conversationsState: {
+                hasFetched:    true,
+                conversations: conversations,
+                errorCode:  '',
+                lastUpdated:   action.lastUpdated
             }
         };
     } else if (action.type === 'currentUser/resetMessagesState') {
@@ -122,32 +186,52 @@ export function currentUser(state = initAppState.currentUser, action) {
             conversationsState: {
                 hasFetched: false,
                 messages: [],
-                errorMessage: action.errorMessage,
+                errorCode: action.errorCode,
             }
         };
     } else if (action.type === 'currentUser/setMessagesState') {
         return {
             ...state,
             messagesState: {
-                hasFetched: true,
-                messages: action.messages,
-                errorMessage: '',
+                hasFetched:   true,
+                messages:     action.messages,
+                errorCode: '',
+                lastUpdated:  action.lastUpdated
+            }
+        };
+    } else if (action.type === 'currentUser/updateMessagesState') {
+
+        let messages = _.cloneDeep(state.messagesState.messages);
+
+        messages = messages.filter(message => {
+            return _.findIndex(action.messages, {id: message.id}) === -1;
+        });
+
+        messages = messages.concat(action.messages);
+
+        return {
+            ...state,
+            messagesState: {
+                hasFetched:   true,
+                messages:     messages,
+                errorCode: '',
+                lastUpdated:  action.lastUpdated
             }
         };
     } else if (action.type === 'currentUser/updateAttrsAndPassSucceeded') {
         return {
             ...state,
             updateAttrsAndPassState: {
-                successMessage: action.successMessage,
-                errorMessage: '',
+                successCode: action.successCode,
+                errorCode: '',
             },
         };
     } else if (action.type === 'currentUser/updateAttrsAndPassFailed') {
         return {
             ...state,
             updateAttrsAndPassState: {
-                successMessage: '',
-                errorMessage: action.errorMessage,
+                successCode: '',
+                errorCode: action.errorCode,
             },
         };
     }
@@ -177,15 +261,22 @@ export function ui(state = initAppState.ui, action) {
 export function contacts(state = initAppState.contacts, action) {
     if (action.type === 'contacts/reset') {
         return initAppState;
-    } else if (action.type === 'contacts/succeeded') {
+    } else if (action.type === 'contacts/sending') {
         return {
-            errorMessage: '',
-            successMessage: action.successMessage,
+            ...state,
+            sendingInProgress: true,
+        }
+    } else if (action.type === 'contacts/succeded') {
+        return {
+            sendingInProgress: false,
+            errorCode: '',
+            successCode: action.successCode,
         };
     } else if (action.type === 'contacts/failed') {
         return {
-            errorMessage: action.errorMessage,
-            successMessage: '',
+            sendingInProgress: false,
+            errorCode: action.errorCode,
+            successCode: '',
         };
     }
     return state;

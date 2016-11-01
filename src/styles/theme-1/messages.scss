@@ -8,6 +8,7 @@
     display: flex;
     flex-direction: column-reverse;
     position: relative;
+    width: 100%;
 
     .wait {
         top: 50%;
@@ -37,6 +38,7 @@
         display: flex;
         position: relative;
         padding: 10px 5px;
+        width: 100%;
 
         .profile-pic {
             flex: 0 0 auto;
@@ -48,6 +50,8 @@
 
         .name-and-content {
             flex: 1 0 0;
+            width: 95%;
+            overflow: hidden;
 
             .name {
                 font-size: 14px;
@@ -84,17 +88,22 @@
             }
 
             .cards-root {
-                display: flex;
-                display: flex;
                 overflow-x: scroll;
-                max-width: 50vw;
                 border: 1px solid #b9b9b9;
                 border-radius: 10px;
                 margin: 10px;
+                max-width: calc(100% - 20px);
+                white-space: nowrap;
+                text-align: center;
+                display: inline-block;
+                padding: 20px;
 
                 .card {
-                    display: flex;
+                    display: inline-flex;
                     flex-direction: column;
+                    text-align: center;
+                    align-items: center;
+                    justify-content: flex-start;
 
                     &:not(:last-child) {
                         margin: 0 10px 0 0;
@@ -107,29 +116,29 @@
                         flex: 0 0 auto;
                         font-size: 14px;
                         font-weight: bold;
-                        margin: 5px 10px;
+                        margin: 5px 0px;
                     }
                     .subtitle {
                         flex: 1 0;
                         font-size: 14px;
-                        margin: 0 10px;
                         color: #888;
                     }
                     .button {
                         flex: 0 0 auto;
                         text-align: center;
-                        margin: 10px;
-                        padding: 5px;
+                        margin: 10px 0;
+                        padding: 10px;
                         color: #365899;
-                        font-weight: bold;
+                        font-weight: 700;
                         font-size: 14px;
                         border: 1px solid #ddd;
                         border-radius: 5px;
+                        width: 100%;
                     }
                 }
             }
         }
-        
+
         .date {
             position: absolute;
             right: 20px;

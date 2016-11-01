@@ -28,6 +28,10 @@ $menuItemChildrenVerPadding: 7px;
             margin-right: 10px;
         }
 
+        .menu-icon:before {
+            margin-left: 0;
+        }
+
         .menu-item-parent {
 
             &.active a {

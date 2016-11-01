@@ -6,7 +6,7 @@ import { languages } from '../i18n/translations.js';
 import * as reducers from '../app-state/reducers.js';
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, browserHistory } from 'react-router'
+import { Router, browserHistory, applyRouterMiddleware } from 'react-router'
 import { Provider } from 'react-redux'
 import { createStore, applyMiddleware, combineReducers } from 'redux';
 import thunkMiddleware from 'redux-thunk'
@@ -16,7 +16,8 @@ import _ from 'lodash';
 
 const initAppStateFromServer = JSON.parse(document.getElementById('initAppState').innerHTML);
 const systemLang = document.getElementsByTagName('body')[0].dataset.systemLang;
-console.log('systemLang: ', systemLang);
+const reportDebug = require('debug')('deepiks:client-router');
+const reportError = require('debug')('deepiks:client-router:error');
 
 const loggerMiddleware = createLogger();
 
@@ -27,7 +28,7 @@ let initAndRender = userAttributes => {
     if (!appState.lang) {
         appState = {
             ...appState,
-            lang: Cookies.get('language') || initAppState.systemLang || languages[0],
+            lang: Cookies.get('language') || systemLang || languages[0],
         };
     }
 
@@ -41,9 +42,21 @@ let initAndRender = userAttributes => {
         store.dispatch({ type: 'currentUser/signIn', attributes: userAttributes });
     }
 
+    const extraProps = {
+        setPageTitle(title) {
+            document.title = title;
+        }
+    };
+    const useExtraProps = {
+        renderRouteComponent: child => React.cloneElement(child, extraProps)
+    };
+
     render((
         <Provider store={store}>
-            <Router history={browserHistory}>
+            <Router
+                history={browserHistory}
+                render={applyRouterMiddleware(useExtraProps)}
+            >
                 {Routes}
             </Router>
         </Provider>
@@ -52,10 +65,10 @@ let initAndRender = userAttributes => {
 
 aws.getCurrentUserAttributes()
    .then(attrs => {
-       console.log('client-router: gotAttributes: ', attrs);
+       reportDebug('client-router: gotAttributes: ', attrs);
        initAndRender(attrs);
    })
    .catch(err => {
-       console.log('client-router: ', err);
+       reportError('client-router: ', err);
        initAndRender();
    });

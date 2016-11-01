@@ -1,3 +1,8 @@
+
+// fontello fonts
+@import '../../resources/fonts/css/fontello.css';
+@import '../../resources/fonts/css/animation.css';
+
 // TODO use bootstrap scss files
 @import './bootstrap.css';
 
@@ -10,6 +15,7 @@
 @import './home-contact-form.scss';
 @import './account-page.scss';
 @import './messages-page.scss';
+@import './test-page.scss';
 @import './notifications-page.scss';
 @import './conversations.scss';
 @import './messages.scss';
@@ -20,6 +26,14 @@
 @import './verify-registration.scss';
 @import './contacts-page.scss';
 @import './form.scss';
+@import './feeds-page.scss';
+@import './terms-of-use-page.scss';
+@import './privacy-page.scss';
+@import './users-page';
+@import './cookie-consent.scss';
+@import './bot-settings-page.scss';
+@import './polls-page';
+@import './tracking-page';
 
 body, html {
     padding: 0;
@@ -46,6 +60,8 @@ h1, h2, h3, h4, h5 {
     font-weight: normal;
     text-align: center;
     font-weight: 300;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 h5 {

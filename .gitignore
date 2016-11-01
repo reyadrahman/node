@@ -11,6 +11,7 @@ node_modules
 /dist-client
 /dist-server
 /env
+/.idea
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
