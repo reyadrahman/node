@@ -13,7 +13,8 @@ import _ from 'lodash';
 let BotSettingsPage = React.createClass({
     getInitialState() {
         return {
-            bot: null
+            bot:   null,
+            error: null
         }
     },
 
@@ -25,8 +26,18 @@ let BotSettingsPage = React.createClass({
                 let bot = _.cloneDeep(_.find(user.botsState.bots, {botId: user.selectedBotId}));
                 bot     = _.merge({
                     settings: {
-                        secretWebchatCode: null,
-                        dashbotId:         null
+                        ciscosparkAccessToken:    null,
+                        ciscosparkWebhookId:      null,
+                        ciscosparkBotPersonId:    null,
+                        ciscosparkWebhookSecret:  null,
+                        messengerAppSecret:       null,
+                        messengerPageAccessToken: null,
+                        microsoftAppId:           null,
+                        microsoftAppPassword:     null,
+                        witAccessToken:           null,
+                        secretWebchatCode:        null,
+                        dashbotId:                null,
+                        dashbotGenericKey:        null,
                     }
                 }, bot);
 
@@ -74,23 +85,29 @@ let BotSettingsPage = React.createClass({
     async save(e) {
         e.preventDefault();
 
-        this.setState({busy: true});
+        this.setState({busy: true, error: null});
 
         let bot = this.state.bot;
 
-        let saved = await this.props.updateBot(bot.botId, bot);
+        try {
+            let saved = await this.props.updateBot(bot.botId, bot);
 
-        let bots = _.cloneDeep(this.props.currentUser.botsState.bots);
-        for (let i = 0; i < bots.length; i += 1) {
-            if (bots[i].botId === saved.botId) {
-                bots[i] = saved;
-                break;
+            let bots = _.cloneDeep(this.props.currentUser.botsState.bots);
+            for (let i = 0; i < bots.length; i += 1) {
+                if (bots[i].botId === saved.botId) {
+                    bots[i] = saved;
+                    break;
+                }
             }
-        }
-        this.props.setBots(bots);
+            this.props.setBots(bots);
 
-        this.setState({saved: true, busy: false});
-        setTimeout(() => {this.setState({saved: null})}, 2000);
+            this.setState({saved: true});
+            setTimeout(() => {this.setState({saved: null})}, 2000);
+        } catch (e) {
+            this.setState({error: e.message});
+        } finally {
+            this.setState({busy: false});
+        }
     },
 
     render() {
@@ -200,7 +217,7 @@ let BotSettingsPage = React.createClass({
                                                 <Col sm={9}>
                                                     <FormControl
                                                         type="text"
-                                                        value={bot.settings[key]}
+                                                        value={bot.settings[key] || ''}
                                                         placeholder={key}
                                                         onChange={this.onFormFieldChange}
                                                     />
@@ -258,6 +275,10 @@ let BotSettingsPage = React.createClass({
 
         if (this.state.saved) {
             alert = <Alert bsStyle="success">Settings saved</Alert>;
+        }
+
+        if (bot && this.state.error) {
+            alert = <Alert bsStyle="danger">{this.state.error}</Alert>;
         }
 
         return (

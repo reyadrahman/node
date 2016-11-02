@@ -551,11 +551,13 @@ async function updateBot(identityId, botId, model) {
                                         botIcon = :botIcon, 
                                         onlyAllowedUsersCanChat = :onlyAllowedUsersCanChat, 
                                         isPublic = :isPublic, 
-                                        settings = :settings`,
+                                        settings = :settings,
+                                        defaultLanguage = :defaultLanguage
+                                    `,
         ExpressionAttributeValues: {
             ':botName':                 model.botName || null,
             ':botIcon':                 model.botIcon || null,
-            ':defaultLanguage':         model.botIcon || null,
+            ':defaultLanguage':         model.defaultLanguage || null,
             ':onlyAllowedUsersCanChat': model.onlyAllowedUsersCanChat || false,
             ':isPublic':                model.isPublic || false,
             ':settings':                aws.dynamoCleanUpObj(settings),
