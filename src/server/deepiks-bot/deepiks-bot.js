@@ -709,13 +709,30 @@ async function updateConversationTable(message: DBMessage,
     ].filter(Boolean).join(', ');
 
     const adds = [
-        !message.senderIsBot && 'participantsNames :senderNameSet',
+        !message.senderIsBot && message.senderName && 'participantsNames :senderNameSet',
         !message.senderIsBot && 'participantsIds :senderIdSet',
     ].filter(Boolean).join(', ');
 
     const removes = [
          !channelData && 'channelData',
     ].filter(Boolean).join(', ');
+
+    const vals = {
+        ':lastMessage': aws.dynamoCleanUpObj(message),
+        ':blimtm': composeKeys(botParams.botId, message.creationTimestamp, message.id),
+        ':chan': message.channel,
+        ':botId': botParams.botId,
+        ':cd': channelData,
+    };
+    if (!message.senderIdBot) {
+        Object.assign(vals, {
+            ':senderIdSet': aws.dynamoCreateSet([message.senderId]),
+            ':profilePic': message.senderProfilePic || undefined,
+        });
+        if (message.senderName) {
+            vals[':senderNameSet'] = aws.dynamoCreateSet([message.senderName]);
+        }
+    }
 
     await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
@@ -726,18 +743,7 @@ async function updateConversationTable(message: DBMessage,
         UpdateExpression: (sets ? 'SET ' + sets : '') +
                           (adds ? ' ADD ' + adds : '') +
                           (removes ? ' REMOVE ' + removes : ''),
-        ExpressionAttributeValues: {
-            ':lastMessage': aws.dynamoCleanUpObj(message),
-            ':blimtm': composeKeys(botParams.botId, message.creationTimestamp, message.id),
-            ':chan': message.channel,
-            ':botId': botParams.botId,
-            ':cd': channelData,
-            ...(message.senderIsBot ? {} : {
-                ':senderNameSet': aws.dynamoCreateSet([message.senderName]),
-                ':senderIdSet': aws.dynamoCreateSet([message.senderId]),
-                ':profilePic': message.senderProfilePic || undefined,
-            }),
-        },
+        ExpressionAttributeValues: vals,
     });
 }
 
