@@ -1,10 +1,10 @@
 /* @flow */
 
-import React from 'react';
 import * as actions from '../../app-state/actions.js';
+import {simpleTimeFormat, decomposeKeys} from '../../misc/utils.js';
+import React from 'react';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
-import {simpleTimeFormat, decomposeKeys} from '../../misc/utils.js';
 
 import {Pagination, Alert} from 'react-bootstrap';
 
@@ -108,7 +108,7 @@ let UsersPage = React.createClass({
 
             if (users.length) {
                 content = pageUsers.map(function (user) {
-                    let [botId, channel, userId] = user.botId_channel_userId.split('__');
+                    let [botId, channel, userId] = decomposeKeys(user.botId_channel_userId);
                     let email = user.botId_channel_email && decomposeKeys(user.botId_channel_email)[2] || '';
 
                     let lastConversationId, text;

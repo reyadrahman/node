@@ -2,6 +2,7 @@
 
 import React from 'react';
 import * as actions from '../../app-state/actions.js';
+import {decomposeKeys} from '../../misc/utils.js';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
 
@@ -107,7 +108,7 @@ let PollsPage = React.createClass({
 
                 let groupedPolls = {};
                 polls.forEach(poll => {
-                    let [botId, pollId, questionId] = poll.botId_pollId_questionId.split('__');
+                    let [botId, pollId, questionId] = decomposeKeys(poll.botId_pollId_questionId);
                     if (!groupedPolls[pollId]) {
                         groupedPolls[pollId] = [];
                     }
