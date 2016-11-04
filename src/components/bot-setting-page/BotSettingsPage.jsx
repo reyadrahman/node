@@ -1,9 +1,12 @@
-import React from 'react';
-import {Button, Alert, FormGroup, ControlLabel, FormControl, Checkbox, Col, Form, Tabs, Tab} from 'react-bootstrap';
 import * as actions from '../../app-state/actions.js';
-import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
 import {CONSTANTS} from '../../client/client-utils';
+import * as E from '../../misc/error-codes.js';
+import * as S from '../../misc/success-codes.js';
+
+import {connect} from 'react-redux';
+import React from 'react';
+import {Button, Alert, FormGroup, ControlLabel, FormControl, Checkbox, Col, Form, Tabs, Tab} from 'react-bootstrap';
 
 const reportDebug = require('debug')('deepiks:BotSettingsPage');
 const reportError = require('debug')('deepiks:BotSettingsPage:error');
@@ -14,7 +17,7 @@ let BotSettingsPage = React.createClass({
     getInitialState() {
         return {
             bot:   null,
-            error: null
+            errorCode: '',
         }
     },
 
@@ -44,8 +47,8 @@ let BotSettingsPage = React.createClass({
                 this.setState({bot});
             }
         } else if (user.botsState.errorCode) {
-            if (this.state.error !== user.botsState.errorCode) {
-                this.setState({error: user.botsState.errorCode})
+            if (this.state.errorCode !== user.botsState.errorCode) {
+                this.setState({errorCode: user.botsState.errorCode})
             }
         }
     },
@@ -85,7 +88,7 @@ let BotSettingsPage = React.createClass({
     async save(e) {
         e.preventDefault();
 
-        this.setState({busy: true, error: null});
+        this.setState({busy: true, errorCode: ''});
 
         let bot = this.state.bot;
 
@@ -104,13 +107,15 @@ let BotSettingsPage = React.createClass({
             this.setState({saved: true});
             setTimeout(() => {this.setState({saved: null})}, 2000);
         } catch (e) {
-            this.setState({error: e.message});
+            this.setState({errorCode: e.code || E.UPDATE_BOT_GENERAL});
         } finally {
             this.setState({busy: false});
         }
     },
 
     render() {
+        const {className, i18n: {strings: {errors}}} = this.props;
+
         const bot = this.state.bot;
         let content;
         let alert = null;
@@ -266,8 +271,8 @@ let BotSettingsPage = React.createClass({
                 </Form>
             );
         } else {
-            if (this.state.error) {
-                content = <Alert bsStyle="danger">{this.state.error}</Alert>;
+            if (this.state.errorCode) {
+                content = <Alert bsStyle="danger">{errors[this.state.errorCode]}</Alert>;
             } else {
                 content = <div className="spinner"><i className="icon-spinner animate-spin"/></div>;
             }
@@ -277,12 +282,12 @@ let BotSettingsPage = React.createClass({
             alert = <Alert bsStyle="success">Settings saved</Alert>;
         }
 
-        if (bot && this.state.error) {
-            alert = <Alert bsStyle="danger">{this.state.error}</Alert>;
+        if (bot && this.state.errorCode) {
+            alert = <Alert bsStyle="danger">{errors[this.state.errorCode]}</Alert>;
         }
 
         return (
-            <div className={`bot-settings-page-comp ${this.props.className}`}>
+            <div className={`bot-settings-page-comp ${className}`}>
                 <div className="panel">
                     <div className="panel-heading">
                         <h1>Edit bot settings</h1>
@@ -300,6 +305,8 @@ let BotSettingsPage = React.createClass({
                             </div>
                             <div className="col-xs-4 text-right">
                                 <Button onClick={this.save} bsStyle="primary" disabled={this.state.busy}>
+                                    { this.state.busy && <i className="icon-spinner animate-spin"></i> }
+                                    { ' ' }
                                     Save Bot Settings
                                 </Button>
                             </div>

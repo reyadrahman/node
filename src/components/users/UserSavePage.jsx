@@ -4,7 +4,8 @@ import React from 'react';
 import * as actions from '../../app-state/actions.js';
 import {connect} from 'react-redux';
 import {withRouter} from 'react-router';
-import {decomposeKeys} from '../../misc/utils.js';
+import {decomposeKeys, isValidEmail} from '../../misc/utils.js';
+import * as E from '../../misc/error-codes.js';
 
 import {
     Button, FormGroup, ControlLabel, FormControl, Alert
@@ -15,12 +16,13 @@ let UserSavePage = React.createClass({
         return {
             user:         {
                 id:       '',
+                email:    '',
                 channel:  '',
                 userRole: 'user'
             },
             saved:        false,
             busy:         false,
-            error:        null,
+            errorCode:    '',
             fetchingUser: true
         };
     },
@@ -34,28 +36,33 @@ let UserSavePage = React.createClass({
     async save(e) {
         e.preventDefault();
 
-        this.setState({busy: true, error: null});
+        this.setState({busy: true, errorCode: ''});
 
-        let user   = this.state.user;
-        user.botId = this.props.currentUser.selectedBotId;
+        const { id, userRole } = this.state.user;
+        const email = this.state.user.email.trim();
+        const channel = this.state.user.channel.trim();
+        const botId = this.props.currentUser.selectedBotId;
+        if (!isValidEmail(email)) {
+            return this.setState({busy: false, errorCode: E.SAVE_USER_INVALID_EMAIL});
+        }
         try {
-            let saved                    = await this.props.saveUser(user.botId, user.channel, user.id, user.email, user.userRole);
-            let [botId, channel, userId] = decomposeKeys(saved.botId_channel_userId);
-            saved.id                     = userId;
+            let saved                    = await this.props.saveUser(botId, channel, id, email, userRole);
+            let [, newChannel, newUserId] = decomposeKeys(saved.botId_channel_userId);
+            saved.id                     = newUserId;
             saved.userRole               = saved.userRole || 'user';
-            saved.channel                = channel;
+            saved.channel                = newChannel;
             saved.email                  = saved.botId_channel_email ? decomposeKeys(saved.botId_channel_email)[2] : '';
 
             this.setState({saved: true, user: saved});
 
-            setTimeout(() => {this.setState({saved: null})}, 2000);
+            setTimeout(() => {this.setState({saved: false})}, 2000);
 
             if (!this.props.params.botId_channel_userId) {
                 this.props.router.push(`/users`);
             }
         }
         catch (e) {
-            this.setState({error: e.message})
+            this.setState({errorCode: e.errorCode || E.SAVE_USER_GENERAL})
         } finally {
             this.setState({busy: false});
         }
@@ -67,7 +74,7 @@ let UserSavePage = React.createClass({
 
         if (currentUser.selectedBotId) {
             if (params.botId_channel_userId) {
-                this.setState({fetchingUser: true, error: null});
+                this.setState({fetchingUser: true, errorCode: ''});
 
                 let [botId, channel, userId] = decomposeKeys(params.botId_channel_userId);
                 this.setState({botId, channel, userId});
@@ -85,7 +92,7 @@ let UserSavePage = React.createClass({
 
                     this.setState({user: user});
                 } catch (e) {
-                    this.setState({error: e.message})
+                    this.setState({errorCode: e.errorCode || E.FETCH_USER_GENERAL})
                 } finally {
                     this.setState({fetchingUser: false});
                 }
@@ -125,7 +132,7 @@ let UserSavePage = React.createClass({
     },
 
     render() {
-        const {className, params, currentUser} = this.props;
+        const {className, params, currentUser, i18n: {strings: {errors}}} = this.props;
 
         if (!currentUser.signedIn) {
             return null;
@@ -195,8 +202,8 @@ let UserSavePage = React.createClass({
                 </form>
             );
 
-            if (this.state.error) {
-                content = [content, <Alert bsStyle="danger">{this.state.error}</Alert>];
+            if (this.state.errorCode) {
+                content = [content, <Alert bsStyle="danger">{errors[this.state.errorCode]}</Alert>];
             }
         }
 
@@ -226,6 +233,8 @@ let UserSavePage = React.createClass({
                             <div className="col-xs-4 text-right">
                                 <Button onClick={this.save} bsStyle="primary"
                                         disabled={!(user.id || user.email) && user.channel || this.state.busy}>
+                                    { this.state.busy && <i className="icon-spinner animate-spin"></i> }
+                                    { ' ' }
                                     Save User
                                 </Button>
                             </div>

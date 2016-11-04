@@ -1,10 +1,13 @@
+import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
+import { Title } from '../modal-box-1/ModalBox1.jsx';
+import * as actions from '../../app-state/actions.js';
+import { isValidEmail } from '../../misc/utils.js';
+import * as E from '../../misc/error-codes.js';
+import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
 import React from 'react';
 import { connect } from 'react-redux';
 import { Button } from 'react-bootstrap';
-import { ModalBox } from '../modal-box-1/ModalBox1.jsx';
-import { Form, Input, SuccessMessage, ErrorMessage } from '../form/Form.jsx';
-import { Title } from '../modal-box-1/ModalBox1.jsx';
-import * as actions from '../../app-state/actions.js';
+const reportDebug = require('debug')('deepiks:VerifyRegistration');
 
 let VerifyRegistration = React.createClass({
     getInitialState() {
@@ -15,8 +18,16 @@ let VerifyRegistration = React.createClass({
     },
 
     verify(e) {
-        let { email, code } = this.state;
         e.preventDefault();
+        reportDebug('verify: ', this.state);
+        const email = this.state.email.trim();
+        if (!isValidEmail(email)) {
+            return this.props.verifyRegistrationFailed(E.VERIFY_REGISTRATION_INVALID_EMAIL);
+        }
+        const code = this.state.code;
+        if (!code) {
+            return this.props.verifyRegistrationFailed(E.VERIFY_REGISTRATION_INVALID_CODE);
+        }
         this.props.verifyRegistration({ email, code });
     },
 
@@ -35,10 +46,11 @@ let VerifyRegistration = React.createClass({
     },
 
     render() {
-        const { isOpen, i18n: { strings: { verifyRegistration: strings } },
+        const { isOpen, i18n: { strings: { errors, verifyRegistration: strings } },
                 errorCode, successCode,
                 closeVerifyRegistration } = this.props;
         const { state } = this;
+        const errorMessage = errorCode && errors[errorCode];
 
         return (
             <div>
@@ -62,7 +74,7 @@ let VerifyRegistration = React.createClass({
                             onChange={this.verificationCodeChanged}
                         />
                     </div>
-                    <ErrorMessage message={errorCode} />
+                    <ErrorMessage message={errorMessage} />
                     <SuccessMessage message={successCode} />
                     <Button
                         className="button"
@@ -86,6 +98,7 @@ VerifyRegistration = connect(
     }),
     {
         verifyRegistration: actions.verifyRegistration,
+        verifyRegistrationFailed: actions.verifyRegistrationFailed,
     }
 )(VerifyRegistration);
 

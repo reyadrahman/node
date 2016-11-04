@@ -25,10 +25,12 @@ let AddBotPage = React.createClass({
     addBot(e) {
         e.preventDefault();
         const { botName, ...settings } = this.state;
-        this.props.addBot(botName, settings).then(() => {
-            this.props.router.push('/account');
-            this.props.fetchBots();
-        });
+        this.props.addBot(botName, settings)
+            .then(() => {
+                this.props.fetchBots();
+                this.props.router.goBack();
+            })
+            .catch(()=>{});
     },
     cancel(e) {
         e.preventDefault();
@@ -69,17 +71,16 @@ let AddBotPage = React.createClass({
     },
 
     componentWillMount() {
+        this.props.resetAddBotState();
     },
 
     render() {
-        const { className, i18n: { strings: { addBot: strings } },
-                currentUser, successCode, errorCode } = this.props;
+        const { className, i18n: { strings: { errors, successes, addBot: strings } },
+                currentUser, currentUser: { addBotState: { successCode, errorCode } }
+        } = this.props;
         const { state } = this;
 
-        if (!currentUser || !currentUser.attributes || !currentUser.attributes.sub) {
-            return <h3>Please log in</h3>;
-        }
-
+        if (!currentUser.signedIn) return;
 
         return (
             <div className={`add-bot-page-comp ${className || ''}`}>
@@ -178,8 +179,8 @@ let AddBotPage = React.createClass({
                             />
                         </div>
                         <div className="messages">
-                            <ErrorMessage message={errorCode} />
-                            <SuccessMessage className="success" message={successCode} />
+                            <ErrorMessage message={errors[errorCode]} />
+                            <SuccessMessage className="success" message={successes[successCode]} />
                         </div>
                         <div className="button-area">
                             <Button
@@ -206,12 +207,11 @@ let AddBotPage = React.createClass({
 AddBotPage = connect(
     state => ({
         currentUser: state.currentUser,
-        successCode: state.addBotSuccessMessage,
-        errorCode: state.addBotErrorMessage,
     }),
     {
         addBot: actions.addBot,
         fetchBots: actions.fetchBots,
+        resetAddBotState: actions.resetAddBotState,
     }
 )(AddBotPage);
 

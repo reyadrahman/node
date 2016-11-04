@@ -50,7 +50,7 @@ let UsersPage = React.createClass({
     },
 
     render() {
-        const {className, currentUser} = this.props;
+        const {className, currentUser, i18n: { strings: { errors }}} = this.props;
 
         if (!currentUser.signedIn) {
             return null;
@@ -62,10 +62,11 @@ let UsersPage = React.createClass({
 
         if (!currentUser.usersState.hasFetched) {
             if (currentUser.usersState.errorCode) {
+                const errorMessage = errors[currentUser.usersState.errorCode];
                 content = (
                     <tr>
                         <td colSpan="6" className="text-center">
-                            <Alert bsStyle="danger">{currentUser.usersState.errorCode}</Alert>
+                            <Alert bsStyle="danger">{errorMessage}</Alert>
                         </td>
                     </tr>
                 );

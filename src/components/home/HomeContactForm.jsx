@@ -1,4 +1,6 @@
 import * as actions from '../../app-state/actions.js';
+import * as E from '../../misc/error-codes.js';
+import { isValidEmail } from '../../misc/utils.js';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -7,8 +9,7 @@ import { connect } from 'react-redux';
 import { Glyphicon, Grid, Col, Row, Panel, Button,
          FormGroup, ControlLabel, FormControl,
          InputGroup, Dropdown } from 'react-bootstrap';
-
-import spinnerUrl from '../../resources/spinner.svg';
+const reportDebug = require('debug')('deepiks:HomeContactForm');
 
 let HomeContactForm = React.createClass({
     getInitialState() {
@@ -25,7 +26,16 @@ let HomeContactForm = React.createClass({
     },
 
     send() {
-        const { name, email, subject, message } = this.state;
+        const name = this.state.name.trim();
+        const email = this.state.email.trim();
+        const subject = this.state.subject.trim();
+        const message = this.state.message.trim();
+
+        if (!isValidEmail(email)) {
+            reportDebug('send email: ', email);
+            return this.props.contactsFailed(E.SEND_EMAIL_INVALId_EMAIL);
+        }
+
         this.props.sendEmail({ name, email, subject, message });
     },
 
@@ -41,7 +51,7 @@ let HomeContactForm = React.createClass({
         if (errorCode) {
             statusUi = <div className="error-message">
                 {
-                    errors[errorCode] || errors.DefaultSendEmail
+                    errors[errorCode] || errors[E.SEND_EMAIL_GENERAL]
                 }
                 </div>
         } else if (successCode) {
@@ -117,7 +127,8 @@ let HomeContactForm = React.createClass({
                             </Col>
                             <Col md={4} className="send-col">
                                 <Button onClick={this.send} disabled={sendingInProgress}>
-                                    { sendingInProgress ? <img src={spinnerUrl} /> : null }
+                                    { sendingInProgress && <i className="icon-spinner animate-spin"></i>}
+                                    { ' ' }
                                     { strings.send }
                                 </Button>
                             </Col>
@@ -138,6 +149,7 @@ HomeContactForm = connect(
     }),
     {
         sendEmail: actions.sendEmail,
+        contactsFailed: actions.contactsFailed,
     }
 )(HomeContactForm);
 

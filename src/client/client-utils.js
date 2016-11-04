@@ -3,6 +3,7 @@
 import _ from 'lodash';
 import type { ClientConstants } from '../misc/types.js';
 import { createUrlQuery } from '../misc/utils.js';
+import * as E from '../misc/error-codes.js';
 
 export function isFullscreen() {
     return Boolean(document && (
@@ -59,7 +60,24 @@ export const CONSTANTS: ClientConstants = _.pick(process.env, CONSTANTS_KEYS);
 /*
     POST request with json body, return raw response
 */
-export async function fetchjp(url: string, json: Object): Promise<*> {
+// export async function fetchjp(url: string, json: Object): Promise<*> {
+//     const res = await fetch(url, {
+//         method: 'POST',
+//         headers: new Headers({
+//             'Content-Type': 'application/json',
+//         }),
+//         body: JSON.stringify(json),
+//     });
+//     if (res.ok) {
+//         return res;
+//     }
+//     throw { code: E.GENERAL_ERROR };
+// }
+
+/*
+    fetch POST request with json body and then parse response as json
+*/
+export async function fetchjp2j(url: string, json: Object): Promise<*> {
     const res = await fetch(url, {
         method: 'POST',
         headers: new Headers({
@@ -67,18 +85,15 @@ export async function fetchjp(url: string, json: Object): Promise<*> {
         }),
         body: JSON.stringify(json),
     });
-    if (res.ok) {
-        return res;
-    }
-    throw new Error(`fetching ${url} failed`);
-}
+    let resJson;
+    try {
+        resJson = await res.json();
+    } catch(error) {}
 
-/*
-    fetch POST request with json body and then parse response as json
-*/
-export async function fetchjp2j(url: string, json: Object): Promise<*> {
-    const res = await fetchjp(url, json);
-    return await res.json();
+    if (res.ok) {
+        return resJson
+    }
+    throw resJson || { code: E.GENERAL_ERROR };
 }
 
 /*
@@ -87,8 +102,13 @@ export async function fetchjp2j(url: string, json: Object): Promise<*> {
 export async function fetchg2j(url: string, queryParams: {[key: string]: any}): Promise<*> {
     const urlWithQueries = `${url}?` + createUrlQuery(queryParams);
     const res = await fetch(urlWithQueries);
+    let resJson;
+    try {
+        resJson = await res.json();
+    } catch(error) {}
+
     if (res.ok) {
-        return await res.json();
+        return resJson
     }
-    throw new Error(`fetching ${url} failed`);
+    throw resJson || { code: E.GENERAL_ERROR };
 }

@@ -4,10 +4,12 @@ import React from 'react';
 import * as actions from '../../app-state/actions.js';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
 import { leftPad, splitOmitWhitespace } from '../../misc/utils.js';
+import * as E from '../../misc/error-codes.js';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
-import { Glyphicon, Button, Dropdown, MenuItem, Table, FormGroup, InputGroup,
-         FormControl, DropdownButton, ControlLabel, HelpBlock } from 'react-bootstrap';
+import { Glyphicon, Button, Dropdown, MenuItem, Table, FormGroup,
+         InputGroup, FormControl, DropdownButton, ControlLabel,
+         HelpBlock, Alert } from 'react-bootstrap';
 import _ from 'lodash';
 
 let FeedsPage = React.createClass({
@@ -139,6 +141,7 @@ FeedsPage = withRouter(FeedsPage);
 let NewFeed = React.createClass({
     getInitialState() {
         return {
+            isBusy: false,
             feedName: '',
             categories: '',
             type: 'twitter',
@@ -147,29 +150,37 @@ let NewFeed = React.createClass({
         }
     },
 
-    createClicked(e) {
-        e.preventDefault();
-        const s = this.state;
-        const feedName = s.feedName.trim();
-        const categories = splitOmitWhitespace(s.categories, ',');
-        const type = s.type;
-        const publishTimePattern = `* ${s.publishHour} * * *`;
-        const sourceInput = s.sourceInput.trim();
-        const twitterScreenName = type === 'twitter' && sourceInput.match(/@?(.*)/)[1];
-        const rssUrl = type === 'rss' && sourceInput;
+    async createClicked(e) {
+        try {
+            e.preventDefault();
+            this.setState({ isBusy: true });
+            const s = this.state;
+            const feedName = s.feedName.trim();
+            const categories = splitOmitWhitespace(s.categories, ',');
+            const type = s.type;
+            const publishTimePattern = `* ${s.publishHour} * * *`;
+            const sourceInput = s.sourceInput.trim();
+            const twitterScreenName = type === 'twitter' && sourceInput.match(/@?(.*)/)[1];
+            const rssUrl = type === 'rss' && sourceInput;
 
-        // omit falsy items
-        const newFeed = _.pickBy({
-            feedName, categories, type, twitterScreenName, rssUrl, publishTimePattern,
-            feedId: '.', // feedId will be set by the server
-        }, Boolean);
+            // omit falsy items
+            const newFeed = _.pickBy({
+                feedName, categories, type, twitterScreenName, rssUrl, publishTimePattern,
+                feedId: '.', // feedId will be set by the server
+            }, Boolean);
 
-        if (feedName && type && sourceInput &&
-            (type === 'twitter' && twitterScreenName ||
-             type === 'rss' && rssUrl))
-        {
-            this.props.addBotFeed(this.props.currentUser.selectedBotId, newFeed);
-            this.props.closeModal();
+            if (feedName && type && sourceInput &&
+                (type === 'twitter' && twitterScreenName ||
+                type === 'rss' && rssUrl)) {
+                await this.props.addBotFeed(this.props.currentUser.selectedBotId, newFeed);
+                this.props.closeModal();
+            } else {
+                this.setState({ errorCode: E.ADD_BOT_FEED_ALL_FIELDS });
+            }
+        } catch(error) {
+            this.setState({ errorCode: error.errorCode || E.ADD_BOT_FEED_ALL_FIELDS });
+        } finally {
+            this.setState({ isBusy: false });
         }
     },
 
@@ -186,7 +197,8 @@ let NewFeed = React.createClass({
     },
 
     render() {
-        const { i18n: { strings: { newFeed: strings } }, onRequestClose } = this.props;
+        const { i18n: { strings: { errors, newFeed: strings } },
+                onRequestClose } = this.props;
 
         const s = this.state;
 
@@ -243,13 +255,20 @@ let NewFeed = React.createClass({
                         </FormControl>
                     </FormGroup>
                     <HelpBlock>* {strings.requiredField}</HelpBlock>
+                    {
+                        s.errorCode && <Alert bsStyle="danger">{errors[s.errorCode]}</Alert>
+                    }
                     <div className="button-area">
                         <Button
                             className="button"
                             bsStyle="primary"
                             bsSize="large"
                             type="submit"
-                            >{strings.create}
+                            disabled={s.isBusy}
+                        >
+                            {s.isBusy && <i className="icon-spinner animate-spin"></i>}
+                            {' '}
+                            {strings.create}
                         </Button>
                     </div>
                 </form>

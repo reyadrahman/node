@@ -4,6 +4,7 @@ const initAppState = {
     lang: '',
     signIn: {
         errorCode: '',
+        signingIn: false,
     },
     signUp: {
         errorCode: '',
@@ -12,6 +13,7 @@ const initAppState = {
         initialEmail: '',
         password: '',
         errorCode: '',
+        verifying: false,
     },
     currentUser: {
         signedIn: false,
@@ -40,6 +42,10 @@ const initAppState = {
             lastUpdated:  0
         },
         updateAttrsAndPassState: {
+            successCode: '',
+            errorCode: '',
+        },
+        addBotState: {
             successCode: '',
             errorCode: '',
         }

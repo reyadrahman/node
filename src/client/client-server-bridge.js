@@ -11,7 +11,7 @@ export async function addBot(jwtIdToken: string, botName: string, settings) {
     reportDebug('\tbotName: ', botName);
     reportDebug('\tsettings: ', settings);
 
-    return await fetchjp('/api/add-bot', { jwtIdToken, botName, settings })
+    return await fetchjp2j('/api/add-bot', { jwtIdToken, botName, settings })
 }
 
 export async function updateBot(jwtIdToken: string, botId: string, settings) {
@@ -66,11 +66,11 @@ export async function fetchMessages(jwtIdToken: string, conversationId: string, 
 }
 
 export async function addBotFeed(jwtIdToken: string, botId: string, feedConfig: FeedConfig) {
-    return await fetchjp('/api/add-bot-feed', { jwtIdToken, botId, feedConfig });
+    return await fetchjp2j('/api/add-bot-feed', { jwtIdToken, botId, feedConfig });
 }
 
 export async function sendEmail(contactFormData: ContactFormData) {
-    return await fetchjp('/api/send-email', { contactFormData })
+    return await fetchjp2j('/api/send-email', { contactFormData })
 }
 
 export async function sendNotification(jwtIdToken: string,
@@ -78,9 +78,9 @@ export async function sendNotification(jwtIdToken: string,
                                        message: string,
                                        categories: string[])
 {
-    return await fetchjp('/api/send-notification', { jwtIdToken, botId, message, categories });
+    return await fetchjp2j('/api/send-notification', { jwtIdToken, botId, message, categories });
 }
 
 export async function createInvitationTokens(jwtIdToken: string, botId: string, count: number) {
-    return await fetchjp('/api/create-invitation-tokens', { jwtIdToken, botId, count });
+    return await fetchjp2j('/api/create-invitation-tokens', { jwtIdToken, botId, count });
 }

@@ -5,6 +5,7 @@ import * as aws from '../aws/aws.js';
 import * as channels from './channels/all-channels.js';
 import type { ContactFormData, FeedConfig } from '../misc/types.js';
 import { composeKeys, decomposeKeys, shortLowerCaseRandomId } from '../misc/utils.js';
+import * as E from '../misc/error-codes.js';
 
 import { inspect } from 'util';
 import uuid from 'node-uuid';
@@ -17,14 +18,6 @@ const reportError = require('debug')('deepiks:client-server-bridge:error');
 
 const routes = express.Router();
 
-
-function authMiddleware(req, res, next) {
-    if (!req.customData || !req.customData.identityId) {
-        return res.status(403).send('Missing JWT');
-    }
-
-    next();
-}
 
 routes.use('/', (req, res, next) => {
     let jwtIdTokenRaw;
@@ -44,6 +37,7 @@ routes.use('/', (req, res, next) => {
         aws.getIdFromJwtIdToken(jwtIdTokenRaw)
             .then(identityId => {
                 req.customData = {
+                    ...req.customData,
                     jwtIdTokenRaw,
                     idTokenPayload,
                     identityId,
@@ -57,125 +51,175 @@ routes.use('/', (req, res, next) => {
     }
 });
 
-routes.post('/send-email', (req, res, next) => {
-    sendEmail(req.body.contactFormData)
-        .then(() => res.send())
-        .catch(err => next(err));
+/**
+ * Use this instead of directly using `routes.METHOD(...)`
+ * sets `req.customData.defaultErrorCode` to `defaultErrorCode`
+ * and adds the `awaitMiddleware`
+ */
+function createRoute(method, path, defaultErrorCode, ...middlewares) {
+    routes[method].call(
+        routes,
+        path,
+        (req, res, next) => {
+            req.customData = {
+                ...req.customData,
+                defaultErrorCode,
+            };
+            next();
+        },
+        ...middlewares,
+        awaitMiddleware,
+    );
+}
+
+createRoute('post', '/send-email', E.SEND_EMAIL_GENERAL, (req, res, next) => {
+    res.locals.resPromise = sendEmail(req.body.contactFormData);
+    next();
 });
 
-routes.get('/fetch-bots', authMiddleware, (req, res, next) => {
+createRoute('get', '/fetch-bots', E.FETCH_BOTS_GENERAL, authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    fetchBots(identityId)
-        .then(x => res.send(x))
-        .catch(err => next(err));
-
+    res.locals.resPromise = fetchBots(identityId);
+    next();
 });
 
-routes.get('/fetch-bot-public-info', (req, res, next) => {
-    fetchBotPublicInfo(req.query.publisherId, req.query.botId)
-        .then(x => res.send(x))
-        .catch(err => {
-            if (err.status) {
-                res.status(err.status).send(err.message);
-            } else {
-                next(err);
-            }
-        });
+createRoute('get', '/fetch-bot-public-info', E.GENERAL_ERROR, (req, res, next) => {
+    res.locals.resPromise = fetchBotPublicInfo(req.query.publisherId, req.query.botId);
+    next();
 });
 
-routes.get('/fetch-users', authMiddleware, (req, res, next) => {
+createRoute('get', '/fetch-users', E.FETCH_USERS_GENERAL, authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    fetchUsers(identityId, req.query.botId)
-        .then(x => res.send(x))
-        .catch(err => next(err));
-
+    res.locals.resPromise = fetchUsers(identityId, req.query.botId);
+    next();
 });
 
-routes.get('/fetch-polls', authMiddleware, (req, res, next) => {
-    fetchPolls(req.customData.identityId, req.query.botId)
-        .then(x => res.send(x))
-        .catch(err => next(err));
+createRoute('get', '/fetch-polls', E.GENERAL_ERROR, authMiddleware, (req, res, next) => {
+    res.locals.resPromise = fetchPolls(req.customData.identityId, req.query.botId);
+    next();
 });
 
-routes.get('/fetch-user', authMiddleware, (req, res, next) => {
+createRoute('get', '/fetch-user', E.FETCH_USER_GENERAL, authMiddleware, (req, res, next) => {
     const {identityId} = req.customData;
-    fetchUser(identityId, req.query.botId, req.query.channel, req.query.userId)
-        .then(x => res.send(x))
-        .catch(err => next(err));
-
+    res.locals.resPromise = fetchUser(
+        identityId, req.query.botId, req.query.channel, req.query.userId
+    );
+    next();
 });
 
-routes.post('/save-user', authMiddleware, (req, res, next) => {
-    saveUser(req.customData.identityId, req.body.botId, req.body.channel,
-             req.body.userId, req.body.email, req.body.userRole)
-        .then(x => res.send(x))
-        .catch(err => next(err));
-
+createRoute('post', '/save-user', E.SAVE_USER_GENERAL, authMiddleware, (req, res, next) => {
+    res.locals.resPromise = saveUser(
+        req.customData.identityId, req.body.botId, req.body.channel,
+        req.body.userId, req.body.email, req.body.userRole
+    );
+    next();
 });
 
-routes.get('/fetch-conversations', authMiddleware, (req, res, next) => {
+createRoute('get', '/fetch-conversations', E.FETCH_CONVERSATIONS_GENERAL, authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    fetchConversations(identityId, req.query.botId, req.query.since && parseInt(req.query.since))
-        .then(x => res.send(x))
-        .catch(err => next(err));
-
+    res.locals.resPromise = fetchConversations(
+        identityId, req.query.botId, req.query.since && parseInt(req.query.since)
+    );
+    next();
 });
 
-routes.get('/fetch-messages', authMiddleware, (req, res, next) => {
+createRoute('get', '/fetch-messages', E.FETCH_MESSAGES_GENERAL, authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    fetchMessages(identityId, req.query.conversationId, req.query.since && parseInt(req.query.since))
-        .then(x => res.send(x))
-        .catch(err => next(err));
-
+    res.locals.resPromise = fetchMessages(
+        identityId, req.query.conversationId,
+        req.query.since && parseInt(req.query.since)
+    );
+    next();
 });
 
-routes.post('/add-bot', authMiddleware, (req, res, next) => {
+createRoute('post', '/add-bot', E.ADD_BOT_GENERAL, authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    addBot(identityId, req.body.botName, req.body.settings)
-        .then(x => res.send(x))
-        .catch(err => next(err));
+    res.locals.resPromise = addBot(identityId, req.body.botName, req.body.settings);
+    next();
 });
 
-routes.post('/update-bot', authMiddleware, (req, res, next) => {
-    updateBot(req.customData.identityId, req.body.botId, req.body.settings)
-        .then(x => res.send(x))
-        .catch(err => next(err));
+createRoute('post', '/update-bot', E.UPDATE_BOT_GENERAL, authMiddleware, (req, res, next) => {
+    res.locals.resPromise = updateBot(
+        req.customData.identityId, req.body.botId, req.body.settings
+    );
+    next();
 });
 
-routes.delete('/remove-bot', authMiddleware, (req, res, next) => {
+createRoute('delete', '/remove-bot', E.GENERAL_ERROR, authMiddleware, (req, res, next) => {
     // TODO: Once the client supports removing bots, remove the bot from the
     //       database, remove messages, conversations and cisco spark webhooks
 });
 
-routes.post('/add-bot-feed', authMiddleware, (req, res, next) => {
+createRoute('post', '/add-bot-feed', E.ADD_BOT_FEED_GENERAL, authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    addBotFeed(identityId, req.body.botId, req.body.feedConfig)
-        .then(x => res.send(x))
-        .catch(err => next(err));
+    res.locals.resPromise = addBotFeed(identityId, req.body.botId, req.body.feedConfig);
+    next();
 });
 
-routes.post('/send-notification', authMiddleware, (req, res, next) => {
+createRoute('post', '/send-notification', E.GENERAL_ERROR, authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
-    sendNotification(identityId, req.body.botId, req.body.message, req.body.categories)
-        .then(x => res.send(x))
-        .catch(err => next(err));
+    res.locals.resPromise = sendNotification(
+        identityId, req.body.botId, req.body.message, req.body.categories
+    );
+    next();
 });
 
-// routes.post('/create-invitation-tokens', authMiddleware, (req, res, next) => {
-//     const { identityId } = req.customData;
-//     createInvitationTokens(identityId, req.body.botId, req.body.count)
-//         .then(x => res.send(x))
-//         .catch(err => next(err));
-// });
+
+/**
+ * Catch unhandled errors.
+ * Must be the last route.
+ */
+routes.use(errorHandlerMiddleware);
+
+
+function authMiddleware(req, res, next) {
+    if (!req.customData || !req.customData.identityId) {
+        return res.status(403).send('Missing JWT');
+    }
+    next();
+}
+
+/**
+ * Looks for res.locals.resPromise and if it exists, it returns the resolved value
+ * of the promise or the error if it's rejected.
+ * The error can optionally have `status` and `code` properties. If it doesn't have
+ * the `code` property, it looks for `req.customData.defaultErrorCode`, and if that
+ * doesn't exist either, it defaults to `E.GeneralError`
+ */
+function awaitMiddleware(req, res, next) {
+    reportDebug('have res.locals.resPromise? ', !!res.locals.resPromise);
+    const p = res.locals.resPromise;
+    if (!p) return next();
+    if (!(p instanceof Promise)) res.send(p);
+
+    p.then(
+        x => res.send(x),
+        error => errorHandlerMiddleware(error, req, res, next),
+    );
+}
+
+function errorHandlerMiddleware(error, req, res, next) {
+    const code =
+        error.code ||
+        (req.customData && req.customData.defaultErrorCode) ||
+        E.GeneralError;
+    const status = error.status || 500;
+    reportError('errorHandlerMiddleware error:', error,
+                ', returning status: ', status, ', code: ', code);
+    res.status(status).send({ status, code });
+}
+
+
 
 async function sendEmail(contactFormData: ContactFormData) {
+    reportDebug('sendEmail: ', contactFormData);
     let { email, name, subject, message } = contactFormData;
     if (!email) {
-        throw new Error('No email provided');
+        throw { code: E.SEND_EMAIL_NO_EMAIL };
     }
 
     if (!message) {
-        throw new Error('Empty message');
+        throw { code: E.SEND_EMAIL_NO_MESSAGE };
     }
 
     name = name || email;
@@ -199,7 +243,6 @@ async function sendEmail(contactFormData: ContactFormData) {
                 Charset: 'UTF-8'
             },
         },
-        // TODO
         Source: CONSTANTS.CONTACT_EMAIL,
         ReplyToAddresses: [
             name + '<' + email + '>',
@@ -211,7 +254,7 @@ async function sendEmail(contactFormData: ContactFormData) {
 }
 
 async function fetchBotPublicInfo(identityId, botId) {
-    reportDebug('fetchBots: ', identityId);
+    reportDebug('fetchBotPublicInfo: ', arguments);
     const qres = await aws.dynamoQuery({
         TableName:                 CONSTANTS.DB_TABLE_BOTS,
         KeyConditionExpression:    'publisherId = :pid AND botId = :bid',
@@ -322,14 +365,16 @@ async function saveUser(
     if (email) email = email.trim().toLowerCase();
 
     if (!botId || !channel || (!userId && !email)) {
-        throw new Error(`saveUser must provide botId, channel, and either userId or emailId or both. `);
+        throw { error: E.SAVE_USER_GENERAL };
+        // throw new Error(`saveUser must provide botId, channel, and either userId or emailId or both. `);
     }
 
     if (email && !userId) {
         // create new fake user if email doesn't exist
         const oldUser = await aws.getUserByEmail(identityId, botId, channel, email);
         if (oldUser) {
-            throw new Error(`Email already exists ${email}`);
+            throw { error: E.SAVE_USER_GENERAL };
+            // throw new Error(`Email already exists ${email}`);
         }
         const user = {
             publisherId: identityId,
@@ -353,9 +398,11 @@ async function saveUser(
 
     const oldUser = await aws.getUserByUserId(identityId, botId, channel, userId);
     if (!oldUser) {
-        throw new Error(`invalid userId: ${userId}`);
+        throw { error: E.SAVE_USER_GENERAL };
+        // throw new Error(`invalid userId: ${userId}`);
     }
-    const oldEmail = decomposeKeys(oldUser.botId_channel_email)[2];
+    const oldEmail =
+        oldUser.botId_channel_email && decomposeKeys(oldUser.botId_channel_email)[2];
     const emailHasChanged = email && email !== oldEmail;
 
     if (!email || !emailHasChanged) {
@@ -522,7 +569,7 @@ async function updateBot(identityId, botId, model) {
     reportDebug('updateBot: ', identityId, botId, model);
     const bot = await aws.getBot(identityId, botId);
     if (!bot) {
-        throw new Error(`no bot with id ${botId} exists`);
+        throw { errorCode: E.UPDATE_BOT_GENERAL };
     }
 
     let ciscosparkSettings = {};
