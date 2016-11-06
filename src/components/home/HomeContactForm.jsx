@@ -127,7 +127,7 @@ let HomeContactForm = React.createClass({
                             </Col>
                             <Col md={4} className="send-col">
                                 <Button onClick={this.send} disabled={sendingInProgress}>
-                                    { sendingInProgress && <i className="icon-spinner animate-spin"></i>}
+                                    { sendingInProgress && <i className="icon-spinner animate-spin"></i> }
                                     { ' ' }
                                     { strings.send }
                                 </Button>

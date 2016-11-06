@@ -123,7 +123,7 @@ let SignedInPage = React.createClass({
                 onClick={this.onMenuToggle}
                 onMouseEnter={this.onMenuToggleEnter}
                 onMouseLeave={this.onMenuToggleLeave}
-                ></i>
+            ></i>
         );
 
         const { selectedBotId, botsState: { bots, hasFetched } } = currentUser;
