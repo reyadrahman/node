@@ -9,6 +9,7 @@ import type { BotParams, AIActionInfo, Conversation, User,
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
+import { inspect } from 'util';
 const reportDebug = require('debug')('deepiks:aws');
 const reportError = require('debug')('deepiks:aws:error');
 
@@ -37,31 +38,40 @@ const cognitoIdentity = new AWS.CognitoIdentity();
 const sts = new AWS.STS();
 const ses = new AWS.SES();
 
-export const dynamoCreateSet = x => dynamoDoc.createSet(x);
+export const dynamoCreateSet = (x: any[]) => dynamoDoc.createSet(x);
 
-export const dynamoBatchWrite = callbackToPromise(dynamoDoc.batchWrite, dynamoDoc);
-export const dynamoPut = callbackToPromise(dynamoDoc.put, dynamoDoc);
-export const dynamoUpdate = callbackToPromise(dynamoDoc.update, dynamoDoc);
-export const dynamoDelete = callbackToPromise(dynamoDoc.delete, dynamoDoc);
-export const dynamoQuery = callbackToPromise(dynamoDoc.query, dynamoDoc);
-export const dynamoScan = callbackToPromise(dynamoDoc.scan, dynamoDoc);
-export const dynamoCreateTable = callbackToPromise(dynamodb.createTable, dynamodb);
-export const dynamoDeleteTable = callbackToPromise(dynamodb.deleteTable, dynamodb);
-export const dynamoListTables = callbackToPromise(dynamodb.listTables, dynamodb);
-export const dynamoWaitFor = callbackToPromise(dynamodb.waitFor, dynamodb);
-export const s3PutObject = callbackToPromise(s3.putObject, s3);
-export const s3GetObject = callbackToPromise(s3.getObject, s3);
-export const s3Upload = callbackToPromise(s3.upload, s3);
-export const s3ListBuckets = callbackToPromise(s3.listBuckets, s3);
-export const s3CreateBucket = callbackToPromise(s3.createBucket, s3);
-export const s3WaitFor = callbackToPromise(s3.waitFor, s3);
-export const s3PutBucketPolicy = callbackToPromise(s3.putBucketPolicy, s3);
-export const s3PutBucketCors = callbackToPromise(s3.putBucketCors, s3);
-export const s3GetSignedUrl = callbackToPromise(s3.getSignedUrl, s3);
-export const lambdaInvoke = callbackToPromise(lambda.invoke, lambda);
-export const cognitoIdentityGetId = callbackToPromise(cognitoIdentity.getId, cognitoIdentity);
-export const stsGetFederationToken = callbackToPromise(sts.getFederationToken, sts);
-export const sesSendEmail = callbackToPromise(ses.sendEmail, ses);
+function createAWSMethod(context, methodName) {
+    const fn = callbackToPromise(context[methodName], context);
+    return (...args) => fn(...args).catch(error => {
+            reportError(`AWS method ${methodName} failed. It's arguments were: `,
+                        inspect(args, { depth: 5 }));
+            throw error;
+    });
+}
+
+export const dynamoBatchWrite = createAWSMethod(dynamoDoc, 'batchWrite');
+export const dynamoPut = createAWSMethod(dynamoDoc, 'put');
+export const dynamoUpdate = createAWSMethod(dynamoDoc, 'update');
+export const dynamoDelete = createAWSMethod(dynamoDoc, 'delete');
+export const dynamoQuery = createAWSMethod(dynamoDoc, 'query');
+export const dynamoScan = createAWSMethod(dynamoDoc, 'scan');
+export const dynamoCreateTable = createAWSMethod(dynamodb, 'createTable');
+export const dynamoDeleteTable = createAWSMethod(dynamodb, 'deleteTable');
+export const dynamoListTables = createAWSMethod(dynamodb, 'listTables');
+export const dynamoWaitFor = createAWSMethod(dynamodb, 'waitFor');
+export const s3PutObject = createAWSMethod(s3, 'putObject');
+export const s3GetObject = createAWSMethod(s3, 'getObject');
+export const s3Upload = createAWSMethod(s3, 'upload');
+export const s3ListBuckets = createAWSMethod(s3, 'listBuckets');
+export const s3CreateBucket = createAWSMethod(s3, 'createBucket');
+export const s3WaitFor = createAWSMethod(s3, 'waitFor');
+export const s3PutBucketPolicy = createAWSMethod(s3, 'putBucketPolicy');
+export const s3PutBucketCors = createAWSMethod(s3, 'putBucketCors');
+export const s3GetSignedUrl = createAWSMethod(s3, 'getSignedUrl');
+export const lambdaInvoke = createAWSMethod(lambda, 'invoke');
+export const cognitoIdentityGetId = createAWSMethod(cognitoIdentity, 'getId');
+export const stsGetFederationToken = createAWSMethod(sts, 'getFederationToken');
+export const sesSendEmail = createAWSMethod(ses, 'sendEmail');
 
 export async function dynamoBatchWriteHelper(tableName: string, operations: Object[]) {
     // TODO retry unprocessedItems
@@ -240,7 +250,6 @@ export function verifyJwt(token: string) {
 }
 
 export const getAIAction = _createGetAIAction();
-
 export function _createGetAIAction() {
     let cache;
     let lastCacheTimestamp = 0;

@@ -13,9 +13,15 @@ export function lang(state = initAppState.lang, action) {
 export function signIn(state = initAppState.signIn, action) {
     if (action.type === 'signIn/reset') {
         return initAppState.signIn;
+    } else if (action.type === 'signIn/signingIn') {
+        return {
+            errorCode: '',
+            signingIn: true,
+        };
     } else if (action.type === 'signIn/failed') {
         return {
             errorCode: action.errorCode,
+            signingIn: false,
         };
     }
     return state;
@@ -183,10 +189,11 @@ export function currentUser(state = initAppState.currentUser, action) {
     } else if (action.type === 'currentUser/fetchMessagesFailed') {
         return {
             ...state,
-            conversationsState: {
+            messagesState: {
                 hasFetched: false,
                 messages: [],
                 errorCode: action.errorCode,
+                lastUpdated: 0,
             }
         };
     } else if (action.type === 'currentUser/setMessagesState') {
@@ -230,6 +237,27 @@ export function currentUser(state = initAppState.currentUser, action) {
         return {
             ...state,
             updateAttrsAndPassState: {
+                successCode: '',
+                errorCode: action.errorCode,
+            },
+        };
+    } else if (action.type === 'currentUser/addBotReset') {
+        return {
+            ...state,
+            addBotState: init.addBotState,
+        };
+    } else if (action.type === 'currentUser/addBotSucceeded') {
+        return {
+            ...state,
+            addBotState: {
+                successCode: action.successCode,
+                errorCode: '',
+            },
+        };
+    } else if (action.type === 'currentUser/addBotFailed') {
+        return {
+            ...state,
+            addBotState: {
                 successCode: '',
                 errorCode: action.errorCode,
             },

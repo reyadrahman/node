@@ -1,14 +1,53 @@
+/* @flow */
+
+import * as E from '../misc/error-codes.js';
+import * as S from '../misc/success-codes.js';
+
 export default {
     errors: {
-        NotAuthorizedException: 'Wrong email or password',
-        UserNotFoundException: 'User not found',
-        DefaultSignIn: `Sorry, couldn't sign in`,
-        DefaultSendEmail: `Sorry, couldn't send email`,
-        DefaultUpdateAttrsAndPass: `Sorry, couldn't update your information`,
+        [E.GENERAL_ERROR]: `Sorry, your request has failed`,
+        [E.NOT_AUTHORIZED]: `Wrong email or password`,
+        [E.USER_NOT_FOUND]: `User not found`,
+        [E.SIGN_IN_GENERAL]: `Sorry, couldn't sign in`,
+        [E.SIGN_IN_INVALID_EMAIL]: `Invalid email address`,
+        [E.SIGN_IN_INVALID_PASSWORD]: `Password cannot be empty`,
+        [E.EXPIRED_VERIFICATION_CODE]: `This verification code is expired`,
+        [E.VERIFY_REGISTRATION_INVALID_EMAIL]: `Invalid email address`,
+        [E.VERIFY_REGISTRATION_INVALID_CODE]: `Please enter your verification code`,
+        [E.VERIFY_REGISTRATION_GENERAL]: `Sorry, couldn't verify registration`,
+
+        [E.SEND_EMAIL_GENERAL]: `Sorry, couldn't send email`,
+        [E.SEND_EMAIL_INVALId_EMAIL]: 'Invalid email address',
+        [E.SEND_EMAIL_NO_EMAIL]: 'Please enter an email address',
+        [E.SEND_EMAIL_NO_MESSAGE]: 'Please write a message',
+
+        [E.UPDATE_ATTRS_AND_PASS_INVALID_PARAMETER]: `One of the fields is invalid`,
+        [E.UPDATE_ATTRS_AND_PASS_GENERAL]: `Sorry, couldn't update your information`,
+
+        [E.FETCH_BOTS_GENERAL]: `Sorry, couldn't fetch bots`,
+
+        [E.FETCH_USERS_GENERAL]: `Sorry, couldn't fetch users`,
+
+        [E.FETCH_CONVERSATIONS_GENERAL]: `Sorry, couldn't fetch conversations`,
+
+        [E.FETCH_MESSAGES_GENERAL]: `Sorry, couldn't fetch messages`,
+
+        [E.ADD_BOT_GENERAL]: `Sorry, couldn't add bot`,
+
+        [E.UPDATE_BOT_GENERAL]: `Sorry, couldn't update bot settings`,
+
+        [E.ADD_BOT_FEED_ALL_FIELDS]: `Please fill out all fields`,
+        [E.ADD_BOT_FEED_GENERAL]: `Sorry, couldn't add feed`,
+
+        [E.SAVE_USER_GENERAL]: `Sorry, couldn't save user`,
+        [E.SAVE_USER_INVALID_EMAIL]: `Invalid email address`,
+
+        [E.FETCH_USER_GENERAL]: `Sorry, couldn't fetch user`,
     },
     successes: {
-        SendEmailSuccess: `Email successfully sent, thanks.`,
-        DefaultUpdateAttrsAndPass: 'Successfully updated',
+        [S.SEND_EMAIL]: `Email successfully sent, thanks.`,
+        [S.UPDATE_ATTRS_AND_PASS]: 'Successfully updated',
+        [S.ADD_BOT_GENERAL]: `Bot successfully created`,
     },
     app: {
         pageTitle: 'Deepiks: advanced chatbot platform',

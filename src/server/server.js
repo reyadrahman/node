@@ -57,7 +57,7 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, next) {
     reportError(err);
     res.status(err.status || 500);
-    res.send(`Error ${err.status || 500}\n\n${err.message || ''}`);
+    res.send(`<h1>Error ${err.status || 500}</h1><h3>${err.message || ''}</h3>`);
 });
 
 reportDebug('Initializing resources...');
@@ -71,7 +71,7 @@ initResources(5, 5).then(() => {
 
 }).catch(err => {
     reportError('Failed initializing resources: ', err);
-})
+});
 
 
 function onError(error) {

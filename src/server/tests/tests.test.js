@@ -11,19 +11,21 @@ import * as serverUtils from '../server-utils.js';
 import * as aws from '../../aws/aws.js';
 import * as deepiksBot from '../deepiks-bot/deepiks-bot.js';
 import * as witAI from '../deepiks-bot/wit-ai.js';
-import * as customAI from '../deepiks-bot/custom-ai.js';
+import * as ce from '../deepiks-bot/conversational-engine/conversational-engine.js';
 import { translations, languages } from '../i18n/translations.js';
 import * as messenger from '../channels/messenger.js';
 import * as spark from '../channels/spark.js';
+import testStories from './test-story.json';
 import expect from 'must';
 import _ from 'lodash';
 import sinon from 'sinon';
 import uuid from 'node-uuid';
-const reportDebug = require('debug')('deepiks:tests');
-const reportError = require('debug')('deepiks:tests:error');
 import sparkClient from 'ciscospark';
 import type { Request, Response } from 'express';
 import crypto from 'crypto';
+
+const reportDebug = require('debug')('deepiks:tests');
+const reportError = require('debug')('deepiks:tests:error');
 
 // this allows writing to _aws_ using sinon
 const _aws_ = require('../../aws/aws-helper.js');
@@ -665,46 +667,6 @@ describe('::', function() {
         });
     });
 
-    describe('=> Custom AI', function() {
-        it('=> echo messages', async function () {
-            const botParams = {
-                ...sampleBotParams1,
-                settings: {
-                    ...sampleBotParams1.settings,
-                    witAccessToken: undefined,
-                }
-            };
-            await logSampleDBMessage1();
-            await updateConversationsTable1();
-
-            const responses = [];
-            const respondFn = (m) => {
-                responses.push(m);
-                return Promise.resolve();
-            };
-
-            await customAI.ai(_.omit(sampleDBMessage1, 'cards'), botParams, respondFn);
-            await customAI.ai(_.omit(sampleDBMessage1, 'cards'), botParams, respondFn);
-
-            expect(responses.map(x => _.omit(x, 'creationTimestamp'))).eql([
-                { text: `You wrote: ${sampleDBMessage1.text || ''}` },
-                { text: 'Write something (1)' },
-                { text: `You wrote: ${sampleDBMessage1.text || ''}` },
-                { text: 'Write something (2)' },
-            ]);
-
-            // const conversation = await aws.getConversation(
-            //     botParams.publisherId, botParams.botId, sampleConversationId1
-            // );
-            // expect(conversation.customAIData).eql({
-            //     session: {
-            //         count: 0
-            //     },
-            //     context: {},
-            // });
-        });
-    });
-
     describe('=> spark webhook', function() {
         let sampleWebhookReqBody, sig, req, res, statusCode, messageId, roomId,
             personId, personEmail, creationTimestamp, publisherId, botId, botParams,
@@ -1068,4 +1030,297 @@ describe('::', function() {
             });
         });
     });
+
+
+    describe('=> conversational engine', function() {
+        const bookmarks = ce._collectBookmarks(testStories.data);
+        describe('bookmarks', function() {
+            it('collectBookmarks', () => {
+                expect(bookmarks).eql({
+                    b1: [0, 0, 0],
+                    b2: [0, 1, 0],
+                    b3: [1, 1, 1, 0, 1],
+                    b4: [1, 1, 1, 0, 2, 0, 0, 3, 0, 0, 0],
+                });
+            });
+        });
+
+        describe('converse', function() {
+            let converseRes;
+            it('do nothing', () => {
+                converseRes = ce._converseHelper(null, {}, {}, testStories.data, {});
+                expect(converseRes).eql({
+                    type: 'stop',
+                    session: {
+                        leafIsExpectingUserInput: false,
+                        path: [],
+                    },
+                });
+            });
+
+            describe('hi', function() {
+
+                it('send', () => {
+                    converseRes = ce._converseHelper('hi', converseRes.session, {}, testStories.data, bookmarks);
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: '<[ delay: 1; as user ]> hi back'
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [0, 0, 1]
+                        }
+                    });
+
+                });
+
+                it('converse 1', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: 'will reply in a minute'
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [0, 0, 2]
+                        },
+                    });
+                });
+
+                it('converse 2', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        session: {
+                            leafIsExpectingUserInput: true,
+                            path: [0, 1],
+                        },
+                        type: 'stop',
+                    });
+                });
+
+                it('converse 3', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        session: {
+                            leafIsExpectingUserInput: true,
+                            path: [0, 1],
+                        },
+                        type: 'stop',
+                    });
+
+                });
+            });
+
+            describe('hihi', function() {
+                it('send', () => {
+                    converseRes = ce._converseHelper('hihi', converseRes.session, {}, testStories.data, bookmarks);
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: 'hihi back',
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [0, 1, 1]
+                        }
+                    });
+                });
+
+                it('converse 1', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, bookmarks);
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: '<[ delay: 1; as user ]> hi back'
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [0, 0, 1]
+                        }
+                    });
+
+                });
+
+                it('converse 2', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: 'will reply in a minute'
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [0, 0, 2]
+                        },
+                    });
+                });
+
+                it('converse 3', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'stop',
+                        session: {
+                            leafIsExpectingUserInput: true,
+                            path: [0, 1],
+                        }
+                    })
+                });
+            });
+
+            describe('bye', function() {
+                it('send', () => {
+                    converseRes = ce._converseHelper('bye', converseRes.session, {}, testStories.data, bookmarks);
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: 'bye back',
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [1, 0, 0]
+                        }
+                    });
+                });
+
+                it('converse 1', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'stop',
+                        session: {
+                            leafIsExpectingUserInput: true,
+                            path: [1, 1],
+                        }
+                    })
+                });
+
+                it('converse 2', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'stop',
+                        session: {
+                            leafIsExpectingUserInput: true,
+                            path: [1, 1],
+                        }
+                    })
+                });
+            });
+
+            describe('dfqwsfsdfffwasdf', function() {
+                it('send', () => {
+                    converseRes = ce._converseHelper('dfqwsfsdfffwasdf', converseRes.session, {}, testStories.data, bookmarks);
+                    expect(converseRes).eql({
+                        type: 'action',
+                        action: 'aaa',
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [1, 1, 1, 0, 0],
+                        }
+                    })
+                });
+
+                it('converse 1', () => {
+                    const context = {
+                        bb: true,
+                        ff: true,
+                    };
+                    converseRes = ce._converseHelper(null, converseRes.session, context, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: 'rr',
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [1, 1, 1, 0, 2, 0, 0, 1],
+                        }
+                    });
+                });
+
+                it('converse 2', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'action',
+                        action: 'vvv',
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [1, 1, 1, 0, 2, 0, 0, 2],
+                        }
+                    });
+                });
+
+                it('converse 3', () => {
+                    const context = {
+                        x: true
+                    };
+                    converseRes = ce._converseHelper(null, converseRes.session, context, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'stop',
+                        session: {
+                            leafIsExpectingUserInput: true,
+                            path: [1, 1, 1, 0, 2, 0, 0, 3, 0, 1, 0],
+                        }
+                    });
+                });
+            });
+
+            describe('wer', function() {
+                it('send', () => {
+                    converseRes = ce._converseHelper('wer', converseRes.session, {}, testStories.data, bookmarks);
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: 'werback',
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [1, 1, 1, 0, 2, 0, 0, 3, 0, 1, 0, 0],
+                        }
+                    })
+                });
+
+                it('converse 1', () => {
+                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    expect(converseRes).eql({
+                        type: 'stop',
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [],
+                        }
+                    });
+                });
+            });
+            describe('change mid story', function() {
+                it('send hi', () => {
+                    converseRes = ce._converseHelper('hi', converseRes.session, {}, testStories.data, bookmarks);
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: '<[ delay: 1; as user ]> hi back',
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [0, 0, 1],
+                        }
+                    })
+                });
+                it('send bye', () => {
+                    converseRes = ce._converseHelper('bye', converseRes.session, {}, testStories.data, bookmarks);
+                    expect(converseRes).eql({
+                        type: 'msg',
+                        msg: {
+                            text: 'bye back',
+                        },
+                        session: {
+                            leafIsExpectingUserInput: false,
+                            path: [1, 0, 0],
+                        }
+                    })
+                });
+
+            });
+        });
+    });
+
 });

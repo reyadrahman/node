@@ -1,9 +1,11 @@
 /* @flow */
 
+import { simpleTimeFormat } from '../../misc/utils.js';
+
 import React from 'react';
 import _ from 'lodash';
+import { Alert } from 'react-bootstrap';
 
-import { simpleTimeFormat } from '../../misc/utils.js';
 // $FlowFixMe
 import defaultAvatarUrl from '../../resources/avatar.jpg';
 
@@ -11,8 +13,17 @@ let Messages = React.createClass({
     render() {
         const { className, selectedConversationId,
                 currentUser: { conversationsState, messagesState },
-                i18n: { strings: { messages: strings } }
+                i18n: { strings: { errors, messages: strings } }
               } = this.props;
+
+        if (conversationsState.errorCode || messagesState.errorCode) {
+            const errorMessage = errors[conversationsState.errorCode || messagesState.errorCode];
+            return (
+                <div className={`messages-comp ${className || ''}`}>
+                    <Alert bsStyle="danger">{errorMessage}</Alert>
+                </div>
+            );
+        }
 
         const noConversationsFound =
             conversationsState.hasFetched && _.isEmpty(conversationsState.conversations);

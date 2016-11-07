@@ -10,7 +10,8 @@ import defaultAvatarUrl from '../../resources/avatar.jpg';
 let Conversations = React.createClass({
     getInitialState() {
         return {
-            searchFilter: ''
+            searchFilter: '',
+            scrollToConversation: false,
         };
     },
 
@@ -39,7 +40,7 @@ let Conversations = React.createClass({
               } = this.props;
 
         const { conversationsState: cs } = currentUser;
-        if (!cs.hasFetched) {
+        if (!cs.hasFetched && !cs.errorCode) {
             return (
                 <div className={`conversations-comp ${className || ''}`}>
                     <div className="wait"><i className="icon-spinner animate-spin"></i></div>

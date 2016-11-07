@@ -8,6 +8,10 @@ const reportDebug = require('debug')('deepiks:utils');
 const reportError = require('debug')('deepiks:utils:error');
 
 
+export function isValidEmail(x: string) {
+    return Boolean(x.match(/^([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)$/));
+}
+
 export function composeKeys(...xs: Array<string | number>): string {
     return xs.join('__');
 }
