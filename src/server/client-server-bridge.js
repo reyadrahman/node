@@ -268,11 +268,12 @@ async function fetchBotPublicInfo(identityId, botId) {
         let bot = qres.Items[0];
         if (bot.isPublic) {
             return {
-                botId:    bot.botId,
-                botName:  bot.botName,
-                botIcon:  bot.botIcon,
-                isPublic: bot.isPublic,
-                settings: {
+                botId:       bot.botId,
+                publisherId: bot.publisherId,
+                botName:     bot.botName,
+                botIcon:     bot.botIcon,
+                isPublic:    bot.isPublic,
+                settings:    {
                     secretWebchatCode: bot.settings.secretWebchatCode
                 }
             };

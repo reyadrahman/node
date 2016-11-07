@@ -7,10 +7,8 @@ import {withRouter, Link} from 'react-router';
 import _ from 'lodash';
 import uuid from 'node-uuid';
 import MessagesFeed from './MessagesFeed.jsx';
+import Messages from './Messages.jsx';
 import InputBox from './InputBox.jsx';
-
-import moment from 'moment';
-
 
 const reportDebug = require('debug')('deepiks:WebChat');
 const reportError = require('debug')('deepiks:WebChat:error');
@@ -29,23 +27,26 @@ let Chat = React.createClass({
     handleMessageReceived: function (data) {
         reportDebug('webchat message received:', data);
 
-        let message = JSON.parse(data);
+        let message         = JSON.parse(data);
         message.senderIsBot = true;
-        message.senderName = 'Deepiks Pitching';
+        message.senderName  = this.props.bot.botName;
 
         this.setState({data: this.state.data.concat([message])})
     },
 
     handleMessageSubmit: function (text) {
+        let bot = this.props.bot;
+
         let messages = this.state.data;
         let message  = {
-            receivedOrSent: 'sent',
-                            text,
-            publisherId:    'eu-west-1:9b648ba2-d018-4723-8b65-2710b3062119',
-            botId:          '8c334a80-8aee-11e6-bc96-c186c2efac62',
-            conversationId: this.props.conversationId,
-            senderId:       this.props.senderId,
-            timestamp:      moment().format('x')
+            receivedOrSent:    'sent',
+                               text,
+            publisherId:       bot.publisherId,
+            botId:             bot.botId,
+            senderName:        'You',
+            conversationId:    this.state.conversationId,
+            senderId:          this.state.senderId,
+            creationTimestamp: Date.now()
         };
         // message.id = uuid.v1();
         //Send message to websocket
@@ -58,9 +59,12 @@ let Chat = React.createClass({
         this.setState({data: newMessages});
     },
     componentWillMount:  function () {
-        this.props.conversationId = uuid.v1();
-        this.props.senderId       = uuid.v1();
-        //Initialize connection to websocket and stock ws in props
+        this.setState({
+            conversationId: uuid.v1(),
+            senderId:       uuid.v1()
+        });
+
+        //Initialize connection to websocket and stock ws in component instance
 
         try {
             this.setupWebsocket();
@@ -71,8 +75,6 @@ let Chat = React.createClass({
 
     setupWebsocket: function () {
         let websocket = this.ws = new WebSocket('ws://localhost:3000');
-
-        reportDebug('websocket', websocket);
 
         websocket.onopen = () => {
             reportDebug('Websocket connected');
@@ -109,10 +111,15 @@ let Chat = React.createClass({
     },
 
     render: function () {
+        let bot = this.props.bot;
+
         return (
             <section className="chatBotContainer">
+                <div className="chatBotHeader">
+                    {`Hi! I'm ${bot.botName}. Say "hi" if you'd like to chat`}
+                </div>
                 <div className="chatBot">
-                    <MessagesFeed data={ this.state.data }/>
+                    <Messages messages={ this.state.data }/>
                     <InputBox onMessageSubmit={ this.handleMessageSubmit }/>
                 </div>
             </section>

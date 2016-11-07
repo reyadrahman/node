@@ -9,14 +9,13 @@ import Message from './Message.jsx';
 
 let MessagesFeed = React.createClass({
   render: function() {
-    let messages = this.props.data.map(m => {
-      return (
-        <Message message={ m } receivedOrSent="received"/>
-      );
-    });
     return (
       <div className="messagesFeed">
-        { messages }
+          { this.props.messages.map(m => {
+              return (
+                  <Message message={ m }/>
+              );
+          }) }
       </div>
     );
   }

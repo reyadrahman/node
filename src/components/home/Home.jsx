@@ -140,7 +140,6 @@ let Home = React.createClass({
                        <br/><br/><br/><br/><br/><br/><br/><br/><br/>{ strings.hello }<br/>{ strings.baseline }
                     </div>
                 </section>
-                <Chat />
 
                <section id="services" className="services">
                     <div className="section-heading">

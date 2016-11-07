@@ -29,7 +29,7 @@ async function handleWebsocketMessage(messageReceived: WebchannelMessage, ws: We
 
     const message: WebhookMessage = {
         publisherId_conversationId: composeKeys(botParams.publisherId, messageReceived.conversationId),
-        creationTimestamp:          +messageReceived.timestamp,
+        creationTimestamp:          +messageReceived.creationTimestamp,
         id:                         uuid.v1(),
         channel:                    'web',
         senderIsBot:                false,

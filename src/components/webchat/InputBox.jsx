@@ -10,26 +10,50 @@ let InputBox = React.createClass({
     getInitialState: function () {
         return {text: ''};
     },
-    _entry:          function (e) {
+    textEntered:     function (e) {
         let text = e.target.value;
-        console.log(text);
         this.setState({text});
     },
     onKeyUp:         function (e) {
         if (e.nativeEvent.keyCode == 13) {
+            this.send();
+        }
+    },
+
+    send: function (e = null) {
+        e && e.preventDefault();
+
+        if (this.state.text) {
             this.props.onMessageSubmit(this.state.text);
             this.setState(this.getInitialState());
         }
     },
+
+    uploadImage: function (e) {
+        e.preventDefault();
+    },
+
+
+
     render:          function () {
         return (
             <div className="inputBox">
-                <input className="form-control"
+                <div className="input-group">
+                    <div className="input-group-addon action" onClick={this.uploadImage}>
+                        <i className="icon-file-image"/>
+                    </div>
+                    <input className="form-control"
 
-                       onChange={ this._entry }
-                       onKeyUp={ this.onKeyUp }
-                       value={this.state.text}
-                       placeholder="Say hello to our bot !"/>
+                           onChange={ this.textEntered }
+                           onKeyUp={ this.onKeyUp }
+                           value={this.state.text}
+                           placeholder="Type your message..."/>
+
+                    <div className="input-group-addon action" onClick={this.send}>
+                        <i className="icon-paper-plane-empty"/>
+                    </div>
+                </div>
+
             </div>
         );
     }
