@@ -1,5 +1,6 @@
 /* @flow */
 
+
 export type User = {
     publisherId: string,
     botId_channel_userId: string,
@@ -131,7 +132,7 @@ export type MessagePreprocessorAction = {
 
 export type RespondFn = (response: ResponseMessage) => Promise<void>;
 
-export type ActionRequest = {
+export type AIActionRequest = {
     sessionId: string,
     context: Object,
     userPrefs: UserPrefs,
@@ -139,6 +140,9 @@ export type ActionRequest = {
     entities: Object,
     publisherId: string,
     botId: string,
+};
+
+export type ExternalAIActionRequest = AIActionRequest & {
     credentials: {
         accessKeyId: string,
         secretAccessKey: string,

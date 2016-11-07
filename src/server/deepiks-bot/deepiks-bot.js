@@ -717,18 +717,18 @@ async function updateConversationTable(message: DBMessage,
          !channelData && 'channelData',
     ].filter(Boolean).join(', ');
 
-    const vals = {
+    const vals: Object = {
         ':lastMessage': aws.dynamoCleanUpObj(message),
         ':blimtm': composeKeys(botParams.botId, message.creationTimestamp, message.id),
         ':chan': message.channel,
         ':botId': botParams.botId,
         ':cd': channelData,
     };
-    if (!message.senderIdBot) {
-        Object.assign(vals, {
-            ':senderIdSet': aws.dynamoCreateSet([message.senderId]),
-            ':profilePic': message.senderProfilePic || undefined,
-        });
+    if (!message.senderIsBot) {
+        vals[':senderIdSet'] = aws.dynamoCreateSet([message.senderId]);
+        if (message.senderProfilePic) {
+            vals[':profilePic'] = message.senderProfilePic;
+        }
         if (message.senderName) {
             vals[':senderNameSet'] = aws.dynamoCreateSet([message.senderName]);
         }

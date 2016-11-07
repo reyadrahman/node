@@ -2,11 +2,12 @@
 
 import * as aws from '../../aws/aws.js';
 import type { DBMessage, BotParams, UserPrefs, RespondFn,
-              CustomAIData, Conversation, ResponseMessage } from '../../misc/types.js';
+              CustomAIData, Conversation, ResponseMessage,
+              AIActionRequest } from '../../misc/types.js';
 import { CONSTANTS } from '../server-utils.js';
 import { toStr, composeKeys, decomposeKeys } from '../../misc/utils.js';
 import { runAction } from './ai-helpers.js';
-import type { ActionRequestIncomplete } from './ai-helpers.js';
+import { converse as aiEngineConverse } from './conversational-engine/conversational-engine.js';
 import _ from 'lodash';
 import uuid from 'node-uuid';
 const reportDebug = require('debug')('deepiks:custom-ai');
@@ -35,7 +36,7 @@ async function converse(
     respondFn: RespondFn
 ) : Promise<ConverseRes>
 {
-    let converseData = await aiEngineConverse(text, session, context, userPrefs, botParams);
+    let converseData = await aiEngineConverse(text, userPrefs, session, context, botParams);
     return await converseHelper(text, originalMessage, context, userPrefs,
                                 botParams, conversation, respondFn, converseData, 10);
 }
@@ -79,7 +80,7 @@ async function converseHelper(
             creationTimestamp: Date.now(),
         });
         const newConverseData = await aiEngineConverse(
-            null, converseData.session, context, userPrefs, botParams
+            null, userPrefs, converseData.session, context, botParams
         );
         await resP;
         return await converseHelper(
@@ -88,8 +89,9 @@ async function converseHelper(
         );
 
     } else if (converseData.type === 'action') {
-        let actionRequest: ActionRequestIncomplete = {
+        let actionRequest: AIActionRequest = {
             sessionId: conversation.botId_conversationId, // TODO delete this
+            entities: {},
             context,
             userPrefs,
             text,
@@ -97,7 +99,7 @@ async function converseHelper(
             botId: botParams.botId,
         };
         const actionRes = await runAction(
-            converseData.action, actionRequest, originalMessage, botParams, {});
+            converseData.action, actionRequest, originalMessage, botParams);
         reportDebug('action returned: ', actionRes);
         const newContext = actionRes.context || {};
         const newUserPrefs = _.has(actionRes, 'userPrefs')
@@ -116,7 +118,7 @@ async function converseHelper(
         //     session: customAIData.session,
         // };
         const newConverseData =
-            await aiEngineConverse(null, converseData.session, context, userPrefs, botParams);
+            await aiEngineConverse(null, userPrefs, converseData.session, context, botParams);
         await resP;
         return await converseHelper(
             text, originalMessage, context, newUserPrefs, botParams,
@@ -147,56 +149,6 @@ function parseResponseMessage(msg) {
     }
 
     return response;
-}
-
-async function aiEngineConverse(
-    text: ?string, session: Object, context: Object,
-    userPrefs: UserPrefs, botParams: BotParams
-): Promise<ConverseData>
-{
-    const { publisherId, botId } = botParams;
-    const policy = JSON.stringify({
-        Version: '2012-10-17',
-        Statement: [
-            {
-                Effect: 'Allow',
-                Action: [
-                    's3:GetObject',
-                    's3:PutObject',
-                ],
-                Resource: [
-                    `arn:aws:s3:::${CONSTANTS.S3_BUCKET_NAME}/${publisherId}/${botId}/*`,
-                ]
-            }
-        ]
-    });
-    const federationToken = await aws.stsGetFederationToken({
-        Name: uuid.v4().substr(0, 30),
-        DurationSeconds: 15 * 60,
-        Policy: policy,
-    });
-    const credentials = federationToken.Credentials;
-    const res = await aws.lambdaInvoke({
-        FunctionName: CONSTANTS.CONVERSATIONAL_ENGINE_LAMBDA,
-        Payload: JSON.stringify({
-            text, userPrefs, session, context,
-            credentials: {
-                accessKeyId: credentials.AccessKeyId,
-                secretAccessKey: credentials.SecretAccessKey,
-                sessionToken: credentials.SessionToken,
-                expiration: credentials.Expiration,
-            },
-            s3: {
-                bucket: CONSTANTS.S3_BUCKET_NAME,
-                prefix: `${publisherId}/${botId}/`,
-            }
-        }),
-    });
-    reportDebug('aiEngineConverse CONVERSATIONAL_ENGINE_LAMBDA returned: ', toStr(res));
-    if (res.StatusCode !== 200) {
-        throw new Error(`CONVERSATIONAL_ENGINE_LAMBDA returned status code ${res.StatusCode}`);
-    }
-    return JSON.parse(res.Payload);
 }
 
 export async function ai(

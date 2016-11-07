@@ -1,0 +1,187 @@
+{
+  "data" : [
+    {
+      "name" : "",
+      "turns" : [
+        {
+          "user" : "hi",
+          "entities" : [
+            {
+              "entity" : "intent",
+              "value" : "\"greetings\""
+            }
+          ],
+          "operations" : [
+            {
+              "bookmark" : "b1"
+            },
+            {
+              "action" : "template-<[ delay: 1; as user ]> hi back"
+            },
+            {
+              "action" : "template-will reply in a minute"
+            }
+          ]
+        },
+        {
+          "user" : "hihi",
+          "entities" : [
+            {
+              "entity" : "intent",
+              "value" : "\"greetings\""
+            }
+          ],
+          "operations" : [
+            {
+              "bookmark" : "b2"
+            },
+            {
+              "action" : "template-hihi back"
+            },
+            {
+              "jump" : "b1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name" : "",
+      "turns" : [
+        {
+          "user" : "bye",
+          "entities" : [
+            {
+              "entity" : "intent",
+              "value" : "\"bye\""
+            }
+          ],
+          "operations" : [
+            {
+              "action" : "template-bye back"
+            }
+          ]
+        },
+        {
+          "branches" : [
+            [
+              {
+                "user" : "abc",
+                "entities" : [ ],
+                "operations" : [
+                  {
+                    "action" : "template-abc back"
+                  }
+                ]
+              },
+              {
+                "user" : "cba",
+                "entities" : [ ],
+                "operations" : [
+                  {
+                    "action" : "template-cba back"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "user" : "dfqwsfsdfffwasdf",
+                "entities" : [ ],
+                "operations" : [
+                  {
+                    "action" : "function-aaa"
+                  },
+                  {
+                    "bookmark" : "b3"
+                  },
+                  {
+                    "branches" : [
+                      {
+                        "predicates" : [
+                          {
+                            "name" : "bb",
+                            "negative" : false
+                          },
+                          {
+                            "name" : "ff",
+                            "negative" : false
+                          }
+                        ],
+                        "operations" : [
+                          {
+                            "bookmark" : "b4"
+                          },
+                          {
+                            "action" : "template-rr"
+                          },
+                          {
+                            "action" : "function-vvv"
+                          },
+                          {
+                            "branches" : [
+                              {
+                                "predicates" : [
+                                  {
+                                    "name" : "x",
+                                    "negative" : false
+                                  }
+                                ],
+                                "operations" : [
+                                  {
+                                    "bookmark" : "b4"
+                                  }
+                                ],
+                                "turns" : [
+                                  {
+                                    "user" : "wer",
+                                    "entities" : [ ],
+                                    "operations" : [
+                                      {
+                                        "action" : "template-werback"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "predicates" : [
+                                  {
+                                    "name" : "y",
+                                    "negative" : false
+                                  }
+                                ],
+                                "operations" : [
+                                  {
+                                    "action" : "template-yyyyy"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "predicates" : [
+                          {
+                            "name" : "ee",
+                            "negative" : false
+                          }
+                        ],
+                        "operations" : [
+                          {
+                            "action" : "template-qq"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

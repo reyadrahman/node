@@ -2,7 +2,7 @@
 
 import * as aws from '../../aws/aws.js';
 import type { DBMessage, BotParams, UserPrefs, WitData,
-              RespondFn } from '../../misc/types.js';
+              RespondFn, AIActionRequest } from '../../misc/types.js';
 import { CONSTANTS } from '../server-utils.js';
 import { toStr, composeKeys, decomposeKeys } from '../../misc/utils.js';
 import { runAction } from './ai-helpers.js';
@@ -85,7 +85,7 @@ async function runActionsHelper(
         return { userPrefs, witData };
     }
 
-    const requestData = {
+    const requestData: AIActionRequest = {
         sessionId: witData.sessionId,
         context: witData.context,
         userPrefs,
@@ -144,8 +144,7 @@ async function runActionsHelper(
             }
         }
         const actionRes =
-            await runAction(action, newRequestData, originalMessage, botParams,
-                            client.config.actions) || {};
+            await runAction(action, newRequestData, originalMessage, botParams) || {};
         reportDebug('action returned: ', actionRes);
         newWitData.context = actionRes.context || {};
         const newUserPrefs = _.has(actionRes, 'userPrefs')

@@ -3,20 +3,14 @@
 import * as aws from '../../aws/aws.js';
 import { CONSTANTS, request } from '../server-utils.js';
 import { toStr } from '../../misc/utils.js';
+import localActions from './ai-actions/all-actions.js';
+import type { AIActionRequest, ExternalAIActionRequest } from '../../misc/types.js';
 import uuid from 'node-uuid';
 const reportDebug = require('debug')('deepiks:ai-helpers');
 const reportError = require('debug')('deepiks:ai-helpers:error');
-import type { DBMessage, BotParams, ActionRequest, UserPrefs } from '../../misc/types.js';
+import type { DBMessage, BotParams, UserPrefs } from '../../misc/types.js';
 
-export type ActionRequestIncomplete = {
-    sessionId: string,
-    context: Object,
-    userPrefs: UserPrefs,
-    text: string,
-    publisherId: string,
-    botId: string,
-    entities?: Object,
-};
+reportDebug('localActions: ', localActions);
 
 function generateS3PolicyForAction(publisherId: string, botId: string, senderId: string): string {
     return JSON.stringify({
@@ -38,10 +32,9 @@ function generateS3PolicyForAction(publisherId: string, botId: string, senderId:
 
 export async function runAction(
     actionName: string,
-    actionRequest: ActionRequestIncomplete,
+    actionRequest: AIActionRequest,
     originalMessage: DBMessage,
     botParams: BotParams,
-    localActions: {[key: string]: Function}
 ) {
     reportDebug('runAction ', actionName, toStr(actionRequest));
     const { publisherId, botId } = botParams;
@@ -49,6 +42,20 @@ export async function runAction(
     if (!senderId) {
         throw new Error(`ERROR: runAction senderId: ${senderId || ''}`);
     }
+
+    // local action
+    // ============
+
+    if (localActions[actionName]) {
+        reportDebug(`runAction found local action ${actionName}`);
+        const res = await localActions[actionName](actionRequest);
+        reportDebug('runAction local action returned: ', res);
+        return res;
+    }
+
+    // external action
+    // ===============
+
     const federationToken = await aws.stsGetFederationToken({
         Name: uuid.v4().substr(0, 30),
         DurationSeconds: 15 * 60,
@@ -56,9 +63,8 @@ export async function runAction(
     });
     const credentials = federationToken.Credentials;
     reportDebug('got federationToken: ', federationToken);
-    const requestData: ActionRequest = {
+    const requestData: ExternalAIActionRequest = {
         ...actionRequest,
-        // action: actionName,
         credentials: {
             accessKeyId: credentials.AccessKeyId,
             secretAccessKey: credentials.SecretAccessKey,
@@ -70,9 +76,6 @@ export async function runAction(
             prefix: `${publisherId}/${botId}/${senderId}/`,
         }
     };
-    if (localActions[actionName]) {
-        return await localActions[actionName](requestData);
-    }
 
     const action = await aws.getAIAction(actionName);
     reportDebug('runAction: ', action);
@@ -98,18 +101,18 @@ export async function runAction(
             FunctionName: lambda,
             Payload: JSON.stringify(requestData),
         });
-        reportDebug('lambda returned: ', toStr(res));
+        reportDebug('runAction lambda returned: ', toStr(res));
         if (res.StatusCode !== 200) {
-            throw new Error(`lambda ${lambda} returned status code ${res.StatusCode}`);
+            throw new Error(`runAction lambda ${lambda} returned status code ${res.StatusCode}`);
         }
         const resPayload = JSON.parse(res.Payload);
         if (!resPayload.context){
-            throw new Error(`lambda ai action named ${lambda} did not return a context: ` +
+            throw new Error(`runAction lambda ai action named ${lambda} did not return a context: ` +
                 toStr(resPayload));
         }
         return resPayload;
     }
 
-    throw new Error(`Unknown action: ${toStr(action)}`);
+    throw new Error(`runAction unknown action: ${toStr(action)}`);
 }
 
