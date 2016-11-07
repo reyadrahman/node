@@ -1,10 +1,6 @@
 /* @flow */
 
 import React from 'react';
-import * as actions from '../../app-state/actions.js';
-import {connect} from 'react-redux';
-import {withRouter, Link} from 'react-router';
-import _ from 'lodash';
 
 let InputBox = React.createClass({
     getInitialState: function () {
