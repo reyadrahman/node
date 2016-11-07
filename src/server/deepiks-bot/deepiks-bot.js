@@ -818,10 +818,8 @@ async function handleWebhookMessage(
         return;
     }
     if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none' && user.isVerified) {
-        reportDebug('point 1');
         // Process message, will connect to wit etc.
         await sendAsUser(dbMessage);
-        reportDebug('point 1.1');
 
     } else {
         await Promise.all([
@@ -830,8 +828,6 @@ async function handleWebhookMessage(
             logMessage(dbMessage),
         ]);
     }
-
-    reportDebug('point 2');
 
     // log responses and update conversations table
     if (responses.length > 0) {
