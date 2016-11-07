@@ -2,7 +2,6 @@ import * as actions from '../../app-state/actions.js';
 import Header from '../header/Header.jsx';
 import Menu from './Menu.jsx';
 import HomeContactForm from './HomeContactForm.jsx';
-import Chat from '../webchat/Chat.jsx';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
