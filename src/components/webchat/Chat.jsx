@@ -4,6 +4,7 @@ import React from 'react';
 import uuid from 'node-uuid';
 import Messages from './Messages.jsx';
 import InputBox from './InputBox.jsx';
+import {CONSTANTS} from '../../client/client-utils';
 
 const reportDebug = require('debug')('deepiks:WebChat');
 const reportError = require('debug')('deepiks:WebChat:error');
@@ -102,7 +103,7 @@ let Chat = React.createClass({
     },
 
     setupWebsocket: function () {
-        let websocket = this.ws = new WebSocket('ws://localhost:3000');
+        let websocket = this.ws = new WebSocket(CONSTANTS.OWN_BASE_URL.replace(/https?/, 'ws'));
 
         websocket.onopen = () => {
             reportDebug('Websocket connected');
