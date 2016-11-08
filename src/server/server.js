@@ -10,10 +10,7 @@ import http from 'http';
 import compression from 'compression';
 import { initResources } from '../aws/aws.js';
 import { CONSTANTS } from './server-utils.js';
-import { Server as WebSocketServer } from 'ws';
 import initializeRoutes from './server-router.js';
-import { websocketMessage } from './channels/web.js';
-import uuid from 'node-uuid';
 const reportDebug = require('debug')('deepiks:server');
 const reportError = require('debug')('deepiks:server:error');
 

@@ -3,6 +3,7 @@ import * as actions from '../../app-state/actions.js';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
 import {Alert} from 'react-bootstrap';
+import Chat from '../webchat/Chat';
 
 let TestPage = React.createClass({
     getInitialState(){
@@ -50,14 +51,18 @@ let TestPage = React.createClass({
 
         if (this.props.public || currentUser.signedIn) {
             if (this.state.bot) {
-                if (this.state.bot.settings.secretWebchatCode) {
-                    content = (
-                        <iframe
-                            src={`https://webchat.botframework.com/embed/${this.state.bot.settings.secretWebchatCode}`}
-                            frameborder="0"></iframe>
-                    );
+                if (this.props.location.query.direct) {
+                    content = <Chat bot={this.state.bot}/>
                 } else {
-                    content = <Alert bsStyle="danger">Bot configuration is missing webchat secret code</Alert>
+                    if (this.state.bot.settings.secretWebchatCode) {
+                        content = (
+                            <iframe
+                                src={`https://webchat.botframework.com/embed/${this.state.bot.settings.secretWebchatCode}`}
+                                frameborder="0"></iframe>
+                        );
+                    } else {
+                        content = <Alert bsStyle="danger">Bot configuration is missing webchat secret code</Alert>
+                    }
                 }
             } else if (this.state.loading) {
                 content = <div className="wait"><i className="icon-spinner animate-spin"/></div>;

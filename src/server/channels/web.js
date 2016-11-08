@@ -1,70 +1,62 @@
 /* @flow */
 
-import { request, CONSTANTS } from '../server-utils.js';
-import { toStr, waitForAll, composeKeys, decomposeKeys } from '../../misc/utils.js';
-import type { WebhookMessage, ResponseMessage, BotParams, WebchannelMessage } from '../../misc/types.js';
-import deepiksBot from '../deepiks-bot/deepiks-bot.js';
+import type {WebhookMessage, ResponseMessage, WebchannelMessage} from '../../misc/types.js';
+import {deepiksBot} from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
-import type { Request, Response } from 'express';
-import _ from 'lodash';
+import {composeKeys} from '../../misc/utils.js';
 import uuid from 'node-uuid';
-import u from 'util';
-import crypto from 'crypto';
-import { Server as WebSocketServer } from 'ws';
+
 const reportDebug = require('debug')('deepiks:web');
 const reportError = require('debug')('deepiks:web:error');
 
-async function handleWebsocketMessage(
-    messageReceived: WebchannelMessage, wss: WebSocketServer)
-{
-    //Retrieve bot
-    const { publisherId, botId } = messageReceived;
-    const botParams = await aws.getBot(publisherId, botId);
-    if (!botParams) {
-        throw new Error(`Did not find bot with publisherId ${publisherId} and botId ${botId}`);
-    }
+const conversationIdToWebsocket = {};
 
-    //Retrieve message data
-    const { conversationId, senderId, text, timestamp } = messageReceived.data;
+async function handleWebsocketMessage(messageReceived: WebchannelMessage, ws: WebSocket) {
+    reportDebug('Handling received message', typeof messageReceived, messageReceived);
+
+    //Retrieve bot
+    const botParams = await aws.getBot(messageReceived.publisherId, messageReceived.botId);
+
+    //Store the websocket server for the conversationId
+
+    conversationIdToWebsocket[messageReceived.conversationId] = ws;
 
     const message: WebhookMessage = {
-        publisherId_conversationId: composeKeys(botParams.publisherId, message.id),
-        creationTimestamp: new Date(timestamp).getTime(),
-        id: body.id,
-        senderId: senderId,
-        senderIsBot: false,
-        channel: 'web',
-        text: text,
+        publisherId_conversationId: composeKeys(botParams.publisherId, messageReceived.conversationId),
+        creationTimestamp:          +messageReceived.creationTimestamp,
+        id:                         uuid.v1(),
+        channel:                    'web',
+        senderIsBot:                false,
+        senderName:                 'WebChannel user ' + messageReceived.senderId,
+        senderId:                   messageReceived.senderId,
+        text:                       messageReceived.text,
     };
+
+    if (messageReceived.cards) {
+        let cards             = messageReceived.cards;
+        messageReceived.cards = undefined;
+
+        message.fetchCardImages = cards.map(
+            card => () => new Buffer(card.imageUrl.substr(card.imageUrl.indexOf('base64') + 7), 'base64')
+        );
+    }
 
     reportDebug('Got message: ', message);
 
-    await deepiksBot(message, botParams, wss, m => {
-        responses.push(send(botParams, conversationId, m))
-    });
-
-    await waitForAll(responses);
+    try {
+        await deepiksBot(message, botParams, responseMessage => {
+            reply(messageReceived.conversationId, responseMessage);
+        });
+    } catch (e) {
+        reportError(e.message);
+    }
 }
 
-export async function send(botParams: BotParams, conversationId: string,
-                           wss: WebSocketServer, message: ResponseMessage)
-{
-    wss.send(message);
+export function reply(conversationId: string, message: ResponseMessage) {
+    conversationIdToWebsocket[conversationId].send(JSON.stringify(message));
 }
 
-export function websocketMessage(messageReceived: WebchannelMessage,
-    wss: WebSocketServer)
-{
-    res.send(); // respond immediately ???
-    reportDebug('webChannel-message...');
-    handleWebhookRequest(messageReceived, wss)
-    .then(() => {
-        reportDebug('Success')
-    })
-    .catch(err => {
-        reportError('Error: ', err || '-');
-        if (err instanceof Error) {
-            throw err;
-        }
-    });
+export function websocketMessage(messageReceived: WebchannelMessage, ws: WebSocket) {
+    handleWebsocketMessage(messageReceived, ws);
 }
+

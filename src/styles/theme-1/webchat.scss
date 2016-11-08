@@ -1,0 +1,42 @@
+.chatBotContainer {
+    .chatBotHeader {
+        text-align: center;
+        font-size: 18px;
+        padding: 15px;
+        background-color: #f6f6f6;
+    }
+
+    .chatBot {
+        width: 100%;
+        height: 100%;
+        padding: 10px 10px 50px 10px;
+        background-color: #FFF;
+
+        .messagesFeed, .messages-comp {
+            height: 100%;
+        }
+
+        .messages-comp {
+            background-color: inherit;
+            border: none;
+            display: block;
+        }
+
+        .inputBox {
+            height: 40px;
+            margin-top: 10px;
+        }
+
+        .received {
+            color: red;
+        }
+
+        .sent {
+            color: green;
+        }
+
+        .action {
+            cursor: pointer;
+        }
+    }
+}

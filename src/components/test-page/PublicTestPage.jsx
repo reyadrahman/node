@@ -48,7 +48,7 @@ let PublicTestPage = React.createClass({
             content = (
                 <div>
                     <h1>{this.state.bot.botName}</h1>
-                    <TestPage public="true" bot={this.state.bot}/>
+                    <TestPage public="true" bot={this.state.bot} location={this.props.location}/>
                 </div>
             );
         }

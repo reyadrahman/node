@@ -34,6 +34,7 @@
 @import './bot-settings-page.scss';
 @import './polls-page';
 @import './tracking-page';
+@import './webchat';
 
 body, html {
     padding: 0;
@@ -116,6 +117,10 @@ button {
 #app-comp {
     position: relative;
     min-height: 100vh;
+}
+
+.input-group-addon {
+    font-size: 13px;
 }
 
 
