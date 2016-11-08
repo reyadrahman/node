@@ -11,8 +11,6 @@ const reportError = require('debug')('deepiks:web:error');
 
 const conversationIdToWebsocket = {};
 
-const attachmentRegex = /^data:.+\/(.+);base64,(.*)$/;
-
 async function handleWebsocketMessage(messageReceived: WebchannelMessage, ws: WebSocket) {
     reportDebug('Handling received message', typeof messageReceived, messageReceived);
 
@@ -38,13 +36,9 @@ async function handleWebsocketMessage(messageReceived: WebchannelMessage, ws: We
         let cards             = messageReceived.cards;
         messageReceived.cards = undefined;
 
-        message.fetchCardImages = cards.map(card => {
-            let matches = card.imageUrl.match(attachmentRegex);
-            // let ext     = matches[1];
-            let data    = matches[2];
-
-            return () => new Buffer(data, 'base64');
-        });
+        message.fetchCardImages = cards.map(
+            card => () => new Buffer(card.imageUrl.substr(card.imageUrl.indexOf('base64') + 7), 'base64')
+        );
     }
 
     reportDebug('Got message: ', message);
