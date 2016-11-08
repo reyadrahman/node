@@ -53,6 +53,39 @@ let Chat = React.createClass({
         let newMessages = messages.concat([message]);
         this.setState({data: newMessages});
     },
+
+    handleAttachment: function (attachmentDataUrl) {
+        let bot = this.props.bot;
+
+        let messages = this.state.data;
+        let message  = {
+            receivedOrSent:    'sent',
+            publisherId:       bot.publisherId,
+            botId:             bot.botId,
+            senderName:        'You',
+            conversationId:    this.state.conversationId,
+            senderId:          this.state.senderId,
+            creationTimestamp: Date.now(),
+            cards:             [{
+                imageUrl: attachmentDataUrl
+            }]
+        };
+        // message.id = uuid.v1();
+        //Send message to websocket
+
+        reportDebug('handling uploaded image', message);
+        //
+        this.ws.send(JSON.stringify(message));
+
+        let newMessages = messages.concat([message]);
+        this.setState({data: newMessages});
+    },
+
+    handleAction: function (action) {
+        console.log(action);
+        this.handleMessageSubmit(action.postback);
+    },
+
     componentWillMount:  function () {
         this.setState({
             conversationId: uuid.v1(),
@@ -114,8 +147,10 @@ let Chat = React.createClass({
                     {`Hi! I'm ${bot.botName}. Say "hi" if you'd like to chat`}
                 </div>
                 <div className="chatBot">
-                    <Messages messages={ this.state.data }/>
-                    <InputBox onMessageSubmit={ this.handleMessageSubmit }/>
+                    <Messages messages={ this.state.data } handleAction={this.handleAction}/>
+                    <InputBox
+                        onAttachmentSubmit={ this.handleAttachment }
+                        onMessageSubmit={ this.handleMessageSubmit }/>
                 </div>
             </section>
         );

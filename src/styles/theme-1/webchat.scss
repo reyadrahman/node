@@ -25,10 +25,6 @@
         .inputBox {
             height: 40px;
             margin-top: 10px;
-
-            .action {
-                cursor: pointer;
-            }
         }
 
         .received {
@@ -37,6 +33,10 @@
 
         .sent {
             color: green;
+        }
+
+        .action {
+            cursor: pointer;
         }
     }
 }

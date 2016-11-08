@@ -8,6 +8,10 @@ import React from 'react';
 import defaultAvatarUrl from '../../resources/avatar.jpg';
 
 let Messages = React.createClass({
+    handleAction: function(action){
+        this.props.handleAction(action);
+    },
+
     componentDidUpdate: function () {
         if (this.props.messages.length) {
             let messageElements = this.refs.messages.getElementsByClassName('message');
@@ -22,7 +26,7 @@ let Messages = React.createClass({
         return (
             <div ref="messages" className={`messages-comp ${this.props.className || ''}`}>
                 { this.props.messages.map(
-                    (message, i) => <Message message={message}/>
+                    (message, i) => <Message message={message} handleAction={this.handleAction}/>
                 ) }
             </div>
         );
@@ -33,6 +37,7 @@ let Messages = React.createClass({
 const Message = ({
     className,
     message,
+    handleAction,
     ...others
 }) => {
     const profilePic      = message.senderProfilePic || defaultAvatarUrl;
@@ -48,12 +53,15 @@ const Message = ({
                 </div>
                 <Cards
                     cards={message.cards}
+                    handleAction={handleAction}
+
                 />
                 <div className="text">
                     { message.text }
                 </div>
                 <Actions
                     actions={message.actions}
+                    handleAction={handleAction}
                 />
             </div>
             <div className="date">
@@ -67,12 +75,13 @@ const Message = ({
 const Actions = ({
     className,
     actions,
+    handleAction,
     ...others
 }) => {
     if (!actions || actions.length === 0) return null;
 
     const actionsUi = actions.map((x, i) => (
-        <div key={i} className="simple-action">
+        <div key={i} className="simple-action action" onClick={() => handleAction(a)}>
             { x.text }
         </div>
     ));
@@ -88,6 +97,7 @@ const Actions = ({
 const Cards = ({
     className,
     cards,
+    handleAction,
     ...others
 }) => {
     if (!cards || cards.length === 0) return null;
@@ -107,7 +117,7 @@ const Cards = ({
                 </div>
                 {
                     x.actions && x.actions.map((a, j) => (
-                        <div key={j} className="button">
+                        <div key={j} className="button action" onClick={() => handleAction(a)}>
                             {a.text}
                         </div>
                     ))
