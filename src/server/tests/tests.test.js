@@ -10,7 +10,7 @@ import { CONSTANTS, request } from '../server-utils.js';
 import * as serverUtils from '../server-utils.js';
 import * as aws from '../../aws/aws.js';
 import * as deepiksBot from '../deepiks-bot/deepiks-bot.js';
-import * as witAI from '../deepiks-bot/wit-ai.js';
+import * as witAI from '../deepiks-bot/ai/wit-ai.js';
 import * as ce from '../deepiks-bot/conversational-engine/conversational-engine.js';
 import { translations, languages } from '../i18n/translations.js';
 import * as messenger from '../channels/messenger.js';
@@ -220,6 +220,7 @@ describe('::', function() {
                 prefs: {},
                 userRole: 'user',
                 userLastMessage: sampleDBMessage1,
+                conversationId,
             });
         });
 
@@ -449,6 +450,7 @@ describe('::', function() {
                         isVerified: true,
                         lastMessage: message,
                         botId_channel_email: fakeUser.botId_channel_email,
+                        conversationId,
                         prefs: {
                             ...existingUser.prefs,
                             verificationToken,
@@ -562,6 +564,7 @@ describe('::', function() {
                         isVerified: true,
                         lastMessage: message,
                         botId_channel_email: fakeUser.botId_channel_email,
+                        conversationId,
                         prefs: {
                             verificationToken,
                         }

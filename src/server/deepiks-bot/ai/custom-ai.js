@@ -1,28 +1,25 @@
 /* @flow */
 
-import * as aws from '../../aws/aws.js';
+import * as aws from '../../../aws/aws.js';
 import type { DBMessage, BotParams, UserPrefs, RespondFn,
-              CustomAIData, Conversation, ResponseMessage,
-              AIActionRequest } from '../../misc/types.js';
-import { CONSTANTS } from '../server-utils.js';
-import { toStr, composeKeys, decomposeKeys } from '../../misc/utils.js';
-import { runAction } from './ai-helpers.js';
-import { converse as aiEngineConverse } from './conversational-engine/conversational-engine.js';
+              User, Conversation, ResponseMessage,
+              AIActionRequest } from '../../../misc/types.js';
+import { CONSTANTS } from '../../server-utils.js';
+import { toStr, composeKeys, decomposeKeys } from '../../../misc/utils.js';
+import { runAction, CONVERSE_STATUS_STOP, CONVERSE_STATUS_STUCK } from './ai-helpers.js';
+import type { ConverseStatus } from './ai-helpers.js';
+import { converse as aiEngineConverse } from '../conversational-engine/conversational-engine.js';
+import type { ConverseData } from '../conversational-engine/conversational-engine.js';
 import _ from 'lodash';
 import uuid from 'node-uuid';
 const reportDebug = require('debug')('deepiks:custom-ai');
 const reportError = require('debug')('deepiks:custom-ai:error');
 
-type ConverseData =
-    | { type: 'error', session: Object }
-    | { type: 'stop', session: Object }
-    | { type: 'msg', session: Object, msg: ResponseMessage }
-    | { type: 'action', session: Object, action: string };
-
 type ConverseRes = {
     userPrefs: UserPrefs,
     session: Object,
     context: Object,
+    status: ConverseStatus,
 };
 
 async function converse(
@@ -55,8 +52,7 @@ async function converseHelper(
 {
     reportDebug('converseHelper converseData: ', converseData);
     if (level < 0) {
-        reportDebug('converseHelper: Max steps reached, stopping.');
-        return { userPrefs, context, session: converseData.session };
+        throw new Error('converseHelper: Max steps reached');
     }
 
     if (!converseData.type) {
@@ -70,7 +66,11 @@ async function converseHelper(
     }
 
     if (converseData.type === 'stop') {
-        return { userPrefs, context, session: converseData.session };
+        return { userPrefs, context, session: converseData.session, status: CONVERSE_STATUS_STOP };
+    }
+
+    if (converseData.type === 'stuck') {
+        return { userPrefs, context, session: converseData.session, status: CONVERSE_STATUS_STUCK };
     }
 
     if (converseData.type === 'msg') {
@@ -144,7 +144,7 @@ function parseResponseMessage(msg) {
                 .filter(Boolean)
             )
             .filter(x => x.length > 0)
-            .map(([ action, ...args ]) => ({ action, args }))
+            .map(([ action, ...args ]) => ({ action, args }));
         response.text = preprocessorMatch[2];
     }
 
@@ -154,15 +154,12 @@ function parseResponseMessage(msg) {
 export async function ai(
     message: DBMessage,
     botParams: BotParams,
+    conversation: Conversation,
+    user: User,
     respondFn: RespondFn
-) {
+) : Promise<ConverseStatus> {
     reportDebug('ai message: ', message);
     const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
-
-    const [conversation, user] = await Promise.all([
-        aws.getConversation(publisherId, botParams.botId, conversationId),
-        aws.getUserByUserId(publisherId, botParams.botId, message.channel, message.senderId),
-    ]);
 
     const userPrefs = user && user.prefs || {};
     reportDebug('ai userPrefs: ', userPrefs);
@@ -176,7 +173,7 @@ export async function ai(
     }
     const oldCustomAIData = conversation.customAIData || {};
 
-    const { session, context, userPrefs: newUserPrefs } =
+    const { session, context, userPrefs: newUserPrefs, status } =
         await converse(text, message,
                        oldCustomAIData.session || {},
                        oldCustomAIData.context || {},
@@ -206,6 +203,8 @@ export async function ai(
             },
         }),
     ]);
+
+    return status;
 }
 
 export default ai;

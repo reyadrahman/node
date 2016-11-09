@@ -1,11 +1,12 @@
 /* @flow */
 
-import * as aws from '../../aws/aws.js';
-import type { DBMessage, BotParams, UserPrefs, WitData,
-              RespondFn, AIActionRequest } from '../../misc/types.js';
-import { CONSTANTS } from '../server-utils.js';
-import { toStr, composeKeys, decomposeKeys } from '../../misc/utils.js';
-import { runAction } from './ai-helpers.js';
+import * as aws from '../../../aws/aws.js';
+import type { DBMessage, BotParams, UserPrefs, WitData, User, Conversation,
+              RespondFn, AIActionRequest } from '../../../misc/types.js';
+import { CONSTANTS } from '../../server-utils.js';
+import { toStr, composeKeys, decomposeKeys } from '../../../misc/utils.js';
+import { runAction, CONVERSE_STATUS_STOP } from './ai-helpers.js';
+import type { ConverseStatus } from './ai-helpers.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
 import uuid from 'node-uuid';
@@ -201,20 +202,16 @@ function converseDataToResponseMessage(converseData) {
 export async function ai(
     message: DBMessage,
     botParams: BotParams,
+    conversation: Conversation,
+    user: User,
     respondFn: RespondFn
-) {
+) : Promise<ConverseStatus> {
     reportDebug('ai message: ', message);
     if (!botParams.settings.witAccessToken) {
         throw new Error(`Bot doesn't have witAccessToken: ${toStr(botParams)}`);
     }
 
     const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
-
-
-    const [conversation, user] = await Promise.all([
-        aws.getConversation(publisherId, botParams.botId, conversationId),
-        aws.getUserByUserId(publisherId, botParams.botId, message.channel, message.senderId),
-    ]);
 
     const witData = Object.assign({
         sessionId: uuid.v4(),
@@ -264,6 +261,8 @@ export async function ai(
             },
         }),
     ]);
+
+    return CONVERSE_STATUS_STOP;
 }
 
 export default ai;

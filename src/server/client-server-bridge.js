@@ -383,6 +383,7 @@ async function saveUser(
                 botId, channel, `dummy::${shortLowerCaseRandomId()}`
             ),
             botId_channel_email: composeKeys(botId, channel, email),
+            conversationId: `dummy`,
             userRole,
             prefs: {},
             isFake: true,
@@ -437,12 +438,14 @@ async function saveUser(
         UpdateExpression:
             ' SET    botId_channel_email = :bce      ' +
             ',       userRole            = :userRole ' +
+            ',       conversationId      = :ci       ' +
             ' REMOVE prefs.verificationToken         ' +
             ',       isVerified                      ' +
             ',       unverifiedVerificationToken     ',
         ExpressionAttributeValues: {
             ':bce': composeKeys(botId, channel, email),
             ':userRole': userRole,
+            ':ci': 'dummy'
         },
         ReturnValues: 'ALL_NEW'
     });

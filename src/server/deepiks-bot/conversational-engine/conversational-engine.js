@@ -10,10 +10,20 @@ import streamifier from 'streamifier';
 const reportDebug = require('debug')('deepiks:conversational-engine');
 const reportError = require('debug')('deepiks:conversational-engine:error');
 
+type ConverseData_ =
+    | { type: 'error' }
+    | { type: 'stop' }
+    | { type: 'stuck' }
+    | { type: 'msg', msg: ResponseMessage }
+    | { type: 'action', action: string };
+
+// TODO fix flow type
+export type ConverseData = { session: Object } & ConverseData_;
+
 export async function converse(
     text: ?string, userPrefs: UserPrefs, session: Object,
     context: Object, botParams: BotParams
-) {
+) : Promise<ConverseData> {
     const stories = await getStoriesFromS3(botParams);
     reportDebug('converse stories: ', stories);
     if (!stories) {
@@ -179,17 +189,17 @@ function matchUserInput(userInput, stories, userTurnsAndPaths) {
         };
     }
 
-    return userTurnsAndPaths && userTurnsAndPaths[0];
+    return null;
 }
 
 function converseHelper(
     userInput: ?string, session: Object, context: Object,
     stories: Object, bookmarks: Object
-) {
+) : ConverseData {
     let initPath = (session.path || []).slice();
     let initLeafIsExpectingUserInput = session.leafIsExpectingUserInput;
     let leafIsExpectingUserInput = false;
-    let ret = { type: 'stop' };
+    let ret: ConverseData_ = { type: 'stop' };
     let path = [];
 
     handleStories();
@@ -321,9 +331,9 @@ function converseHelper(
                 userInput = null;
                 if (!x) {
                     ret = {
-                        type: 'error',
-                        errorMsg: `handleTurnUser: user input didn't match`,
+                        type: 'stuck',
                     };
+                    leafIsExpectingUserInput = true;
                     return true;
                 }
                 path = x.path;
@@ -349,9 +359,9 @@ function converseHelper(
                 userInput = null;
                 if (!x) {
                     ret = {
-                        type: 'error',
-                        errorMsg: `handleTurnBranches: user input didn't match any branch`,
+                        type: 'stuck',
                     };
+                    leafIsExpectingUserInput = true;
                     return true;
                 }
                 path = x.path;
@@ -390,9 +400,9 @@ function converseHelper(
             const userTurnAndPath = matchUserInput(userInput, stories);
             if (!userTurnAndPath) {
                 ret = {
-                    type: 'error',
-                    errorMsg: `didn't understand user`,
+                    type: 'stuck',
                 };
+                leafIsExpectingUserInput = initLeafIsExpectingUserInput;
                 return true;
             }
 
@@ -414,7 +424,7 @@ function converseHelper(
         return false;
     }
 
-    const returnValue = {
+    const returnValue: ConverseData = {
         ...ret,
         session: {
             path,
@@ -434,7 +444,6 @@ function insp(x) {
 export {
     converseHelper as _converseHelper,
     collectBookmarks as _collectBookmarks,
-    getStoriesFromZipBuffer as _getStoriesFromZipBuffer
 };
 
 

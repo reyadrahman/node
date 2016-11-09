@@ -6,6 +6,7 @@ export type User = {
     botId_channel_userId: string,
     prefs: UserPrefs,
     userRole: 'user' | 'admin' | 'none',
+    conversationId: string,
     botId_channel_email?: string,
     userLastMessage?: DBMessage,
     unverifiedVerificationToken?: string,
@@ -35,6 +36,10 @@ export type Conversation = {
         type: 'string',
         values: string[],
     },
+    transferredToHuman?: boolean,
+    transferredConversations?: {[key: string]: {
+        lastMessage: DBMessage,
+    }},
 };
 
 export type ChannelData = {
@@ -197,6 +202,11 @@ export type BotParams = {
     defaultLanguage: string,
     publisherId: string,
     onlyAllowedUsersCanChat: boolean,
+    feeds?: FeedConfig[],
+    humanTransfer?: {
+        userId: string,
+        channel: string,
+    },
     settings: {
         ciscosparkAccessToken?: string,
         ciscosparkBotPersonId?: string,
@@ -214,7 +224,6 @@ export type BotParams = {
         dashbotGenericKey?: string,
         secretWebchatCode?: string,
     },
-    feeds?: FeedConfig[],
 };
 
 export type AIActionInfo = {

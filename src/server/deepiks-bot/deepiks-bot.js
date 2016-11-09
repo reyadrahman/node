@@ -5,8 +5,7 @@ import { callbackToPromise, toStr, destructureS3Url, timeout,
          composeKeys, decomposeKeys, waitForAll,
          shortLowerCaseRandomId } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
-import witAI from './wit-ai.js';
-import customAI from './custom-ai.js';
+import ai from './ai/ai.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
               ChannelData, Conversation, RespondFn, User } from '../../misc/types.js';
 import { translations as tr, languages as langs } from '../i18n/translations.js';
@@ -180,6 +179,7 @@ async function verifyUser(
         }
 
         // update userWithEmail.unverifiedVerificationToken = new token
+        //        and conversationId
         const newVerificationToken = shortLowerCaseRandomId();
         reportDebug('verifyUser newVerificationToken: ', newVerificationToken);
         await aws.dynamoUpdate({
@@ -246,6 +246,7 @@ async function verifyUser(
         return await respondFn(textToResponseMessage(strings.enterVerificationToken));
     }
 
+    const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
     // update user
     await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_USERS,
@@ -259,6 +260,7 @@ async function verifyUser(
             ',       isVerified               = :iv  ' +
             ',       prefs.verificationToken  = :t   ' +
             ',       lastMessage              = :lm  ' +
+            ',       conversationId           = :ci  ' +
             ' REMOVE associatedFakeUserId            ' +
             ',       unverifiedVerificationToken     ',
         ExpressionAttributeValues: {
@@ -267,6 +269,7 @@ async function verifyUser(
             ':iv':  true,
             ':t':   token,
             ':lm':  message,
+            ':ci':  conversationId,
         },
     });
 
@@ -754,7 +757,7 @@ async function updateUsersTable(
     message: DBMessage, botParams: BotParams,
 ) {
     reportDebug('updateUsersTable');
-
+    const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
     await aws.dynamoUpdate({
         TableName: CONSTANTS.DB_TABLE_USERS,
         Key: {
@@ -763,11 +766,13 @@ async function updateUsersTable(
         },
         UpdateExpression: 'SET userLastMessage = :userLastMessage' +
                           ', prefs = if_not_exists(prefs, :defaultPrefs)' +
-                          ', userRole = if_not_exists(userRole, :defaultUserRole)',
+                          ', userRole = if_not_exists(userRole, :defaultUserRole)' +
+                          ', conversationId = :conversationId',
         ExpressionAttributeValues: {
             ':userLastMessage': aws.dynamoCleanUpObj(message),
             ':defaultUserRole': 'user',
             ':defaultPrefs': {},
+            ':conversationId': conversationId,
         },
     });
 }
@@ -855,11 +860,7 @@ async function handleProcessedDBMessage(
         logMessage(dbMessage),
     ]);
     dbMessage = await pollMiddleware(dbMessage, botParams, respondFn);
-    if (botParams.settings.witAccessToken) {
-        await witAI(dbMessage, botParams, respondFn);
-    } else {
-        await customAI(dbMessage, botParams, respondFn);
-    }
+    await ai(dbMessage, botParams, respondFn);
 }
 
 export async function deepiksBot(message: WebhookMessage,

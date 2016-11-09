@@ -1,16 +1,20 @@
 /* @flow */
 
-import * as aws from '../../aws/aws.js';
-import { CONSTANTS, request } from '../server-utils.js';
-import { toStr } from '../../misc/utils.js';
-import localActions from './ai-actions/all-actions.js';
-import type { AIActionRequest, ExternalAIActionRequest } from '../../misc/types.js';
+import * as aws from '../../../aws/aws.js';
+import { CONSTANTS, request } from '../../server-utils.js';
+import { toStr } from '../../../misc/utils.js';
+import localActions from './actions/all-actions.js';
+import type { AIActionRequest, ExternalAIActionRequest } from '../../../misc/types.js';
 import uuid from 'node-uuid';
 const reportDebug = require('debug')('deepiks:ai-helpers');
 const reportError = require('debug')('deepiks:ai-helpers:error');
-import type { DBMessage, BotParams, UserPrefs } from '../../misc/types.js';
+import type { DBMessage, BotParams, UserPrefs } from '../../../misc/types.js';
 
 reportDebug('localActions: ', localActions);
+
+export const CONVERSE_STATUS_STOP = 'CONVERSE_STATUS_STOP';
+export const CONVERSE_STATUS_STUCK = 'CONVERSE_STATUS_STUCK';
+export type ConverseStatus = 'CONVERSE_STATUS_STOP' | 'CONVERSE_STATUS_STUCK';
 
 function generateS3PolicyForAction(publisherId: string, botId: string, senderId: string): string {
     return JSON.stringify({

@@ -9,6 +9,13 @@ export default {
         enterVerificationToken: `Please enter your verification code`,
         successfullyVerified: `Thanks, your email address has been verified`,
     },
+    ai: {
+        didNotUnderstand: `Sorry, didn't get that`,
+        transferMessage: `One moment please. I am still a trainee. Let me get some help...`,
+        askForResponseWithHistory: `Whats your response to the above messages?`,
+        askForResponseWithoutHistory: `Whats your response to the above message?`,
+        imagePlaceholder: `[image]`,
+    },
     errors: {
         general: 'Sorry, there seems to be a problem...',
     },

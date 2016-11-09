@@ -9,6 +9,13 @@ export default {
         enterVerificationToken: `Veuillez entrer votre code de vérification`,
         successfullyVerified: `Merci, vous êtes autorisé à dialoguer avec ce bot`,
     },
+    ai: {
+        didNotUnderstand: `FR Sorry, didn't get that`,
+        transferMessage: `FR One moment please. I am still a trainee. Let me get some help...`,
+        askForResponseWithHistory: `FR Whats your response to the above messages?`,
+        askForResponseWithoutHistory: `FR Whats your response to the above message?`,
+        imagePlaceholder: `[FR image]`,
+    },
     errors: {
         general: 'Désolé, il semble qu\'il y ait un problème...',
     },
