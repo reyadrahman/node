@@ -40,7 +40,7 @@ export default async function ai(
         );
         if (!expectsReply) {
             const transferredConversations = _.omit(
-                conversation.transferredConversation, conversationId
+                conversation.transferredConversations, refConversationId
             );
             await Promise.all([
                 aws.dynamoUpdate({
