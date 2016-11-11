@@ -4,8 +4,7 @@
 import AWS from 'aws-sdk';
 import { callbackToPromise, pushMany, composeKeys } from '../misc/utils.js';
 import { CONSTANTS, request } from '../server/server-utils.js';
-import type { BotParams, AIActionInfo, Conversation, User,
-              Invitation } from '../misc/types.js';
+import type { BotParams, AIActionInfo, Conversation, User } from '../misc/types.js';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';

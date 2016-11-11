@@ -8,10 +8,13 @@ import { CONSTANTS } from '../../server-utils.js';
 import { toStr, composeKeys, decomposeKeys } from '../../../misc/utils.js';
 import { runAction, CONVERSE_STATUS_STOP, CONVERSE_STATUS_STUCK } from './ai-helpers.js';
 import type { ConverseStatus } from './ai-helpers.js';
-import { converse as aiEngineConverse } from '../conversational-engine/conversational-engine.js';
+import { converse as aiEngineConverse,
+         learnFromHumanTransfer as aiEngineLearnFromHumanTransfer
+       } from '../conversational-engine/conversational-engine.js';
 import type { ConverseData } from '../conversational-engine/conversational-engine.js';
+import JSZip from 'jszip';
 import _ from 'lodash';
-import uuid from 'node-uuid';
+import { inspect } from 'util';
 const reportDebug = require('debug')('deepiks:custom-ai');
 const reportError = require('debug')('deepiks:custom-ai:error');
 
@@ -33,9 +36,19 @@ async function converse(
     respondFn: RespondFn
 ) : Promise<ConverseRes>
 {
-    let converseData = await aiEngineConverse(text, userPrefs, session, context, botParams);
-    return await converseHelper(text, originalMessage, context, userPrefs,
-                                botParams, conversation, respondFn, converseData, 10);
+    const stories = await getStoriesFromS3(botParams);
+    reportDebug('converse stories: ', stories);
+    if (!stories) {
+        throw new Error('converse no stories found');
+    }
+
+    let converseData = aiEngineConverse(
+        text, session, context, stories
+    );
+    return await converseHelper(
+        text, originalMessage, context, userPrefs, stories, botParams,
+        conversation, respondFn, converseData, 10
+    );
 }
 
 async function converseHelper(
@@ -43,6 +56,7 @@ async function converseHelper(
     originalMessage: DBMessage,
     context: Object,
     userPrefs: UserPrefs,
+    stories: Object,
     botParams: BotParams,
     conversation: Conversation,
     respondFn: RespondFn,
@@ -79,12 +93,12 @@ async function converseHelper(
             ...parseResponseMessage(converseData.msg),
             creationTimestamp: Date.now(),
         });
-        const newConverseData = await aiEngineConverse(
-            null, userPrefs, converseData.session, context, botParams
+        const newConverseData = aiEngineConverse(
+            null, converseData.session, context, stories
         );
         await resP;
         return await converseHelper(
-            text, originalMessage, context, userPrefs, botParams,
+            text, originalMessage, context, userPrefs, stories, botParams,
             conversation, respondFn, newConverseData, level-1
         );
 
@@ -118,10 +132,10 @@ async function converseHelper(
         //     session: customAIData.session,
         // };
         const newConverseData =
-            await aiEngineConverse(null, userPrefs, converseData.session, context, botParams);
+            aiEngineConverse(null, converseData.session, context, stories);
         await resP;
         return await converseHelper(
-            text, originalMessage, context, newUserPrefs, botParams,
+            text, originalMessage, context, newUserPrefs, stories, botParams,
             conversation, respondFn, newConverseData, level-1
         );
     }
@@ -149,6 +163,24 @@ function parseResponseMessage(msg) {
     }
 
     return response;
+}
+
+// TODO cache stories
+async function getStoriesFromS3(botParams) {
+    const { publisherId, botId } = botParams;
+    const res = await aws.s3GetObject({
+        Bucket: CONSTANTS.S3_BUCKET_NAME,
+        Key: `${publisherId}/${botId}/bot.zip`,
+    });
+    if (!res) return null;
+
+    // const stories = await getStoriesFromZipBuffer(res.Body);
+    const zip = await JSZip.loadAsync(res.Body);
+    const storiesStr = await zip.file('stories.json').async('string');
+    const stories = JSON.parse(storiesStr);
+
+    reportDebug('getStoriesFromS3 stories: ', inspect(stories, { depth: null }));
+    return stories.data;
 }
 
 export async function ai(
@@ -207,5 +239,54 @@ export async function ai(
     return status;
 }
 
-export default ai;
+export async function learnFromHumanTransfer(
+    responseText: string, botParams: BotParams, toConversation: Conversation,
+    originConversation: Conversation, expectsReply: boolean
+) {
+    const stories = await getStoriesFromS3(botParams);
+    if (!stories) {
+        throw new Error('learnFromHumanTransfer failed to get/parse stories from S3');
+    }
+
+    const { publisherId, botId } = botParams;
+    const cad = originConversation.customAIData || {};
+    const oci = decomposeKeys(originConversation.botId_conversationId)[1];
+    const originalMessage = toConversation.transferredConversations[oci].lastMessage;
+    const res = aiEngineLearnFromHumanTransfer(
+        responseText, originalMessage, cad.session || {}, stories, expectsReply
+    );
+    reportDebug('aiEngineLearnFromHumanTransfer returned ', inspect(res, { depth: null }));
+
+    // update conversations table
+    const updateConversationsP = aws.dynamoUpdate({
+        TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+        Key: {
+            publisherId: publisherId,
+            botId_conversationId: composeKeys(botId, oci),
+        },
+        UpdateExpression: 'SET customAIData = :cad',
+        ExpressionAttributeValues: {
+            ':cad': aws.dynamoCleanUpObj({
+                session: res.session,
+                context: cad.context || {},
+            }),
+        },
+    });
+
+    // zip stories.json into bot.zip and upload to s3
+    const zip = new JSZip();
+    zip.file('stories.json', JSON.stringify({ data: res.stories }, null, ' '));
+    const zipStream = zip.generateNodeStream({
+        type: 'nodebuffer',
+        streamFiles: true,
+    });
+
+    await aws.s3Upload({
+        Bucket: CONSTANTS.S3_BUCKET_NAME,
+        Key: `${publisherId}/${botId}/bot.zip`,
+        Body: zipStream,
+    });
+
+    await updateConversationsP;
+}
 

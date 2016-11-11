@@ -223,7 +223,6 @@ export default {
         categoriesPlaceholder: 'Enter categories separated by comma',
         source: 'Source',
         publishHourLabel: 'Publish every day at ',
-        create: 'Create',
         twitterScreenName: '@screenName',
         rssUrl: 'https://example.com/rss-feed',
         requiredField: 'required field',

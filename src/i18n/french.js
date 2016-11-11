@@ -222,7 +222,6 @@ export default {
         categoriesPlaceholder: 'Entrez les catégories, séparées par une virgule',
         source: 'Source',
         publishHourLabel: 'Diffusé chaque jour à ',
-        create: 'Créer',
         twitterScreenName: '@screenName',
         rssUrl: 'https://example.com/rss-feed',
         requiredField: 'Champs obligatoire',

@@ -1,6 +1,6 @@
 /* @flow */
 
-import type { AIActionRequest } from '../../../misc/types.js';
+import type { AIActionRequest } from '../../../../misc/types.js';
 import _ from 'lodash';
 const reportDebug = require('debug')('deepiks:store-preferences');
 const reportError = require('debug')('deepiks:store-preferences:error');

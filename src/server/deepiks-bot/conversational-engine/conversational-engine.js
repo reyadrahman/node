@@ -1,12 +1,8 @@
 /* @flow */
 
-import * as aws from '../../../aws/aws.js';
-import { CONSTANTS } from '../../server-utils.js';
-import type { DBMessage, BotParams, UserPrefs,
-              Conversation, ResponseMessage } from '../../../misc/types.js';
+import type { DBMessage, ResponseMessage } from '../../../misc/types.js';
 import { inspect } from 'util';
-import unzip from 'unzip';
-import streamifier from 'streamifier';
+import _ from 'lodash';
 const reportDebug = require('debug')('deepiks:conversational-engine');
 const reportError = require('debug')('deepiks:conversational-engine:error');
 
@@ -20,77 +16,6 @@ type ConverseData_ =
 // TODO fix flow type
 export type ConverseData = { session: Object } & ConverseData_;
 
-export async function converse(
-    text: ?string, userPrefs: UserPrefs, session: Object,
-    context: Object, botParams: BotParams
-) : Promise<ConverseData> {
-    const stories = await getStoriesFromS3(botParams);
-    reportDebug('converse stories: ', stories);
-    if (!stories) {
-        throw new Error('no stories found');
-    }
-
-    const bookmarks = collectBookmarks(stories);
-    return converseHelper(text, session, context, stories, bookmarks);
-}
-
-// TODO cache stories
-async function getStoriesFromS3(botParams) {
-    const { publisherId, botId } = botParams;
-    const res = await aws.s3GetObject({
-        Bucket: CONSTANTS.S3_BUCKET_NAME,
-        Key: `${publisherId}/${botId}/bot.zip`,
-    });
-    if (!res) return null;
-
-    const stories = await getStoriesFromZipBuffer(res.Body);
-    reportDebug('getStoriesFromS3 stories: ', stories);
-    return stories.data;
-}
-
-function getStoriesFromZipBuffer(buffer: Buffer): Promise<any> {
-    return new Promise((resolve, reject) => {
-        let content = '';
-        const readStream = streamifier.createReadStream(buffer);
-        readStream.pipe(unzip.Parse())
-            .on('entry', entry => {
-                reportDebug('entry.path: ', entry.path);
-                if (entry.path === 'stories.json') {
-                    reportDebug('got stories.json entry');
-                    entry
-                        .on('data', buf => {
-                            reportDebug('entry on data');
-                            content += buf.toString();
-                        })
-                        .on('end', () => {
-                            reportDebug('entry on end');
-                            let parsed;
-                            try {
-                                parsed = JSON.parse(content);
-                            } catch(error) {
-                                return reject(new Error('error while parsing stories', error));
-                            }
-                            resolve(parsed);
-                        })
-                        .on('error', error => {
-                            reportDebug('entry on error ', error);
-                            reject(error);
-                        });
-                } else {
-                    entry.autodrain();
-                }
-            })
-            .on('end', () => {
-                if (content) return;
-                reject(new Error(`coudn't read and extract stories.json from zip file`));
-            })
-            .on('error', error => {
-                reportDebug('readStream on error ', error);
-                reject(error);
-            });
-
-    });
-}
 
 function collectBookmarks(stories: Object) {
     let path = [];
@@ -147,7 +72,7 @@ function collectBookmarks(stories: Object) {
 
     function handleTurns(turns) {
         turns.forEach((turn, i) => {
-            const handler = turn.user ? handleTurnUser : handleTurnBranches;
+            const handler = turn.user === undefined ? handleTurnBranches : handleTurnUser;
             path.push(i);
             handler(turn);
             path.pop();
@@ -171,9 +96,10 @@ function collectBookmarks(stories: Object) {
 function matchUserInput(userInput, stories, userTurnsAndPaths) {
     userInput = userInput.trim().toLowerCase();
     if (userTurnsAndPaths) {
-        const userTurnIndex = userTurnsAndPaths.findIndex(
-            x => userInput === x.userTurn.user.trim().toLowerCase()
-        );
+        const userTurnIndex = userTurnsAndPaths.findIndex(x => {
+            return !x.userTurn.user.placeholder &&
+                userInput === x.userTurn.user.trim().toLowerCase()
+        });
         if (userTurnIndex >= 0) {
             return userTurnsAndPaths[userTurnIndex];
         }
@@ -192,10 +118,11 @@ function matchUserInput(userInput, stories, userTurnsAndPaths) {
     return null;
 }
 
-function converseHelper(
-    userInput: ?string, session: Object, context: Object,
-    stories: Object, bookmarks: Object
+export function converse(
+    userInput: ?string, session: Object, context: Object, stories: Object
 ) : ConverseData {
+
+    const bookmarks = collectBookmarks(stories);
     let initPath = (session.path || []).slice();
     let initLeafIsExpectingUserInput = session.leafIsExpectingUserInput;
     let leafIsExpectingUserInput = false;
@@ -383,7 +310,7 @@ function converseHelper(
         let turnIndex = initPath.shift() || 0;
         for (; turnIndex<turns.length; turnIndex++) {
             const turn = turns[turnIndex];
-            const handler = turn.user ? handleTurnUser : handleTurnBranches;
+            const handler = turn.user === undefined ? handleTurnBranches : handleTurnUser;
             path.push(turnIndex);
             if (handler(turn)) return true;
             path.pop();
@@ -431,9 +358,189 @@ function converseHelper(
             leafIsExpectingUserInput,
         },
     };
-    reportDebug('converseHelper returning ', insp(returnValue));
+    reportDebug('converse returning ', insp(returnValue));
 
     return returnValue;
+}
+
+export function learnFromHumanTransfer(
+    responseText: string, originalMessage: DBMessage, session: Object,
+    stories: Object, expectsReply: boolean
+) {
+    reportDebug('learnFromHumanTransfer');
+    let initPath = (session.path || []).slice();
+    let leafIsExpectingUserInput = false;
+    let path = [];
+    // TODO instead of cloneDeep use icepick for manipulating immutable data structures
+    stories = _.cloneDeep(stories);
+
+    const createPlaceholderTurn = () => ({
+        user: '',
+        placeholder: true,
+        entities: [],
+        operations: [],
+    });
+
+    const learnedTurn = {
+        user: originalMessage.text,
+        entities: [],
+        operations: [
+            {
+                action: `template-${responseText}`,
+            }
+        ],
+    };
+
+
+    if (initPath.length > 0 && !session.leafIsExpectingUserInput) {
+        throw new Error('learnFromHumanTransfer requires session.leafIsExpectingUserInput');
+    }
+
+    handleStories();
+
+    function handleOpBranches(op) {
+        reportDebug('handleOpBranches branches', insp(op));
+        reportDebug('handleOpBranches stack', insp(path));
+        reportDebug('handleOpBranches initPath', insp(initPath));
+        let branchIndex = initPath.shift();
+        const branch = op.branches[branchIndex];
+        let i = initPath.shift();
+        const handlers = [handleOps, handleTurns];
+        const key = ['operations', 'turns'][i];
+        path.push(branchIndex);
+        path.push(i);
+        handlers[i](branch[key]);
+    }
+
+    function handleOps(ops) {
+        reportDebug('handleOps ops', insp(ops));
+        reportDebug('handleOps path', insp(path));
+        reportDebug('handleOps initPath', insp(initPath));
+        let opIndex = initPath.shift();
+        const op = ops[initPath.shift()];
+        if (!op.branches) {
+            throw new Error('learnFromHumanTransfer handleOps requires op.branches');
+        }
+        path.push(opIndex);
+        handleOpBranches(ops[opIndex]);
+    }
+
+    function handleTurnUser(turn, turnIndex, turns) {
+        reportDebug('handleTurnUser turn:', insp(turn));
+        reportDebug('handleTurnUser path:', insp(path));
+        reportDebug('handleTurnUser initPath:', insp(initPath));
+        if (initPath.length) {
+            return handleOps(turn.operations);
+        }
+
+        if (turn.placeholder) {
+            turns[turnIndex] = learnedTurn;
+
+            if (expectsReply) {
+                turns.push(createPlaceholderTurn());
+                path.splice(path.length-1, 1, turns.length-1);
+                leafIsExpectingUserInput = true;
+            } else {
+                path = [];
+            }
+
+            return;
+        }
+
+        const restTurns = turns.splice(turnIndex);
+
+        const newBranch = [
+            learnedTurn
+        ];
+
+        if (expectsReply) {
+            newBranch.push(createPlaceholderTurn());
+            path.push(1);
+            path.push(1);
+            leafIsExpectingUserInput = true;
+
+        } else {
+            path = [];
+        }
+
+        turns.push({
+            branches: [
+                restTurns,
+                newBranch,
+            ],
+        });
+
+    }
+
+    function handleTurnBranches(turn) {
+        reportDebug('handleTurnBranches turn:', insp(turn));
+        reportDebug('handleTurnBranches path:', insp(path));
+        reportDebug('handleTurnBranches initPath:', insp(initPath));
+        let branchIndex = initPath.shift();
+        if (branchIndex !== undefined) {
+            path.push(branchIndex);
+            return handleTurns(turn.branches[branchIndex]);
+        }
+
+        const newBranch = [];
+        turn.branches.push(newBranch);
+
+        newBranch.push(learnedTurn);
+
+        if (expectsReply) {
+            newBranch.push(createPlaceholderTurn());
+            path.push(turn.branches.length-1);
+            path.push(1);
+            leafIsExpectingUserInput = true;
+        } else {
+            path = [];
+        }
+    }
+
+    function handleTurns(turns) {
+        reportDebug('handleTurns turns', insp(turns));
+        reportDebug('handleTurns path', insp(path));
+        reportDebug('handleTurns initPath:', insp(initPath));
+        let turnIndex = initPath.shift();
+        const turn = turns[turnIndex];
+        const handler = turn.user === undefined ? handleTurnBranches : handleTurnUser;
+        path.push(turnIndex);
+        handler(turn, turnIndex, turns);
+    }
+
+    function handleStories() {
+        reportDebug('handleStories');
+        reportDebug('handleStories initPath:', insp(initPath));
+        if (initPath.length) {
+            const storyIndex: number = initPath.shift();
+            path = [storyIndex];
+            return handleTurns(stories[storyIndex].turns);
+        }
+
+        const newTurns = [
+            learnedTurn,
+        ];
+        if (expectsReply) {
+            newTurns.push(createPlaceholderTurn());
+            path = [stories.length, 1];
+            leafIsExpectingUserInput = true;
+        } else {
+            path = [];
+        }
+
+        stories.push({
+            name: '', // TODO pick an appropriate name
+            turns: newTurns
+        });
+    }
+
+    return {
+        stories,
+        session: {
+            path,
+            leafIsExpectingUserInput
+        }
+    };
 }
 
 function insp(x) {
@@ -442,8 +549,9 @@ function insp(x) {
 
 // for testing
 export {
-    converseHelper as _converseHelper,
+    converse as _converse,
     collectBookmarks as _collectBookmarks,
+    learnFromHumanTransfer as _learnFromHumanTransfer,
 };
 
 

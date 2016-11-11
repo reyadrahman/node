@@ -1,6 +1,6 @@
 /* @flow */
 
-import type { AIActionRequest } from '../../../misc/types.js';
+import type { AIActionRequest } from '../../../../misc/types.js';
 const reportDebug = require('debug')('deepiks:got-attachment');
 const reportError = require('debug')('deepiks:got-attachment:error');
 

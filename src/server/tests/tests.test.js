@@ -23,6 +23,8 @@ import uuid from 'node-uuid';
 import sparkClient from 'ciscospark';
 import type { Request, Response } from 'express';
 import crypto from 'crypto';
+import ice from 'icepick';
+import JSZip from 'jszip';
 
 const reportDebug = require('debug')('deepiks:tests');
 const reportError = require('debug')('deepiks:tests:error');
@@ -138,6 +140,29 @@ const updateConversationsTable1 = _.once(() => {
         sampleDBMessage1, sampleBotParams1, sampleChannelData1);
 });
 
+const sampleConversation1 = {
+    lastMessage: sampleDBMessage1,
+    botId_conversationId: composeKeys(sampleBotParams1.botId, sampleConversationId1),
+    botId_lastInteractiveMessageTimestamp_messageId:
+        composeKeys(sampleBotParams1.botId, sampleDBMessage1.creationTimestamp, sampleDBMessage1.id),
+    channel: sampleDBMessage1.channel,
+    botId: sampleBotParams1.botId,
+    publisherId: sampleBotParams1.publisherId,
+    channelData: sampleChannelData1,
+    lastParticipantProfilePic: sampleDBMessage1.senderProfilePic,
+    participantsNames: aws.dynamoCreateSet([sampleDBMessage1.senderName]),
+    participantsIds: aws.dynamoCreateSet([sampleDBMessage1.senderId]),
+};
+
+const sampleUser1 = {
+    publisherId: sampleBotParams1.publisherId,
+    botId_channel_userId: composeKeys(sampleBotParams1.botId, sampleDBMessage1.channel, sampleDBMessage1.senderId),
+    prefs: {},
+    userRole: 'user',
+    userLastMessage: sampleDBMessage1,
+    conversationId: sampleConversationId1,
+}
+
 describe('::', function() {
     this.timeout(15000);
 
@@ -191,18 +216,7 @@ describe('::', function() {
             const [, conversationId] = decomposeKeys(sampleDBMessage1.publisherId_conversationId);
 
             const conv = await aws.getConversation(publisherId, botId, conversationId);
-            expect(conv).eql({
-                lastMessage: sampleDBMessage1,
-                botId_conversationId: composeKeys(botId, conversationId),
-                botId_lastInteractiveMessageTimestamp_messageId: composeKeys(botId, sampleDBMessage1.creationTimestamp, sampleDBMessage1.id),
-                channel: sampleDBMessage1.channel,
-                botId,
-                publisherId,
-                channelData: sampleChannelData1,
-                lastParticipantProfilePic: sampleDBMessage1.senderProfilePic,
-                participantsNames: aws.dynamoCreateSet([sampleDBMessage1.senderName]),
-                participantsIds: aws.dynamoCreateSet([sampleDBMessage1.senderId]),
-            });
+            expect(conv).eql(sampleConversation1);
         });
 
         it('=> updates users table', async function () {
@@ -214,14 +228,7 @@ describe('::', function() {
 
             const user = await aws.getUserByUserId(publisherId, botId, channel, senderId);
 
-            expect(user).eql({
-                publisherId,
-                botId_channel_userId: composeKeys(botId, channel, senderId),
-                prefs: {},
-                userRole: 'user',
-                userLastMessage: sampleDBMessage1,
-                conversationId,
-            });
+            expect(user).eql(sampleUser1);
         });
 
         it('=> uploads to S3', async function () {
@@ -584,89 +591,102 @@ describe('::', function() {
                 responses.push(m);
                 return Promise.resolve();
             };
-            await witAI.ai(sampleDBMessage1, sampleBotParams1, respondFn);
+
+            await witAI.ai(
+                sampleDBMessage1, sampleBotParams1, sampleConversation1,
+                sampleUser1, respondFn
+            );
 
             expect(responses.length, 'must have a response').gte(1);
             expect(responses[0].text, 'hi back');
         });
 
-        it('=> calls action', async function () {
-            const message = {
-                ...createSampleDBMessage(sampleBotParams1.publisherId, sampleConversationId1, 'y'),
-                text: 'test action',
-            };
-
-            await deepiksBot._updateConversationTable(message, sampleBotParams1);
-
-            await aws.dynamoPut({
-                TableName: CONSTANTS.DB_TABLE_AI_ACTIONS,
-                Item: {
-                    action: 'testAction',
-                    url: 'xxx',
-                },
-            });
-
-            const responses = [];
-            const respondFn = (m) => {
-                responses.push(m);
-                return Promise.resolve();
-            };
-
-            const actionMessage = {
-                text: 'booo',
-                actions: [
-                    {
-                        text: 'button X',
-                        postback: 'postback X',
-                    },
-                ],
-            };
-            const userPrefs = {
-                favoritePainter: 'Van Gogh'
-            };
-            const context = {
-                a: 123,
-            };
-
-            sinon.stub(serverUtils, 'request', req => {
-                if (req.uri === 'xxx') {
-                    return Promise.resolve({
-                        statusCode: 200,
-                        body: {
-                            msg: actionMessage,
-                            context,
-                            userPrefs,
+        describe('.', function() {
+            let actionMessage, context, userPrefs;
+            before(function() {
+                userPrefs = {
+                    favoritePainter: 'Van Gogh'
+                };
+                context = {
+                    a: 123,
+                };
+                actionMessage = {
+                    text: 'booo',
+                    actions: [
+                        {
+                            text: 'button X',
+                            postback: 'postback X',
                         },
-                    });
-                }
-                return Promise.reject('uri must be xxx');
+                    ],
+                };
+                sinon.stub(serverUtils, 'request', req => {
+                    if (req.uri === 'xxx') {
+                        return Promise.resolve({
+                            statusCode: 200,
+                            body: {
+                                msg: actionMessage,
+                                context,
+                                userPrefs,
+                            },
+                        });
+                    }
+                    return Promise.reject('uri must be xxx');
+                });
             });
 
-            await witAI.ai(message, sampleBotParams1, respondFn);
-
-            expect(_.omit(responses[0], 'creationTimestamp')).eql(actionMessage);
-            expect(responses[0].creationTimestamp, 'must add creationTimestamp').gt(0);
-
-            const {publisherId, botId} = sampleBotParams1;
-
-            // check user prefs
-            const user = await aws.getUserByUserId(publisherId, botId, message.channel, message.senderId);
-            expect(user, 'user must exist').exist();
-            expect(user.prefs, 'must update user.prefs').eql(userPrefs);
-
-            // check witData
-            const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
-            const conv = await aws.getConversation(publisherId, botId, conversationId);
-            expect(conv, 'conversation must be updated').exist();
-            expect(_.omit(conv.witData, 'sessionId'), 'witData must be updated').eql({
-                lastActionPrefix: 'thisStory',
-                context,
+            after(function() {
+                serverUtils.request.restore();
             });
-            expect(conv.witData.sessionId, 'witData.sessionId must exist').exist();
 
-            // restore request
-            // $FlowFixMe
-            serverUtils.request.restore();
+            it('=> calls action', async function () {
+                const message = {
+                    ...createSampleDBMessage(sampleBotParams1.publisherId, sampleConversationId1, 'y'),
+                    text: 'test action',
+                };
+
+                await deepiksBot._updateConversationTable(message, sampleBotParams1);
+
+                await aws.dynamoPut({
+                    TableName: CONSTANTS.DB_TABLE_AI_ACTIONS,
+                    Item: {
+                        action: 'testAction',
+                        url: 'xxx',
+                    },
+                });
+
+                const responses = [];
+                const respondFn = (m) => {
+                    responses.push(m);
+                    return Promise.resolve();
+                };
+
+                await witAI.ai(
+                    message, sampleBotParams1, sampleConversation1,
+                    sampleUser1, respondFn
+                );
+
+                expect(_.omit(responses[0], 'creationTimestamp')).eql(actionMessage);
+                expect(responses[0].creationTimestamp, 'must add creationTimestamp').gt(0);
+
+                const {publisherId, botId} = sampleBotParams1;
+
+                // check user prefs
+                const user = await aws.getUserByUserId(publisherId, botId, message.channel, message.senderId);
+                expect(user, 'user must exist').exist();
+                expect(user.prefs, 'must update user.prefs').eql(userPrefs);
+
+                // check witData
+                const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
+                const conv = await aws.getConversation(publisherId, botId, conversationId);
+                expect(conv, 'conversation must be updated').exist();
+                expect(_.omit(conv.witData, 'sessionId'), 'witData must be updated').eql({
+                    lastActionPrefix: 'thisStory',
+                    context,
+                });
+                expect(conv.witData.sessionId, 'witData.sessionId must exist').exist();
+
+            });
+
         });
     });
 
@@ -1036,8 +1056,8 @@ describe('::', function() {
 
 
     describe('=> conversational engine', function() {
-        const bookmarks = ce._collectBookmarks(testStories.data);
         describe('bookmarks', function() {
+            const bookmarks = ce._collectBookmarks(testStories.data);
             it('collectBookmarks', () => {
                 expect(bookmarks).eql({
                     b1: [0, 0, 0],
@@ -1051,7 +1071,7 @@ describe('::', function() {
         describe('converse', function() {
             let converseRes;
             it('do nothing', () => {
-                converseRes = ce._converseHelper(null, {}, {}, testStories.data, {});
+                converseRes = ce._converse(null, {}, {}, testStories.data, {});
                 expect(converseRes).eql({
                     type: 'stop',
                     session: {
@@ -1064,7 +1084,7 @@ describe('::', function() {
             describe('hi', function() {
 
                 it('send', () => {
-                    converseRes = ce._converseHelper('hi', converseRes.session, {}, testStories.data, bookmarks);
+                    converseRes = ce._converse('hi', converseRes.session, {}, testStories.data);
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1079,7 +1099,7 @@ describe('::', function() {
                 });
 
                 it('converse 1', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1093,7 +1113,7 @@ describe('::', function() {
                 });
 
                 it('converse 2', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         session: {
                             leafIsExpectingUserInput: true,
@@ -1104,7 +1124,7 @@ describe('::', function() {
                 });
 
                 it('converse 3', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         session: {
                             leafIsExpectingUserInput: true,
@@ -1118,7 +1138,7 @@ describe('::', function() {
 
             describe('hihi', function() {
                 it('send', () => {
-                    converseRes = ce._converseHelper('hihi', converseRes.session, {}, testStories.data, bookmarks);
+                    converseRes = ce._converse('hihi', converseRes.session, {}, testStories.data);
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1132,7 +1152,7 @@ describe('::', function() {
                 });
 
                 it('converse 1', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, bookmarks);
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data);
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1147,7 +1167,7 @@ describe('::', function() {
                 });
 
                 it('converse 2', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1161,7 +1181,7 @@ describe('::', function() {
                 });
 
                 it('converse 3', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'stop',
                         session: {
@@ -1174,7 +1194,7 @@ describe('::', function() {
 
             describe('bye', function() {
                 it('send', () => {
-                    converseRes = ce._converseHelper('bye', converseRes.session, {}, testStories.data, bookmarks);
+                    converseRes = ce._converse('bye', converseRes.session, {}, testStories.data);
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1188,7 +1208,7 @@ describe('::', function() {
                 });
 
                 it('converse 1', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'stop',
                         session: {
@@ -1199,7 +1219,7 @@ describe('::', function() {
                 });
 
                 it('converse 2', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'stop',
                         session: {
@@ -1212,7 +1232,7 @@ describe('::', function() {
 
             describe('dfqwsfsdfffwasdf', function() {
                 it('send', () => {
-                    converseRes = ce._converseHelper('dfqwsfsdfffwasdf', converseRes.session, {}, testStories.data, bookmarks);
+                    converseRes = ce._converse('dfqwsfsdfffwasdf', converseRes.session, {}, testStories.data);
                     expect(converseRes).eql({
                         type: 'action',
                         action: 'aaa',
@@ -1228,7 +1248,7 @@ describe('::', function() {
                         bb: true,
                         ff: true,
                     };
-                    converseRes = ce._converseHelper(null, converseRes.session, context, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, context, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1242,7 +1262,7 @@ describe('::', function() {
                 });
 
                 it('converse 2', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'action',
                         action: 'vvv',
@@ -1257,7 +1277,7 @@ describe('::', function() {
                     const context = {
                         x: true
                     };
-                    converseRes = ce._converseHelper(null, converseRes.session, context, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, context, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'stop',
                         session: {
@@ -1270,7 +1290,7 @@ describe('::', function() {
 
             describe('wer', function() {
                 it('send', () => {
-                    converseRes = ce._converseHelper('wer', converseRes.session, {}, testStories.data, bookmarks);
+                    converseRes = ce._converse('wer', converseRes.session, {}, testStories.data);
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1284,7 +1304,7 @@ describe('::', function() {
                 });
 
                 it('converse 1', () => {
-                    converseRes = ce._converseHelper(null, converseRes.session, {}, testStories.data, {});
+                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
                     expect(converseRes).eql({
                         type: 'stop',
                         session: {
@@ -1296,7 +1316,7 @@ describe('::', function() {
             });
             describe('change mid story', function() {
                 it('send hi', () => {
-                    converseRes = ce._converseHelper('hi', converseRes.session, {}, testStories.data, bookmarks);
+                    converseRes = ce._converse('hi', converseRes.session, {}, testStories.data);
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1309,7 +1329,7 @@ describe('::', function() {
                     })
                 });
                 it('send bye', () => {
-                    converseRes = ce._converseHelper('bye', converseRes.session, {}, testStories.data, bookmarks);
+                    converseRes = ce._converse('bye', converseRes.session, {}, testStories.data);
                     expect(converseRes).eql({
                         type: 'msg',
                         msg: {
@@ -1324,6 +1344,267 @@ describe('::', function() {
 
             });
         });
+
+        describe('=> Learn from human transfer', function() {
+            let placeholderTurn, learnedTurn, inputMessage, responseText;
+            before(function() {
+                responseText = 'xxx';
+                inputMessage = { text: 'dummy input' };
+                placeholderTurn = {
+                    user: '',
+                    placeholder: true,
+                    entities: [],
+                    operations: [],
+                };
+                learnedTurn = {
+                    user: inputMessage.text,
+                    entities: [],
+                    operations: [
+                        {
+                            action: `template-${responseText}`
+                        }
+                    ],
+                };
+            });
+
+            it('=> at branch, expecting reply', async function() {
+                const res = ce._learnFromHumanTransfer(
+                    responseText,
+                    inputMessage,
+                    {
+                        path: [1, 1],
+                        leafIsExpectingUserInput: true,
+                    },
+                    testStories.data,
+                    true
+                );
+
+                expect(res).eql({
+                    session: {
+                        leafIsExpectingUserInput: true,
+                        path: [1, 1, 2, 1],
+                    },
+                    stories: ice.assocIn(
+                        testStories.data,
+                        [1, 'turns', 1, 'branches', 2],
+                        [
+                            learnedTurn,
+                            placeholderTurn,
+                        ]
+                    ),
+                });
+            });
+
+            it('=> at branch, not expecting reply', async function() {
+                const res = ce._learnFromHumanTransfer(
+                    responseText,
+                    inputMessage,
+                    {
+                        path: [1, 1],
+                        leafIsExpectingUserInput: true,
+                    },
+                    testStories.data,
+                    false
+                );
+
+                expect(res).eql({
+                    session: {
+                        leafIsExpectingUserInput: false,
+                        path: [],
+                    },
+                    stories: ice.assocIn(
+                        testStories.data,
+                        [1, 'turns', 1, 'branches', 2],
+                        [learnedTurn]
+                    ),
+                });
+            });
+
+            it('=> at placeholder user, expecting reply', async function() {
+                const stories = ice.assocIn(
+                    testStories.data, [0, 'turns', 2], placeholderTurn
+                );
+                const res = ce._learnFromHumanTransfer(
+                    responseText,
+                    inputMessage,
+                    {
+                        path: [0, 2],
+                        leafIsExpectingUserInput: true,
+                    },
+                    stories,
+                    true
+                );
+
+                expect(res).eql({
+                    session: {
+                        leafIsExpectingUserInput: true,
+                        path: [0, 3],
+                    },
+                    stories: ice.chain(stories)
+                        .assocIn([0, 'turns', 2], learnedTurn)
+                        .assocIn([0, 'turns', 3], placeholderTurn)
+                        .value(),
+                });
+            });
+
+            it('=> at placeholder user, not expecting reply', async function() {
+                const stories = ice.assocIn(
+                    testStories.data, [0, 'turns', 2], placeholderTurn
+                );
+                const res = ce._learnFromHumanTransfer(
+                    responseText,
+                    inputMessage,
+                    {
+                        path: [0, 2],
+                        leafIsExpectingUserInput: true,
+                    },
+                    stories,
+                    false
+                );
+
+                expect(res).eql({
+                    session: {
+                        leafIsExpectingUserInput: false,
+                        path: [],
+                    },
+                    stories: ice.assocIn(
+                        stories, [0, 'turns', 2], learnedTurn
+                    ),
+                });
+            });
+
+            it('=> at non-placeholder user, expecting reply', async function() {
+                const res = ce._learnFromHumanTransfer(
+                    responseText,
+                    inputMessage,
+                    {
+                        path: [2, 1],
+                        leafIsExpectingUserInput: true,
+                    },
+                    testStories.data,
+                    true
+                );
+
+                expect(res).eql({
+                    session: {
+                        leafIsExpectingUserInput: true,
+                        path: [2, 1, 1, 1],
+                    },
+                    stories: ice.assocIn(testStories.data, [2, 'turns'], [
+                        testStories.data[2].turns[0],
+                        {
+                            branches: [
+                                testStories.data[2].turns.slice(1),
+                                [
+                                    learnedTurn,
+                                    placeholderTurn,
+                                ]
+                            ]
+                        }
+                    ])
+                });
+            });
+
+            it('=> at non-placeholder user, not expecting reply', async function() {
+                const res = ce._learnFromHumanTransfer(
+                    responseText,
+                    inputMessage,
+                    {
+                        path: [2, 1],
+                        leafIsExpectingUserInput: true,
+                    },
+                    testStories.data,
+                    false
+                );
+
+                expect(res).eql({
+                    session: {
+                        leafIsExpectingUserInput: false,
+                        path: [],
+                    },
+                    stories: ice.assocIn(testStories.data, [2, 'turns'], [
+                        testStories.data[2].turns[0],
+                        {
+                            branches: [
+                                testStories.data[2].turns.slice(1),
+                                [
+                                    learnedTurn,
+                                ]
+                            ]
+                        }
+                    ])
+                });
+            });
+
+            it('=> empty session, expecting reply', async function() {
+                const res = ce._learnFromHumanTransfer(
+                    responseText,
+                    inputMessage,
+                    {
+                        path: [],
+                        leafIsExpectingUserInput: false,
+                    },
+                    testStories.data,
+                    true
+                );
+
+                expect(res).eql({
+                    session: {
+                        leafIsExpectingUserInput: true,
+                        path: [3, 1],
+                    },
+                    stories: ice.push(testStories.data, {
+                        name: '',
+                        turns: [
+                            learnedTurn,
+                            placeholderTurn,
+                        ]
+                    }),
+                });
+            });
+
+            it('=> empty session, not expecting reply', async function() {
+                const res = ce._learnFromHumanTransfer(
+                    responseText,
+                    inputMessage,
+                    {
+                        path: [],
+                        leafIsExpectingUserInput: false,
+                    },
+                    testStories.data,
+                    false
+                );
+
+                expect(res).eql({
+                    session: {
+                        leafIsExpectingUserInput: false,
+                        path: [],
+                    },
+                    stories: ice.push(testStories.data, {
+                        name: '',
+                        turns: [
+                            learnedTurn,
+                        ]
+                    }),
+                });
+            });
+        });
     });
+
+    // it('tests3', async function() {
+    //
+    //     const zip = new JSZip();
+    //     zip.file('stories.json', 'boooya222');
+    //     const zipStream = zip.generateNodeStream({
+    //         type: 'nodebuffer',
+    //         streamFiles: true,
+    //     });
+    //
+    //     await aws.s3Upload({
+    //         Bucket: CONSTANTS.S3_BUCKET_NAME,
+    //         Key: `tests3/bot.zip`,
+    //         Body: zipStream,
+    //     });
+    // });
 
 });

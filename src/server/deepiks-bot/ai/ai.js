@@ -5,7 +5,7 @@ import type { DBMessage, BotParams, RespondFn, Conversation } from '../../../mis
 import { toStr, composeKeys, decomposeKeys } from '../../../misc/utils.js';
 import { CONSTANTS } from '../../server-utils.js';
 import witAI from './wit-ai.js';
-import customAI from './custom-ai.js';
+import { ai as customAI, learnFromHumanTransfer as customAILearn } from './custom-ai.js';
 import { CONVERSE_STATUS_STUCK } from './ai-helpers.js';
 import { send } from '../../channels/all-channels.js';
 import { translations as tr, languages as langs } from '../../i18n/translations.js';
@@ -31,7 +31,7 @@ export default async function ai(
     ]);
 
     // handle human response to a transferred conversation
-    const ref = extractRefConversationId(message, conversation);
+    const ref = extractRefFromMessage(message, conversation);
     if (conversation.transferredConversations && ref) {
         const { text: responseContent, conversationId: refConversationId,
                 expectsReply } = ref;
@@ -65,6 +65,15 @@ export default async function ai(
                     UpdateExpression: 'REMOVE transferredToHuman, customAIData',
                 }),
             ]);
+        }
+
+
+        // learn if using custom AI
+        if (!botParams.settings.witAccessToken) {
+            customAILearn(
+                responseContent, botParams, conversation,
+                transFromConversation, expectsReply
+            );
         }
 
         await send(botParams, transFromConversation, {
@@ -101,89 +110,88 @@ export default async function ai(
     reportDebug('humanTransfer:', humanTransfer);
     reportDebug('transToUser:', transToUser);
 
-    if (transToUser && transToUser.isVerified) {
-        reportDebug('transfer to human');
-
-        const transToConversation = await aws.getConversation(
-            publisherId, botId, transToUser.conversationId
-        );
-        reportDebug('transToConversation: ', transToConversation);
-        const [, transToConversationId] =
-            decomposeKeys(transToConversation.botId_conversationId);
-
-        const transferredConversations = {
-            ...transToConversation.transferredConversations,
-            [conversationId]: {
-                lastMessage: message,
-            },
-        };
-
-        await Promise.all([
-            aws.dynamoUpdate({
-                TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
-                Key: {
-                    publisherId,
-                    botId_conversationId: composeKeys(botId, transToConversationId),
-                },
-                UpdateExpression:
-                    'SET transferredConversations = :tc',
-                ExpressionAttributeValues: {
-                    ':tc': transferredConversations,
-                },
-            }),
-            aws.dynamoUpdate({
-                TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
-                Key: {
-                    publisherId,
-                    botId_conversationId: composeKeys(botId, conversationId),
-                },
-                UpdateExpression: 'SET transferredToHuman = :th',
-                ExpressionAttributeValues: {
-                    ':th': true,
-                },
-            }),
-        ]);
-
-        // send message to the human
-        // if new transfer
-        if (!conversation.transferredToHuman) {
-            const history = await createHistory(conversation, strings);
-            reportDebug('history: ', history);
-            await send(botParams, transToConversation, {
-                text: history,
-                creationTimestamp: Date.now(),
-            });
-            await send(botParams, transToConversation, {
-                text: strings.askForResponseWithHistory,
-                creationTimestamp: Date.now()+1,
-            });
-        } else { // already transferred
-            await send(botParams, transToConversation, {
-                text: messageToText(message, strings),
-                creationTimestamp: Date.now(),
-            });
-            await send(botParams, transToConversation, {
-                text: strings.askForResponseWithoutHistory,
-                creationTimestamp: Date.now()+1,
-            });
-
-        }
-
-        // send message to user
-        await respondFn({
-            text: strings.transferMessage,
-            creationTimestamp: Date.now(),
-        });
-
-    } else {
+    if (!transToUser || !transToUser.isVerified || transToUser.userRole !== 'admin') {
         // send message to user
         await respondFn({
             text: strings.didNotUnderstand,
             creationTimestamp: Date.now(),
         });
+        return;
     }
 
 
+    reportDebug('transfer to human');
+
+    const transToConversation = await aws.getConversation(
+        publisherId, botId, transToUser.conversationId
+    );
+    reportDebug('transToConversation: ', transToConversation);
+    const [, transToConversationId] =
+        decomposeKeys(transToConversation.botId_conversationId);
+
+    const transferredConversations = {
+        ...transToConversation.transferredConversations,
+        [conversationId]: {
+            lastMessage: message,
+        },
+    };
+
+    await Promise.all([
+        aws.dynamoUpdate({
+            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+            Key: {
+                publisherId,
+                botId_conversationId: composeKeys(botId, transToConversationId),
+            },
+            UpdateExpression:
+                'SET transferredConversations = :tc',
+            ExpressionAttributeValues: {
+                ':tc': transferredConversations,
+            },
+        }),
+        aws.dynamoUpdate({
+            TableName: CONSTANTS.DB_TABLE_CONVERSATIONS,
+            Key: {
+                publisherId,
+                botId_conversationId: composeKeys(botId, conversationId),
+            },
+            UpdateExpression: 'SET transferredToHuman = :th',
+            ExpressionAttributeValues: {
+                ':th': true,
+            },
+        }),
+    ]);
+
+    // send message to the human
+    // if new transfer
+    if (!conversation.transferredToHuman) {
+        const history = await createHistory(conversation, strings);
+        reportDebug('history: ', history);
+        await send(botParams, transToConversation, {
+            text: history,
+            creationTimestamp: Date.now(),
+        });
+        await send(botParams, transToConversation, {
+            text: strings.askForResponseWithHistory,
+            creationTimestamp: Date.now()+1,
+        });
+    } else { // already transferred
+        await send(botParams, transToConversation, {
+            text: messageToText(message, strings),
+            creationTimestamp: Date.now(),
+        });
+        await send(botParams, transToConversation, {
+            text: strings.askForResponseWithoutHistory,
+            creationTimestamp: Date.now()+1,
+        });
+
+    }
+
+    // send message to user
+    await respondFn({
+        text: strings.transferMessage,
+        creationTimestamp: Date.now(),
+    });
 }
 
 async function createHistory(conversation: Conversation, strings: Object): Promise<string> {
@@ -211,8 +219,8 @@ function messageToText(message: DBMessage, strings, Object) {
     return text.trim();
 }
 
-function extractRefConversationId(message: DBMessage, conversation: Conversation) {
-    reportDebug('extractRefConversationId message.text:', message.text,
+function extractRefFromMessage(message: DBMessage, conversation: Conversation) {
+    reportDebug('extractRefFromMessage message.text:', message.text,
                 'conversation.transferredConversations: ',
                 conversation.transferredConversations);
     const inputMatch = (message.text || '').match(/^\s*@(.*?)\s+(.*)/);
@@ -227,7 +235,7 @@ function extractRefConversationId(message: DBMessage, conversation: Conversation
         return sn.toLowerCase().startsWith(refName.toLowerCase()) ||
             simplifyName(sn).startsWith(simplifiedRefName)
     });
-    reportDebug('extractRefConversationId validItems', validItems);
+    reportDebug('extractRefFromMessage validItems', validItems);
     if (_.size(validItems !== 1)) return null;
 
     const expectsReply = Boolean((message.text || '').match(/\?\s*$/));
