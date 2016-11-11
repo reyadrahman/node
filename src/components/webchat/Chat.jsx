@@ -103,7 +103,7 @@ let Chat = React.createClass({
     },
 
     setupWebsocket: function () {
-        let websocket = this.ws = new WebSocket(CONSTANTS.OWN_BASE_URL.replace(/https?/, 'ws'));
+        let websocket = this.ws = new WebSocket(CONSTANTS.OWN_BASE_URL.replace(/https?/, 'wss'));
 
         websocket.onopen = () => {
             reportDebug('Websocket connected');
