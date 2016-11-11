@@ -24,6 +24,7 @@ const VALID_ENV_VARS = [
     { name: 'CDN',                            required: false },
     { name: 'PORT',                           required: false },
     { name: 'DEBUG',                          required: false },
+    { name: 'RUNNING_LOCALLY',                required: false },
 ];
 
 const INCLUDE_MODULES = ['normalize.css'];
@@ -56,6 +57,7 @@ const defaultEnv = {
     PLATFORM: 'node',
     PORT: 3000,
     DEBUG: 'deepiks:*',
+    RUNNING_LOCALLY: 0,
 };
 
 

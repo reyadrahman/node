@@ -33,15 +33,18 @@ OWN_BASE_URL=
 CDN=
 PORT=3000
 DEBUG=deepiks:*
+RUNNING_LOCALLY=0
 ```
 
-`NODE_ENV`, `DB_TABLES_PREFIX`, `CDN`, `PORT` and `DEBUG` are **optional**.
+`NODE_ENV`, `DB_TABLES_PREFIX`, `CDN`, `PORT`, `DEBUG` and `RUNNING_LOCALLY` are **optional**.
 
 `NODE_ENV` can be `production` (default) or `development`. When set to `development` you get much better error messages and debugging capability, but the output will be 10x larger. This doesn't cause a problem for the bot engine, but the website will be unusable for most people due to the size.
 
 `CALL_SERVER_LAMBDA_SECRET` should be a random string that matches the same environment variable in the `CallServer` lambda (see "CallServer Lambda" section below).
 
 `OWN_BASE_URL` is the full address of your server (e.g. https://deepiks.io) and is used to, for example, set up webhooks automatically.
+
+When you deploy locally set `RUNNING_LOCALLY=1`. Websocket, for example, behaves differently when deployed locally due to lack of nginx and ELB.
 
 ### .test.env file or environment variables in console
 This is the same as `.env` but only used for running the **server side** tests (the "Tests" secion below). So pick different names for the database tables and s3 buckets as they will be modified.

@@ -269,6 +269,7 @@ export type ServerConstants = {
     OWN_BASE_URL: string,
     CONVERSATIONAL_ENGINE_LAMBDA: string,
     CALL_SERVER_LAMBDA_SECRET: string,
+    RUNNING_LOCALLY: boolean,
     CDN?: string,
     DEBUG?: string,
 };
@@ -283,7 +284,9 @@ export type ClientConstants = {
     IDENTITY_POOL_ID: string,
     IDENTITY_POOL_UNAUTH_ROLE_ARN: string,
     IDENTITY_POOL_AUTH_ROLE_ARN: string,
+    PORT: string,
     OWN_BASE_URL: string,
+    RUNNING_LOCALLY: boolean,
     SYSTEM_LANG?: string,
     DEBUG?: string,
 };

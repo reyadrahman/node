@@ -103,7 +103,10 @@ let Chat = React.createClass({
     },
 
     setupWebsocket: function () {
-        let websocket = this.ws = new WebSocket(CONSTANTS.OWN_BASE_URL.replace(/https?/, 'wss'));
+        let address = CONSTANTS.RUNNINGL_LOCALLY
+            ? `ws://localhost:${CONSTANTS.PORT}`
+            : CONSTANTS.OWN_BASE_URL.replace(/^https/i, 'wss').replace(/^http/i, 'ws');
+        let websocket = this.ws = new WebSocket(address);
 
         websocket.onopen = () => {
             reportDebug('Websocket connected');

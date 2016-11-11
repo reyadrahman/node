@@ -44,15 +44,16 @@ async function handleWebsocketMessage(messageReceived: WebchannelMessage, ws: We
     reportDebug('Got message: ', message);
 
     try {
-        await deepiksBot(message, botParams, responseMessage => {
-            reply(messageReceived.conversationId, responseMessage);
-        });
+        await deepiksBot(message, botParams,
+            responseMessage => send(messageReceived.conversationId, responseMessage)
+        );
     } catch (e) {
         reportError(e.message);
     }
 }
 
-export function reply(conversationId: string, message: ResponseMessage) {
+export async function send(conversationId: string, message: ResponseMessage) {
+    // TODO use promise
     conversationIdToWebsocket[conversationId].send(JSON.stringify(message));
 }
 

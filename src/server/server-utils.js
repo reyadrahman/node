@@ -14,6 +14,7 @@ function prefixDBTable(x) {
 
 export const CONSTANTS: ServerConstants = ({
     ...process.env,
+    RUNNING_LOCALLY: Number(process.env.RUNNING_LOCALLY) === 1,
     AI_ACTION_CACHE_VALID_TIME_S: 10,
     TYPING_INDICATOR_DELAY_S: 2,
     DB_TABLE_BOTS: prefixDBTable('bots'),

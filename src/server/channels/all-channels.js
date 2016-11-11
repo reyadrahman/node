@@ -3,6 +3,7 @@
 import * as spark from './spark.js';
 import * as messenger from './messenger.js';
 import * as ms from './ms.js';
+import * as web from './web.js';
 import * as aws from '../../aws/aws.js';
 import { waitForAll } from '../../misc/utils.js';
 import type { ResponseMessage, BotParams, Conversation } from '../../misc/types.js';
@@ -30,6 +31,8 @@ export async function send(botParams: BotParams, conversation: Conversation,
         sendFn = m => messenger.send(botParams, conversationId, m);
     } else if (channel === 'ciscospark') {
         sendFn = m => spark.send(botParams, conversationId, m);
+    } else if (channel === 'web') {
+        sendFn = m => web.send(conversationId, m);
     } else if (['skype', 'slack', 'telegram', 'webchat'].includes(channel)) {
         if (!channelData) {
             throw new Error('send: channelData is missing');
