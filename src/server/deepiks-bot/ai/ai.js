@@ -2,7 +2,7 @@
 
 import * as aws from '../../../aws/aws.js';
 import type { DBMessage, BotParams, RespondFn, Conversation } from '../../../misc/types.js';
-import { toStr, composeKeys, decomposeKeys } from '../../../misc/utils.js';
+import { toStr, composeKeys, decomposeKeys, timeout } from '../../../misc/utils.js';
 import { CONSTANTS } from '../../server-utils.js';
 import witAI from './wit-ai.js';
 import { ai as customAI, learnFromHumanTransfer as customAILearn } from './custom-ai.js';
@@ -171,6 +171,7 @@ export default async function ai(
             text: history,
             creationTimestamp: Date.now(),
         });
+        await timeout(500); // TODO quickfix
         await send(botParams, transToConversation, {
             text: strings.askForResponseWithHistory,
             creationTimestamp: Date.now()+1,
@@ -180,6 +181,7 @@ export default async function ai(
             text: messageToText(message, strings),
             creationTimestamp: Date.now(),
         });
+        await timeout(500); // TODO quickfix
         await send(botParams, transToConversation, {
             text: strings.askForResponseWithoutHistory,
             creationTimestamp: Date.now()+1,
