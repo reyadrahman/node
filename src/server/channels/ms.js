@@ -100,7 +100,7 @@ async function processMessage(session, authRequest, botParams) {
         creationTimestamp: new Date(m.timestamp).getTime(),
         id: m.address.id,
         senderId: m.user.id,
-        senderName,
+        senderName: senderName || 'unknown',
         senderIsBot: false,
         channel: m.address.channelId,
         text: m.text,
