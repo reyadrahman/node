@@ -1,6 +1,17 @@
 /* @flow */
 
 
+export type BotAIData = {
+    stories: Object,
+    actions: Array<{
+        id: string,
+        type: string,
+        template?: string,
+        name?: string,
+        quickreplies?: string[],
+    }>,
+};
+
 export type User = {
     publisherId: string,
     botId_channel_userId: string,

@@ -243,7 +243,7 @@ function extractRefFromMessage(message: DBMessage, conversation: Conversation) {
             simplifyName(sn).startsWith(simplifiedRefName)
     });
     reportDebug('extractRefFromMessage validItems', validItems);
-    if (_.size(validItems !== 1)) return null;
+    if (_.size(validItems) !== 1) return null;
     const refConversationId = _.keys(validItems)[0];
 
     const expectsReply = Boolean((message.text || '').match(/\?\s*$/));

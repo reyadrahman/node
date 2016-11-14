@@ -1,6 +1,6 @@
 /* @flow */
 
-import type { DBMessage, ResponseMessage } from '../../../misc/types.js';
+import type { DBMessage, ResponseMessage, BotAIData } from '../../../misc/types.js';
 import { inspect } from 'util';
 import _ from 'lodash';
 const reportDebug = require('debug')('deepiks:conversational-engine');
@@ -15,7 +15,6 @@ type ConverseData_ =
 
 // TODO fix flow type
 export type ConverseData = { session: Object } & ConverseData_;
-
 
 function collectBookmarks(stories: Object) {
     let path = [];
@@ -119,9 +118,10 @@ function matchUserInput(userInput, stories, userTurnsAndPaths) {
 }
 
 export function converse(
-    userInput: ?string, session: Object, context: Object, stories: Object
+    userInput: ?string, session: Object, context: Object, botAIData: BotAIData
 ) : ConverseData {
 
+    const { stories, actions } = botAIData;
     const bookmarks = collectBookmarks(stories);
     let initPath = (session.path || []).slice();
     let initLeafIsExpectingUserInput = session.leafIsExpectingUserInput;
@@ -135,12 +135,20 @@ export function converse(
         if (initializing) {
             return false;
         }
+        const actionDesc = actions.find(x => x.id === op.action);
+        reportDebug('converse handleOpTemplate actionDesc: ', actionDesc);
         ret = {
             type: 'msg',
             msg: {
                 text: op.action.substr('template-'.length),
             }
         };
+        if (actionDesc && actionDesc.quickreplies) {
+            ret.msg.actions = actionDesc.quickreplies.map(x => ({
+                text: x,
+                fallback: x,
+            }));
+        }
         return true;
     }
 
@@ -365,14 +373,14 @@ export function converse(
 
 export function learnFromHumanTransfer(
     responseText: string, originalMessage: DBMessage, session: Object,
-    stories: Object, expectsReply: boolean
+    botAIData: BotAIData, expectsReply: boolean
 ) {
     reportDebug('learnFromHumanTransfer');
     let initPath = (session.path || []).slice();
     let leafIsExpectingUserInput = false;
     let path = [];
     // TODO instead of cloneDeep use icepick for manipulating immutable data structures
-    stories = _.cloneDeep(stories);
+    const { stories, actions } = _.cloneDeep(botAIData);
 
     const createPlaceholderTurn = () => ({
         user: '',
@@ -536,6 +544,7 @@ export function learnFromHumanTransfer(
 
     return {
         stories,
+        actions,
         session: {
             path,
             leafIsExpectingUserInput
