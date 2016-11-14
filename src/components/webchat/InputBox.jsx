@@ -3,8 +3,8 @@
 import React from 'react';
 import FileReaderInput from 'react-file-reader-input';
 
-const reportDebug = require('debug')('deepiks:WebChat:input');
-const reportError = require('debug')('deepiks:WebChat:input:error');
+const log = require('debug')('deepiks:WebChat:input');
+log.error = require('debug')('deepiks:WebChat:input:error');
 
 let InputBox = React.createClass({
     getInitialState: function () {
@@ -34,20 +34,40 @@ let InputBox = React.createClass({
 
         if (results.length) {
             this.props.onAttachmentSubmit(results[0][0].target.result);
+
+            // reset the file input. Same photo could not be selected otherwise.
+            this.setState({resetting: true}, () => {
+                this.setState({resetting: false});
+            });
         }
     },
 
     render:          function () {
+        let fileInput;
+
+        // below forces reset of the input after selecting file, so the same image can be also selected
+        if (this.state.resetting) {
+            fileInput = (
+                <div className="input-group-addon action">
+                    <i ref="uploadButton" className="icon-file-image"/>
+                </div>
+            );
+        } else {
+            fileInput = (
+                <div className="input-group-addon action"
+                     onClick={e => e.target.className.indexOf('action') > -1 && this.refs.uploadButton.click()}>
+                    <FileReaderInput as="url" id="attachment"
+                                     onChange={this.uploadImage}>
+                        <i ref="uploadButton" className="icon-file-image"/>
+                    </FileReaderInput>
+                </div>
+            );
+        }
+
         return (
             <div className="inputBox">
                 <div className="input-group">
-                    <div className="input-group-addon action"
-                         onClick={e => e.target.className.indexOf('action') > -1 && this.refs.uploadButton.click()}>
-                        <FileReaderInput as="url" id="attachment"
-                                         onChange={this.uploadImage}>
-                            <i ref="uploadButton" className="icon-file-image"/>
-                        </FileReaderInput>
-                    </div>
+                    {fileInput}
 
                     <input className="form-control"
 
@@ -60,8 +80,6 @@ let InputBox = React.createClass({
                         <i className="icon-paper-plane-empty"/>
                     </div>
                 </div>
-
-
             </div>
         );
     }
