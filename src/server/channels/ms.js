@@ -94,6 +94,10 @@ async function processMessage(session, authRequest, botParams) {
          senderName = `${firstName} ${lastName}`.trim();
     }
 
+    // work around Microsoft Teams bug
+    // remove this after word2vec algorithm for matching inputs
+    const text = m.text.replace(/[\u200B-\u200D\uFEFF]/g, '');
+
     const message: WebhookMessage = {
         publisherId_conversationId:
             composeKeys(botParams.publisherId, m.address.conversation.id),
@@ -103,7 +107,7 @@ async function processMessage(session, authRequest, botParams) {
         senderName: senderName || 'unknown',
         senderIsBot: false,
         channel: m.address.channelId,
-        text: m.text,
+        text,
         fetchCardImages,
     };
 
