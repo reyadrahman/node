@@ -33,7 +33,7 @@ export async function send(botParams: BotParams, conversation: Conversation,
         sendFn = m => spark.send(botParams, conversationId, m);
     } else if (channel === 'web') {
         sendFn = m => web.send(conversationId, m);
-    } else if (['skype', 'slack', 'telegram', 'webchat'].includes(channel)) {
+    } else if (['skype', 'slack', 'telegram', 'webchat', 'msteams'].includes(channel)) {
         if (!channelData) {
             throw new Error('send: channelData is missing');
         }

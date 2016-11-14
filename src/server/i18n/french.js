@@ -15,6 +15,7 @@ export default {
         askForResponseWithHistory: `FR Whats your response to the above messages?`,
         askForResponseWithoutHistory: `FR Whats your response to the above message?`,
         imagePlaceholder: `[FR image]`,
+        sentMessage: name => `FR Message was successfully sent to "${name}"`,
     },
     errors: {
         general: 'Désolé, il semble qu\'il y ait un problème...',

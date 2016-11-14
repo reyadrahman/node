@@ -170,7 +170,7 @@ export async function send(botParams: BotParams,
     reportDebug('send: ', message);
 
     const { text, cards, actions } = message;
-    const supportsHeroCard = ['telegram', 'skype', 'slack'].includes(channel);
+    const supportsHeroCard = ['telegram', 'skype', 'slack', 'msteams'].includes(channel);
 
     if (cards) {
         let resAttachments = [];
@@ -236,7 +236,8 @@ export async function send(botParams: BotParams,
             resText += `\n(${textActions.join(', ')})`;
         }
 
-        let resMessage = new builder.Message(session)
+        let resMessage = new builder.Message(session);
+        resMessage.textFormat('markdown');
         resText && resMessage.text(resText);
         resAttachments.length > 0 && resMessage.attachments(resAttachments);
         sendHelperFn(resMessage);

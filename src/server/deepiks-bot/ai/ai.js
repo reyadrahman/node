@@ -34,7 +34,7 @@ export default async function ai(
     const ref = extractRefFromMessage(message, conversation);
     if (conversation.transferredConversations && ref) {
         const { text: responseContent, conversationId: refConversationId,
-                expectsReply } = ref;
+                expectsReply, senderName: refSenderName } = ref;
         const transFromConversation = await aws.getConversation(
             publisherId, botId, refConversationId
         );
@@ -79,6 +79,11 @@ export default async function ai(
         await send(botParams, transFromConversation, {
             text: responseContent,
             creationTimestamp: Date.now(),
+        });
+
+        await send(botParams, conversation, {
+            text: strings.sentMessage(refSenderName),
+            creationTimestamp: Date.now()+1,
         });
 
         return;
@@ -239,11 +244,13 @@ function extractRefFromMessage(message: DBMessage, conversation: Conversation) {
     });
     reportDebug('extractRefFromMessage validItems', validItems);
     if (_.size(validItems !== 1)) return null;
+    const refConversationId = _.keys(validItems)[0];
 
     const expectsReply = Boolean((message.text || '').match(/\?\s*$/));
     return {
         text: content,
-        conversationId: _.keys(validItems)[0],
+        conversationId: refConversationId,
         expectsReply,
+        senderName: validItems[refConversationId].lastMessage.senderName,
     }
 }
