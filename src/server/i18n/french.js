@@ -10,12 +10,12 @@ export default {
         successfullyVerified: `Merci, vous êtes autorisé à dialoguer avec ce bot`,
     },
     ai: {
-        didNotUnderstand: `FR Sorry, didn't get that`,
-        transferMessage: `FR One moment please. I am still a trainee. Let me get some help...`,
-        askForResponseWithHistory: `FR Whats your response to the above messages?`,
-        askForResponseWithoutHistory: `FR Whats your response to the above message?`,
-        imagePlaceholder: `[FR image]`,
-        sentMessage: name => `FR Message was successfully sent to "${name}"`,
+        didNotUnderstand: `Désolé, je n'ai pas compris`,
+        transferMessage: `Un petit instant SVP. Je suis encore en phase d'apprentissage. Je demande l'aide d'un humain...`,
+        askForResponseWithHistory: `Que faut-il répondre au message ci-dessus?`,
+        askForResponseWithoutHistory: `Que faut-il répondre aux messages ci-dessus?`,
+        imagePlaceholder: `[Image]`,
+        sentMessage: name => `Le message a bien été envoyé à "${name}"`,
     },
     errors: {
         general: 'Désolé, il semble qu\'il y ait un problème...',
