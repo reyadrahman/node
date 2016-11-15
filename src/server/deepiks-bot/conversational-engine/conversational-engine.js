@@ -131,35 +131,37 @@ export function converse(
 
     handleStories();
 
-    function handleOpTemplate(op, initializing) {
+    function handleOpAction(op, initializing) {
         if (initializing) {
             return false;
         }
         const actionDesc = actions.find(x => x.id === op.action);
-        reportDebug('converse handleOpTemplate actionDesc: ', actionDesc);
-        ret = {
-            type: 'msg',
-            msg: {
-                text: op.action.substr('template-'.length),
+        reportDebug('converse handleOpAction op: ', op);
+        reportDebug('converse handleOpAction actionDesc: ', actionDesc);
+        if (!actionDesc) {
+            throw new Error('converse handleOpAction did not find op in actions.json');
+        }
+        if (actionDesc.type === 'template') {
+            ret = {
+                type: 'msg',
+                msg: {
+                    text: actionDesc.template,
+                }
+            };
+            if (actionDesc && actionDesc.quickreplies) {
+                ret.msg.actions = actionDesc.quickreplies.map(x => ({
+                    text: x,
+                    fallback: x,
+                }));
             }
-        };
-        if (actionDesc && actionDesc.quickreplies) {
-            ret.msg.actions = actionDesc.quickreplies.map(x => ({
-                text: x,
-                fallback: x,
-            }));
+        } else if (actionDesc.type === 'function') {
+            ret = {
+                type: 'action',
+                action: actionDesc.name,
+            };
+        } else {
+            throw new Error('converse handleOpAction unknown action type');
         }
-        return true;
-    }
-
-    function handleOpFunction(op, initializing) {
-        if (initializing) {
-            return false;
-        }
-        ret = {
-            type: 'action',
-            action: op.action.substr('function-'.length),
-        };
         return true;
     }
 
@@ -231,10 +233,8 @@ export function converse(
             reportDebug('opIndex ', opIndex);
             const op = ops[opIndex];
             let handler;
-            if (op.action && op.action.startsWith('template-')) {
-                handler = handleOpTemplate;
-            } else if (op.action && op.action.startsWith('function-')) {
-                handler = handleOpFunction;
+            if (op.action) {
+                handler = handleOpAction;
             } else if (op.branches) {
                 handler = handleOpBranches;
             } else if (op.jump) {
@@ -399,6 +399,15 @@ export function learnFromHumanTransfer(
         ],
     };
 
+    const learnedAction = {
+        id : `template-${responseText}`,
+        type : 'template',
+        template : responseText,
+    };
+
+    if (!actions.find(x => x.id === learnedAction.id)) {
+        actions.push(learnedAction);
+    }
 
     if (initPath.length > 0 && !session.leafIsExpectingUserInput) {
         throw new Error('learnFromHumanTransfer requires session.leafIsExpectingUserInput');
