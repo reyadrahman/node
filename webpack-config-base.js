@@ -17,7 +17,7 @@ function createBaseConfig(NODE_ENV) {
     const DEV = NODE_ENV === 'development';
 
     return {
-        devtool: DEV ? 'inline-source-map' : false,
+        devtool: DEV ? 'inline-source-map' : 'source-map',
         resolve: {
             modulesDirectories: ['node_modules', 'external_modules'],
         },

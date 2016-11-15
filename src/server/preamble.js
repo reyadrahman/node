@@ -12,10 +12,8 @@ const reportDebug = require('debug')('deepiks:preamble');
 
 reportDebug('process.env: ', _.pick(process.env, _.keys(__ENV_VARS__)));
 
-if (process.env.NODE_ENV === 'development') {
-    reportDebug('registering source-map-support');
-    require('source-map-support').install();
-}
+reportDebug('registering source-map-support');
+require('source-map-support').install();
 
 //Promise.done is non-standard but some modules depend on it
 if (typeof Promise.prototype.done !== 'function') {

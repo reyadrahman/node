@@ -235,22 +235,24 @@ function extractRefFromMessage(message: DBMessage, conversation: Conversation) {
     if (!inputMatch || _.isEmpty(tcs)) return null;
     const [, refName, content] = inputMatch;
 
-    const simplifyName = x => x.trim().toLowerCase().replace(/[^a-z0-9_-]/, '');
+    const simplifyName = x => x.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
     const simplifiedRefName = simplifyName(refName);
-    const validItems = _.pickBy(tcs, (v, k) => {
+    const validConversationIds = Object.keys(tcs).filter(k => {
+        const v = tcs[k];
         const sn = v.lastMessage.senderName || '';
         return sn.toLowerCase().startsWith(refName.toLowerCase()) ||
-            simplifyName(sn).startsWith(simplifiedRefName)
+            simplifyName(sn).startsWith(simplifiedRefName);
     });
-    reportDebug('extractRefFromMessage validItems', validItems);
-    if (_.size(validItems) !== 1) return null;
-    const refConversationId = _.keys(validItems)[0];
+    reportDebug('extractRefFromMessage validConversationIds', validConversationIds);
+
+    if (_.size(validConversationIds) !== 1) return null;
+    const refConversationId = validConversationIds[0];
 
     const expectsReply = Boolean((message.text || '').match(/\?\s*$/));
     return {
         text: content,
         conversationId: refConversationId,
         expectsReply,
-        senderName: validItems[refConversationId].lastMessage.senderName,
+        senderName: tcs[refConversationId].lastMessage.senderName,
     }
 }
