@@ -33,6 +33,8 @@ export const UPDATE_BOT_GENERAL             = 'UPDATE_BOT_GENERAL';
 export const ADD_BOT_FEED_ALL_FIELDS        = 'ADD_BOT_FEED_ALL_FIELDS';
 export const ADD_BOT_FEED_GENERAL           = 'ADD_BOT_FEED_GENERAL';
 
+export const FORCE_SEND_FEEDS_GENERAL       = 'FORCE_SEND_FEEDS_GENERAL';
+
 export const SAVE_USER_GENERAL              = 'SAVE_USER_GENERAL';
 export const SAVE_USER_INVALID_EMAIL        = 'SAVE_USER_INVALID_EMAIL';
 export const FETCH_USER_GENERAL             = 'FETCH_USER_GENERAL';

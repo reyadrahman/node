@@ -84,6 +84,7 @@ const Message = ({
     const profilePicStyle = {
         backgroundImage: `url(${profilePic})`,
     };
+    const textElems = (message.text || '').split('\n\n').map((x, i) => <p key={i}>{x}</p>);
     return (
         <div className={`message ${className || ''}`} {...others} >
             <div className="profile-pic" style={profilePicStyle} />
@@ -95,7 +96,7 @@ const Message = ({
                     cards={message.cards}
                 />
                 <div className="text">
-                    { message.text }
+                    { textElems }
                 </div>
                 <Actions
                     actions={message.actions}
@@ -143,7 +144,9 @@ const Cards = ({
         // };
         return (
             <div key={i} className="card">
-                <img className="image" src={x.imageUrl} />
+                {
+                    x.imageUrl && <img className="image" src={x.imageUrl}/>
+                }
                 <div className="title">
                     {x.title}
                 </div>

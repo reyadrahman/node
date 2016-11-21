@@ -69,14 +69,18 @@ export type CustomAIData = {
 };
 
 
+/*
+    Either provide url or postback+fallback
+ */
 export type MessageAction = {
     text: string,
     postback?: string,
     fallback?: string,
+    url?: string,
 };
 
 export type MessageCard = {
-    imageUrl: string,
+    imageUrl?: string,
     title?: string,
     subtitle?: string,
     actions?: MessageAction[],
@@ -195,6 +199,7 @@ export type FeedConfigTwitter = {
     lastPublishTimestamp: number,
     publishTimePattern: string,
     categories?: string[],
+    actions?: FeedConfigAction[],
 };
 
 export type FeedConfigRss = {
@@ -205,7 +210,13 @@ export type FeedConfigRss = {
     lastPublishTimestamp: number,
     publishTimePattern: string,
     categories?: string[],
+    actions?: FeedConfigAction[],
 };
+
+export type FeedConfigAction = {
+    text: string,
+    link?: string,
+}
 
 export type BotParams = {
     botId: string,

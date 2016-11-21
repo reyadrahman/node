@@ -5,6 +5,7 @@ import * as aws from '../aws/aws.js';
 import * as channels from './channels/all-channels.js';
 import type { ContactFormData, FeedConfig } from '../misc/types.js';
 import { composeKeys, decomposeKeys, shortLowerCaseRandomId } from '../misc/utils.js';
+import { updateFeedsForBot } from './periodic-tasks/feeds-periodic-task.js';
 import * as E from '../misc/error-codes.js';
 
 import { inspect } from 'util';
@@ -153,6 +154,12 @@ createRoute('delete', '/remove-bot', E.GENERAL_ERROR, authMiddleware, (req, res,
 createRoute('post', '/add-bot-feed', E.ADD_BOT_FEED_GENERAL, authMiddleware, (req, res, next) => {
     const { identityId } = req.customData;
     res.locals.resPromise = addBotFeed(identityId, req.body.botId, req.body.feedConfig);
+    next();
+});
+
+createRoute('post', '/force-send-feeds', E.FORCE_SEND_FEEDS_GENERAL, authMiddleware, (req, res, next) => {
+    const { identityId } = req.customData;
+    res.locals.resPromise = forceSendFeeds(identityId, req.body.botId);
     next();
 });
 
@@ -635,6 +642,14 @@ async function addBotFeed(identityId, botId: string, feedConfig: FeedConfig) {
             ':newFeed': [feedConfigWithId],
         },
     });
+}
+
+async function forceSendFeeds(identityId, botId: string) {
+    const botParams = await aws.getBot(identityId, botId);
+    if (!botParams) {
+        throw { code: E.FORCE_SEND_FEEDS_GENERAL };
+    }
+    await updateFeedsForBot(botParams, true);
 }
 
 

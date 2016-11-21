@@ -22,7 +22,7 @@
 
                 th,td {
                     padding: 8px 20px;
-                    border-bottom: 1px solid #dddddd; 
+                    border-bottom: 1px solid #dddddd;
                 }
                 th:nth-child(4), td:nth-child(4) {
                     text-align: right
@@ -30,10 +30,14 @@
             }
         }
 
-        .button {
-            display: block;
-            margin: 30px auto;
-            padding: 10px 40px;
+        .buttons-area {
+            text-align: center;
+
+            .button {
+                display: inline-block;
+                margin: 30px 20px;
+                padding: 10px 40px;
+            }
         }
     }
 }

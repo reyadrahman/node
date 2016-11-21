@@ -214,11 +214,21 @@ export async function send(botParams: BotParams, conversationId: string,
 
     if (cards) {
         const payloadElements = cards.slice(0,10).map((c, i) => {
-            let buttons = c.actions && c.actions.map(a => ({
-                type: 'postback',
-                title: a.text,
-                payload: a.postback || a.text,
-            }));
+            let buttons = c.actions && c.actions.map(a => {
+                if (a.url) {
+                    return {
+                        type: 'web_url',
+                        title: a.text,
+                        url: a.url,
+                    }
+                } else { // postback
+                    return {
+                        type: 'postback',
+                        title: a.text,
+                        payload: a.postback || a.text,
+                    };
+                }
+            });
 
             if(c.imageUrl) {
                 buttons = [{

@@ -460,7 +460,7 @@ async function signS3UrlsInMesssages(messages: DBMessage[]): Promise<DBMessage[]
         let cardsP;
         if (clone.cards) {
             cardsP = Promise.all(clone.cards.map(async function(c) {
-                const bucketAndKey = destructureS3Url(c.imageUrl);
+                const bucketAndKey = c.imageUrl && destructureS3Url(c.imageUrl);
                 if (!bucketAndKey || bucketAndKey.bucket !== CONSTANTS.S3_BUCKET_NAME) {
                     return c;
                 }
@@ -510,3 +510,15 @@ export function addBotFeed(botId: string, feedConfig: FeedConfig) {
     };
 }
 
+export function forceSendFeeds(botId: string) {
+    return async function(dispatch: Function) {
+        try {
+            const session = await aws.getCurrentSession();
+            await bridge.forceSendFeeds(session.getIdToken().getJwtToken(), botId);
+        } catch(error) {
+            reportError(error);
+            const errorCode = error.errorCode || E.FORCE_SEND_FEEDS_GENERAL;
+            throw { errorCode };
+        }
+    };
+}

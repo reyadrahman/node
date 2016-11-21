@@ -148,19 +148,35 @@ export async function send(botParams: BotParams, conversationId: string,
     });
 
     reportDebug('send sending message: ', message);
-    const actionsToStr = xs =>
-        (xs || []).filter(x => x.fallback).map(x => x.fallback).join(', ');
+    const actionsToStr = xs => {
+        const postbacks = (xs || []).filter(x => x.fallback).map(x => x.fallback).join(', ').trim();
+        const urls = (xs || []).filter(x => x.url).map(
+            x => `${x.text}: ${x.url || ''}`
+        ).join('\n\n').trim();
+
+        let text = '';
+        if (postbacks) {
+            text = `(${postbacks})`;
+        }
+        if (urls) {
+            text += `\n\n${urls}`;
+        }
+
+        return text;
+    };
     // ciscospark can only send 1 file at a time
     const dashbotPromises = [];
     const { typingOn, text, cards, actions } = message;
     if (cards) {
         for (let i=0; i<cards.length; i++) {
             const c = cards[i];
-            await client.messages.create({
-                text: '',
-                files: [c.imageUrl],
-                roomId: conversationId,
-            });
+            if (c.imageUrl) {
+                await client.messages.create({
+                    text: '',
+                    files: [c.imageUrl],
+                    roomId: conversationId,
+                });
+            }
             // TODO how to send images to dashbot
 
             const cardText = removeMarkdown(actionsToStr(c.actions) || '');
@@ -176,9 +192,6 @@ export async function send(botParams: BotParams, conversationId: string,
 
     if (text || actions) {
         let actionsText = actionsToStr(actions);
-        if (actionsText) {
-            actionsText = `(${actionsText})`;
-        }
         const textToSend = removeMarkdown(
             ((text || '') + '\n\n' + actionsText).trim()
         );

@@ -226,7 +226,8 @@ export async function ai(
 
     let text = message.text;
     if (message.cards && message.cards.length) {
-        text = `${text || ''} ${_.last(message.cards).imageUrl}`
+        imageUrl = _.last(message.cards).imageUrl;
+        text = `${text || ''} ${imageUrl || ''}`.trim();
     }
     if (!text) {
         return;

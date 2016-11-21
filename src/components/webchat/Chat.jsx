@@ -84,7 +84,11 @@ let Chat = React.createClass({
 
     handleAction: function (action) {
         console.log(action);
-        this.handleMessageSubmit(action.postback);
+        if (action.url) {
+            window.open(action.url);
+        } else { // postback
+            this.handleMessageSubmit(action.postback);
+        }
     },
 
     componentWillMount:  function () {
@@ -103,7 +107,7 @@ let Chat = React.createClass({
     },
 
     setupWebsocket: function () {
-        let address = CONSTANTS.RUNNINGL_LOCALLY
+        let address = CONSTANTS.RUNNING_LOCALLY
             ? `ws://localhost:${CONSTANTS.PORT}`
             : CONSTANTS.OWN_BASE_URL.replace(/^https/i, 'wss').replace(/^http/i, 'ws');
         let websocket = this.ws = new WebSocket(address);

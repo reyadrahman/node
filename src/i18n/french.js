@@ -39,6 +39,8 @@ export default {
         [E.ADD_BOT_FEED_ALL_FIELDS]: `FR Please fill out all fields`,
         [E.ADD_BOT_FEED_GENERAL]: `FR Sorry, couldn't add feed`,
 
+        [E.FORCE_SEND_FEEDS_GENERAL]: `FR Sorry, couldn't send feeds`,
+
         [E.SAVE_USER_GENERAL]: `FR Sorry, couldn't save user`,
         [E.SAVE_USER_INVALID_EMAIL]: `FR Invalid email address`,
 
@@ -48,6 +50,7 @@ export default {
         [S.SEND_EMAIL]: `FR Email successfully sent, thanks.`,
         [S.UPDATE_ATTRS_AND_PASS]: 'FR Successfully updated',
         [S.ADD_BOT_GENERAL]: `FR Bot successfully created`,
+        [S.FORCE_SEND_FEEDS]: `FR Feeds successfully sent`,
     },
     app: {
         pageTitle: 'Deepiks: plateforme de chatbots avancée',
@@ -212,6 +215,7 @@ export default {
         fetchingFeeds: 'Recherche de flux en cours...',
         noBots: 'Vous n\'avez aucun bot',
         noFeeds: 'Vous n\'avez encore aucun flux',
+        sendNow: 'FR Send now',
     },
     newFeed: {
         create: 'Créer',

@@ -3,8 +3,9 @@ import React from 'react';
 //          ErrorMessage } from '../form/Form.jsx';
 import * as actions from '../../app-state/actions.js';
 import { Title } from '../modal-box-1/ModalBox1.jsx';
-import { leftPad, splitOmitWhitespace } from '../../misc/utils.js';
+import { leftPad, splitOmitWhitespace, timeout } from '../../misc/utils.js';
 import * as E from '../../misc/error-codes.js';
+import * as S from '../../misc/success-codes.js';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
 import { Glyphicon, Button, Dropdown, MenuItem, Table, FormGroup,
@@ -13,7 +14,13 @@ import { Glyphicon, Button, Dropdown, MenuItem, Table, FormGroup,
 import _ from 'lodash';
 
 let FeedsPage = React.createClass({
-    newFeed(e) {
+    getInitialState() {
+        return {
+            isSending: false,
+        };
+    },
+
+    newFeed() {
         const close = e => {
             e.preventDefault();
             this.props.closeModal();
@@ -22,12 +29,28 @@ let FeedsPage = React.createClass({
         this.props.setModal(props => <NewFeed {...props} onRequestClose={close} />);
     },
 
+    async forceSendFeeds(e) {
+        try {
+            this.setState({ isSending: true });
+            await this.props.forceSendFeeds(this.props.currentUser.selectedBotId);
+            this.setState({ successCode: S.FORCE_SEND_FEEDS });
+            await timeout(3000);
+            this.setState({ successCode: null });
+        } catch(error) {
+            this.setState({ errorCode: error.errorCode || E.FORCE_SEND_FEEDS_GENERAL });
+        } finally {
+            this.setState({ isSending: false });
+        }
+    },
+
     newBot() {
         this.props.router.push('/add-bot');
     },
 
     render() {
-        const { className, currentUser, i18n: { strings: { feedsPage: strings } } } = this.props;
+        const { className, currentUser,
+                i18n: { strings: { errors, successes, feedsPage: strings } } } = this.props;
+
         if (!currentUser.signedIn) {
             return null;
         }
@@ -99,7 +122,7 @@ let FeedsPage = React.createClass({
                     <td>{ at }</td>
                 </tr>
             );
-        })
+        });
 
         return wrapPage(
             wrapFeedsSection([
@@ -116,7 +139,21 @@ let FeedsPage = React.createClass({
                         { rowsUi }
                     </tbody>
                 </Table>,
-                newFeedButton
+                this.state.errorCode && <Alert bsStyle="danger">{errors[this.state.errorCode]}</Alert>,
+                this.state.successCode && <Alert bsStyle="success">{successes[this.state.successCode]}</Alert>,
+                <div className="buttons-area">
+                    <Button
+                        className="button"
+                        bsSize="large"
+                        onClick={this.forceSendFeeds}
+                        disabled={this.state.isSending}
+                    >
+                        {this.state.isSending && <i className="icon-spinner animate-spin"></i>}
+                        {' '}
+                        { strings.sendNow }
+                    </Button>
+                    { newFeedButton }
+                </div>
             ])
         );
     }
@@ -130,6 +167,7 @@ FeedsPage = connect(
     {
         closeModal: actions.closeModal,
         setModal: actions.setModal,
+        forceSendFeeds: actions.forceSendFeeds,
     }
 )(FeedsPage);
 

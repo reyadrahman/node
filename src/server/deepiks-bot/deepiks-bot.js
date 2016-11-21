@@ -490,7 +490,7 @@ async function signS3Urls(response: ResponseMessage): Promise<ResponseMessage> {
     let cardsP;
     if (clone.cards) {
         cardsP = Promise.all(clone.cards.map(async function(c) {
-            const bucketAndKey = destructureS3Url(c.imageUrl);
+            const bucketAndKey = c.imageUrl && destructureS3Url(c.imageUrl);
             if (!bucketAndKey || bucketAndKey.bucket !== CONSTANTS.S3_BUCKET_NAME) {
                 return c;
             }

@@ -69,6 +69,10 @@ export async function addBotFeed(jwtIdToken: string, botId: string, feedConfig: 
     return await fetchjp2j('/api/add-bot-feed', { jwtIdToken, botId, feedConfig });
 }
 
+export async function forceSendFeeds(jwtIdToken: string, botId: string) {
+    return await fetchjp2j('/api/force-send-feeds', { jwtIdToken, botId });
+}
+
 export async function sendEmail(contactFormData: ContactFormData) {
     return await fetchjp2j('/api/send-email', { contactFormData })
 }

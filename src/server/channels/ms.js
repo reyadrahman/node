@@ -174,7 +174,7 @@ export async function send(botParams: BotParams,
     reportDebug('send: ', message);
 
     const { text, cards, actions } = message;
-    const supportsHeroCard = ['telegram', 'skype', 'slack', 'msteams'].includes(channel);
+    const supportsHeroCard = ['telegram', 'skype', 'slack', 'msteams', 'webchat'].includes(channel);
 
     if (cards) {
         let resAttachments = [];
@@ -187,24 +187,32 @@ export async function send(botParams: BotParams,
                     builder.CardImage.create(session, c.imageUrl)
                            .tap(builder.CardAction.showImage(session, c.imageUrl)),
                 ]);
-                c.actions && card.buttons(c.actions.map(a => (
-                    builder.CardAction.imBack(session, a.postback || a.text, a.text)
-                )));
+                c.actions && card.buttons(c.actions.map(a => {
+                    if (a.url) {
+                        return builder.CardAction.openUrl(session, a.url, a.text)
+                    } else { // postback
+                        return builder.CardAction.imBack(session, a.postback || a.text, a.text)
+                    }
+                }));
                 return card;
             })
         } else {
             const CA = builder.CardAction;
             cards.forEach(c => {
                 const card = new builder.HeroCard(session);
-                c.fallback && card.title(c.fallback);
-                // x.subtitle && card.subtitle(x.subtitle);
+                c.title && card.title(c.title);
+                c.subtitle && card.subtitle(c.subtitle);
                 c.imageUrl && card.images([
                     builder.CardImage.create(session, c.imageUrl)
                            .tap(builder.CardAction.showImage(session, c.imageUrl)),
                 ]);
-                c.actions && card.buttons(c.actions.filter(a => a.fallback).map(a => (
-                    new CA(session).type('imBack').value(a.fallback).title(a.fallback)
-                )));
+                c.actions && card.buttons(c.actions.filter(a => a.fallback || a.url).map(a => {
+                    if (a.url) {
+                        return new CA(session).type('openUrl').value(a.url).title(a.text)
+                    } else { // postback
+                        return new CA(session).type('imBack').value(a.fallback).title(a.fallback)
+                    }
+                }));
                 resAttachments.push(card);
                 reportDebug('adding card: ', card);
             });
@@ -212,7 +220,7 @@ export async function send(botParams: BotParams,
 
         reportDebug('send: resAttachments: ', resAttachments);
 
-        let resMessage = new builder.Message(session)
+        let resMessage = new builder.Message(session);
         if (resAttachments.length > 1 &&
             resAttachments.length <= MAX_MS_CAROUSEL_ITEM_COUNT &&
             supportsHeroCard)

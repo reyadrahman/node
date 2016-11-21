@@ -1,6 +1,6 @@
 /* @flow */
 
-import updateFeedsPeriodicTask from './feeds-periodic-task.js';
+import { updateFeedsPeriodicTask } from './feeds-periodic-task.js';
 import updateScheduledTasks from './scheduled-tasks.js';
 import { CONSTANTS } from '../server-utils.js';
 import type { Request, Response } from 'express';
