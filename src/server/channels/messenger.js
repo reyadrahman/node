@@ -230,13 +230,6 @@ export async function send(botParams: BotParams, conversationId: string,
                 }
             });
 
-            if(c.imageUrl) {
-                buttons = [{
-                    type: 'web_url',
-                    title: 'Open Image',
-                    url: c.imageUrl,
-                }].concat(buttons || []);
-            }
             return {
                 title: c.title || `${i+1}`,
                 subtitle: c.subtitle || null,

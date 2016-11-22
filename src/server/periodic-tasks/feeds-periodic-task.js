@@ -248,10 +248,16 @@ function botFeedToResponseMessage(botFeed: BotFeed): ResponseMessage {
             title: m.title,
             subtitle: m.description,
             imageUrl: m.imageUrl,
-            actions: feedConfig.actions && feedConfig.actions.map(a => ({
-                text: a.text,
-                url: expandFeedActionLink(a.link, m),
-            })),
+            actions: feedConfig.actions && feedConfig.actions.map(a => {
+                return a.postback ? {
+                    text: a.text,
+                    postback: a.postback,
+                    fallback: a.postback,
+                } : {
+                    text: a.text,
+                    url: expandFeedActionLink(a.link, m),
+                };
+            }),
         })),
     };
 }
