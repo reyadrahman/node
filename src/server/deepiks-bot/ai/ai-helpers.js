@@ -4,7 +4,8 @@ import * as aws from '../../../aws/aws.js';
 import { CONSTANTS, request } from '../../server-utils.js';
 import { toStr } from '../../../misc/utils.js';
 import localActions from './actions/all-actions.js';
-import type { AIActionRequest, ExternalAIActionRequest } from '../../../misc/types.js';
+import type { AIActionRequest, ExternalAIActionRequest,
+              MessagePreprocessorAction } from '../../../misc/types.js';
 import uuid from 'node-uuid';
 const reportDebug = require('debug')('deepiks:ai-helpers');
 const reportError = require('debug')('deepiks:ai-helpers:error');
@@ -120,3 +121,25 @@ export async function runAction(
     throw new Error(`runAction unknown action: ${toStr(action)}`);
 }
 
+/**
+ * extract for preprocessor actions inside the text
+ * e.g. "<[DELAY:60]> some text"
+ */
+export function extractPreprocessorActions(text: string)
+: ?{ text: string, actions: MessagePreprocessorAction[] }
+{
+    const preprocessorMatch = text.match(/^\s*<\[(.*?)\]>\s*(.*)/);
+    if (!preprocessorMatch) {
+        return null;
+    }
+    const actions = preprocessorMatch[1]
+            .split(';')
+            .map(command => command
+                .split(':')
+                .map(x => x.trim().toLowerCase())
+                .filter(Boolean)
+            )
+            .filter(x => x.length > 0)
+            .map(([ action, ...args ]) => ({ action, args }));
+    return { text: preprocessorMatch[2], actions };
+}

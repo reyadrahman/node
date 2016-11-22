@@ -2,11 +2,12 @@
 
 import * as aws from '../../../aws/aws.js';
 import type { DBMessage, BotParams, UserPrefs, RespondFn,
-              User, Conversation, ResponseMessage,
+              User, Conversation, HumanTransferDest,
               AIActionRequest, BotAIData } from '../../../misc/types.js';
 import { CONSTANTS } from '../../server-utils.js';
 import { toStr, composeKeys, decomposeKeys } from '../../../misc/utils.js';
-import { runAction, CONVERSE_STATUS_STOP, CONVERSE_STATUS_STUCK } from './ai-helpers.js';
+import { runAction, extractPreprocessorActions,
+         CONVERSE_STATUS_STOP, CONVERSE_STATUS_STUCK } from './ai-helpers.js';
 import type { ConverseStatus } from './ai-helpers.js';
 import { converse as aiEngineConverse,
          learnFromHumanTransfer as aiEngineLearnFromHumanTransfer
@@ -165,7 +166,7 @@ function parseResponseMessage(msg) {
 }
 
 // TODO cache stories
-async function getBotAIData(botParams) {
+async function getBotAIData(botParams): Promise<?BotAIData> {
     const { publisherId, botId } = botParams;
     const res = await aws.s3GetObject({
         Bucket: CONSTANTS.S3_BUCKET_NAME,
@@ -209,7 +210,7 @@ export async function ai(
         text = `${text || ''} ${imageUrl || ''}`.trim();
     }
     if (!text) {
-        return;
+        return CONVERSE_STATUS_STOP;
     }
     const oldCustomAIData = conversation.customAIData || {};
 
@@ -299,3 +300,36 @@ export async function learnFromHumanTransfer(
     await updateConversationsP;
 }
 
+export async function getHumanTransferDest(botParams: BotParams)
+: Promise<?HumanTransferDest>
+{
+    // TODO cache botAIData
+    const botAIData = await getBotAIData(botParams);
+    if (!botAIData) {
+        throw new Error('getHumanTransferDest failed to get/parse bot AI data from S3');
+    }
+
+    // find the story where its first user message is CONSTANTS.HUMAN_TRANSFER_INDICATOR
+    // then find its operation which is a template action which has the `transfer`
+    // preprocessor action with at least 2 arguments
+    const story = botAIData.stories.find(x => {
+        const u = _.get(x, ['turns', 0, 'user'], '').trim().toLowerCase();
+        return u === CONSTANTS.HUMAN_TRANSFER_INDICATOR;
+    });
+    const actions =
+        _.get(story, ['turns', 0, 'operations'], [])
+        .filter(a => a.action)
+        .map(a => botAIData.actions.find(b => b.id === a.action))
+        .map(a => a && a.template && extractPreprocessorActions(a.template))
+        .reduce((acc, a) => acc.concat(a.actions), [])
+        .filter(a => a && a.action === 'transfer' && a.args[0] && a.args[1]);
+
+    reportDebug('getHumanTransferDest actions: ', actions);
+    if (actions.length === 0) return null;
+
+    return {
+        channel: actions[0].args[0],
+        userId: actions[0].args[1],
+        learn: actions[0].args[2] === 'learn',
+    };
+}

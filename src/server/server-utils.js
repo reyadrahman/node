@@ -17,6 +17,7 @@ export const CONSTANTS: ServerConstants = ({
     RUNNING_LOCALLY: Number(process.env.RUNNING_LOCALLY) === 1,
     AI_ACTION_CACHE_VALID_TIME_S: 10,
     TYPING_INDICATOR_DELAY_S: 2,
+    HUMAN_TRANSFER_INDICATOR: 'xxxxx',
     DB_TABLE_BOTS: prefixDBTable('bots'),
     DB_TABLE_CONVERSATIONS: prefixDBTable('conversations'),
     DB_TABLE_MESSAGES: prefixDBTable('messages'),

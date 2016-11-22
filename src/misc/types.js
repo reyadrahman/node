@@ -47,11 +47,17 @@ export type Conversation = {
         type: 'string',
         values: string[],
     },
-    transferredToHuman?: boolean,
+    humanTransferDest?: HumanTransferDest,
     transferredConversations?: {[key: string]: {
         lastMessage: DBMessage,
     }},
 };
+
+export type HumanTransferDest = {
+    channel: string,
+    userId: string,
+    learn: boolean,
+}
 
 export type ChannelData = {
     address: Object, // microsoft bot framework specific
@@ -225,10 +231,6 @@ export type BotParams = {
     publisherId: string,
     onlyAllowedUsersCanChat: boolean,
     feeds?: FeedConfig[],
-    humanTransfer?: {
-        userId: string,
-        channel: string,
-    },
     settings: {
         ciscosparkAccessToken?: string,
         ciscosparkBotPersonId?: string,
@@ -292,6 +294,7 @@ export type ServerConstants = {
     CONVERSATIONAL_ENGINE_LAMBDA: string,
     CALL_SERVER_LAMBDA_SECRET: string,
     RUNNING_LOCALLY: boolean,
+    HUMAN_TRANSFER_INDICATOR: string,
     CDN?: string,
     DEBUG?: string,
 };

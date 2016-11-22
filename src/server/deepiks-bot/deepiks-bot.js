@@ -5,7 +5,8 @@ import { callbackToPromise, toStr, destructureS3Url, timeout,
          composeKeys, decomposeKeys, waitForAll,
          shortLowerCaseRandomId } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
-import ai from './ai/ai.js';
+import { ai, conversationIsStuck } from './ai/ai.js';
+import { extractPreprocessorActions } from './ai/ai-helpers.js';
 import type { DBMessage, WebhookMessage, ResponseMessage, BotParams,
               ChannelData, Conversation, RespondFn, User } from '../../misc/types.js';
 import { translations as tr, languages as langs } from '../i18n/translations.js';
@@ -353,7 +354,8 @@ function respondFnPreprocessorActionsMiddleware(
     botParams: BotParams,
     conversationId: string,
     channel: string,
-    sendAsUser: (msg: DBMessage) => Promise<*>
+    sendAsUser: (msg: DBMessage) => Promise<*>,
+    userMessage: ?DBMessage,
 ): RespondFn
 {
     return async function self(response) {
@@ -368,6 +370,7 @@ function respondFnPreprocessorActionsMiddleware(
         const pollAction = pas.find(x => x.action === 'poll' && x.args[0] && x.args[1]);
         const asUserAction = pas.find(x => x.action === 'as user');
         const emailAction = pas.find(x => x.action === 'email' && x.args[0]);
+        const transferAction = pas.find(x => x.action === 'transfer' && x.args[0] && x.args[1]);
 
         if (delayAction && pollAction) {
             const m = `Cannot use 'delay' and 'poll' preprocessor actions together`;
@@ -383,12 +386,30 @@ function respondFnPreprocessorActionsMiddleware(
             return;
         }
 
+        if (transferAction) { // this is only for wit.ai
+            if (!userMessage) {
+                throw new Error('respondFnPreprocessorActionsMiddleware transferAction ' +
+                                'is provided but userMessage is missing.');
+            }
+
+            const conversation = await aws.getConversation(
+                botParams.publisherId, botParams.botId, conversationId
+            );
+
+            const humanTransferDest = {
+                channel: transferAction.args[0],
+                userId: transferAction.args[1],
+                learn: false, // wit.ai does not support learning
+            };
+            await conversationIsStuck(userMessage, conversation, botParams, next, humanTransferDest);
+        }
+
         if (delayAction) {
             // remove the action and schedule it
             const newResponse = {
                 ...response,
                 preprocessorActions: _.without(pas, delayAction),
-            }
+            };
             const scheduleTimestamp = Date.now() + Number(delayAction.args[0]) * 1000 * 60;
             await aws.dynamoPut({
                 TableName: CONSTANTS.DB_TABLE_SCHEDULED_TASKS,
@@ -808,7 +829,8 @@ async function handleWebhookMessage(
     newRespondFn = respondFnSignS3UrlsMiddleware(newRespondFn);
     newRespondFn = respondFnCollectorMiddleware(newRespondFn, responses);
     newRespondFn = respondFnPreprocessorActionsMiddleware(
-        newRespondFn, botParams, conversationId, dbMessage.channel, sendAsUser
+        newRespondFn, botParams, conversationId,
+        dbMessage.channel, sendAsUser, dbMessage
     );
 
     // Ensure the message is not already processed
@@ -902,7 +924,7 @@ export async function coldSend(message: ResponseMessage, botParams: BotParams,
     newRespondFn = respondFnCollectorMiddleware(newRespondFn, responses);
     newRespondFn = respondFnPreprocessorActionsMiddleware(
         newRespondFn, botParams, conversationId,
-        conversation.channel, sendAsUser
+        conversation.channel, sendAsUser, null,
     );
 
     await newRespondFn(message);

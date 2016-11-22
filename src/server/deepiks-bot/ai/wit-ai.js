@@ -5,7 +5,7 @@ import type { DBMessage, BotParams, UserPrefs, WitData, User, Conversation,
               RespondFn, AIActionRequest } from '../../../misc/types.js';
 import { CONSTANTS } from '../../server-utils.js';
 import { toStr, composeKeys, decomposeKeys } from '../../../misc/utils.js';
-import { runAction, CONVERSE_STATUS_STOP } from './ai-helpers.js';
+import { runAction, CONVERSE_STATUS_STOP, extractPreprocessorActions } from './ai-helpers.js';
 import type { ConverseStatus } from './ai-helpers.js';
 import { Wit, log as witLog } from 'node-wit';
 import _ from 'lodash';
@@ -175,20 +175,10 @@ async function runActionsHelper(
 
 function converseDataToResponseMessage(converseData) {
     const response = {};
-    // check for preprocessor actions inside the message
-    // e.g. "<[DELAY:60]> some message"
-    const preprocessorMatch = (converseData.msg || '').match(/^\s*<\[(.*?)\]>\s*(.*)/);
-    if (preprocessorMatch) {
-        response.preprocessorActions = preprocessorMatch[1]
-            .split(';')
-            .map(command => command
-                .split(':')
-                .map(x => x.trim().toLowerCase())
-                .filter(Boolean)
-            )
-            .filter(x => x.length > 0)
-            .map(([ action, ...args ]) => ({ action, args }))
-        response.text = preprocessorMatch[2];
+    const extracted = extractPreprocessorActions(converseData.msg || '');
+    if (extracted) {
+        response.preprocessorActions = extracted.actions;
+        response.text = extracted.text;
     } else {
         response.text = converseData.msg;
     }
@@ -230,7 +220,7 @@ export async function ai(
         text = `${text || ''} ${imageUrl || ''}`.trim();
     }
     if (!text) {
-        return;
+        return CONVERSE_STATUS_STOP;
     }
 
 
