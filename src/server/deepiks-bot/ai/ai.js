@@ -2,13 +2,13 @@
 
 import * as aws from '../../../aws/aws.js';
 import type { DBMessage, BotParams, RespondFn, Conversation,
-              HumanTransferDest } from '../../../misc/types.js';
+              StuckStoryHandlerInfo } from '../../../misc/types.js';
 import { toStr, composeKeys, decomposeKeys, timeout } from '../../../misc/utils.js';
 import { CONSTANTS } from '../../server-utils.js';
 import witAI from './wit-ai.js';
 import { ai as customAI,
          learnFromHumanTransfer as customAILearn,
-         getHumanTransferDest } from './custom-ai.js';
+         getStuckStoryHandlerInfo } from './custom-ai.js';
 import { CONVERSE_STATUS_STUCK } from './ai-helpers.js';
 import { send } from '../../channels/all-channels.js';
 import { translations as tr, languages as langs } from '../../i18n/translations.js';
@@ -56,10 +56,19 @@ export async function ai(
     }
 
     if (transfer) {
-        const humanTransferDest =
-            conversation.humanTransferDest || await getHumanTransferDest(botParams);
+        let humanTransferDest = conversation.humanTransferDest;
+        let responseText = null;
+        if (!humanTransferDest) {
+            const sshi = await getStuckStoryHandlerInfo(botParams);
+            if (sshi) {
+                humanTransferDest = sshi.humanTransferDest;
+                responseText = sshi.text;
+            }
+        }
         reportDebug('ai humanTransferDest: ', humanTransferDest);
-        await conversationIsStuck(message, conversation, botParams, respondFn, humanTransferDest);
+        await conversationIsStuck(
+            message, conversation, botParams, respondFn, humanTransferDest, responseText
+        );
     }
 }
 
@@ -112,8 +121,8 @@ async function respondToTransferredConversation(
 
     // learn if using custom AI and learn is set
     if (!botParams.settings.witAccessToken) {
-        const humanTransferDest = await getHumanTransferDest(botParams);
-        if (humanTransferDest && humanTransferDest.learn) {
+        const sshi = await getStuckStoryHandlerInfo(botParams);
+        if (sshi && sshi.humanTransferDest && sshi.humanTransferDest.learn) {
             await customAILearn(
                 responseContent, botParams, conversation,
                 transFromConversation, expectsReply
@@ -138,13 +147,23 @@ export async function conversationIsStuck(
     botParams: BotParams,
     respondFn: RespondFn,
     humanTransferDest: ?HumanTransferDest,
+    responseText: ?string,
 ) {
-    reportDebug('conversationIsStuck called');
+    reportDebug('conversationIsStuck called, humanTransferDest: ',
+                humanTransferDest, ', responseText: ', responseText);
     const strings = (tr[botParams.defaultLanguage] || tr[langs[0]]).ai;
     const [publisherId, conversationId] = decomposeKeys(message.publisherId_conversationId);
     const {botId} = botParams;
 
-    if (!humanTransferDest || humanTransferDest.userId === message.senderId) {
+    if (!humanTransferDest) {
+        await respondFn({
+            text: responseText || strings.didNotUnderstand,
+            creationTimestamp: Date.now(),
+        });
+        return;
+    }
+
+    if (humanTransferDest.userId === message.senderId) {
         await respondFn({
             text: strings.didNotUnderstand,
             creationTimestamp: Date.now(),
@@ -236,7 +255,7 @@ export async function conversationIsStuck(
 
     // send message to user
     await respondFn({
-        text: strings.transferMessage,
+        text: responseText || strings.transferMessage,
         creationTimestamp: Date.now(),
     });
 }

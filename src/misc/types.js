@@ -53,6 +53,11 @@ export type Conversation = {
     }},
 };
 
+export type StuckStoryHandlerInfo = {
+    text: string,
+    humanTransferDest: HumanTransferDest
+};
+
 export type HumanTransferDest = {
     channel: string,
     userId: string,

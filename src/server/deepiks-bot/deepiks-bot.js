@@ -397,11 +397,13 @@ function respondFnPreprocessorActionsMiddleware(
             );
 
             const humanTransferDest = {
-                channel: transferAction.args[0],
+                channel: transferAction.args[0].toLowerCase(),
                 userId: transferAction.args[1],
                 learn: false, // wit.ai does not support learning
             };
-            await conversationIsStuck(userMessage, conversation, botParams, next, humanTransferDest);
+            await conversationIsStuck(
+                userMessage, conversation, botParams, next, humanTransferDest, response.text
+            );
         }
 
         if (delayAction) {

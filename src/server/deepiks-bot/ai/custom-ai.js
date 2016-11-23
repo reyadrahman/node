@@ -2,7 +2,7 @@
 
 import * as aws from '../../../aws/aws.js';
 import type { DBMessage, BotParams, UserPrefs, RespondFn,
-              User, Conversation, HumanTransferDest,
+              User, Conversation, StuckStoryHandlerInfo,
               AIActionRequest, BotAIData } from '../../../misc/types.js';
 import { CONSTANTS } from '../../server-utils.js';
 import { toStr, composeKeys, decomposeKeys } from '../../../misc/utils.js';
@@ -146,20 +146,11 @@ async function converseHelper(
 
 function parseResponseMessage(msg) {
     const response = { ...msg };
-    // check for preprocessor actions inside the message
-    // e.g. "<[DELAY:60]> some message"
-    const preprocessorMatch = (msg.text || '').match(/^\s*<\[(.*?)\]>\s*(.*)/);
-    if (preprocessorMatch) {
-        response.preprocessorActions = preprocessorMatch[1]
-            .split(';')
-            .map(command => command
-                .split(':')
-                .map(x => x.trim().toLowerCase())
-                .filter(Boolean)
-            )
-            .filter(x => x.length > 0)
-            .map(([ action, ...args ]) => ({ action, args }));
-        response.text = preprocessorMatch[2];
+
+    const extracted = extractPreprocessorActions(msg.text || '');
+    if (extracted) {
+        response.preprocessorActions = extracted.actions;
+        response.text = extracted.text;
     }
 
     return response;
@@ -300,13 +291,13 @@ export async function learnFromHumanTransfer(
     await updateConversationsP;
 }
 
-export async function getHumanTransferDest(botParams: BotParams)
-: Promise<?HumanTransferDest>
+export async function getStuckStoryHandlerInfo(botParams: BotParams)
+: Promise<?StuckStoryHandlerInfo>
 {
     // TODO cache botAIData
     const botAIData = await getBotAIData(botParams);
     if (!botAIData) {
-        throw new Error('getHumanTransferDest failed to get/parse bot AI data from S3');
+        throw new Error('getStuckStoryHandlerInfo failed to get/parse bot AI data from S3');
     }
 
     // find the story where its first user message is CONSTANTS.HUMAN_TRANSFER_INDICATOR
@@ -321,15 +312,22 @@ export async function getHumanTransferDest(botParams: BotParams)
         .filter(a => a.action)
         .map(a => botAIData.actions.find(b => b.id === a.action))
         .map(a => a && a.template && extractPreprocessorActions(a.template))
-        .reduce((acc, a) => acc.concat(a.actions), [])
-        .filter(a => a && a.action === 'transfer' && a.args[0] && a.args[1]);
+        .map(a => a && a.actions && {
+            text: a.text,
+            action: a.actions.find(x => x.action === 'transfer' && x.args[0] && x.args[1])
+        })
+        .filter(a => a && (a.text || a.action));
 
-    reportDebug('getHumanTransferDest actions: ', actions);
+    reportDebug('getStuckStoryHandlerInfo actions: ', actions);
     if (actions.length === 0) return null;
 
+    const a0 = actions[0];
     return {
-        channel: actions[0].args[0],
-        userId: actions[0].args[1],
-        learn: actions[0].args[2] === 'learn',
+        humanTransferDest: a0.action && {
+            channel: a0.action.args[0],
+            userId:  a0.action.args[1],
+            learn: (a0.action.args[2] || '').toLowerCase() === 'learn',
+        },
+        text: a0.text,
     };
 }

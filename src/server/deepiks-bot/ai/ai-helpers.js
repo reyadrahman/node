@@ -135,11 +135,11 @@ export function extractPreprocessorActions(text: string)
     const actions = preprocessorMatch[1]
             .split(';')
             .map(command => command
-                .split(':')
-                .map(x => x.trim().toLowerCase())
+                .split(' : ')
+                .map(x => x.trim())
                 .filter(Boolean)
             )
             .filter(x => x.length > 0)
-            .map(([ action, ...args ]) => ({ action, args }));
+            .map(([ action, ...args ]) => ({ action: action.toLowerCase(), args }));
     return { text: preprocessorMatch[2], actions };
 }
