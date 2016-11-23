@@ -311,10 +311,10 @@ export async function getStuckStoryHandlerInfo(botParams: BotParams)
         _.get(story, ['turns', 0, 'operations'], [])
         .filter(a => a.action)
         .map(a => botAIData.actions.find(b => b.id === a.action))
-        .map(a => a && a.template && extractPreprocessorActions(a.template))
-        .map(a => a && a.actions && {
+        .map(a => a && a.template && (extractPreprocessorActions(a.template) || { text: a.template }))
+        .map(a => a && {
             text: a.text,
-            action: a.actions.find(x => x.action === 'transfer' && x.args[0] && x.args[1])
+            action: a.actions && a.actions.find(x => x.action === 'transfer' && x.args[0] && x.args[1])
         })
         .filter(a => a && (a.text || a.action));
 
