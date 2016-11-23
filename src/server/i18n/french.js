@@ -11,9 +11,9 @@ export default {
     },
     ai: {
         didNotUnderstand: `Désolé, je n'ai pas compris`,
-        transferMessage: `Un petit instant SVP. Je suis encore en phase d'apprentissage. Je demande l'aide d'un humain...`,
+        transferMessage: `Je transmets votre message...`,
         askForResponseWithHistory: `Que faut-il répondre au message ci-dessus?`,
-        askForResponseWithoutHistory: `Que faut-il répondre aux messages ci-dessus?`,
+        askForResponseWithoutHistory: `Que faut-il répondre au message ci-dessus?`,
         imagePlaceholder: `[Image]`,
         sentMessage: name => `Le message a bien été envoyé à "${name}"`,
     },
