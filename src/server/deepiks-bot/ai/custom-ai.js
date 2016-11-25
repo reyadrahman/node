@@ -42,8 +42,8 @@ async function converse(
         throw new Error('converse failed to get/parse bot AI data from S3');
     }
 
-    let converseData = aiEngineConverse(
-        text, session, context, botAIData
+    let converseData = await aiEngineConverse(
+        text, session, context, botAIData, botParams.defaultLanguage
     );
     return await converseHelper(
         text, originalMessage, context, userPrefs, botAIData, botParams,
@@ -93,8 +93,8 @@ async function converseHelper(
             ...parseResponseMessage(converseData.msg),
             creationTimestamp: Date.now(),
         });
-        const newConverseData = aiEngineConverse(
-            null, converseData.session, context, botAIData
+        const newConverseData = await aiEngineConverse(
+            null, converseData.session, context, botAIData, botParams.defaultLanguage
         );
         await resP;
         return await converseHelper(
@@ -132,7 +132,9 @@ async function converseHelper(
         //     session: customAIData.session,
         // };
         const newConverseData =
-            aiEngineConverse(null, converseData.session, context, botAIData);
+            await aiEngineConverse(
+                null, converseData.session, context, botAIData, botParams.defaultLanguage
+            );
         await resP;
         return await converseHelper(
             text, originalMessage, context, newUserPrefs, botAIData, botParams,
@@ -174,11 +176,17 @@ async function getBotAIData(botParams): Promise<?BotAIData> {
     const actionsStr = actionsFile && (await actionsFile.async('string'));
     const actions = actionsStr && JSON.parse(actionsStr) || { data: [] };
 
+    const expressionsFile = zip.file('expressions.json');
+    const expressionsStr = expressionsFile && (await expressionsFile.async('string'));
+    const expressions = expressionsStr && JSON.parse(expressionsStr) || { data: [] };
+
     reportDebug('getBotAIData stories: ', inspect(stories, { depth: null }));
     reportDebug('getBotAIData actions: ', inspect(actions, { depth: null }));
+    reportDebug('getBotAIData expressions: ', inspect(actions, { depth: null }));
     return {
         stories: stories.data,
         actions: actions.data,
+        expressions: expressions.data,
     };
 }
 
@@ -277,6 +285,7 @@ export async function learnFromHumanTransfer(
     const zip = new JSZip();
     zip.file('stories.json', JSON.stringify({ data: res.stories }, null, ' '));
     zip.file('actions.json', JSON.stringify({ data: res.actions }, null, ' '));
+    zip.file('expressions.json', JSON.stringify({ data: res.expressions }, null, ' '));
     const zipStream = zip.generateNodeStream({
         type: 'nodebuffer',
         streamFiles: true,

@@ -10,6 +10,13 @@ export type BotAIData = {
         name?: string,
         quickreplies?: string[],
     }>,
+    expressions: Array<{
+        text: string,
+        entities: Array<{
+            entity: string,
+            value: string,
+        }>
+    }>
 };
 
 export type User = {

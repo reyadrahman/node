@@ -1,7 +1,7 @@
 /* @flow */
 
 import type { DBMessage, ResponseMessage, BotAIData } from '../../../misc/types.js';
-import { CONSTANTS } from '../../server-utils.js';
+import { CONSTANTS, request } from '../../server-utils.js';
 import { inspect } from 'util';
 import _ from 'lodash';
 const reportDebug = require('debug')('deepiks:conversational-engine');
@@ -93,33 +93,135 @@ function collectBookmarks(stories: Object) {
 }
 
 
-function matchUserInput(userInput, stories, userTurnsAndPaths) {
-    userInput = userInput.trim().toLowerCase();
-    if (userTurnsAndPaths) {
-        const userTurnIndex = userTurnsAndPaths.findIndex(x => {
-            return !x.userTurn.user.placeholder &&
-                userInput === x.userTurn.user.trim().toLowerCase()
-        });
-        if (userTurnIndex >= 0) {
-            return userTurnsAndPaths[userTurnIndex];
+async function matchUserInput(userInput, botAIData, language, userTurnsAndPaths = []) {
+    const { stories, expressions } = botAIData;
+    const r = await request({
+        // TODO
+        uri: 'http://nlp-intent-dev.eu-west-1.elasticbeanstalk.com/',
+        // uri: 'http://localhost:5000/',
+        method: 'POST',
+        json: {
+            query: userInput,
+            stories: stories,
+            expressions: expressions,
+            language: language || 'en',
         }
+    });
+    if (r.statusCode !== 200) {
+        throw new Error(`matchUserInput failed with code ${r.statusCode}, msg ` +
+            `${r.statusMessage} and body: ${r.body}`);
     }
-    const storyIndex: number = stories.findIndex(
-        x => userInput === x.turns[0].user.trim().toLowerCase()
-    );
 
-    if (storyIndex >= 0) {
-        return {
-            path: [storyIndex, 0],
-            userTurn: stories[storyIndex].turns[0],
-        };
+    const allMatches = r.body;
+    reportDebug('matchUserInput got: ', allMatches);
+
+    const LOWER_THRESHOLD = 0.6;
+
+    const findMatchesForUserTurn = (userTurn, pCoefficient = 1) => {
+        const matches = [];
+
+        const exprInd = expressions.findIndex(e => e.text === userTurn.user)
+        const exactMatch = allMatches.find(x => x[0] === exprInd);
+        if (exactMatch) {
+            matches.push({
+                p: exactMatch[1] * pCoefficient,
+                expression: expressions[exprInd],
+            });
+        }
+
+        const userTurnIntent = (userTurn.entities || [])
+            .filter(x => x.entity === 'intent')
+            .map(x => x.value)
+            [0];
+
+        if (userTurnIntent) {
+            for (let m of allMatches) {
+                const expression = expressions[m[0]];
+                const hasTheIntent = (expression.entities || [])
+                    .find(x => x.entity === 'intent' && x.value === userTurnIntent);
+                if (hasTheIntent) {
+                    matches.push({
+                        p: m[1] * pCoefficient,
+                        expression,
+                    });
+                }
+            }
+        }
+
+        matches.sort((a,b) => b.p - a.p);
+        return matches;
+    };
+
+    const allTurnMatches = [
+        ...userTurnsAndPaths.map(utp => ({
+            userTurn: utp.userTurn,
+            path: utp.path,
+            matches: findMatchesForUserTurn(utp.userTurn, 1.4),
+        })),
+        ...stories.map((s, i) => ({
+            userTurn: s.turns[0],
+            path: [i, 0],
+            matches: findMatchesForUserTurn(s.turns[0])
+        })),
+    ];
+    reportDebug('matchUserInput allTurnMatches:', insp(allTurnMatches));
+
+    const flatMatches = _.flatMap(allTurnMatches,
+        t => t.matches.map(m => ({
+            p: m.p,
+            expression: m.expression,
+            path: t.path,
+            userTurn: t.userTurn,
+        }))
+    );
+    flatMatches.sort((a,b) => b.p - a.p);
+    reportDebug('matchUserInput flatMatches:', insp(flatMatches));
+
+    if (flatMatches[0].p > LOWER_THRESHOLD) {
+        return flatMatches[0];
     }
 
     return null;
+
+
+    // const userTurnExprMatches = userTurnsAndPaths
+    //     .map((utp, i) => {
+    //         const exprInd = expressions.findIndex(x => x.text === utp.userTurn.user)
+    //         const m = matches.find(x => x[0] === exprInd);
+    //         return [i, exprInd, m ? m[1] : -1];
+    //     })
+    //     .sort((a, b) => b[2] - a[2]);
+    // const storyExprMatches = stories
+    //     .map((s, i) => {
+    //         const exprInd = expressions.findIndex(x => x.text === s.turns[0].user)
+    //         const m = matches.find(x => x[0] === exprInd);
+    //         return [i, exprInd, m ? m[1] : -1];
+    //     })
+    //     .sort((a, b) => b[2] - a[2]);
+    // reportDebug('matchUserInput userTurnsMatches: ', userTurnExprMatches);
+    // reportDebug('matchUserInput storiesExpInds: ', storyExprMatches);
+    //
+    // const LOWER_THRESHOLD = 0.5;
+    //
+    // const s02 = storyExprMatches[0][2];
+    // const u02 = userTurnExprMatches.length ? userTurnExprMatches[0][2] : -1;
+    // if ((!userTurnExprMatches.length || s02 > u02 * 1.4) && s02 > LOWER_THRESHOLD) {
+    //     return {
+    //         path: [storyExprMatches[0][0], 0],
+    //         userTurn: stories[storyExprMatches[0][0]].turns[0],
+    //     };
+    // }
+    //
+    // if (userTurnExprMatches.length && u02 > LOWER_THRESHOLD) {
+    //     return userTurnsAndPaths[userTurnExprMatches[0][0]];
+    // }
+    //
+    // return null;
 }
 
-export function converse(
-    userInput: ?string, session: Object, context: Object, botAIData: BotAIData
+export async function converse(
+    userInput: ?string, session: Object, context: Object,
+    botAIData: BotAIData, language: string
 ) : ConverseData {
 
     const { stories, actions } = botAIData;
@@ -130,9 +232,9 @@ export function converse(
     let ret: ConverseData_ = { type: 'stop' };
     let path = [];
 
-    handleStories();
+    await handleStories();
 
-    function handleOpAction(op, initializing) {
+    async function handleOpAction(op, initializing) {
         if (initializing) {
             return false;
         }
@@ -166,7 +268,7 @@ export function converse(
         return true;
     }
 
-    function handleOpBranches(op) {
+    async function handleOpBranches(op) {
         reportDebug('handleOpBranches branches', insp(op));
         reportDebug('handleOpBranches stack', insp(path));
         reportDebug('handleOpBranches initPath', insp(initPath));
@@ -196,14 +298,14 @@ export function converse(
         for (;i<2; i++) {
             const key = keys[i];
             path.push(i);
-            if (branch[key] && handlers[i](branch[key])) return true;
+            if (branch[key] && await handlers[i](branch[key])) return true;
             path.pop();
         }
         path.pop();
         return false;
     }
 
-    function handleOpJump(op) {
+    async function handleOpJump(op) {
         const bookmarkPath = bookmarks[op.jump];
         if (!bookmarkPath) {
             ret = {
@@ -217,11 +319,11 @@ export function converse(
         initPath = bookmarkPath;
         path = [];
         userInput = null;
-        handleStories();
+        await handleStories();
         return true;
     }
 
-    function handleOps(ops) {
+    async function handleOps(ops) {
         reportDebug('handleOps ops', insp(ops));
         reportDebug('handleOps path', insp(path));
         reportDebug('handleOps initPath', insp(initPath));
@@ -247,7 +349,7 @@ export function converse(
             }
 
             path.push(opIndex);
-            if (handler && handler(ops[opIndex], initializing)) return true;
+            if (handler && await handler(ops[opIndex], initializing)) return true;
             path.pop();
             initializing = false;
         }
@@ -255,13 +357,13 @@ export function converse(
         return false;
     }
 
-    function handleTurnUser(turn) {
+    async function handleTurnUser(turn) {
         reportDebug('handleTurnUser turn:', insp(turn));
         reportDebug('handleTurnUser path:', insp(path));
         reportDebug('handleTurnUser initPath:', insp(initPath));
         if (!initPath.length) {
             if (userInput) {
-                const x = matchUserInput(userInput, stories, [
+                const x = await matchUserInput(userInput, botAIData, language, [
                     { userTurn: turn, path }
                 ]);
                 userInput = null;
@@ -273,23 +375,23 @@ export function converse(
                     return true;
                 }
                 path = x.path;
-                return handleOps(x.userTurn.operations);
+                return await handleOps(x.userTurn.operations);
             }
             leafIsExpectingUserInput = true;
             reportDebug('handleTurnUser returning true');
             return true;
         }
-        return handleOps(turn.operations);
+        return await handleOps(turn.operations);
     }
 
-    function handleTurnBranches(turn) {
+    async function handleTurnBranches(turn) {
         reportDebug('handleTurnBranches turn:', insp(turn));
         reportDebug('handleTurnBranches path:', insp(path));
         reportDebug('handleTurnBranches initPath:', insp(initPath));
         let branchIndex = initPath.shift();
         if (branchIndex === undefined) {
             if (userInput) {
-                const x = matchUserInput(userInput, stories, turn.branches.map(
+                const x = await matchUserInput(userInput, botAIData, language, turn.branches.map(
                     (y, i) => ({ userTurn: y[0], path: [...path, i, 0] })
                 ));
                 userInput = null;
@@ -301,18 +403,18 @@ export function converse(
                     return true;
                 }
                 path = x.path;
-                return handleOps(x.userTurn.operations);
+                return await handleOps(x.userTurn.operations);
             }
             leafIsExpectingUserInput = true;
             ret = { type: 'stop' };
             return true;
         }
         path.push(branchIndex);
-        if (handleTurns(turn.branches[branchIndex])) return true;
+        if (await handleTurns(turn.branches[branchIndex])) return true;
         path.pop();
     }
 
-    function handleTurns(turns) {
+    async function handleTurns(turns) {
         reportDebug('handleTurns turns', insp(turns));
         reportDebug('handleTurns path', insp(path));
         reportDebug('handleTurns initPath:', insp(initPath));
@@ -321,19 +423,19 @@ export function converse(
             const turn = turns[turnIndex];
             const handler = turn.user === undefined ? handleTurnBranches : handleTurnUser;
             path.push(turnIndex);
-            if (handler(turn)) return true;
+            if (await handler(turn)) return true;
             path.pop();
         }
         reportDebug('handleTurns returning false');
         return false;
     }
 
-    function handleStories() {
+    async function handleStories() {
         reportDebug('handleStories');
         reportDebug('handleStories initPath:', insp(initPath));
         if (userInput && (initPath.length === 0 || !initLeafIsExpectingUserInput)) {
             // cold start
-            const userTurnAndPath = matchUserInput(userInput, stories);
+            const userTurnAndPath = await matchUserInput(userInput, botAIData, language);
             if (!userTurnAndPath) {
                 ret = {
                     type: 'stuck',
@@ -345,7 +447,7 @@ export function converse(
             initPath = [];
             path = userTurnAndPath.path;
             userInput = null;
-            return handleOps(userTurnAndPath.userTurn.operations);
+            return await handleOps(userTurnAndPath.userTurn.operations);
         }
         if (initPath.length === 0) {
             // nothing to do
@@ -354,7 +456,7 @@ export function converse(
 
         const storyIndex: number = initPath.shift();
         path = [storyIndex];
-        if (handleTurns(stories[storyIndex].turns)) return true;
+        if (await handleTurns(stories[storyIndex].turns)) return true;
         path.pop();
         reportDebug('handleStories returning false');
         return false;
@@ -381,7 +483,7 @@ export function learnFromHumanTransfer(
     let leafIsExpectingUserInput = false;
     let path = [];
     // TODO instead of cloneDeep use icepick for manipulating immutable data structures
-    const { stories, actions } = _.cloneDeep(botAIData);
+    const { stories, actions, expressions } = _.cloneDeep(botAIData);
 
     const createPlaceholderTurn = () => ({
         user: '',
@@ -405,9 +507,15 @@ export function learnFromHumanTransfer(
         type : 'template',
         template : responseText,
     };
-
     if (!actions.find(x => x.id === learnedAction.id)) {
         actions.push(learnedAction);
+    }
+
+    const learnedExpression = {
+        text: originalMessage.text,
+    };
+    if (!expressions.find(x => x.text === learnedExpression.text)) {
+        expressions.push(learnedExpression);
     }
 
     if (initPath.length > 0 && !session.leafIsExpectingUserInput) {
@@ -555,6 +663,7 @@ export function learnFromHumanTransfer(
     return {
         stories,
         actions,
+        expressions,
         session: {
             path,
             leafIsExpectingUserInput
