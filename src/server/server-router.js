@@ -16,6 +16,18 @@ export default function initializeRoutes(server) {
 
     routes.use('/api', bridge);
 
+    routes.use('/webhooks/email', (req, res, next) => {
+        webhooks.email(req, res)
+        .then(() => {
+            reportDebug(`The webhook of email completed successfully`);
+            res.send('Message processed');
+        })
+        .catch(error => {
+            reportError(`The webhook of email failed with error: `, error);
+            res.status(500).send(error.message);
+        });
+    });
+
     routes.use('/webhooks/:publisherId/:botId/:channel', (req, res, next) => {
         const { channel } = req.params;
         reportDebug('server-routes');
