@@ -151,6 +151,9 @@ export type WebchannelMessage = {
 };
 
 export type ResponseMessage = {
+    subject?: string,
+    to?: object,
+    from?: object,
     text?: string,
     cards?: MessageCard[],
     actions?: MessageAction[],

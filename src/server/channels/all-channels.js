@@ -4,6 +4,7 @@ import * as spark from './spark.js';
 import * as messenger from './messenger.js';
 import * as ms from './ms.js';
 import * as web from './web.js';
+import * as email from './email.js';
 import * as aws from '../../aws/aws.js';
 import { waitForAll } from '../../misc/utils.js';
 import type { ResponseMessage, BotParams, Conversation } from '../../misc/types.js';
@@ -16,8 +17,9 @@ const reportError = require('debug')('deepiks:all-channels:error');
 
 export const webhooks = {
     messenger: messenger.webhook,
-    spark: spark.webhook,
-    ms: ms.webhook,
+    spark:     spark.webhook,
+    ms:        ms.webhook,
+    email:     email.webhook
     // web.webhook not here, handled with websocket
 };
 
