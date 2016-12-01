@@ -96,6 +96,10 @@ async function receivedMessage(email, botParams: BotParams) {
         conversationId = uuid.v1();
     }
 
+    let text = (email.text ? email.text.split('\n\n')[0] : striptags(email.html)).trim();
+
+    text = text.substr(0, 50);
+
     const message: WebhookMessage = {
         publisherId_conversationId: composeKeys(botParams.publisherId, conversationId),
         creationTimestamp:          Date.parse(email.date),
@@ -103,12 +107,12 @@ async function receivedMessage(email, botParams: BotParams) {
         senderId:                   email.from[0].address,
         senderIsBot:                false,
         channel:                    'email',
-        text:                       (email.text.split('\n\n')[0] || striptags(email.html)).trim(),
+        text,
         senderName:                 `${email.from[0].name || ''}`.trim()
     };
 
     if (email.attachments) {
-        message.fetchCardImages = email.attachments.map(attachment => () => attachment);
+        message.fetchCardImages = email.attachments.map(attachment => () => attachment.content);
     }
 
 
@@ -123,6 +127,44 @@ async function receivedMessage(email, botParams: BotParams) {
 
 
 export async function send(botParams: BotParams, conversationId: string, message: ResponseMessage) {
+
+    let body = {};
+
+    if (message.cards) {
+        let html = [];
+
+        if (message.text) {
+            html.push(`<div>${message.text}</div>`);
+        }
+
+        message.cards.forEach(card => {
+            let content = `
+                <h1>${card.title}</h1>
+                <div><img src="${card.imageUrl}" alt="${card.title}" style="width: 300px"></div>
+            `;
+
+            card.actions && card.actions.forEach(action => {
+                content += `
+                    <div>Reply "${action.postback}" to ${action.text}</div>
+                `
+            });
+
+            html.push(content);
+        });
+
+        body['Html'] = {
+            Data:    html.join('<hr>'),
+            Charset: 'utf8'
+        }
+    } else {
+
+    }
+
+    body['Text'] = {
+        Data:    message.text || 'no message in bot reply',
+        Charset: 'utf8'
+    };
+
     return aws.sesSendEmail({
         Destination: {
             ToAddresses: [
@@ -130,12 +172,7 @@ export async function send(botParams: BotParams, conversationId: string, message
             ]
         },
         Message:     {
-            Body:    {
-                Text: {
-                    Data:    message.text,
-                    Charset: 'utf8'
-                }
-            },
+            Body:    body,
             Subject: {
                 Data:    message.subject,
                 Charset: 'utf8'
