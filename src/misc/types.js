@@ -65,9 +65,11 @@ export type StuckStoryHandlerInfo = {
     humanTransferDest: HumanTransferDest
 };
 
+// either provide userId+channel or just conversationId
 export type HumanTransferDest = {
-    channel: string,
-    userId: string,
+    channel?: string,
+    userId?: string,
+    conversationId?: string,
     learn: boolean,
     transferIndicatorMessage?: string,
 }

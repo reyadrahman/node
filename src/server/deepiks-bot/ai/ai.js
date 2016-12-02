@@ -164,7 +164,9 @@ export async function conversationIsStuck(
         return;
     }
 
-    if (humanTransferDest.userId === message.senderId) {
+    if (humanTransferDest.userId === message.senderId ||
+        humanTransferDest.conversationId === conversationId)
+    {
         await respondFn({
             text: strings.didNotUnderstand,
             creationTimestamp: Date.now(),
@@ -172,13 +174,35 @@ export async function conversationIsStuck(
         return;
     }
 
-    const transToUser = await aws.getUserByUserId(
-        publisherId, botId, humanTransferDest.channel, humanTransferDest.userId
-    );
-    reportDebug('transToUser:', transToUser);
+    let transToConversation;
+    if (humanTransferDest.userId) { // transferring to user
+        const transToUser = await aws.getUserByUserId(
+            publisherId, botId, humanTransferDest.channel, humanTransferDest.userId
+        );
+        reportDebug('transToUser:', transToUser);
 
-    if (!transToUser || !transToUser.isVerified || transToUser.userRole !== 'admin') {
-        // send message to user
+        if (!transToUser || !transToUser.isVerified || transToUser.userRole !== 'admin') {
+            // send message to user
+            await respondFn({
+                text: strings.didNotUnderstand,
+                creationTimestamp: Date.now(),
+            });
+            return;
+        }
+
+        reportDebug('transferring to human...');
+
+        transToConversation = await aws.getConversation(
+            publisherId, botId, transToUser.conversationId
+        );
+    } else { // transferring to conversation
+        transToConversation = await aws.getConversation(
+            publisherId, botId, humanTransferDest.conversationId
+        );
+
+    }
+
+    if (!transToConversation) {
         await respondFn({
             text: strings.didNotUnderstand,
             creationTimestamp: Date.now(),
@@ -186,11 +210,6 @@ export async function conversationIsStuck(
         return;
     }
 
-    reportDebug('transferring to human...');
-
-    const transToConversation = await aws.getConversation(
-        publisherId, botId, transToUser.conversationId
-    );
     reportDebug('transToConversation: ', transToConversation);
     const [, transToConversationId] =
         decomposeKeys(transToConversation.botId_conversationId);

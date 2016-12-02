@@ -1,7 +1,8 @@
 /* @flow */
 
 import { request, CONSTANTS } from '../server-utils.js';
-import { toStr, waitForAll, timeout, composeKeys, decomposeKeys } from '../../misc/utils.js';
+import { toStr, waitForAll, timeout, composeKeys, decomposeKeys,
+         splitTextAtWord } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import { deepiksBot } from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
@@ -259,13 +260,26 @@ export async function send(botParams: BotParams, conversationId: string,
         payload: x.postback || x.text,
     }));
 
-    if (text || quickReplies) {
+    let textChunks = splitTextAtWord(text || '', 320);
+    let butLast = textChunks.slice(0, -1);
+    let last = textChunks[textChunks.length-1];
+    for (let m of butLast) {
         await sendHelper(botParams, {
             recipient: {
                 id: to,
             },
             message: {
-                text: removeMarkdown(text || ' '), // text cannot be empty when using quick_replies
+                text: removeMarkdown(m || ' '),
+            }
+        });
+    }
+    if (last || quickReplies) {
+        await sendHelper(botParams, {
+            recipient: {
+                id: to,
+            },
+            message: {
+                text: removeMarkdown(last || ' '), // text cannot be empty when using quick_replies
                 quick_replies: quickReplies,
             }
         });

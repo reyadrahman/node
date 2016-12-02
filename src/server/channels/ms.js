@@ -2,7 +2,7 @@
 
 import { deepiksBot } from '../deepiks-bot/deepiks-bot.js';
 import { callbackToPromise, waitForAll, timeout,
-         composeKeys, decomposeKeys } from '../../misc/utils.js';
+         composeKeys, decomposeKeys, splitTextAtWord } from '../../misc/utils.js';
 import { request, CONSTANTS } from '../server-utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams, ChannelData } from '../../misc/types.js';
 import * as aws from '../../aws/aws.js';
@@ -248,9 +248,21 @@ export async function send(botParams: BotParams,
             resText += `\n(${textActions.join(', ')})`;
         }
 
-        let resMessage = new builder.Message(session);
+        // 4000 seems to be a good common denominator
+        let textChunks = splitTextAtWord(resText || '', 4000);
+        let butLast = textChunks.slice(0, -1);
+        let last = textChunks[textChunks.length-1];
+
+        for(let m of butLast) {
+            const resM = new builder.Message(session);
+            resM.textFormat('markdown');
+            resM.text(m);
+            sendHelperFn(resM);
+            await timeout(200); // TODO artificial delay. Find a better solution
+        }
+        const resMessage = new builder.Message(session);
         resMessage.textFormat('markdown');
-        resText && resMessage.text(resText);
+        last && resMessage.text(last);
         resAttachments.length > 0 && resMessage.attachments(resAttachments);
         sendHelperFn(resMessage);
         await dashbotSend(botParams, conversationId, resText || '');

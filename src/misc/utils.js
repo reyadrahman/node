@@ -8,6 +8,33 @@ const reportDebug = require('debug')('deepiks:utils');
 const reportError = require('debug')('deepiks:utils:error');
 
 
+export function splitTextAtWord(text: string, chunkSize: number) {
+    if (text && text.length > chunkSize) {
+        const split = text.split(' ');
+        return split.reduce((acc, x) => {
+            const last = acc[acc.length-1];
+            console.log('last: ', last, ', acc: ', acc);
+            if (x.length > chunkSize) {
+                pushMany(acc, splitText(x, chunkSize));
+            } else if (!last || last.length + x.length + 1 > chunkSize) {
+                acc.push(x);
+            } else {
+                acc[acc.length-1] += ' ' + x;
+            }
+            return acc;
+        }, []);
+    }
+    return text ? [text] : [];
+}
+
+export function splitText(text: string, chunkSize: number) {
+    if (text.length <= chunkSize) return text ? [text] : [];
+    return [
+        text.substr(0, chunkSize),
+        ...splitText(text.substr(chunkSize), chunkSize),
+    ];
+}
+
 export function isValidEmail(x: string) {
     return Boolean(x.match(/^([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)$/));
 }
@@ -42,13 +69,13 @@ export function splitOmitWhitespace(str: string, sep: string): string[] {
  * for why we need this and the limits of Function.prototyp.apply
  */
 export function pushMany<T>(arr: T[], newElems: T[]): T[] {
-  const CHUNK_LENGTH = 32768;
-  const n = newElems.length;
-  for (let i = 0; i < n; i += CHUNK_LENGTH) {
-    arr.push(...newElems.slice(i, Math.min(i+CHUNK_LENGTH, n)));
-  }
+    const CHUNK_LENGTH = 32768;
+    const n = newElems.length;
+    for (let i = 0; i < n; i += CHUNK_LENGTH) {
+        arr.push(...newElems.slice(i, Math.min(i+CHUNK_LENGTH, n)));
+    }
 
-  return arr;
+    return arr;
 }
 
 export function leftPad(x: string | number, pad: string, n: number): string {

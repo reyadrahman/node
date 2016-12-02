@@ -371,6 +371,7 @@ function respondFnPreprocessorActionsMiddleware(
         const asUserAction = pas.find(x => x.action === 'as user');
         const emailAction = pas.find(x => x.action === 'email' && x.args[0]);
         const transferAction = pas.find(x => x.action === 'transfer' && x.args[0] && x.args[1]);
+        const transferRoomAction = pas.find(x => x.action === 'transferroom' && x.args[0]);
 
         if (delayAction && pollAction) {
             const m = `Cannot use 'delay' and 'poll' preprocessor actions together`;
@@ -390,9 +391,9 @@ function respondFnPreprocessorActionsMiddleware(
         // from any backend that wants to explicitly transfer to human
         // either way, the seamless learning feature is not possible
         // during this transfer
-        if (transferAction) {
+        if (transferAction || transferRoomAction) {
             if (!userMessage) {
-                throw new Error('respondFnPreprocessorActionsMiddleware transferAction ' +
+                throw new Error('respondFnPreprocessorActionsMiddleware transfer[Room]Action ' +
                                 'is provided but userMessage is missing.');
             }
 
@@ -400,12 +401,17 @@ function respondFnPreprocessorActionsMiddleware(
                 botParams.publisherId, botParams.botId, conversationId
             );
 
-            const humanTransferDest = {
-                channel: transferAction.args[0].toLowerCase(),
-                userId: transferAction.args[1],
-                learn: false,
-                transferIndicatorMessage: response.text,
-            };
+            const humanTransferDest =
+                transferAction ? {
+                    channel: transferAction.args[0].toLowerCase(),
+                    userId: transferAction.args[1],
+                    learn: false,
+                    transferIndicatorMessage: response.text,
+                } : {
+                    conversationId: transferRoomAction.args[0],
+                    learn: false,
+                    transferIndicatorMessage: response.text,
+                };
             await conversationIsStuck(
                 userMessage, conversation, botParams, next, humanTransferDest
             );

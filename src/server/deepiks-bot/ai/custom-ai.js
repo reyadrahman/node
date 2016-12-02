@@ -323,7 +323,10 @@ export async function getStuckStoryHandlerInfo(botParams: BotParams)
         .map(a => a && a.template && (extractPreprocessorActions(a.template) || { text: a.template }))
         .map(a => a && {
             text: a.text,
-            action: a.actions && a.actions.find(x => x.action === 'transfer' && x.args[0] && x.args[1])
+            action: a.actions && a.actions.find(
+                x => (x.action === 'transfer' && x.args[0] && x.args[1]) ||
+                     (x.action === 'transferroom' && x.args[0])
+            )
         })
         .filter(a => a && (a.text || a.action));
 
@@ -331,13 +334,26 @@ export async function getStuckStoryHandlerInfo(botParams: BotParams)
     if (actions.length === 0) return null;
 
     const a0 = actions[0];
+    let humanTransferDest;
+    if (a0.action) {
+        if (a0.action.action === 'transfer') {
+            humanTransferDest = {
+                channel: a0.action.args[0],
+                userId: a0.action.args[1],
+                conversationId: a0.action.args[1],
+                learn: (a0.action.args[2] || '').toLowerCase() === 'learn',
+                transferIndicatorMessage: a0.text,
+            };
+        } else if (a0.action.action === 'transferroom') {
+            humanTransferDest = {
+                conversationId: a0.action.args[0],
+                learn: (a0.action.args[1] || '').toLowerCase() === 'learn',
+                transferIndicatorMessage: a0.text,
+            };
+        }
+    }
     return {
-        humanTransferDest: a0.action && {
-            channel: a0.action.args[0],
-            userId:  a0.action.args[1],
-            learn: (a0.action.args[2] || '').toLowerCase() === 'learn',
-            transferIndicatorMessage: a0.text,
-        },
+        humanTransferDest,
         text: a0.text,
     };
 }
