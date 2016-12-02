@@ -386,7 +386,11 @@ function respondFnPreprocessorActionsMiddleware(
             return;
         }
 
-        if (transferAction) { // this is only for wit.ai
+        // the transfer action is from wit when it doesn't understand or
+        // from any backend that wants to explicitly transfer to human
+        // either way, the seamless learning feature is not possible
+        // during this transfer
+        if (transferAction) {
             if (!userMessage) {
                 throw new Error('respondFnPreprocessorActionsMiddleware transferAction ' +
                                 'is provided but userMessage is missing.');
@@ -399,10 +403,11 @@ function respondFnPreprocessorActionsMiddleware(
             const humanTransferDest = {
                 channel: transferAction.args[0].toLowerCase(),
                 userId: transferAction.args[1],
-                learn: false, // wit.ai does not support learning
+                learn: false,
+                transferIndicatorMessage: response.text,
             };
             await conversationIsStuck(
-                userMessage, conversation, botParams, next, humanTransferDest, response.text
+                userMessage, conversation, botParams, next, humanTransferDest
             );
         }
 

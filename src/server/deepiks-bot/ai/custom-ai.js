@@ -336,6 +336,7 @@ export async function getStuckStoryHandlerInfo(botParams: BotParams)
             channel: a0.action.args[0],
             userId:  a0.action.args[1],
             learn: (a0.action.args[2] || '').toLowerCase() === 'learn',
+            transferIndicatorMessage: a0.text,
         },
         text: a0.text,
     };

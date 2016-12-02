@@ -60,12 +60,13 @@ export async function ai(
         let responseText = null;
         if (!humanTransferDest) {
             const sshi = await getStuckStoryHandlerInfo(botParams);
-            if (sshi) {
-                humanTransferDest = sshi.humanTransferDest;
+            humanTransferDest = sshi && sshi.humanTransferDest;
+            if (!humanTransferDest) {
                 responseText = sshi.text;
             }
         }
-        reportDebug('ai humanTransferDest: ', humanTransferDest);
+        reportDebug('ai humanTransferDest: ', humanTransferDest,
+                    'responseText: ', responseText);
         await conversationIsStuck(
             message, conversation, botParams, respondFn, humanTransferDest, responseText
         );
@@ -250,12 +251,13 @@ export async function conversationIsStuck(
             text: strings.askForResponseWithoutHistory,
             creationTimestamp: Date.now()+1,
         });
-
     }
 
     // send message to user
     await respondFn({
-        text: responseText || strings.transferMessage,
+        text: responseText ||
+            humanTransferDest.transferIndicatorMessage ||
+            strings.transferMessage,
         creationTimestamp: Date.now(),
     });
 }

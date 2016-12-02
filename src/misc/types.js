@@ -69,6 +69,7 @@ export type HumanTransferDest = {
     channel: string,
     userId: string,
     learn: boolean,
+    transferIndicatorMessage?: string,
 }
 
 export type ChannelData = {
