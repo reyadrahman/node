@@ -38,6 +38,7 @@ app.use(bodyParser.json({
     verify: (req, res, buf) => req.rawBody = buf
 }));
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.text());
 app.use(cookieParser());
 app.use(CONSTANTS.PUBLIC_PATH, express.static(path.join(ROOT_DIR, 'dist-client'),
     DEV ? {} : { maxage: '1d' }));

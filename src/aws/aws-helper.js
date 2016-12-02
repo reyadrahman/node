@@ -133,6 +133,18 @@ export async function getBot(publisherId: string, botId: string): Promise<?BotPa
     return qres.Items && qres.Items[0];
 }
 
+export async function getBotById(botId: string): Promise<?BotParams> {
+    reportDebug('getBotById botId: ', botId);
+    const qres = await dynamoScan({
+        TableName:                 CONSTANTS.DB_TABLE_BOTS,
+        FilterExpression:          'botId = :botId',
+        ExpressionAttributeValues: {
+            ':botId': botId,
+        },
+    });
+    return qres.Items && qres.Items[0];
+}
+
 export async function getConversation(publisherId: string, botId: string, conversationId: string)
 : Promise<?Conversation>
 {
