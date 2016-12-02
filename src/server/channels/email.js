@@ -2,6 +2,7 @@ import request from 'request-promise';
 import MessageValidator from 'sns-validator';
 import {MailParser} from 'mailparser';
 import striptags from 'striptags';
+import moment from 'moment';
 
 import {composeKeys} from '../../misc/utils.js';
 import type {WebhookMessage, ResponseMessage, BotParams} from '../../misc/types.js';
@@ -121,6 +122,7 @@ async function receivedMessage(email, botParams: BotParams) {
     return deepiksBot(message, botParams, m => {
         m.to      = email.from[0];
         m.subject = `Re: ${email.subject}` + (subjectContainsConversationId ? '' : ` [ref:${conversationId}]`);
+        m.originalEmail = email;
         return send(botParams, conversationId, m);
     });
 }
@@ -128,7 +130,18 @@ async function receivedMessage(email, botParams: BotParams) {
 
 export async function send(botParams: BotParams, conversationId: string, message: ResponseMessage) {
 
-    let body = {};
+    let body = {}, quote = {text: '', html: ''};
+
+    if (message.originalEmail) {
+        let email      = message.originalEmail;
+        let from       = email.from[0].name ? `${email.from[0].name} <${email.from[0].address}>` : email.from[0].address;
+        let quoteTitle = `On ${moment(email.date).format('ddd, MMM D, YYYY [at] hh:mm A')}, ${from} wrote:`;
+
+        let quoteText = email.text.split('\n').map(line => '> ' + line).join('\n');
+
+        quote.text = `\n\n${quoteTitle}\n\n${quoteText}`;
+        quote.html = `<br><br><div>${quoteTitle}<blockquote>${email.html}</blockquote></div>`;
+    }
 
     if (message.cards) {
         let html = [];
@@ -152,16 +165,16 @@ export async function send(botParams: BotParams, conversationId: string, message
             html.push(content);
         });
 
+        quote.html && html.push(quote.html);
+
         body['Html'] = {
             Data:    html.join('<hr>'),
             Charset: 'utf8'
         }
-    } else {
-
     }
 
     body['Text'] = {
-        Data:    message.text || 'no message in bot reply',
+        Data:    (message.text || 'no message in bot reply') + quote.text,
         Charset: 'utf8'
     };
 

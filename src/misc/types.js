@@ -156,6 +156,7 @@ export type WebchannelMessage = {
 export type ResponseMessage = {
     subject?: string,
     to?: object,
+    originalEmail?: object,
     from?: object,
     text?: string,
     cards?: MessageCard[],
