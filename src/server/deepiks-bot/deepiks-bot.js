@@ -81,7 +81,15 @@ class FunctionQueue {
     }
 }
 
-const _functionQueue_ = new FunctionQueue();
+const _functionQueues_ = {};
+
+function enqueueFunction(groupId, fn) {
+    let queue = _functionQueues_[groupId];
+    if (!queue) {
+        queue = _functionQueues_[groupId] = new FunctionQueue();
+    }
+    return queue.enqueue(fn);
+}
 
 function textToResponseMessage(text: string): ResponseMessage {
     return { text, creationTimestamp: Date.now() };
@@ -832,7 +840,7 @@ async function handleWebhookMessage(
     // set up
     const [, conversationId] = decomposeKeys(dbMessage.publisherId_conversationId);
     let newRespondFn;
-    const sendAsUser = (msg: DBMessage) => _functionQueue_.enqueue(() => {
+    const sendAsUser = (msg: DBMessage) => enqueueFunction(conversationId, () => {
         return handleProcessedDBMessage(
             msg, botParams, newRespondFn, conversationId, channelData
         );
@@ -926,7 +934,7 @@ export async function coldSend(message: ResponseMessage, botParams: BotParams,
 {
     const [, conversationId] = decomposeKeys(conversation.botId_conversationId);
     let newRespondFn;
-    const sendAsUser = (msg: DBMessage) => _functionQueue_.enqueue(() => {
+    const sendAsUser = (msg: DBMessage) => enqueueFunction(conversationId, () => {
         return handleProcessedDBMessage(
             msg, botParams, newRespondFn, conversationId, conversation.channelData
         );
