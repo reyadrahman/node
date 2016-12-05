@@ -598,6 +598,7 @@ async function updateBot(identityId, botId, model) {
     }
 
     const settings = {
+        ...bot.settings,
         ...model.settings,
         ...ciscosparkSettings,
     };
