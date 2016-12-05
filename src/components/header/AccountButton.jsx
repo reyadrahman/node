@@ -49,7 +49,10 @@ let AccountButton = React.createClass({
                     </Button>
                     <Dropdown.Toggle className="arrow-btn" />
                     <Dropdown.Menu>
-                        <MenuItem eventKey="verify">
+                        <MenuItem eventKey="signUp">
+                           <Glyphicon glyph="plus-sign" className="icon" /> { strings.signUp }
+                         </MenuItem>
+                         <MenuItem eventKey="verify">
                             <Glyphicon glyph="ok-circle" className="icon" /> { strings.verifyRegistration }
                         </MenuItem>
                     </Dropdown.Menu>
