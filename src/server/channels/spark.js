@@ -97,6 +97,8 @@ export async function webhook(req: Request, res: Response) {
             return buffer.body;
         })
     );
+
+    const text = rawMessage.html ? textFromHtml(rawMessage.html) : rawMessage.text;
     const senderProfile = await client.people.get(rawMessage.personId);
     const message: WebhookMessage = {
         publisherId_conversationId: composeKeys(botParams.publisherId, rawMessage.roomId),
@@ -106,7 +108,7 @@ export async function webhook(req: Request, res: Response) {
         senderName: senderProfile.displayName,
         senderIsBot: false,
         channel: 'ciscospark',
-        text: rawMessage.text,
+        text: text,
         fetchCardImages,
     };
 
@@ -133,6 +135,12 @@ export async function webhook(req: Request, res: Response) {
     await deepiksBot(message, botParams, m => send(botParams, roomId, m));
 
     if (dashbotPromise) await dashbotPromise;
+}
+
+function textFromHtml(html) {
+    return html
+        .replace(/<spark-mention\s.*?<\/spark-mention>\s*/, '')
+        .replace(/<[\w_-]+\s*.*?>(.*?)<\/[\w_-]+>\s*/, '$1');
 }
 
 // roomId is the same as conversationId
