@@ -187,10 +187,10 @@ export async function send(botParams: BotParams, conversationId: string,
             }
             // TODO how to send images to dashbot
 
-            const cardText = removeMarkdown(actionsToStr(c.actions) || '');
+            const cardText = actionsToStr(c.actions) || '';
             if (cardText) {
                 await client.messages.create({
-                    text: cardText,
+                    markdown: cardText,
                     roomId: conversationId,
                 });
                 dashbotPromises.push(dashbotSend(botParams, conversationId, cardText));
@@ -200,21 +200,15 @@ export async function send(botParams: BotParams, conversationId: string,
 
     if (text || actions) {
         let actionsText = actionsToStr(actions);
-        const textToSend = removeMarkdown(
-            ((text || '') + '\n\n' + actionsText).trim()
-        );
+        const textToSend = ((text || '') + '\n\n' + actionsText).trim()
         await client.messages.create({
-            text: textToSend,
+            markdown: textToSend,
             roomId: conversationId,
         });
         dashbotPromises.push(dashbotSend(botParams, conversationId, textToSend));
     }
 
     await waitForAll(dashbotPromises);
-};
-
-function removeMarkdown(text) {
-    return text.replace(/\n\n/g, '\n');
 }
 
 async function dashbotSend(botParams, roomId, text) {
