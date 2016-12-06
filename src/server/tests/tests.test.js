@@ -15,7 +15,9 @@ import * as ce from '../deepiks-bot/conversational-engine/conversational-engine.
 import { translations, languages } from '../i18n/translations.js';
 import * as messenger from '../channels/messenger.js';
 import * as spark from '../channels/spark.js';
-import testStories from './test-story.json';
+import testStories from './test-stories.json';
+import testExpressions from './test-expressions.json';
+import testActions from './test-actions.json';
 import expect from 'must';
 import _ from 'lodash';
 import sinon from 'sinon';
@@ -826,7 +828,7 @@ describe('::', function() {
                     roomId,
                 },
                 {
-                    text: 'b',
+                    text: '(b)',
                     roomId,
                 },
                 {
@@ -984,11 +986,6 @@ describe('::', function() {
                                         image_url: 'xxx',
                                         buttons: [
                                             {
-                                                type: 'web_url',
-                                                title: 'Open Image',
-                                                url: 'xxx'
-                                            },
-                                            {
                                                 type: 'postback',
                                                 title: 'a',
                                                 payload: 'b'
@@ -1055,556 +1052,548 @@ describe('::', function() {
     });
 
 
-    describe('=> conversational engine', function() {
-        describe('bookmarks', function() {
-            const bookmarks = ce._collectBookmarks(testStories.data);
-            it('collectBookmarks', () => {
-                expect(bookmarks).eql({
-                    b1: [0, 0, 0],
-                    b2: [0, 1, 0],
-                    b3: [1, 1, 1, 0, 1],
-                    b4: [1, 1, 1, 0, 2, 0, 0, 3, 0, 0, 0],
-                });
-            });
-        });
-
-        describe('converse', function() {
-            let converseRes;
-            it('do nothing', () => {
-                converseRes = ce._converse(null, {}, {}, testStories.data, {});
-                expect(converseRes).eql({
-                    type: 'stop',
-                    session: {
-                        leafIsExpectingUserInput: false,
-                        path: [],
-                    },
-                });
-            });
-
-            describe('hi', function() {
-
-                it('send', () => {
-                    converseRes = ce._converse('hi', converseRes.session, {}, testStories.data);
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: '<[ delay: 1; as user ]> hi back'
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [0, 0, 1]
-                        }
-                    });
-
-                });
-
-                it('converse 1', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: 'will reply in a minute'
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [0, 0, 2]
-                        },
-                    });
-                });
-
-                it('converse 2', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        session: {
-                            leafIsExpectingUserInput: true,
-                            path: [0, 1],
-                        },
-                        type: 'stop',
-                    });
-                });
-
-                it('converse 3', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        session: {
-                            leafIsExpectingUserInput: true,
-                            path: [0, 1],
-                        },
-                        type: 'stop',
-                    });
-
-                });
-            });
-
-            describe('hihi', function() {
-                it('send', () => {
-                    converseRes = ce._converse('hihi', converseRes.session, {}, testStories.data);
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: 'hihi back',
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [0, 1, 1]
-                        }
-                    });
-                });
-
-                it('converse 1', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data);
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: '<[ delay: 1; as user ]> hi back'
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [0, 0, 1]
-                        }
-                    });
-
-                });
-
-                it('converse 2', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: 'will reply in a minute'
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [0, 0, 2]
-                        },
-                    });
-                });
-
-                it('converse 3', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'stop',
-                        session: {
-                            leafIsExpectingUserInput: true,
-                            path: [0, 1],
-                        }
-                    })
-                });
-            });
-
-            describe('bye', function() {
-                it('send', () => {
-                    converseRes = ce._converse('bye', converseRes.session, {}, testStories.data);
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: 'bye back',
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [1, 0, 0]
-                        }
-                    });
-                });
-
-                it('converse 1', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'stop',
-                        session: {
-                            leafIsExpectingUserInput: true,
-                            path: [1, 1],
-                        }
-                    })
-                });
-
-                it('converse 2', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'stop',
-                        session: {
-                            leafIsExpectingUserInput: true,
-                            path: [1, 1],
-                        }
-                    })
-                });
-            });
-
-            describe('dfqwsfsdfffwasdf', function() {
-                it('send', () => {
-                    converseRes = ce._converse('dfqwsfsdfffwasdf', converseRes.session, {}, testStories.data);
-                    expect(converseRes).eql({
-                        type: 'action',
-                        action: 'aaa',
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [1, 1, 1, 0, 0],
-                        }
-                    })
-                });
-
-                it('converse 1', () => {
-                    const context = {
-                        bb: true,
-                        ff: true,
-                    };
-                    converseRes = ce._converse(null, converseRes.session, context, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: 'rr',
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [1, 1, 1, 0, 2, 0, 0, 1],
-                        }
-                    });
-                });
-
-                it('converse 2', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'action',
-                        action: 'vvv',
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [1, 1, 1, 0, 2, 0, 0, 2],
-                        }
-                    });
-                });
-
-                it('converse 3', () => {
-                    const context = {
-                        x: true
-                    };
-                    converseRes = ce._converse(null, converseRes.session, context, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'stop',
-                        session: {
-                            leafIsExpectingUserInput: true,
-                            path: [1, 1, 1, 0, 2, 0, 0, 3, 0, 1, 0],
-                        }
-                    });
-                });
-            });
-
-            describe('wer', function() {
-                it('send', () => {
-                    converseRes = ce._converse('wer', converseRes.session, {}, testStories.data);
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: 'werback',
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [1, 1, 1, 0, 2, 0, 0, 3, 0, 1, 0, 0],
-                        }
-                    })
-                });
-
-                it('converse 1', () => {
-                    converseRes = ce._converse(null, converseRes.session, {}, testStories.data, {});
-                    expect(converseRes).eql({
-                        type: 'stop',
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [],
-                        }
-                    });
-                });
-            });
-            describe('change mid story', function() {
-                it('send hi', () => {
-                    converseRes = ce._converse('hi', converseRes.session, {}, testStories.data);
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: '<[ delay: 1; as user ]> hi back',
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [0, 0, 1],
-                        }
-                    })
-                });
-                it('send bye', () => {
-                    converseRes = ce._converse('bye', converseRes.session, {}, testStories.data);
-                    expect(converseRes).eql({
-                        type: 'msg',
-                        msg: {
-                            text: 'bye back',
-                        },
-                        session: {
-                            leafIsExpectingUserInput: false,
-                            path: [1, 0, 0],
-                        }
-                    })
-                });
-
-            });
-        });
-
-        describe('=> Learn from human transfer', function() {
-            let placeholderTurn, learnedTurn, inputMessage, responseText;
-            before(function() {
-                responseText = 'xxx';
-                inputMessage = { text: 'dummy input' };
-                placeholderTurn = {
-                    user: '',
-                    placeholder: true,
-                    entities: [],
-                    operations: [],
-                };
-                learnedTurn = {
-                    user: inputMessage.text,
-                    entities: [],
-                    operations: [
-                        {
-                            action: `template-${responseText}`
-                        }
-                    ],
-                };
-            });
-
-            it('=> at branch, expecting reply', async function() {
-                const res = ce._learnFromHumanTransfer(
-                    responseText,
-                    inputMessage,
-                    {
-                        path: [1, 1],
-                        leafIsExpectingUserInput: true,
-                    },
-                    testStories.data,
-                    true
-                );
-
-                expect(res).eql({
-                    session: {
-                        leafIsExpectingUserInput: true,
-                        path: [1, 1, 2, 1],
-                    },
-                    stories: ice.assocIn(
-                        testStories.data,
-                        [1, 'turns', 1, 'branches', 2],
-                        [
-                            learnedTurn,
-                            placeholderTurn,
-                        ]
-                    ),
-                });
-            });
-
-            it('=> at branch, not expecting reply', async function() {
-                const res = ce._learnFromHumanTransfer(
-                    responseText,
-                    inputMessage,
-                    {
-                        path: [1, 1],
-                        leafIsExpectingUserInput: true,
-                    },
-                    testStories.data,
-                    false
-                );
-
-                expect(res).eql({
-                    session: {
-                        leafIsExpectingUserInput: false,
-                        path: [],
-                    },
-                    stories: ice.assocIn(
-                        testStories.data,
-                        [1, 'turns', 1, 'branches', 2],
-                        [learnedTurn]
-                    ),
-                });
-            });
-
-            it('=> at placeholder user, expecting reply', async function() {
-                const stories = ice.assocIn(
-                    testStories.data, [0, 'turns', 2], placeholderTurn
-                );
-                const res = ce._learnFromHumanTransfer(
-                    responseText,
-                    inputMessage,
-                    {
-                        path: [0, 2],
-                        leafIsExpectingUserInput: true,
-                    },
-                    stories,
-                    true
-                );
-
-                expect(res).eql({
-                    session: {
-                        leafIsExpectingUserInput: true,
-                        path: [0, 3],
-                    },
-                    stories: ice.chain(stories)
-                        .assocIn([0, 'turns', 2], learnedTurn)
-                        .assocIn([0, 'turns', 3], placeholderTurn)
-                        .value(),
-                });
-            });
-
-            it('=> at placeholder user, not expecting reply', async function() {
-                const stories = ice.assocIn(
-                    testStories.data, [0, 'turns', 2], placeholderTurn
-                );
-                const res = ce._learnFromHumanTransfer(
-                    responseText,
-                    inputMessage,
-                    {
-                        path: [0, 2],
-                        leafIsExpectingUserInput: true,
-                    },
-                    stories,
-                    false
-                );
-
-                expect(res).eql({
-                    session: {
-                        leafIsExpectingUserInput: false,
-                        path: [],
-                    },
-                    stories: ice.assocIn(
-                        stories, [0, 'turns', 2], learnedTurn
-                    ),
-                });
-            });
-
-            it('=> at non-placeholder user, expecting reply', async function() {
-                const res = ce._learnFromHumanTransfer(
-                    responseText,
-                    inputMessage,
-                    {
-                        path: [2, 1],
-                        leafIsExpectingUserInput: true,
-                    },
-                    testStories.data,
-                    true
-                );
-
-                expect(res).eql({
-                    session: {
-                        leafIsExpectingUserInput: true,
-                        path: [2, 1, 1, 1],
-                    },
-                    stories: ice.assocIn(testStories.data, [2, 'turns'], [
-                        testStories.data[2].turns[0],
-                        {
-                            branches: [
-                                testStories.data[2].turns.slice(1),
-                                [
-                                    learnedTurn,
-                                    placeholderTurn,
-                                ]
-                            ]
-                        }
-                    ])
-                });
-            });
-
-            it('=> at non-placeholder user, not expecting reply', async function() {
-                const res = ce._learnFromHumanTransfer(
-                    responseText,
-                    inputMessage,
-                    {
-                        path: [2, 1],
-                        leafIsExpectingUserInput: true,
-                    },
-                    testStories.data,
-                    false
-                );
-
-                expect(res).eql({
-                    session: {
-                        leafIsExpectingUserInput: false,
-                        path: [],
-                    },
-                    stories: ice.assocIn(testStories.data, [2, 'turns'], [
-                        testStories.data[2].turns[0],
-                        {
-                            branches: [
-                                testStories.data[2].turns.slice(1),
-                                [
-                                    learnedTurn,
-                                ]
-                            ]
-                        }
-                    ])
-                });
-            });
-
-            it('=> empty session, expecting reply', async function() {
-                const res = ce._learnFromHumanTransfer(
-                    responseText,
-                    inputMessage,
-                    {
-                        path: [],
-                        leafIsExpectingUserInput: false,
-                    },
-                    testStories.data,
-                    true
-                );
-
-                expect(res).eql({
-                    session: {
-                        leafIsExpectingUserInput: true,
-                        path: [3, 1],
-                    },
-                    stories: ice.push(testStories.data, {
-                        name: '',
-                        turns: [
-                            learnedTurn,
-                            placeholderTurn,
-                        ]
-                    }),
-                });
-            });
-
-            it('=> empty session, not expecting reply', async function() {
-                const res = ce._learnFromHumanTransfer(
-                    responseText,
-                    inputMessage,
-                    {
-                        path: [],
-                        leafIsExpectingUserInput: false,
-                    },
-                    testStories.data,
-                    false
-                );
-
-                expect(res).eql({
-                    session: {
-                        leafIsExpectingUserInput: false,
-                        path: [],
-                    },
-                    stories: ice.push(testStories.data, {
-                        name: '',
-                        turns: [
-                            learnedTurn,
-                        ]
-                    }),
-                });
-            });
-        });
-    });
-
-    // it('tests3', async function() {
+    // TODO uncomment these tests after conversational engine is done
+    // describe('=> conversational engine', function() {
+    //     const botAIData = {
+    //         stories: testStories.data,
+    //         actions: testActions.data,
+    //         expressions: testExpressions.data,
+    //     };
     //
-    //     const zip = new JSZip();
-    //     zip.file('stories.json', 'boooya222');
-    //     const zipStream = zip.generateNodeStream({
-    //         type: 'nodebuffer',
-    //         streamFiles: true,
+    //     describe('bookmarks', function() {
+    //         const bookmarks = ce._collectBookmarks(testStories.data);
+    //         it('collectBookmarks', () => {
+    //             expect(bookmarks).eql({
+    //                 b1: [0, 0, 0],
+    //                 b2: [0, 1, 0],
+    //                 b3: [1, 1, 1, 0, 1],
+    //                 b4: [1, 1, 1, 0, 2, 0, 0, 3, 0, 0, 0],
+    //             });
+    //         });
     //     });
     //
-    //     await aws.s3Upload({
-    //         Bucket: CONSTANTS.S3_BUCKET_NAME,
-    //         Key: `tests3/bot.zip`,
-    //         Body: zipStream,
+    //     describe('converse', function() {
+    //         let converseRes;
+    //         it('do nothing', async function() {
+    //             converseRes = await ce._converse(null, {}, {}, botAIData);
+    //             expect(converseRes).eql({
+    //                 type: 'stop',
+    //                 session: {
+    //                     leafIsExpectingUserInput: false,
+    //                     path: [],
+    //                 },
+    //             });
+    //         });
+    //
+    //         describe('hi', function() {
+    //
+    //             it('send', async function()  {
+    //                 converseRes = await ce._converse('hi', converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: '<[ delay: 1; as user ]> hi back'
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [0, 0, 1]
+    //                     }
+    //                 });
+    //
+    //             });
+    //
+    //             it('converse 1', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: 'will reply in a minute'
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [0, 0, 2]
+    //                     },
+    //                 });
+    //             });
+    //
+    //             it('converse 2', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     session: {
+    //                         leafIsExpectingUserInput: true,
+    //                         path: [0, 1],
+    //                     },
+    //                     type: 'stop',
+    //                 });
+    //             });
+    //
+    //             it('converse 3', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     session: {
+    //                         leafIsExpectingUserInput: true,
+    //                         path: [0, 1],
+    //                     },
+    //                     type: 'stop',
+    //                 });
+    //
+    //             });
+    //         });
+    //
+    //         describe('hihi', function() {
+    //             it('send', async function() {
+    //                 converseRes = await ce._converse('hihi', converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: 'hihi back',
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [0, 1, 1]
+    //                     }
+    //                 });
+    //             });
+    //
+    //             it('converse 1', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: '<[ delay: 1; as user ]> hi back'
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [0, 0, 1]
+    //                     }
+    //                 });
+    //
+    //             });
+    //
+    //             it('converse 2', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: 'will reply in a minute'
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [0, 0, 2]
+    //                     },
+    //                 });
+    //             });
+    //
+    //             it('converse 3', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'stop',
+    //                     session: {
+    //                         leafIsExpectingUserInput: true,
+    //                         path: [0, 1],
+    //                     }
+    //                 })
+    //             });
+    //         });
+    //
+    //         describe('bye', function() {
+    //             it('send', async function() {
+    //                 converseRes = await ce._converse('bye', converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: 'bye back',
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [1, 0, 0]
+    //                     }
+    //                 });
+    //             });
+    //
+    //             it('converse 1', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'stop',
+    //                     session: {
+    //                         leafIsExpectingUserInput: true,
+    //                         path: [1, 1],
+    //                     }
+    //                 })
+    //             });
+    //
+    //             it('converse 2', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'stop',
+    //                     session: {
+    //                         leafIsExpectingUserInput: true,
+    //                         path: [1, 1],
+    //                     }
+    //                 })
+    //             });
+    //         });
+    //
+    //         describe('dfqwsfsdfffwasdf', function() {
+    //             it('send', async function() {
+    //                 converseRes = await ce._converse('dfqwsfsdfffwasdf', converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'action',
+    //                     action: 'aaa',
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [1, 1, 1, 0, 0],
+    //                     }
+    //                 })
+    //             });
+    //
+    //             it('converse 1', async function() {
+    //                 const context = {
+    //                     bb: true,
+    //                     ff: true,
+    //                 };
+    //                 converseRes = await ce._converse(null, converseRes.session, context, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: 'rr',
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [1, 1, 1, 0, 2, 0, 0, 1],
+    //                     }
+    //                 });
+    //             });
+    //
+    //             it('converse 2', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'action',
+    //                     action: 'vvv',
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [1, 1, 1, 0, 2, 0, 0, 2],
+    //                     }
+    //                 });
+    //             });
+    //
+    //             it('converse 3', async function() {
+    //                 const context = {
+    //                     x: true
+    //                 };
+    //                 converseRes = await ce._converse(null, converseRes.session, context, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'stop',
+    //                     session: {
+    //                         leafIsExpectingUserInput: true,
+    //                         path: [1, 1, 1, 0, 2, 0, 0, 3, 0, 1, 0],
+    //                     }
+    //                 });
+    //             });
+    //         });
+    //
+    //         describe('wer', function() {
+    //             it('send', async function() {
+    //                 converseRes = await ce._converse('wer', converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: 'werback',
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [1, 1, 1, 0, 2, 0, 0, 3, 0, 1, 0, 0],
+    //                     }
+    //                 })
+    //             });
+    //
+    //             it('converse 1', async function() {
+    //                 converseRes = await ce._converse(null, converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'stop',
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [],
+    //                     }
+    //                 });
+    //             });
+    //         });
+    //         describe('change mid story', function() {
+    //             it('send hi', async function() {
+    //                 converseRes = await ce._converse('hi', converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: '<[ delay: 1; as user ]> hi back',
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [0, 0, 1],
+    //                     }
+    //                 })
+    //             });
+    //             it('send bye', async function() {
+    //                 converseRes = await ce._converse('bye', converseRes.session, {}, botAIData);
+    //                 expect(converseRes).eql({
+    //                     type: 'msg',
+    //                     msg: {
+    //                         text: 'bye back',
+    //                     },
+    //                     session: {
+    //                         leafIsExpectingUserInput: false,
+    //                         path: [1, 0, 0],
+    //                     }
+    //                 })
+    //             });
+    //
+    //         });
+    //     });
+    //
+    //     describe('=> Learn from human transfer', function() {
+    //         let placeholderTurn, learnedTurn, inputMessage, responseText;
+    //         before(function() {
+    //             responseText = 'xxx';
+    //             inputMessage = { text: 'dummy input' };
+    //             placeholderTurn = {
+    //                 user: '',
+    //                 placeholder: true,
+    //                 entities: [],
+    //                 operations: [],
+    //             };
+    //             learnedTurn = {
+    //                 user: inputMessage.text,
+    //                 entities: [],
+    //                 operations: [
+    //                     {
+    //                         action: `template-${responseText}`
+    //                     }
+    //                 ],
+    //             };
+    //         });
+    //
+    //         it('=> at branch, expecting reply', async function() {
+    //             const res = ce._learnFromHumanTransfer(
+    //                 responseText,
+    //                 inputMessage,
+    //                 {
+    //                     path: [1, 1],
+    //                     leafIsExpectingUserInput: true,
+    //                 },
+    //                 botAIData,
+    //                 true
+    //             );
+    //
+    //             expect(res).eql({
+    //                 session: {
+    //                     leafIsExpectingUserInput: true,
+    //                     path: [1, 1, 2, 1],
+    //                 },
+    //                 stories: ice.assocIn(
+    //                     testStories.data,
+    //                     [1, 'turns', 1, 'branches', 2],
+    //                     [
+    //                         learnedTurn,
+    //                         placeholderTurn,
+    //                     ]
+    //                 ),
+    //             });
+    //         });
+    //
+    //         it('=> at branch, not expecting reply', async function() {
+    //             const res = ce._learnFromHumanTransfer(
+    //                 responseText,
+    //                 inputMessage,
+    //                 {
+    //                     path: [1, 1],
+    //                     leafIsExpectingUserInput: true,
+    //                 },
+    //                 botAIData,
+    //                 false
+    //             );
+    //
+    //             expect(res).eql({
+    //                 session: {
+    //                     leafIsExpectingUserInput: false,
+    //                     path: [],
+    //                 },
+    //                 stories: ice.assocIn(
+    //                     testStories.data,
+    //                     [1, 'turns', 1, 'branches', 2],
+    //                     [learnedTurn]
+    //                 ),
+    //             });
+    //         });
+    //
+    //         it('=> at placeholder user, expecting reply', async function() {
+    //             const stories = ice.assocIn(
+    //                 testStories.data, [0, 'turns', 2], placeholderTurn
+    //             );
+    //             const res = ce._learnFromHumanTransfer(
+    //                 responseText,
+    //                 inputMessage,
+    //                 {
+    //                     path: [0, 2],
+    //                     leafIsExpectingUserInput: true,
+    //                 },
+    //                 stories,
+    //                 true
+    //             );
+    //
+    //             expect(res).eql({
+    //                 session: {
+    //                     leafIsExpectingUserInput: true,
+    //                     path: [0, 3],
+    //                 },
+    //                 stories: ice.chain(stories)
+    //                     .assocIn([0, 'turns', 2], learnedTurn)
+    //                     .assocIn([0, 'turns', 3], placeholderTurn)
+    //                     .value(),
+    //             });
+    //         });
+    //
+    //         it('=> at placeholder user, not expecting reply', async function() {
+    //             const stories = ice.assocIn(
+    //                 testStories.data, [0, 'turns', 2], placeholderTurn
+    //             );
+    //             const res = ce._learnFromHumanTransfer(
+    //                 responseText,
+    //                 inputMessage,
+    //                 {
+    //                     path: [0, 2],
+    //                     leafIsExpectingUserInput: true,
+    //                 },
+    //                 stories,
+    //                 false
+    //             );
+    //
+    //             expect(res).eql({
+    //                 session: {
+    //                     leafIsExpectingUserInput: false,
+    //                     path: [],
+    //                 },
+    //                 stories: ice.assocIn(
+    //                     stories, [0, 'turns', 2], learnedTurn
+    //                 ),
+    //             });
+    //         });
+    //
+    //         it('=> at non-placeholder user, expecting reply', async function() {
+    //             const res = ce._learnFromHumanTransfer(
+    //                 responseText,
+    //                 inputMessage,
+    //                 {
+    //                     path: [2, 1],
+    //                     leafIsExpectingUserInput: true,
+    //                 },
+    //                 botAIData,
+    //                 true
+    //             );
+    //
+    //             expect(res).eql({
+    //                 session: {
+    //                     leafIsExpectingUserInput: true,
+    //                     path: [2, 1, 1, 1],
+    //                 },
+    //                 stories: ice.assocIn(testStories.data, [2, 'turns'], [
+    //                     testStories.data[2].turns[0],
+    //                     {
+    //                         branches: [
+    //                             testStories.data[2].turns.slice(1),
+    //                             [
+    //                                 learnedTurn,
+    //                                 placeholderTurn,
+    //                             ]
+    //                         ]
+    //                     }
+    //                 ])
+    //             });
+    //         });
+    //
+    //         it('=> at non-placeholder user, not expecting reply', async function() {
+    //             const res = ce._learnFromHumanTransfer(
+    //                 responseText,
+    //                 inputMessage,
+    //                 {
+    //                     path: [2, 1],
+    //                     leafIsExpectingUserInput: true,
+    //                 },
+    //                 botAIData,
+    //                 false
+    //             );
+    //
+    //             expect(res).eql({
+    //                 session: {
+    //                     leafIsExpectingUserInput: false,
+    //                     path: [],
+    //                 },
+    //                 stories: ice.assocIn(testStories.data, [2, 'turns'], [
+    //                     testStories.data[2].turns[0],
+    //                     {
+    //                         branches: [
+    //                             testStories.data[2].turns.slice(1),
+    //                             [
+    //                                 learnedTurn,
+    //                             ]
+    //                         ]
+    //                     }
+    //                 ])
+    //             });
+    //         });
+    //
+    //         it('=> empty session, expecting reply', async function() {
+    //             const res = ce._learnFromHumanTransfer(
+    //                 responseText,
+    //                 inputMessage,
+    //                 {
+    //                     path: [],
+    //                     leafIsExpectingUserInput: false,
+    //                 },
+    //                 botAIData,
+    //                 true
+    //             );
+    //
+    //             expect(res).eql({
+    //                 session: {
+    //                     leafIsExpectingUserInput: true,
+    //                     path: [3, 1],
+    //                 },
+    //                 stories: ice.push(testStories.data, {
+    //                     name: '',
+    //                     turns: [
+    //                         learnedTurn,
+    //                         placeholderTurn,
+    //                     ]
+    //                 }),
+    //             });
+    //         });
+    //
+    //         it('=> empty session, not expecting reply', async function() {
+    //             const res = ce._learnFromHumanTransfer(
+    //                 responseText,
+    //                 inputMessage,
+    //                 {
+    //                     path: [],
+    //                     leafIsExpectingUserInput: false,
+    //                 },
+    //                 botAIData,
+    //                 false
+    //             );
+    //
+    //             expect(res).eql({
+    //                 session: {
+    //                     leafIsExpectingUserInput: false,
+    //                     path: [],
+    //                 },
+    //                 stories: ice.push(testStories.data, {
+    //                     name: '',
+    //                     turns: [
+    //                         learnedTurn,
+    //                     ]
+    //                 }),
+    //             });
+    //         });
     //     });
     // });
+
 
 });

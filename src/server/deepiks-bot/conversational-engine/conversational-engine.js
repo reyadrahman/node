@@ -94,6 +94,7 @@ function collectBookmarks(stories: Object) {
 
 
 async function matchUserInput(userInput, botAIData, language, userTurnsAndPaths = []) {
+    reportDebug('matchUserInput: botAIData: ', botAIData);
     const { stories, expressions } = botAIData;
     const r = await request({
         // TODO
