@@ -539,6 +539,8 @@ Some features such as sending news feeds, notifications and transfer to human in
 
 Make sure you update `all-channels.js`'s `send` function when creating a new channel.
 
+Please see [issue #266](https://github.com/deepiksdev/node/issues/266) for a more complete explanation of `RespondFn` and the `send` functions.
+
 #### Front-End - Immutable Props
 **The entire application state and all `props` of every component are immutable.** Please ensure that you do not ever modify them directly. Always use actions to update the application state and let Redux+React propagate the props down to each component.
 
