@@ -8,6 +8,13 @@ const reportDebug = require('debug')('deepiks:utils');
 const reportError = require('debug')('deepiks:utils:error');
 
 
+export function stripMarkdown(text: string): string {
+    return text
+        .replace(/^>\s*/gm, '')
+        .replace(/\*\*/g, '')
+        .replace(/\n\n/g, '\n');
+}
+
 export function splitTextAtWord(text: string, chunkSize: number) {
     if (text && text.length > chunkSize) {
         const split = text.split(' ');

@@ -2,7 +2,7 @@
 
 import { request, CONSTANTS } from '../server-utils.js';
 import { toStr, waitForAll, timeout, composeKeys, decomposeKeys,
-         splitTextAtWord } from '../../misc/utils.js';
+         splitTextAtWord, stripMarkdown } from '../../misc/utils.js';
 import type { WebhookMessage, ResponseMessage, BotParams } from '../../misc/types.js';
 import { deepiksBot } from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
@@ -269,7 +269,7 @@ export async function send(botParams: BotParams, conversationId: string,
                 id: to,
             },
             message: {
-                text: removeMarkdown(m || ' '),
+                text: stripMarkdown(m || ' '),
             }
         });
     }
@@ -279,7 +279,7 @@ export async function send(botParams: BotParams, conversationId: string,
                 id: to,
             },
             message: {
-                text: removeMarkdown(last || ' '), // text cannot be empty when using quick_replies
+                text: stripMarkdown(last || ' '), // text cannot be empty when using quick_replies
                 quick_replies: quickReplies,
             }
         });
@@ -305,10 +305,6 @@ async function sendHelper(botParams: BotParams, messageData) {
         throw new Error(`Sending message failed with code ${r.statusCode} msg ` +
                         `${r.statusMessage} and body: ${toStr(r.body)}`);
     }
-}
-
-function removeMarkdown(text) {
-    return text.replace(/\n\n/g, '\n');
 }
 
 async function getUserProfile(userId, botParams) {

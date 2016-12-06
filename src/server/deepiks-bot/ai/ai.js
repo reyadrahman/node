@@ -298,10 +298,10 @@ async function createHistory(conversation: Conversation, strings: Object): Promi
 
 function messageToText(message: DBMessage, strings, Object) {
     const senderName = (message.senderName || '').trim().toLowerCase().replace(/\s+/g, '-');
-    let text = `@${senderName}: `;
-    text += message.text || '';
+    let text = `> **@${senderName}:** `;
+    text += (message.text || '').replace(/\n\n/g, '\n\n> ');
     if (!_.isEmpty(message.cards)) {
-        text += `\n\n${strings.imagePlaceholder}`
+        text += `\n\n> ${strings.imagePlaceholder}`
     }
     return text.trim();
 }
