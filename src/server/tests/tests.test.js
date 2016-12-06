@@ -828,11 +828,11 @@ describe('::', function() {
                     roomId,
                 },
                 {
-                    text: '(b)',
+                    markdown: '(b)',
                     roomId,
                 },
                 {
-                    text: 'abc\n(z)',
+                    markdown: 'abc\n\n(z)',
                     roomId,
                 }
             ]);
