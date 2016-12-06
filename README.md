@@ -410,6 +410,8 @@ Please use an editor/IDE with Flow support while developing as it really helps c
 
 As of writing this, Webstorm's EAP builds are very stable and have great support for Flow.
 
+Moreover, studying the unit tests is also a great way to understand the source code.
+
 #### Cisco Spark Webhooks
 Cisco Spark webhooks are supposed to automatically register/unregister when updating a bot. However, if due to a bug or any other reason webhooks are not properly setup or old webhooks are not properly remove, then
 - clear `ciscosparkAccessToken` in bot's settings
