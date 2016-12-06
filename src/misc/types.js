@@ -243,6 +243,12 @@ export type FeedConfigAction = {
     link?: string,
 }
 
+/**
+ * Inside BotParams.settings, the only ciscospark setting set by the publisher is
+ * ciscosparkAccessToken. The rest, ciscosparkBotPersonId, ciscosparkWebhookSecret
+ * and ciscosparkWebhookId are all set automatically when registering or unregistering
+ * the ciscospark webhooks.
+ */
 export type BotParams = {
     botId: string,
     botName: string,
@@ -253,7 +259,6 @@ export type BotParams = {
     settings: {
         ciscosparkAccessToken?: string,
         ciscosparkBotPersonId?: string,
-        ciscosparkBotEmail?: string,
         ciscosparkWebhookSecret?: string,
         ciscosparkWebhookId?: string,
         messengerPageAccessToken?: string,

@@ -184,7 +184,7 @@ export function arity(length: number, fn: Function) {
             return fn.apply(this, arguments);
         };
     }
-};
+}
 
 export function catchPromise(fn: Function) {
     return arity(fn.length, async function() {

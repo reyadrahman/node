@@ -576,6 +576,17 @@ async function addBot(identityId, botName, settings) {
     });
 }
 
+/**
+ *
+ * Inside model.settings, the only ciscospark setting set by the publisher is
+ * ciscosparkAccessToken. The rest, ciscosparkBotPersonId, ciscosparkWebhookSecret
+ * and ciscosparkWebhookId are all set automatically when registering or unregistering
+ * the ciscospark webhooks.
+ *
+ * If ciscosparkAccessToken is different, the old ciscospark webhook will be automatically
+ * unregistered and if it is not empty a new webhook will be registered and the extra
+ * ciscospark settings will be set.
+ */
 async function updateBot(identityId, botId, model) {
     reportDebug('updateBot: ', identityId, botId, model);
     const bot = await aws.getBot(identityId, botId);

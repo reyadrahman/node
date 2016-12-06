@@ -312,8 +312,10 @@ Once the `CDN` environment variable is set and you deploy the server, every stat
 **NOTE: if your website is using HTTPS, so should the CDN. Otherwise browsers will block your CDN files for security reasons**
 
 ## Setting Up Webhooks
-### Spark
+### Cisco Spark
 The add-bot page automatically sets up the webhook.
+
+Also see the "Cisco Spark Webhooks" section under "Development Notes".
 
 ### Messenger
 The webhook target url is https://SOME_DOMAIN/webhooks/PUBLISHER_ID/BOT_ID/messenger
@@ -401,6 +403,69 @@ For more information see [aws-sdk-js's docs](http://docs.aws.amazon.com/AWSJavaS
 
 ### Development Notes
 
+#### Reading the Code and Further Development
+The javascript code uses [Facebook Flow](https://github.com/facebook/flow/). The file `src/misc/types.js` includes most types used in the code. This is an indispensable resource for understanding the code and the data structures.
+
+Please use an editor/IDE with Flow support while developing as it really helps catch errors before run-time and ensures that the type definitions will stay up-to-date.
+
+As of writing this, Webstorm's EAP builds are very stable and have great support for Flow.
+
+#### Cisco Spark Webhooks
+Cisco Spark webhooks are supposed to automatically register/unregister when updating a bot. However, if due to a bug or any other reason webhooks are not properly setup or old webhooks are not properly remove, then
+- clear `ciscosparkAccessToken` in bot's settings
+- use the `SparkWebHookManager` utility from [github.com/deepiksdev/bash/](https://github.com/deepiksdev/bash/) to unregister all webhooks
+- update the bot again with the proper `ciscosparkAccessToken`
+
+Make sure you use the same access token for `SparkWebHookManager` as you use in the bot's settings.
+
+#### Checking the Logs
+If you are running the server on AWS Beanstalk, there are 2 ways to check the logs:
+- through AWS Console
+- through the command line
+
+To check the logs through the console, go to the `AWS console -> Beanstalk -> [select node environment] -> Logs -> Request Logs -> Full Logs -> Download`.
+
+After downloading and extracting it, you can find the logs in `log/nodejs/nodejs.log`. Older logs are compressed in the `log/nodejs/rotated/` directory.
+
+If you use the command line, you can see the logs in real-time. But you do need SSH access to the EC2 instances. See [here](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-ssh.html) for more information on how to set up the credentials. Make sure `awsebcli` is installed and configured and then:
+```bash
+eb ssh
+
+# after ssh connection is established:
+less /var/log/nodejs/nodejs.log
+```
+this will show you the latest log. You could also use the following command to see a live and real-time version of the log:
+```bash
+eb ssh
+
+# after ssh connection is established:
+less +F /var/log/nodejs/nodejs.log
+```
+
+If `eb ssh` gives an error similar to:
+```
+Permission denied (publickey).
+INFO: Closed port 22 on ec2 instance security group.
+ERROR: An error occurred while running: ssh.
+```
+you can set up the ssh keys using the interactive command:
+```bash
+eb ssh --setup
+```
+
+#### Internationalization (i18n)
+Translations for client-side code are stored in `src/i18n/` whereas the translations for the server-side code, such as messages coming from the bot are stored in `src/server/i18n/`.
+
+
+#### Constants and Environment Variables
+Regardless of what method you use to define your env variables, `webpack-config-server.js` checks to make sure mandatory variables are provided and the default values for optional variables are set. Then these env variables will be bound to the `__ENV_VARS__` global variable which is hard-coded in the server code using webpack's [DefinePlugin](https://webpack.github.io/docs/list-of-plugins.html#defineplugin).
+
+The first file that runs in the server is `src/server/preamble.js` which reads `__ENV_VARS__` and updates `process.env`, but does not override variables that already existed in `process.env`.
+
+Some of these env variables are meant to be used as they are, some need to be changed and some new constants need to be added. `src/server/server-utils.js` defines all constants as `CONSTANTS` using `process.env` as its base.
+
+Not every constant should be sent to the client. Some may be secrets and some just not useful. In `src/server/server-side-rendering.js`, the server injects the relevant constants into the client. The client will then use `CONSTANTS` defined in `src/client/client-utils.js` to access them.
+
 #### Static Files
 The server serves the static files from `dist-client`. This directory is created by Webpack after a build. There are 3 ways for a file to end up in `dist-client`:
 
@@ -418,9 +483,59 @@ import { CONSTANTS } from '../../client/client-utils.js';
 const faviconURL = `${CONSTANTS.PUBLIC_URL}favicon.png`;
 ```
 
-Now depending on your configurations, faviconURL could be a relative path to `dist-client` or the URL to the corresponding file in CDN.
+Now depending on your configurations, faviconURL could be a relative path to `dist-client` or the URL to the corresponding file in CDN. The constant `PUBLIC_URL` will be explained in the next section.
 
 **Please use CDN in production to serve static files.** See "Deploy" section for more details.
+
+#### CDN, PUBLIC_URL and How They Are Configured
+As mentioned above, if you set the CDN environment variable, the URL of all static resources will be changed to use the CDN. Here we explain how it works.
+
+In `src/server/server.js` static files from the `dist-client` directory will be served at the public path `CONSTANTS.PUBLIC_PATH`.
+
+The constants `PUBLIC_PATH` and `PUBLIC_URL` are created at build time in `webpack-config-base.js`:
+```js
+PUBLIC_PATH = (cdn ? `/dist_${timestamp}/`        : '/dist/')
+PUBLIC_URL =  (cdn ? `${cdn}/dist_${timestamp}/`  : '/dist/')
+```
+where `cdn` is just the `CDN` env variable and `timestamp` is the epoch timestamp at build time. So for example if somewhere in your code you used any one of the 3 methods to use a static file (see the "Static Files" section above):
+```js
+import { CONSTANTS } from '../../client/client-utils.js';
+const faviconURL = `${CONSTANTS.PUBLIC_URL}favicon.png`;
+```
+
+and have `CDN` set to `https://XXX.cloudfront.net` and the build timestamp is `1480987650714`, then `faviconURL` will be: `https://XXX.cloudfront.net/dist_1480987650714/favicon.png`.
+
+Now when a browser makes a request to `https://XXX.cloudfront.net/dist_1480987650714/favicon.png` for the first time, cloudfront cannot find the file in its cache because the **timestamp has made the url unique to this build**. So cloudfront will make a request to the node server at path `/dist_1480987650714/favicon.png`. The node server will serve the file to cloudfront only once and from then on, the file will stay in cloudfront's cache for days.
+
+The next time you deploy the server, a new timestamp will be created at build time, `PUBLIC_URL` will be different and cloudfront must contact the server again. This way, we don't have to manually empty the CDN cache or wait until the cache expires. The CDN just works immediately after each build.
+
+Since we want the timestamp, and therefore `PUBLIC_URL`, to be the same for the client and the server builds, we use a script `scripts/build.sh` which will create a timestamp and pass it to build the server and the client. This is the script that is called when you run: `npm run build`.
+
+
+#### Creating a New Channel
+In order to create a new channel, the first thing we need is to set up a webhook, that is an end-point through which the channel's servers can communicate with our server.
+
+Webhook routes are defined in `src/server/server-router.js`
+```js
+routes.use('/webhooks/:publisherId/:botId/:channel', (req, res, next) => {
+    /*...*/
+});
+```
+
+which uses the list of all available webhooks and their handlers defined in `src/server/channels/all-channel.js` to handle each request. For example the Messenger channel is implemented in `src/server/channels/messenger.js` and its webhook handler is the `webhook` function.
+
+The job of a webhook handler is to:
+- take a request
+- extract the message(s) inside it (as an object of type `WebhookMessage`)
+- pass it on to `deepiksBot` (will be explained shortly)
+- send the responses (of type `ResponseMessage`) coming from `deepiksBot` back to the user
+- call dashbot to collect statistics
+
+The `deepiksBot` function defined in `src/server/deepiks-bot/deepiks-bot.js` is independent of any channel. It updates the database, store images in S3, handles user authorization, calls the conversational engine, etc. One of its parameters is a callback function of type `RespondFn`. It calls this function when a message must be sent back to the user.
+
+Some features such as sending news feeds, notifications and transfer to human involve sending a message which is not a direct response to a message from users. So every channel also implements a `send` function which will be used from the `send` function in `all-channels.js`.
+
+Make sure you update `all-channels.js`'s `send` function when creating a new channel.
 
 #### Front-End - Immutable Props
 **The entire application state and all `props` of every component are immutable.** Please ensure that you do not ever modify them directly. Always use actions to update the application state and let Redux+React propagate the props down to each component.
@@ -432,7 +547,7 @@ Please remember that by default promises swallow errors and **silently fail**:
 
 ```js
 async function f() {
-    throw new Error('You will not see this message');
+    throw new Error('Can you see this message?');
 }
 
 function bad() {

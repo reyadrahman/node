@@ -236,7 +236,6 @@ export default {
         addBot: 'Ajouter bot',
         cancel: 'Annuler',
         ciscosparkAccessToken: 'Cisco Spark access token',
-        ciscosparkBotEmail: 'Cisco Spark bot\'s email address',
         messengerPageAccessToken: 'Facebook page access token',
         messengerAppSecret: 'Facebook app secret',
         microsoftAppId: 'Microsoft app ID',
