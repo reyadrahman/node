@@ -10,8 +10,9 @@ const reportDebug = require('debug')('deepiks:WebChat');
 const reportError = require('debug')('deepiks:WebChat:error');
 
 let Chat = React.createClass({
-    shouldReconnect: true,
-    ws:              null,
+    initialMessageHandled: false,
+    shouldReconnect:       true,
+    ws:                    null,
 
     getInitialState: function () {
         return {
@@ -123,8 +124,9 @@ let Chat = React.createClass({
         websocket.onopen = () => {
             reportDebug('Websocket connected');
 
-            if (this.props.initialMessage) {
+            if (this.props.initialMessage && !this.initialMessageHandled) {
                 this.handleMessageSubmit(this.props.initialMessage);
+                this.initialMessageHandled = true;
             }
         };
 
