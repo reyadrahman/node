@@ -122,6 +122,10 @@ let Chat = React.createClass({
 
         websocket.onopen = () => {
             reportDebug('Websocket connected');
+
+            if (this.props.initialMessage) {
+                this.handleMessageSubmit(this.props.initialMessage);
+            }
         };
 
         websocket.onmessage = (evt) => {
@@ -157,11 +161,14 @@ let Chat = React.createClass({
     render: function () {
         let bot = this.props.bot;
 
+        let header = this.props.initialMessage ? null :
+            (<div className="chatBotHeader">
+                {`Hi! I'm ${bot.botName}. Say "hi" if you'd like to chat`}
+            </div>);
+
         return (
             <section className="chatBotContainer">
-                <div className="chatBotHeader">
-                    {`Hi! I'm ${bot.botName}. Say "hi" if you'd like to chat`}
-                </div>
+                {header}
                 <div className="chatBot">
                     <Messages messages={ this.state.data } handleAction={this.handleAction}/>
                     <InputBox
