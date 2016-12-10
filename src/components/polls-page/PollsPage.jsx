@@ -8,6 +8,8 @@ import {withRouter, Link} from 'react-router';
 
 import {Alert} from 'react-bootstrap';
 import {Treebeard} from 'react-treebeard';
+import {PieChart} from 'react-easy-chart';
+import d3 from 'd3';
 
 import _ from 'lodash';
 
@@ -122,15 +124,56 @@ let PollsPage = React.createClass({
 
                 _.forEach(groupedPolls, (questions, pollId) => {
                     treeData.push({
-                        name:     `poll "${pollId}"`,
+                        name:     `poll "${pollId.replace(/_/g, ' ')}"`,
                         children: questions.map(question => {
                             let answers = [];
+                            let total = _.sum(_.values(question.aggregates));
+
+                            let chartData = [];
+
+                            let i      = 0;
+                            let colors = d3.scale.category10();
+
                             _.forEach(question.aggregates, (votes, option) => {
-                                answers.push({name: `${option}: ${votes}`});
+                                let percent = _.round(votes / total * 100, 2);
+                                let name    = `${option.replace(/_/g, ' ')}: ${votes} (${percent}%)`;
+
+                                let color = colors(i);
+                                i += 1;
+
+                                let chartLabel =
+                                        option.replace(/_/g, ' ')
+                                        .split(' ')
+                                        .map(word => word[0] + '.')
+                                        .join(' ')
+                                        + ` ${percent}%`;
+
+                                chartData.push({key: chartLabel, value: votes, color});
+
+                                let style = {
+                                    display:         'inline-block',
+                                    width:           '10px',
+                                    height:          '10px',
+                                    backgroundColor: color
+                                };
+
+                                answers.push({name: [(<div style={style}></div>), ' ' + name], value: votes});
+                            });
+
+                            answers   = _.orderBy(answers, 'value', 'desc');
+                            chartData = _.orderBy(chartData, 'value', 'desc');
+
+                            answers.unshift({
+                                name: (
+                                          <PieChart
+                                              size={250}
+                                              data={chartData}
+                                          />
+                                      )
                             });
 
                             return {
-                                name:     `question "${question.questionId}"`,
+                                name:     `question "${question.questionId.replace(/_/g, ' ')}"`,
                                 children: answers
                             }
                         })
