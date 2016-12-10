@@ -124,7 +124,7 @@ let PollsPage = React.createClass({
 
                 _.forEach(groupedPolls, (questions, pollId) => {
                     treeData.push({
-                        name:     `poll "${pollId.replace(/_/g, ' ')}"`,
+                        name:     `${pollId.replace(/_/g, ' ')}`,
                         children: questions.map(question => {
                             let answers = [];
                             let total = _.sum(_.values(question.aggregates));
@@ -173,7 +173,7 @@ let PollsPage = React.createClass({
                             });
 
                             return {
-                                name:     `question "${question.questionId.replace(/_/g, ' ')}"`,
+                                name:     `${question.questionId.replace(/_/g, ' ')}`,
                                 children: answers
                             }
                         })
