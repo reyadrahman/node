@@ -83,11 +83,10 @@ let Chat = React.createClass({
     },
 
     handleAction: function (action) {
-        console.log(action);
         if (action.url) {
             window.open(action.url);
         } else { // postback
-            this.handleMessageSubmit(action.postback);
+            this.handleMessageSubmit(action.postback || action.fallback || action.text);
         }
     },
 
@@ -103,6 +102,15 @@ let Chat = React.createClass({
             this.setupWebsocket();
         } catch (e) {
             reportError(e);
+        }
+    },
+
+    componentWillUpdate: function (nextProps) {
+        if (nextProps.bot !== this.props.bot) {
+            this.setState({
+                data:           [],
+                conversationId: uuid.v1(),
+            });
         }
     },
 
