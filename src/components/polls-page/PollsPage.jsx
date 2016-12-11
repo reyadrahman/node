@@ -13,6 +13,8 @@ import d3 from 'd3';
 
 import _ from 'lodash';
 
+const reportDebug = require('debug')('deepiks:PollsPage');
+
 let PollsPage = React.createClass({
     treebeardCss: {
         tree: {
@@ -212,6 +214,9 @@ let PollsPage = React.createClass({
 
     render() {
         let content;
+        const i18n = this.props.i18n.strings.pollsPage;
+
+        reportDebug(i18n);
 
         if (this.state.treeData.length) {
             content = (
@@ -227,7 +232,7 @@ let PollsPage = React.createClass({
             } else if (this.state.error) {
                 content = <Alert bsStyle="danger">{this.state.error}</Alert>;
             } else {
-                content = 'No polls were found for this bot';
+                content = i18n['No polls were found for this bot'];
             }
         }
 
@@ -235,7 +240,7 @@ let PollsPage = React.createClass({
             <div className={`polls-page-comp ${this.props.className}`}>
                 <div className="panel">
                     <div className="panel-heading">
-                        <h1>Polls</h1>
+                        <h1>{i18n['Polls']}</h1>
                     </div>
 
                     <div className="panel-body">

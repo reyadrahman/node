@@ -217,6 +217,10 @@ export default {
         noFeeds: 'Vous n\'avez encore aucun flux',
         sendNow: 'FR Send now',
     },
+    pollsPage: {
+        "No polls were found for this bot": "Aucun sondage n'a été trouvé pour ce bot",
+        "Polls": "Sondages"
+    },
     newFeed: {
         create: 'Créer',
         newFeedTitle: 'Nouveau flux',

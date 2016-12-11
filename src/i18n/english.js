@@ -218,6 +218,10 @@ export default {
         noFeeds: 'You don\'t have any feeds yet',
         sendNow: 'Send now',
     },
+    pollsPage: {
+        "No polls were found for this bot": "No polls were found for this bot",
+        "Polls": "Polls"
+    },
     newFeed: {
         create: 'Create',
         newFeedTitle: 'New Feed',
