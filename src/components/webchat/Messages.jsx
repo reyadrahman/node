@@ -15,7 +15,7 @@ let Messages = React.createClass({
     componentDidUpdate: function () {
         if (this.props.messages.length) {
             let messageElements = this.refs.messages.getElementsByClassName('message');
-            if (messageElements.length) {
+            if (messageElements.length > 2) {
                 let lastMessage = messageElements[messageElements.length - 1];
                 lastMessage.scrollIntoView && lastMessage.scrollIntoView();
             }
@@ -82,9 +82,9 @@ const Actions = ({
 }) => {
     if (!actions || actions.length === 0) return null;
 
-    const actionsUi = actions.map((x, i) => (
+    const actionsUi = actions.map((a, i) => (
         <div key={i} className="simple-action action" onClick={() => handleAction(a)}>
-            { x.text }
+            { a.text }
         </div>
     ));
 

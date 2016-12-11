@@ -10,8 +10,9 @@ const reportDebug = require('debug')('deepiks:WebChat');
 const reportError = require('debug')('deepiks:WebChat:error');
 
 let Chat = React.createClass({
-    shouldReconnect: true,
-    ws:              null,
+    initialMessageHandled: false,
+    shouldReconnect:       true,
+    ws:                    null,
 
     getInitialState: function () {
         return {
@@ -83,11 +84,10 @@ let Chat = React.createClass({
     },
 
     handleAction: function (action) {
-        console.log(action);
         if (action.url) {
             window.open(action.url);
         } else { // postback
-            this.handleMessageSubmit(action.postback);
+            this.handleMessageSubmit(action.postback || action.fallback || action.text);
         }
     },
 
@@ -106,6 +106,15 @@ let Chat = React.createClass({
         }
     },
 
+    componentWillUpdate: function (nextProps) {
+        if (nextProps.bot !== this.props.bot) {
+            this.setState({
+                data:           [],
+                conversationId: uuid.v1(),
+            });
+        }
+    },
+
     setupWebsocket: function () {
         let address = CONSTANTS.RUNNING_LOCALLY
             ? `ws://localhost:${CONSTANTS.PORT}`
@@ -114,6 +123,11 @@ let Chat = React.createClass({
 
         websocket.onopen = () => {
             reportDebug('Websocket connected');
+
+            if (this.props.initialMessage && !this.initialMessageHandled) {
+                this.handleMessageSubmit(this.props.initialMessage);
+                this.initialMessageHandled = true;
+            }
         };
 
         websocket.onmessage = (evt) => {
@@ -149,11 +163,14 @@ let Chat = React.createClass({
     render: function () {
         let bot = this.props.bot;
 
+        let header = this.props.initialMessage ? null :
+            (<div className="chatBotHeader">
+                {`Hi! I'm ${bot.botName}. Say "hi" if you'd like to chat`}
+            </div>);
+
         return (
             <section className="chatBotContainer">
-                <div className="chatBotHeader">
-                    {`Hi! I'm ${bot.botName}. Say "hi" if you'd like to chat`}
-                </div>
+                {header}
                 <div className="chatBot">
                     <Messages messages={ this.state.data } handleAction={this.handleAction}/>
                     <InputBox

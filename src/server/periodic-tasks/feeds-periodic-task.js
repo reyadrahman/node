@@ -217,7 +217,17 @@ function processRssFeedConfig(botParams, feedConfig): Promise<BotFeed> {
             );
             const feedMessages = rssItems.map(x => {
                 const { title, description, link, enclosures } = x;
-                const enclosure = enclosures && enclosures.find(e => e.type.includes('image'));
+                const enclosure = enclosures && enclosures.find(e => {
+                        if (e.type) {
+                            return e.type.includes('image');
+                        }
+
+                        if (e.url) {
+                            return e.url.includes('.jpg') || e.url.includes('.jpeg') || e.url.includes('.png');
+                        }
+
+                        return false;
+                    });
                 return {
                     title,
                     description,
