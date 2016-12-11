@@ -205,7 +205,7 @@ export async function ai(
 
     const witData = Object.assign({
         sessionId: uuid.v4(),
-        context:   {channel: conversation.channel},
+        context: {},
     }, conversation.witData);
     reportDebug('ai: witData: ', witData);
 

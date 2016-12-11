@@ -14,10 +14,6 @@ import {websocketMessage} from './channels/web.js';
 export default function initializeRoutes(server) {
     const routes = express.Router();
 
-    routes.get('/splash', function(req, res, next){
-        res.redirect('http://deepiks.io/bot/eu-west-1:2bdc8a58-5b40-47cc-aeb2-6bc3f0bf4604/f2958eac-730b-41a0-b97d-d5f53524e2ef?direct=true&usersays=Accueil%20Wifi');
-    });
-
     routes.use('/api', bridge);
 
     routes.use('/webhooks/email', (req, res, next) => {

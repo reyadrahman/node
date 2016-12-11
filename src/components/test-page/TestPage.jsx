@@ -52,7 +52,7 @@ let TestPage = React.createClass({
         if (this.props.public || currentUser.signedIn) {
             if (this.state.bot) {
                 if (this.props.location.query.direct) {
-                    content = <Chat bot={this.state.bot} initialMessage={this.props.location.query.usersays}/>
+                    content = <Chat bot={this.state.bot}/>
                 } else {
                     if (this.state.bot.settings.secretWebchatCode) {
                         content = (

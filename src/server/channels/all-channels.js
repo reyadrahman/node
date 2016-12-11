@@ -5,7 +5,6 @@ import * as messenger from './messenger.js';
 import * as ms from './ms.js';
 import * as web from './web.js';
 import * as email from './email.js';
-import * as tropo from './tropo.js';
 import * as aws from '../../aws/aws.js';
 import { waitForAll } from '../../misc/utils.js';
 import type { ResponseMessage, BotParams, Conversation } from '../../misc/types.js';
@@ -20,8 +19,7 @@ export const webhooks = {
     messenger: messenger.webhook,
     spark:     spark.webhook,
     ms:        ms.webhook,
-    email:     email.webhook,
-    tropo:     tropo.webhook,
+    email:     email.webhook
     // web.webhook not here, handled with websocket
 };
 
@@ -33,8 +31,6 @@ export async function send(botParams: BotParams, conversation: Conversation,
     let sendFn;
     if (channel === 'messenger') {
         sendFn = m => messenger.send(botParams, conversationId, m);
-    } else if (channel === 'tropo') {
-        sendFn = m => tropo.send(botParams, conversationId, m);
     } else if (channel === 'ciscospark') {
         sendFn = m => spark.send(botParams, conversationId, m);
     } else if (channel === 'web') {
