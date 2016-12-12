@@ -150,7 +150,7 @@ let Chat = React.createClass({
         let bot = this.props.bot;
 
         return (
-            <section className="chatBotContainer">
+            <section className="chatBotContainer nation">
                 <div className="chatBotHeader">
                     {`Hi! I'm ${bot.botName}. Say "hi" if you'd like to chat`}
                 </div>

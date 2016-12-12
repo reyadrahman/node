@@ -24,38 +24,31 @@
         height: 600px;
     }
     
-    @media screen and (max-width: 412px){
-      iframe, .chatBotContainer {
+    @media screen and (max-width: 414px){
+      iframe, .chatBotContainer.nation {
         width: 100%;
-        height: 660px;
+        height: 470px;
       }  
-    }
-  
-    @media  screen and (max-height: 732px){
-      iframe, .chatBotContainer {
-        width: 100%;
-        height: 660px;
-      }  
-    }
+    }  
     
     @media screen and (max-width: 412px){
-      iframe, .chatBotContainer {
+      iframe, .chatBotContainer.nation {
         width: 100%;
-        height: 600px;
+        height: 400px;
       }  
     }
     
     @media  screen and (max-width: 360px){
-      iframe, .chatBotContainer {
+      iframe, .chatBotContainer.nation {
           width: 100%;
-          height: 560px;
+          height: 380px;
       }  
     }
     
     @media  screen and (max-width: 320px){
-      iframe, .chatBotContainer {
+      iframe, .chatBotContainer.nation {
           width: 100%;
-          height: 500px;
+          height: 340px;
       }  
     }
 }
