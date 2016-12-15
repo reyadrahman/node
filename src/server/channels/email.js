@@ -5,7 +5,7 @@ import striptags from 'striptags';
 import moment from 'moment';
 
 import {composeKeys} from '../../misc/utils.js';
-import type {WebhookMessage, ResponseMessage, BotParams} from '../../misc/types.js';
+import type {WebhookMessage, ResponseMessage, BotParams, ChannelData} from '../../misc/types.js';
 import {deepiksBot} from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
 import type {Request, Response} from 'express';
@@ -88,7 +88,7 @@ async function receivedMessage(email, botParams: BotParams) {
     // reportDebug('email receivedMessage: ', u.inspect(entry, {depth: null}));
 
     // fetch conversation id from the reference in subject: Re: inquiry ... [ref:aaaa-bbbb-cccc-dddd]
-    let conversationId                = email.subject.match(/\[ref:([\w\-]+)\]/);
+    let conversationId                = (email.subject || '').match(/\[ref:([\w\-]+)\]/);
     let subjectContainsConversationId = false;
     if (conversationId) {
         conversationId                = conversationId[1];
@@ -120,15 +120,14 @@ async function receivedMessage(email, botParams: BotParams) {
     reportDebug('email sending deepiks-bot: ', message);
 
     return deepiksBot(message, botParams, m => {
-        m.to      = email.from[0];
-        m.subject = `Re: ${email.subject}` + (subjectContainsConversationId ? '' : ` [ref:${conversationId}]`);
+        m.subject = `Re: ${email.subject || ''}` + (subjectContainsConversationId ? '' : ` [ref:${conversationId}]`);
         m.originalEmail = email;
-        return send(botParams, conversationId, m);
+        return send(botParams, conversationId, m, {email: email.from[0]});
     });
 }
 
 
-export async function send(botParams: BotParams, conversationId: string, message: ResponseMessage) {
+export async function send(botParams: BotParams, conversationId: string, message: ResponseMessage, channelData: ChannelData) {
 
     let body = {}, quote = {text: '', html: ''};
 
@@ -178,16 +177,18 @@ export async function send(botParams: BotParams, conversationId: string, message
         Charset: 'utf8'
     };
 
+    let subject = message.subject || `Message from ${botParams.botName} [ref:${conversationId}]`;
+
     return aws.sesSendEmail({
         Destination: {
             ToAddresses: [
-                `${message.to.name} <${message.to.address}>`
+                `${channelData.email.name} <${channelData.email.address}>`
             ]
         },
         Message:     {
             Body:    body,
             Subject: {
-                Data:    message.subject,
+                Data:    subject,
                 Charset: 'utf8'
             }
         },

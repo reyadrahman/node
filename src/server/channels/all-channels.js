@@ -3,7 +3,6 @@
 import * as spark from './spark.js';
 import * as messenger from './messenger.js';
 import * as ms from './ms.js';
-import * as web from './web.js';
 import * as email from './email.js';
 import * as tropo from './tropo.js';
 import * as aws from '../../aws/aws.js';
@@ -35,10 +34,10 @@ export async function send(botParams: BotParams, conversation: Conversation,
         sendFn = m => messenger.send(botParams, conversationId, m);
     } else if (channel === 'tropo') {
         sendFn = m => tropo.send(botParams, conversationId, m, channelData);
+    } else if (channel === 'email') {
+        sendFn = m => email.send(botParams, conversationId, m, channelData);
     } else if (channel === 'ciscospark') {
         sendFn = m => spark.send(botParams, conversationId, m);
-    } else if (channel === 'web') {
-        sendFn = m => web.send(conversationId, m);
     } else if (['skype', 'slack', 'telegram', 'webchat', 'msteams'].includes(channel)) {
         if (!channelData) {
             throw new Error('send: channelData is missing');

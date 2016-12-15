@@ -76,7 +76,8 @@ export type HumanTransferDest = {
 
 export type ChannelData = {
     address: Object, // microsoft bot framework specific,
-    phone: string // tropo channel specific
+    phone: string, // tropo channel specific,
+    email: Object
 };
 
 export type WitData = {
@@ -156,7 +157,6 @@ export type WebchannelMessage = {
 
 export type ResponseMessage = {
     subject?: string,
-    to?: object,
     originalEmail?: object,
     from?: object,
     text?: string,
