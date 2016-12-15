@@ -34,7 +34,7 @@ export async function send(botParams: BotParams, conversation: Conversation,
     if (channel === 'messenger') {
         sendFn = m => messenger.send(botParams, conversationId, m);
     } else if (channel === 'tropo') {
-        sendFn = m => tropo.send(botParams, conversationId, m);
+        sendFn = m => tropo.send(botParams, conversationId, m, channelData);
     } else if (channel === 'ciscospark') {
         sendFn = m => spark.send(botParams, conversationId, m);
     } else if (channel === 'web') {
