@@ -62,7 +62,9 @@ export async function webhook(req: Request, res: Response) {
             return Promise.reject(e);
         }
     } else {
-        session.initialText = session.initialText.substr(6).trim();
+        if (session.initialText.trim() !== '/start') {
+            session.initialText = session.initialText.substr(6).trim();
+        }
     }
 
     const conversationId = previousConversation ?
