@@ -309,6 +309,8 @@ Use CDN in production to serve static files. All you need to do is to create a d
 
 Once the `CDN` environment variable is set and you deploy the server, every static file will be served through the CDN. Files will be available in the CDN immediately without any delays caused by caching.
 
+When deploying multiple Elastic Beanstalk environments, create a separate CloudFront distribution for each environment with its own origin. Please avoid mixing the origins of multiple environments within the same distribution since it requires extra configurations and when set incorrectly, the CDN may not work at all.
+
 **NOTE: if your website is using HTTPS, so should the CDN. Otherwise browsers will block your CDN files for security reasons**
 
 ## Setting Up Webhooks
