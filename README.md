@@ -287,7 +287,7 @@ This command will let you create a new app or choose an old one (but it won't de
 eb init
 ```
 
-If you are creating a new app then you also need to create a new environment which will automatically deploy it as well:
+If you are creating a new app then you also need to create a new environment which will automatically deploy it as well (**make sure you use application load balancer, as discussed [here](https://github.com/deepiksdev/node/issues/123#issuecomment-259516518)**):
 ```
 eb create
 ```
