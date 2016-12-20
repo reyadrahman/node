@@ -130,6 +130,7 @@ async function receivedMessage(email, botParams: BotParams) {
 
 
 export async function send(botParams: BotParams, conversationId: string, message: ResponseMessage, channelData: ChannelData) {
+    reportDebug('Sending email: bp=', botParams, 'cid=', conversationId, 'm=', message, 'cd=', channelData);
 
     let body = {}, quote = {text: '', html: ''};
 
@@ -181,7 +182,7 @@ export async function send(botParams: BotParams, conversationId: string, message
 
     let subject = message.subject || `Message from ${botParams.botName} [ref:${conversationId}]`;
 
-    return aws.sesSendEmail({
+    await aws.sesSendEmail({
         Destination: {
             ToAddresses: [
                 `${channelData.email.name} <${channelData.email.address}>`
@@ -195,5 +196,9 @@ export async function send(botParams: BotParams, conversationId: string, message
             }
         },
         Source:      `${botParams.botName} <${botParams.botId}@quickreply.email>`
+    }).catch(error => {
+        reportError("Could not send email: ", error.message);
+
+        return Promise.reject(error);
     });
 }
