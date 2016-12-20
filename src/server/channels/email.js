@@ -119,11 +119,13 @@ async function receivedMessage(email, botParams: BotParams) {
 
     reportDebug('email sending deepiks-bot: ', message);
 
+    let channelData = {email: email.from[0]};
+
     return deepiksBot(message, botParams, m => {
         m.subject = `Re: ${email.subject || ''}` + (subjectContainsConversationId ? '' : ` [ref:${conversationId}]`);
         m.originalEmail = email;
-        return send(botParams, conversationId, m, {email: email.from[0]});
-    });
+        return send(botParams, conversationId, m, channelData);
+    }, channelData);
 }
 
 
