@@ -187,7 +187,16 @@ let BotSettingsPage = React.createClass({
                             value: <Link to={publicBotUrl}>{publicBotUrl}</Link>
                         }
                     ]
-                }
+                },
+                {
+                    name:     'Tropo',
+                    sections: [
+                        {
+                            label:     'Tropo Application Token',
+                            attribute: 'tropoApplicationToken'
+                        }
+                    ]
+                },
             ];
 
 

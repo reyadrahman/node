@@ -115,8 +115,12 @@ export async function webhook(req: Request, res: Response) {
     }, channelData)
     .then(() => {
         if (!replied) {
-            res.send();
+            res.send('');
         }
+    })
+    .catch(error => {
+        res.status(500).send(error.message);
+        return Promise.reject(error);
     });
 }
 
@@ -128,9 +132,13 @@ export async function send(botParams: BotParams, conversationId: string,
         text = text + "\n" + message.actions.map(a => a.text).join("\n");
     }
 
+    if (!botParams.settings.tropoApplicationToken) {
+        throw new Error(`Tropo channel: missing token for bot ${botParams.botId}:${botParams.botName}`);
+    }
+
     let params = {
         action: 'create',
-        token:  '58516e68565447514f47716e584578586971684473556d6872534d58464f594f444a756870775a5859664145',
+        token:  botParams.settings.tropoApplicationToken,
         phone:  channelData.phone,
         text
     };
