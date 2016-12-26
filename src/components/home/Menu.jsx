@@ -67,14 +67,13 @@ let Header = React.createClass({
             navItems.push(createNavItem(menu[i].to, menu[i].glyph, menu[i].string, menu[i].scroll));
         }
 
-
         return (
             <div className={`home-menu-comp ${className || ''}`}>
-                <i  className="menu-toggle icon-menu"
+                <button  className="menu-toggle icon-menu"
                     onClick={this.onMenuToggle}
                     onMouseEnter={this.onMenuToggleEnter}
                     onMouseLeave={this.onMenuToggleLeave}
-                    ></i>
+                    ></button>
                 <nav
                     className={`left-navbar ${leftNavbarClass}`}
                     onMouseEnter={this.onMenuEnter}
