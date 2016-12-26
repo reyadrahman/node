@@ -50,10 +50,17 @@ body {
 //     box-sizing: border-box;
 // }
 //
-*, *:before, *:after {
-//     box-sizing: inherit;
-    letter-spacing: 2px;
-    line-height: 1.6;
+
+* {
+    &,
+    &:active,
+    &:focus,
+    &:before,
+    &:after {
+        letter-spacing: 2px;
+        line-height: 1.6;
+        outline: none!important;
+    }
 }
 
 h1, h2, h3, h4, h5 {

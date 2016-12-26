@@ -46,7 +46,7 @@ let PublicTestPage = React.createClass({
             );
         } else {
             content = (
-                <div>
+                <div className="chat-bot-wrapper">
                     <h1>{this.state.bot.botName}</h1>
                     <TestPage public="true" bot={this.state.bot} location={this.props.location}/>
                 </div>

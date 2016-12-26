@@ -1,93 +1,118 @@
 $navbarHeight: 50px;
 
-.header-comp {
-    .menu {
-        position: fixed;
-        z-index: 2000;
-        display: flex;
-        background-image: linear-gradient(to bottom, rgb(243, 243, 243), rgb(226, 226, 226));
-        border-bottom: 1px solid #c8c8c8;
+.navbar {
+    background-image: linear-gradient(to bottom, rgb(243, 243, 243), rgb(226, 226, 226));
+    border-bottom: 1px solid #c8c8c8;
+
+    button {
+        padding-left: 20px;
+        padding-right: 20px;
+        border-radius: 0;
+        border: 0;
+        background-color: transparent;
         height: $navbarHeight;
-        top: 0;
-        left: 0;
-        right: 0;
+        &:hover {
+            background-color: #dbdbdb;
+        }
+    }
 
-        .left-section {
-            flex: 0 0 auto;
-            height: 100%;
-            // margin-left: 20px;
-            display: flex;
-            align-items: center;
+    .menu-toggle,
+    .navbar-toggle {
+        width: 65px;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .navbar-toggle {
+        padding: 0;
+        margin: 0;
+        text-align: center;
+    }
+
+    .navbar-right {
+        margin-right: 0;
+    }
+
+    .navbar-brand {
+        display: block;
+        width: 170px;
+        height: $navbarHeight;
+        background: url(../../resources/new-logo3.png) center/ auto 25px no-repeat;
+        border-right: 1px solid #c8c8c8;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
+    .account-button-comp {
+        .icon {
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .navbar-collapse {
+            padding: 0;
+            background-color: #f8f8f8;
+            position: absolute;
+            right: 0;
+            top: 51px;
+            width: 200px;
         }
 
-        .middle-section {
-            flex: 1 1 auto;
-            height: 100%;
+        .navbar-header {
+            height: $navbarHeight;
         }
 
-        .right-section {
-            flex: 0 0 auto;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            margin-right: 20px;
-        }
-
-
-        .logo {
+        button {
             display: block;
-            width: 170px;
-            height: 90%;
-            background: url(../../resources/new-logo3.png) center/ auto 25px no-repeat;
-            border-right: 1px solid #c8c8c8;
-            padding: 8px;
-            box-sizing: border-box; 
-        }
+            width: 100%;
+            text-align: left;
 
-        .account-button-comp {
-            button, button:focus, button:active {
-                outline: none;
-            }
-            .icon {
-                font-size: 0.9em;
-                margin-right: 5px;
+            .caret {
+                position: absolute;
+                right: 20px;
+                top: 50%;
+                transform: translate(0, -50%);
             }
         }
 
         .dropdown {
-            height: 100%;
-            button {
-                padding: 0 40px;
-                height: 100%;
+            display: block;
+            width: 100%;
+
+            .dropdown-menu {
+                position: static;
+                width: 100%;
+                display: none;
                 border-radius: 0;
-                border: 0;
-                background-color: transparent;
-                &:hover {
-                    background-color: #dbdbdb;
+                margin: 0;
+                box-shadow: none;
+            }
+
+            &.open {
+                .dropdown-menu {
+                    display: block;
                 }
-               //  .caret {
-               //     margin-left: 10px;
-               // }
+            }
 
-               &.sign-in-btn,
-               &.arrow-btn,
-               &.account-btn {
-                   padding: 0 15px;
-               }
-               &.language-button-comp {
-                padding: 0 20px;
-               }
+            &.account-button-comp {
+                > *:first-child {
+                    display: block;
+                    width: calc(100% - 50px);
+                    text-align: left;
+                }
+                button.arrow-btn {
+                    width: 50px;
+                    text-align: center;
+                }
             }
         }
-
-        .language-button-comp {
-            &, &:focus, &:hover, &:active {
-                background: none;
-                outline: none;
-                border: 0;
-            }
-        }
-
-
     }
 }

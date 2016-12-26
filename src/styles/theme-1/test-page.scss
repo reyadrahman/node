@@ -1,27 +1,75 @@
 .public-test-page-comp {
+    padding-top: 60px;
+    height: 100vh;
+    display: flex;
+
     .content {
-        padding: 80px 0;
         max-width: 800px;
         margin: 0 auto;
+        display: flex;
+        height: 100%;
 
-        .test-page-comp {
-            padding: 0;
+        > .chat-bot-wrapper {
+            height: calc(100% - 30px);
+            display: flex;
+            flex-direction: column;
         }
 
         .wait {
-            text-align: center;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-size: 40px;
+        }
+
+        .test-page-comp {
+            height: 100%;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+
+            .chatBotContainer {
+                .chatBot {
+                    padding: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1 1 auto;
+
+                    .messages-comp {
+                        flex: 1 1 auto;
+                    }
+                }
+            }
         }
     }
 }
 
 .test-page-comp {
-    padding-top: 60px;
-    padding-left: 50px;
+    height: 100vh;
+    padding-top: 80px;
+    padding-left: 55px;
 
-    iframe, .chatBotContainer {
+    iframe,
+    .chatBotContainer {
         width: 100%;
-        height: 600px;
+        flex: 1 1 auto;
+        border: none;
     }
-
+    .chatBotContainer {
+        height: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    iframe {
+        display: block;
+        height: calc(100% - 30px);
+    }
+    .wait {
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 40px;
+    }
 }
