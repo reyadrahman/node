@@ -1,5 +1,4 @@
 .public-test-page-comp {
-    padding-top: 60px;
     height: 100vh;
     display: flex;
 
@@ -13,6 +12,17 @@
             height: calc(100% - 30px);
             display: flex;
             flex-direction: column;
+
+            h1 {
+                font-size: 32px;
+                img {
+                    width: 70px;
+                    border-radius: 50%;
+                    border: 2px solid #c8c8c8;
+                    display: block;
+                    margin: 0 auto;
+                }
+            }
         }
 
         .wait {
