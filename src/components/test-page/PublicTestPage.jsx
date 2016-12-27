@@ -2,7 +2,6 @@ import React from 'react';
 import * as actions from '../../app-state/actions.js';
 import {connect} from 'react-redux';
 import {withRouter, Link} from 'react-router';
-import Header from '../header/Header.jsx';
 import TestPage from './TestPage';
 import {Alert} from 'react-bootstrap';
 
@@ -34,6 +33,13 @@ let PublicTestPage = React.createClass({
         this.fetchBot();
     },
 
+    renderBotImage() {
+        if (this.state.bot.botIcon) {
+            return (<img src={this.state.bot.botIcon}/>);
+        }
+        return null;
+    },
+
     render() {
         let content;
         if (this.state.loading) {
@@ -47,7 +53,10 @@ let PublicTestPage = React.createClass({
         } else {
             content = (
                 <div className="chat-bot-wrapper">
-                    <h1>{this.state.bot.botName}</h1>
+                    <h1>
+                        {this.renderBotImage()}
+                        {this.state.bot.botName}
+                    </h1>
                     <TestPage public="true" bot={this.state.bot} location={this.props.location}/>
                 </div>
             );
@@ -56,7 +65,6 @@ let PublicTestPage = React.createClass({
 
         return (
             <div className="public-test-page-comp">
-                <Header i18n={this.props.i18n}/>
                 <div className="content">
                     {content}
                 </div>
