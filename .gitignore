@@ -26,3 +26,4 @@ amazon-cognito-identity-js/
 
 #virtualenv
 virtualenv/*
+node_virtualenv/*
