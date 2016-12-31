@@ -403,9 +403,13 @@ Where `DEEPIKS_ROOT` is the root directory of this repository.
 For more information see [aws-sdk-js's docs](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/browser-building.html).
 
 
-### Development Notes
+## Contribution
+If you'd like to contribute to this project, please read the "Development" section above fist to learn about the workflow.
 
-#### Reading the Code and Further Development
+In the following sections, we'll see some notes explaining the architecture and any possible topic that deserves more explanation than merely the code.
+
+
+#### Reading the Code
 The javascript code uses [Facebook Flow](https://github.com/facebook/flow/). The file `src/misc/types.js` includes most types used in the code. This is an indispensable resource for understanding the code and the data structures.
 
 Please use an editor/IDE with Flow support while developing as it really helps catch errors before run-time and ensures that the type definitions will stay up-to-date.
@@ -413,6 +417,112 @@ Please use an editor/IDE with Flow support while developing as it really helps c
 As of writing this, Webstorm's EAP builds are very stable and have great support for Flow.
 
 Moreover, studying the unit tests is also a great way to understand the source code.
+
+#### Coding Style
+It would be very nice to keep the coding style consistent across the project. Here are some notes and examples to demonstrate the coding style. ES7 features are used extensively. 
+
+- Use 4 spaces for indentation
+- End every statement with a semicolon
+- Avoid using var. Instead use const wherever possible, otherwise let
+  ```js
+  const a = {
+      x: 1,
+      y: 2,
+  };
+  ```
+- Prefer a more functional style of programming. For example instead of this:
+  ```js
+  let arr = [];
+  for (let i=0; i<data.length; i++) {
+      if (data[i]) {
+          arr.push(f(data[i]))
+      }
+  }
+  ```
+  we can write:
+  ```js
+  const arr = data.filter(Boolean).map(f);
+  ```
+- Use `camelCase` for naming variables and functions
+- Use `CamelCase` for Classes and Components (even stateless functional components)
+- Use `ALL_CAPS` for constants.
+- Breaking functions with many long parameters
+  ```js
+  funcWithLongParams(argument1, argument2, argument3,
+                     argument4, argument5, argument6);
+
+  ```
+  or
+  ```js
+  funcWithLongParams(
+      argument1, argument2, argument3,
+      argument4, argument5, argument6
+  );
+  ```
+- Breaking long JSX components
+  ```js
+  <div
+      className="field"
+      onClick={e => f(e, 'name')}
+      style={style}
+  >
+      abc
+  </div>
+  ```
+- Use `React.createClass` for creating React components (see [here](https://github.com/deepiksdev/node/issues/217) for a discussion regarding ES6 classes)
+- When returning a React element using JSX, either the whole statement must fit in 1 line or use parenthesis to wrap it
+  ```js
+  return <h1>abc</h1>;
+  ```
+  or
+  ```js
+  return (
+      <h1>
+          abc
+      </h1>
+  );
+  ```
+  **The following is wrong and will return undefined**
+  ```js
+  return 
+      <h1>abc</h1>;
+  ```
+- Array and object destructuring is used extensively
+  ```js
+  const SomeComponent = React.createClass({
+      render() {
+          const { propA, propB, ...rest } = this.props;
+          const { stateA, stateB } = this.state;
+          // ...
+      }
+  });
+  ```
+
+- Prefer stateless functional components wherever possible
+  ```js
+  const AnotherComponent = ({ propA }) => <h1>{propA}</h1>;
+  ```
+- Do not use decorators. Instead use higher order components as normal functions
+  ```js
+  MyComponent = connect(
+      state => ({
+          currentUser: state.currentUser,
+      }),
+      {
+          setModal: actions.setModal,
+      }
+  )(MyComponent);
+
+  MyComponent = withRouter(MyComponent);
+  ```
+- Prefer using `import` and `export` instead of `require` and `module.exports` (see [here](https://github.com/deepiksdev/node/issues/222#issuecomment-257305794) for a couple of exceptions)
+  ```js
+  import { connect } from 'react-redux';
+  
+  ```
+
+#### Pull Requests
+Please develop your changes in a separate branch and then make a pull request.
 
 #### Cisco Spark Webhooks
 Cisco Spark webhooks are supposed to automatically register/unregister when updating a bot. However, if due to a bug or any other reason webhooks are not properly setup or old webhooks are not properly remove, then
@@ -544,7 +654,7 @@ Make sure you update `all-channels.js`'s `send` function when creating a new cha
 Please see [issue #266](https://github.com/deepiksdev/node/issues/266) for a more complete explanation of `RespondFn` and the `send` functions.
 
 #### Front-End - Immutable Props
-**The entire application state and all `props` of every component are immutable.** Please ensure that you do not ever modify them directly. Always use actions to update the application state and let Redux+React propagate the props down to each component.
+**The entire application state and all `props` of every component are immutable. Please ensure that you do not ever modify them directly. Always use actions to update the application state and let Redux+React propagate the props down to each component.**
 
 Please see [Redux](http://redux.js.org/) for more details.
 
