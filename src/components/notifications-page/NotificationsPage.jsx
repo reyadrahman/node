@@ -32,13 +32,6 @@ let NotificationsPage = React.createClass({
         this.setState({categories: e.target.value});
     },
 
-    componentDidMount() {
-        // const { currentUser, fetchBots } = this.props;
-        // if (currentUser) {
-        //     fetchBots();
-        // }
-    },
-
     render() {
         const {
                   className, currentUser: {signedIn, botsState, selectedBotId},
