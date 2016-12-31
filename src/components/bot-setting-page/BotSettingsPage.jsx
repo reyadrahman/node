@@ -188,6 +188,10 @@ let BotSettingsPage = React.createClass({
                             placeholder: ownDomain
                         },
                         {
+                            label: 'SNS Webhook',
+                            value: `${CONSTANTS.OWN_BASE_URL}/webhooks/email`
+                        },
+                        {
                             label: 'Bot Email Address',
                             value: <a href={'mailto:' + botEmail}>{botEmail}</a>
                         }
