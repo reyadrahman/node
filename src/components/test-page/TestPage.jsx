@@ -51,19 +51,7 @@ let TestPage = React.createClass({
 
         if (this.props.public || currentUser.signedIn) {
             if (this.state.bot) {
-                if (this.props.location.query.direct) {
-                    content = <Chat bot={this.state.bot} initialMessage={this.props.location.query.usersays}/>
-                } else {
-                    if (this.state.bot.settings.secretWebchatCode) {
-                        content = (
-                            <iframe
-                                src={`https://webchat.botframework.com/embed/${this.state.bot.settings.secretWebchatCode}`}
-                                frameborder="0"></iframe>
-                        );
-                    } else {
-                        content = <Alert bsStyle="danger">Bot configuration is missing webchat secret code</Alert>
-                    }
-                }
+                content = <Chat bot={this.state.bot} initialMessage={this.props.location.query.usersays}/>
             } else if (this.state.loading) {
                 content = <div className="wait"><i className="icon-spinner animate-spin"/></div>;
             } else if (this.state.error) {
