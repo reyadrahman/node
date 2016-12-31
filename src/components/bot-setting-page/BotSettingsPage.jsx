@@ -109,6 +109,10 @@ let BotSettingsPage = React.createClass({
 
             let publicBotUrl = `${CONSTANTS.OWN_BASE_URL}/bot/${bot.publisherId}/${bot.botId}`;
 
+            let ownDomain = (CONSTANTS.OWN_BASE_URL.match(/^https?:\/\/([^:/]+):?/, '$1') || [])[1] || 'yourdomain.com';
+            let botEmail  = bot.botId + '@' + (bot.settings.emailDomainName || ownDomain);
+
+
             let tabs = [
                 {
                     name:     'Ciscopark',
@@ -116,19 +120,6 @@ let BotSettingsPage = React.createClass({
                         {
                             label:     'Ciscospark Access Token',
                             attribute: 'ciscosparkAccessToken'
-                        }
-                    ]
-                },
-                {
-                    name:     'Dashbot',
-                    sections: [
-                        {
-                            label:     'Dashbot ID',
-                            attribute: 'dashbotId'
-                        },
-                        {
-                            label:     'Dashbot Generic Key',
-                            attribute: 'dashbotGenericKey'
                         }
                     ]
                 },
@@ -167,21 +158,8 @@ let BotSettingsPage = React.createClass({
                     ]
                 },
                 {
-                    name:     'Wit',
-                    sections: [
-                        {
-                            label:     'Wit Access Token',
-                            attribute: 'witAccessToken'
-                        }
-                    ]
-                },
-                {
                     name:     'Web Chat',
                     sections: [
-                        {
-                            label:     'Wit Access Token',
-                            attribute: 'secretWebchatCode'
-                        },
                         {
                             label: 'Bot Public Url',
                             value: <Link to={publicBotUrl}>{publicBotUrl}</Link>
@@ -194,6 +172,24 @@ let BotSettingsPage = React.createClass({
                         {
                             label:     'Tropo Application Token',
                             attribute: 'tropoApplicationToken'
+                        },
+                        {
+                            label: 'Webhook',
+                            value: webHookBaseUrl + 'tropo'
+                        }
+                    ]
+                },
+                {
+                    name:     'Email',
+                    sections: [
+                        {
+                            label:       'Email Domain Name',
+                            attribute:   'emailDomainName',
+                            placeholder: ownDomain
+                        },
+                        {
+                            label: 'Bot Email Address',
+                            value: <a href={'mailto:' + botEmail}>{botEmail}</a>
                         }
                     ]
                 },
@@ -268,6 +264,51 @@ let BotSettingsPage = React.createClass({
                         </Col>
                     </FormGroup>
 
+                    <FormGroup
+                        controlId="settings_dashbotId">
+                        <Col componentClass={ControlLabel} sm={2}>
+                            Dashbot ID
+                        </Col>
+                        <Col sm={10}>
+                            <FormControl
+                                type="text"
+                                value={bot.settings.dashbotId || ''}
+                                placeholder="Dashbot ID"
+                                onChange={this.onFormFieldChange}
+                            />
+                        </Col>
+                    </FormGroup>
+
+                    <FormGroup
+                        controlId="settings_dashbotGenericKey">
+                        <Col componentClass={ControlLabel} sm={2}>
+                            Dashbot Generic Key
+                        </Col>
+                        <Col sm={10}>
+                            <FormControl
+                                type="text"
+                                value={bot.settings.dashbotGenericKey || ''}
+                                placeholder="Dashbot Generic Key"
+                                onChange={this.onFormFieldChange}
+                            />
+                        </Col>
+                    </FormGroup>
+
+                    <FormGroup
+                        controlId="settings_witAccessToken">
+                        <Col componentClass={ControlLabel} sm={2}>
+                            Wit Access Token
+                        </Col>
+                        <Col sm={10}>
+                            <FormControl
+                                type="text"
+                                value={bot.settings.witAccessToken || ''}
+                                placeholder="Wit Access Token"
+                                onChange={this.onFormFieldChange}
+                            />
+                        </Col>
+                    </FormGroup>
+
                     <div>
                         <h2>Channel specific settings</h2>
                         <Tabs defaultActiveKey={1}>
@@ -287,7 +328,7 @@ let BotSettingsPage = React.createClass({
                                         value = <FormControl
                                             type="text"
                                             value={bot.settings[section.attribute] || ''}
-                                            placeholder={section.label}
+                                            placeholder={section.placeholder || section.label}
                                             onChange={this.onFormFieldChange}
                                         />
                                     } else {
