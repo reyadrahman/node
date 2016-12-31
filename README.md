@@ -424,102 +424,126 @@ It would be very nice to keep the coding style consistent across the project. He
 - Use 4 spaces for indentation
 - End every statement with a semicolon
 - Avoid using var. Instead use const wherever possible, otherwise let
-  ```js
-  const a = {
-      x: 1,
-      y: 2,
-  };
-  ```
+
+    ```js
+    const a = {
+        x: 1,
+        y: 2,
+    };
+    ```
+    
 - Prefer a more functional style of programming. For example instead of this:
-  ```js
-  let arr = [];
-  for (let i=0; i<data.length; i++) {
-      if (data[i]) {
-          arr.push(f(data[i]))
-      }
-  }
-  ```
+
+    ```js
+    let arr = [];
+    for (let i=0; i<data.length; i++) {
+        if (data[i]) {
+            arr.push(f(data[i]))
+        }
+    }
+    ```
+    
   we can write:
-  ```js
-  const arr = data.filter(Boolean).map(f);
-  ```
+  
+    ```js
+    const arr = data.filter(Boolean).map(f);
+    ```
+  
 - Use `camelCase` for naming variables and functions
 - Use `CamelCase` for Classes and Components (even stateless functional components)
 - Use `ALL_CAPS` for constants.
 - Breaking functions with many long parameters
-  ```js
-  funcWithLongParams(argument1, argument2, argument3,
-                     argument4, argument5, argument6);
 
-  ```
+    ```js
+    funcWithLongParams(argument1, argument2, argument3,
+                       argument4, argument5, argument6);
+  
+    ```
+    
   or
-  ```js
-  funcWithLongParams(
-      argument1, argument2, argument3,
-      argument4, argument5, argument6
-  );
-  ```
+  
+    ```js
+    funcWithLongParams(
+        argument1, argument2, argument3,
+        argument4, argument5, argument6
+    );
+    ```
+    
 - Breaking long JSX components
+
   ```js
-  <div
-      className="field"
-      onClick={e => f(e, 'name')}
-      style={style}
-  >
-      abc
-  </div>
-  ```
+    <div
+        className="field"
+        onClick={e => f(e, 'name')}
+        style={style}
+    >
+        abc
+    </div>
+    ```
+    
 - Use `React.createClass` for creating React components (see [here](https://github.com/deepiksdev/node/issues/217) for a discussion regarding ES6 classes)
 - When returning a React element using JSX, either the whole statement must fit in 1 line or use parenthesis to wrap it
-  ```js
-  return <h1>abc</h1>;
-  ```
+
+    ```js
+    return <h1>abc</h1>;
+    ```
+    
   or
-  ```js
-  return (
-      <h1>
-          abc
-      </h1>
-  );
-  ```
+  
+    ```js
+    return (
+        <h1>
+            abc
+        </h1>
+    );
+    ```
+    
   **The following is wrong and will return undefined**
-  ```js
-  return 
-      <h1>abc</h1>;
-  ```
+  
+    ```js
+    return 
+        <h1>abc</h1>;
+    ```
+    
 - Array and object destructuring is used extensively
-  ```js
-  const SomeComponent = React.createClass({
-      render() {
-          const { propA, propB, ...rest } = this.props;
-          const { stateA, stateB } = this.state;
-          // ...
-      }
-  });
-  ```
+
+    ```js
+    const SomeComponent = React.createClass({
+        render() {
+            const { propA, propB, ...rest } = this.props;
+            const { stateA, stateB } = this.state;
+            // ...
+        }
+    });
+    ```
 
 - Prefer stateless functional components wherever possible
-  ```js
-  const AnotherComponent = ({ propA }) => <h1>{propA}</h1>;
-  ```
-- Do not use decorators. Instead use higher order components as normal functions
-  ```js
-  MyComponent = connect(
-      state => ({
-          currentUser: state.currentUser,
-      }),
-      {
-          setModal: actions.setModal,
-      }
-  )(MyComponent);
 
-  MyComponent = withRouter(MyComponent);
-  ```
-- Prefer using `import` and `export` instead of `require` and `module.exports` (see [here](https://github.com/deepiksdev/node/issues/222#issuecomment-257305794) for a couple of exceptions)
-  ```js
-  import { connect } from 'react-redux';
+    ```js
+    const AnotherComponent = ({ propA }) => <h1>{propA}</h1>;
+    ```
+    
+- Do not use decorators. Instead use higher order components as normal functions
+
+    ```js
+    MyComponent = connect(
+        state => ({
+            currentUser: state.currentUser,
+        }),
+        {
+            setModal: actions.setModal,
+        }
+    )(MyComponent);
   
-  ```
+    MyComponent = withRouter(MyComponent);
+    ```
+    
+- Prefer using `import` and `export` instead of `require` and `module.exports` (see [here](https://github.com/deepiksdev/node/issues/222#issuecomment-257305794) for a couple of exceptions)
+
+    ```js
+    import { connect } from 'react-redux';
+    
+    ```
 
 #### Pull Requests
 Please develop your changes in a separate branch and then make a pull request.
