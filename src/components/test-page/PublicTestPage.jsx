@@ -33,13 +33,6 @@ let PublicTestPage = React.createClass({
         this.fetchBot();
     },
 
-    renderBotImage() {
-        if (this.state.bot.botIcon) {
-            return (<img src={this.state.bot.botIcon}/>);
-        }
-        return null;
-    },
-
     render() {
         let content;
         if (this.state.loading) {
@@ -51,15 +44,7 @@ let PublicTestPage = React.createClass({
                 </Alert>
             );
         } else {
-            content = (
-                <div className="chat-bot-wrapper">
-                    <h1>
-                        {this.renderBotImage()}
-                        {this.state.bot.botName}
-                    </h1>
-                    <TestPage public="true" bot={this.state.bot} location={this.props.location}/>
-                </div>
-            );
+            content = <TestPage public="true" bot={this.state.bot} location={this.props.location}/>
         }
 
 

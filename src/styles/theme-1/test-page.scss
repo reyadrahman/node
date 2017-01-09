@@ -8,23 +8,6 @@
         display: flex;
         height: 100%;
 
-        > .chat-bot-wrapper {
-            height: calc(100% - 30px);
-            display: flex;
-            flex-direction: column;
-
-            h1 {
-                font-size: 32px;
-                img {
-                    width: 70px;
-                    border-radius: 50%;
-                    border: 2px solid #c8c8c8;
-                    display: block;
-                    margin: 0 auto;
-                }
-            }
-        }
-
         .wait {
             height: 100%;
             display: flex;
@@ -38,28 +21,32 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-
-            .chatBotContainer {
-                .chatBot {
-                    padding: 10px;
-                    display: flex;
-                    flex-direction: column;
-                    flex: 1 1 auto;
-
-                    .messages-comp {
-                        flex: 1 1 auto;
-                    }
-                }
-            }
         }
     }
 }
 
 .test-page-comp {
     height: 100vh;
-    padding-top: 80px;
-    padding-left: 55px;
     display: flex;
+    padding: 50px 20px 0;
+
+    > .chat-bot-wrapper {
+        width: 100%;
+        height: calc(100% - 20px);
+        display: flex;
+        flex-direction: column;
+
+        h1 {
+            font-size: 32px;
+            img {
+                width: 70px;
+                border-radius: 50%;
+                border: 2px solid #c8c8c8;
+                display: block;
+                margin: 0 auto;
+            }
+        }
+    }
 
     iframe,
     .chatBotContainer {
@@ -72,6 +59,17 @@
         min-height: 0;
         display: flex;
         flex-direction: column;
+        .chatBot {
+            padding: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+
+            .messages-comp {
+                flex: 1 1 auto;
+            }
+        }
     }
     iframe {
         display: block;

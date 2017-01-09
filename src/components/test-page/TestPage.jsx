@@ -45,13 +45,28 @@ let TestPage = React.createClass({
         this.setBot();
     },
 
+    renderBotImage() {
+        if (this.state.bot.botIcon) {
+            return (<img src={this.state.bot.botIcon}/>);
+        }
+        return null;
+    },
+
     render() {
         const {className, currentUser} = this.props;
         let content;
 
         if (this.props.public || currentUser.signedIn) {
             if (this.state.bot) {
-                content = <Chat bot={this.state.bot} initialMessage={this.props.location.query.usersays}/>
+                content = (
+                            <div className="chat-bot-wrapper">
+                                <h1>
+                                    {this.renderBotImage()}
+                                    {this.state.bot.botName}
+                                </h1>
+                                <Chat bot={this.state.bot} initialMessage={this.props.location.query.usersays}/>
+                            </div>
+                        );
             } else if (this.state.loading) {
                 content = <div className="wait"><i className="icon-spinner animate-spin"/></div>;
             } else if (this.state.error) {
