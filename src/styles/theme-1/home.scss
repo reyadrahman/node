@@ -41,34 +41,20 @@ $navbarHeight: 50px;
         align-items: center;
         justify-content: center;
 
-        .background-image {
-            padding-top: 50px;
-            background-color: #fff;
-            text-align: center;
+        .video {
             position: absolute;
-            top: 50%;
+            top: 50%; 
             left: 50%;
             -webkit-transform: translateX(-50%) translateY(-50%);
             transform: translateX(-50%) translateY(-50%);
-            width: 100%;
             height: 100%;
+            width: 177.77777778vh;
+            min-width: 100%;
+            min-height: 56.25vw;
             z-index: -1;
-
-            img {
-                height: 100%;
-            }
         }
 
         .intro-message {
-            .github-ribbon {
-                img {
-                    position: absolute;
-                    top: 50px;
-                    right: 0;
-                    border: 0
-                }
-            }
-
             color: white;
             font-size: 40px;
             margin: 0 10px;
@@ -182,6 +168,54 @@ $navbarHeight: 50px;
             }
             p {
 
+            }
+        }
+    }
+
+    .screenshots {
+
+        .screenshots-grid {
+
+            .screenshot {
+                display: flex;
+                justify-content: center;
+            }
+
+            a {
+                background-repeat: no-repeat;
+                background-size: contain;
+                border: 1px solid #bbb;
+                border-radius: 5px;
+                cursor: pointer;
+                display: block;
+                height: 460px;
+                margin-top: 25px;
+                // -left: 45px;
+                width: 260px;
+
+                &.messenger {
+                    background-image: url('../../resources/channels/deepiks-painting-messenger.png');
+                }
+
+                &.slack {
+                    background-image: url('../../resources/channels/deepiks-painting-slack.png');
+                }
+
+                &.web {
+                    background-image: url('../../resources/channels/deepiks-painting-web.png');
+                }
+
+                &.telegram {
+                    background-image: url('../../resources/channels/deepiks-painting-telegram.png');
+                }
+
+                &.skype {
+                    background-image: url('../../resources/channels/deepiks-painting-skype.png');
+                }
+
+                &.spark {
+                    background-image: url('../../resources/channels/deepiks-painting-spark.png');
+                }
             }
         }
     }
