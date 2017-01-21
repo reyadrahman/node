@@ -46,6 +46,14 @@ export async function ai(
         return;
     }
 
+    if (conversation.humanTransferDest && conversation.humanTransferDest.transferAttempts > 1) {
+
+        // looks like something didn't went well with the current transfer.
+        // lets reset humanTransferDest and make AI process user message again
+        conversation.humanTransferDest = null;
+        await removeHumanTransferDest(publisherId, botId, conversationId);
+    }
+
     let transfer = !!conversation.humanTransferDest;
     if (!transfer) {
         // call wit or custom AI
@@ -65,12 +73,28 @@ export async function ai(
                 responseText = sshi.text;
             }
         }
+
+        if (humanTransferDest) {
+            humanTransferDest.transferAttempts = 1 + (humanTransferDest.transferAttempts || 0);
+        }
+
         reportDebug('ai humanTransferDest: ', humanTransferDest,
                     'responseText: ', responseText);
         await conversationIsStuck(
             message, conversation, botParams, respondFn, humanTransferDest, responseText
         );
     }
+}
+
+async function removeHumanTransferDest(publisherId, botId, conversationId) {
+    await aws.dynamoUpdate({
+        TableName:        CONSTANTS.DB_TABLE_CONVERSATIONS,
+        Key:              {
+            publisherId,
+            botId_conversationId: composeKeys(botId, conversationId),
+        },
+        UpdateExpression: 'REMOVE humanTransferDest',
+    })
 }
 
 
@@ -171,6 +195,10 @@ export async function conversationIsStuck(
             text: strings.didNotUnderstand,
             creationTimestamp: Date.now(),
         });
+
+        // I guess this means transfer dest is incorrect,
+        // so let's remove it and force AI to process user messages again
+        await removeHumanTransferDest(publisherId, botId, conversationId);
         return;
     }
 
@@ -207,6 +235,10 @@ export async function conversationIsStuck(
             text: strings.didNotUnderstand,
             creationTimestamp: Date.now(),
         });
+
+        // I guess this means transfer dest is incorrect,
+        // so let's remove it and force AI to process user messages again
+        await removeHumanTransferDest(publisherId, botId, conversationId);
         return;
     }
 

@@ -72,6 +72,7 @@ export type HumanTransferDest = {
     conversationId?: string,
     learn: boolean,
     transferIndicatorMessage?: string,
+    transferAttempts?: number
 }
 
 export type ChannelData = {
