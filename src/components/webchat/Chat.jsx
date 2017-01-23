@@ -123,9 +123,11 @@ let Chat = React.createClass({
 
         websocket.onopen = () => {
             reportDebug('Websocket connected');
+            
+            let initialMessageNotEmpty = this.props.initialMessage ? this.props.initialMessage : 'Hello'  ;
 
-            if (this.props.initialMessage && !this.initialMessageHandled) {
-                this.handleMessageSubmit(this.props.initialMessage);
+            if (!this.initialMessageHandled) {
+                this.handleMessageSubmit(initialMessageNotEmpty);
                 this.initialMessageHandled = true;
             }
         };
@@ -162,12 +164,9 @@ let Chat = React.createClass({
 
     render: function () {
         let bot = this.props.bot;
-
-        let header = this.props.initialMessage ? null :
-            (<div className="chatBotHeader">
-                {`Hi! I'm ${bot.botName}. Say "hi" if you'd like to chat`}
-            </div>);
-
+		//Kept for future reference
+        //let header = this.props.initialMessage ? null :(<div className="chatBotHeader">{`Hi! I'm ${bot.botName}. Say "hello" if you'd like to chat`}</div>);
+		let header = null;
         return (
             <section className="chatBotContainer">
                 {header}
