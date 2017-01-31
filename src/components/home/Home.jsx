@@ -109,7 +109,6 @@ let Home = React.createClass({
         var menu = [
             { 'to': 'services', 'glyph': 'check', 'string': sideMenuStrings.features, 'scroll': true },
             { 'to': 'pricing', 'glyph': 'euro', 'string': sideMenuStrings.pricing, 'scroll': true },
-            { 'to': 'team', 'glyph' : 'user', 'string': sideMenuStrings.team, 'scroll': true },
             { 'to': 'screenshots', 'glyph': 'globe', 'string': sideMenuStrings.channels, 'scroll': true },
             { 'to': 'updates',  'glyph': 'tasks', 'string': sideMenuStrings.timeline, 'scroll': true },
             { 'to': 'contact', 'glyph': 'mail', 'string': sideMenuStrings.contact, 'scroll': true }
@@ -351,42 +350,6 @@ let Home = React.createClass({
                                     </li>
                                 </ul>
                             </Panel>
-                        </Col>
-                    </Grid>
-                </section>
-                <section id="team" className="team">
-                    <div className="section-heading">
-                        <h1>{ strings.team_h}</h1>
-                        <p>
-                           { strings.team_t}
-                        </p>
-                    </div>
-                    <Grid>
-                        <Col xs={12} sm={6} md={3} mdOffset={3}>
-                            <div className="team-member">
-                                <div className="name">
-                                    Emmanuel Prat
-                                </div>
-                                <div className="subtitle">
-                                    CEO & CTO
-                                </div>
-                                <div className="avatar">
-                                    <Image src={emmanuelUrl} responsive />
-                                </div>
-                            </div>
-                        </Col>
-                        <Col xs={12} sm={6} md={3}>
-                            <div className="team-member">
-                                <div className="name">
-                                    Bruno Génuit
-                                </div>
-                                <div className="subtitle">
-                                    COO
-                                </div>
-                                <div className="avatar">
-                                    <Image src={brunoUrl} responsive />
-                                </div>
-                            </div>
                         </Col>
                     </Grid>
                 </section>
