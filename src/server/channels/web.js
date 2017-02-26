@@ -53,8 +53,12 @@ async function handleWebsocketMessage(messageReceived: WebchannelMessage, ws: We
 }
 
 export async function send(conversationId: string, message: ResponseMessage) {
-    // TODO use promise
-    conversationIdToWebsocket[conversationId].send(JSON.stringify(message));
+    const ws = conversationIdToWebsocket[conversationId];
+    if (ws) {
+        conversationIdToWebsocket[conversationId].send(JSON.stringify(message));
+    } else {
+        throw new Error(`No open websocket for conversation: ${conversationId}`);
+    }
 }
 
 export function websocketMessage(messageReceived: WebchannelMessage, ws: WebSocket) {

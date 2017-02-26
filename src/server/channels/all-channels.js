@@ -5,6 +5,7 @@ import * as messenger from './messenger.js';
 import * as ms from './ms.js';
 import * as email from './email.js';
 import * as tropo from './tropo.js';
+import * as web from './web.js';
 import * as aws from '../../aws/aws.js';
 import { waitForAll } from '../../misc/utils.js';
 import type { ResponseMessage, BotParams, Conversation } from '../../misc/types.js';
@@ -43,6 +44,8 @@ export async function send(botParams: BotParams, conversation: Conversation,
             throw new Error('send: channelData is missing');
         }
         sendFn = m => ms.coldSend(botParams, conversationId, channelData, m);
+    } else if (channel === 'web') {
+        sendFn = m => web.send(conversationId, m);
     }
 
     if (!sendFn) {

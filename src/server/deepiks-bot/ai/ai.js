@@ -46,22 +46,12 @@ export async function ai(
         return;
     }
 
-    if (conversation.humanTransferDest && conversation.humanTransferDest.transferAttempts > 1) {
+    // call wit or custom AI
+    const backend = botParams.settings.witAccessToken ? witAI : customAI;
+    const converseStatus = await backend(message, botParams, conversation, user, respondFn);
+    reportDebug('ai converseStatus: ', converseStatus);
+    let transfer = converseStatus === CONVERSE_STATUS_STUCK;
 
-        // looks like something didn't went well with the current transfer.
-        // lets reset humanTransferDest and make AI process user message again
-        conversation.humanTransferDest = null;
-        await removeHumanTransferDest(publisherId, botId, conversationId);
-    }
-
-    let transfer = !!conversation.humanTransferDest;
-    if (!transfer) {
-        // call wit or custom AI
-        const backend = botParams.settings.witAccessToken ? witAI : customAI;
-        const converseStatus = await backend(message, botParams, conversation, user, respondFn);
-        reportDebug('ai converseStatus: ', converseStatus);
-        transfer = converseStatus === CONVERSE_STATUS_STUCK;
-    }
 
     if (transfer) {
         let humanTransferDest = conversation.humanTransferDest;
@@ -72,10 +62,6 @@ export async function ai(
             if (!humanTransferDest) {
                 responseText = sshi.text;
             }
-        }
-
-        if (humanTransferDest) {
-            humanTransferDest.transferAttempts = 1 + (humanTransferDest.transferAttempts || 0);
         }
 
         reportDebug('ai humanTransferDest: ', humanTransferDest,

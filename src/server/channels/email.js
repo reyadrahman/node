@@ -97,9 +97,7 @@ async function receivedMessage(email, botParams: BotParams) {
         conversationId = uuid.v1();
     }
 
-    let text = (email.text ? email.text.split('\n\n')[0] : striptags(email.html)).trim();
-
-    text = text.substr(0, 50);
+    let text = (email.text ? email.text.split('\n\n')[0].replace(/\n/g, ' ') : striptags(email.html)).trim();
 
     const message: WebhookMessage = {
         publisherId_conversationId: composeKeys(botParams.publisherId, conversationId),
