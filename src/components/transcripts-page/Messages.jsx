@@ -5,6 +5,7 @@ import { simpleTimeFormat } from '../../misc/utils.js';
 import React from 'react';
 import _ from 'lodash';
 import { Alert } from 'react-bootstrap';
+import ReactMarkdown from 'react-markdown';
 
 // $FlowFixMe
 import defaultAvatarUrl from '../../resources/avatar.jpg';
@@ -84,7 +85,6 @@ const Message = ({
     const profilePicStyle = {
         backgroundImage: `url(${profilePic})`,
     };
-    const textElems = (message.text || '').split('\n\n').map((x, i) => <p key={i}>{x}</p>);
     return (
         <div className={`message ${className || ''}`} {...others} >
             <div className="profile-pic" style={profilePicStyle} />
@@ -96,7 +96,7 @@ const Message = ({
                     cards={message.cards}
                 />
                 <div className="text">
-                    { textElems }
+                    <ReactMarkdown source={message.text || ''} />
                 </div>
                 <Actions
                     actions={message.actions}

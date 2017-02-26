@@ -3,6 +3,7 @@
 import {simpleTimeFormat} from '../../misc/utils.js';
 
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 // $FlowFixMe
 import defaultAvatarUrl from '../../resources/avatar.jpg';
@@ -45,7 +46,6 @@ const Message = ({
         backgroundImage: `url(${profilePic})`,
     };
 
-    const textElems = (message.text || '').split('\n\n').map((x, i) => <p key={i}>{x}</p>);
     return (
         <div className={`message ${className || ''}`} {...others} >
             <div className="profile-pic" style={profilePicStyle}/>
@@ -59,7 +59,7 @@ const Message = ({
 
                 />
                 <div className="text">
-                    { textElems }
+                    <ReactMarkdown source={message.text || ''} />
                 </div>
                 <Actions
                     actions={message.actions}
