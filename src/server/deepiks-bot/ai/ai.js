@@ -13,6 +13,7 @@ import { CONVERSE_STATUS_STUCK } from './ai-helpers.js';
 import { send } from '../../channels/all-channels.js';
 import { translations as tr, languages as langs } from '../../i18n/translations.js';
 import _ from 'lodash';
+import moment from 'moment';
 
 const reportDebug = require('debug')('deepiks:ai');
 const reportError = require('debug')('deepiks:ai:error');
@@ -269,25 +270,42 @@ export async function conversationIsStuck(
     if (!conversation.humanTransferDest) { // if new transfer
         const history = await createHistory(conversation, strings);
         reportDebug('history: ', history);
-        await send(botParams, transToConversation, {
-            text: history,
-            creationTimestamp: Date.now(),
-        });
-        await timeout(500); // TODO quickfix
-        await send(botParams, transToConversation, {
-            text: strings.askForResponseWithHistory,
-            creationTimestamp: Date.now()+1,
-        });
+
+        if (transToConversation.channel === 'email') {
+            await send(botParams, transToConversation, {
+                text:              `${history}\n\n${strings.askForResponseWithHistory}`,
+                creationTimestamp: Date.now(),
+            });
+        } else {
+            await send(botParams, transToConversation, {
+                text:              history,
+                creationTimestamp: Date.now(),
+            });
+            await timeout(500); // TODO quickfix
+            await send(botParams, transToConversation, {
+                text:              strings.askForResponseWithHistory,
+                creationTimestamp: Date.now() + 1,
+            });
+        }
+
     } else { // already transferred
-        await send(botParams, transToConversation, {
-            text: messageToText(message, strings),
-            creationTimestamp: Date.now(),
-        });
-        await timeout(500); // TODO quickfix
-        await send(botParams, transToConversation, {
-            text: strings.askForResponseWithoutHistory,
-            creationTimestamp: Date.now()+1,
-        });
+        if (transToConversation.channel === 'email') {
+            await send(botParams, transToConversation, {
+                text:              `${messageToText(message, strings)}\n\n${strings.askForResponseWithoutHistory}`,
+                creationTimestamp: Date.now(),
+            });
+        } else {
+            await send(botParams, transToConversation, {
+                text:              messageToText(message, strings),
+                creationTimestamp: Date.now(),
+            });
+            await timeout(500); // TODO quickfix
+            await send(botParams, transToConversation, {
+                text:              strings.askForResponseWithoutHistory,
+                creationTimestamp: Date.now() + 1,
+            });
+        }
+
     }
 
     // send message to user
@@ -314,9 +332,11 @@ async function createHistory(conversation: Conversation, strings: Object): Promi
     return ms.join('\n\n');
 }
 
-function messageToText(message: DBMessage, strings, Object) {
+function messageToText(message: DBMessage, strings: Object) {
     const senderName = (message.senderName || '').trim().toLowerCase().replace(/\s+/g, '-');
-    let text = `> **@${senderName}:** `;
+    const timestamp = moment(message.creationTimestamp).format('hh:mm A');
+    const direction = message.senderIsBot ? '<' : '>';
+    let text = `${direction} [${timestamp}] **@${senderName}:** `;
     text += (message.text || '').replace(/\n\n/g, '\n\n> ');
     if (!_.isEmpty(message.cards)) {
         text += `\n\n> ${strings.imagePlaceholder}`

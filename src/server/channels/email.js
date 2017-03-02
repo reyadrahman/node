@@ -97,7 +97,22 @@ async function receivedMessage(email, botParams: BotParams) {
         conversationId = uuid.v1();
     }
 
-    let text = (email.text ? email.text.split('\n\n')[0].replace(/\n/g, ' ') : striptags(email.html)).trim();
+    let strippedHtml = striptags(email.html);
+    let text         = (email.text ? email.text.split('\n\n')[0].replace(/\n/g, ' ') : strippedHtml).trim();
+
+    // search for mention in the rest of the email's body if it does not start with mention
+    if (text[0] !== '@') {
+        const regex = '\\*\\*(@.+):\\*\\*';
+
+        let mention = (`${text}\n\n${strippedHtml}`.match(new RegExp(regex, 'g')) || [])
+            .map(match => match.match(new RegExp(regex)))
+            .map(match => match && match[1] || null).pop();
+
+        if (mention) {
+            reportDebug(`Mention detected: ${mention}`);
+            text = `${mention} ${text}`;
+        }
+    }
 
     const message: WebhookMessage = {
         publisherId_conversationId: composeKeys(botParams.publisherId, conversationId),
@@ -171,6 +186,10 @@ export async function send(botParams: BotParams, conversationId: string, message
             Data:    html.join('<hr>'),
             Charset: 'utf8'
         }
+    }
+
+    if(message.actions) {
+        message.text += '\n\n' + message.actions.map(a => '- ' + a.text).join('\n');
     }
 
     body['Text'] = {

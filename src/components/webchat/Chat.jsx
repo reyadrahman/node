@@ -56,6 +56,23 @@ let Chat = React.createClass({
         this.setState({data: newMessages});
     },
 
+    handshake: function () {
+        let bot = this.props.bot;
+
+        let message = {
+            publisherId:       bot.publisherId,
+            botId:             bot.botId,
+            conversationId:    this.state.conversationId,
+            senderId:          this.state.senderId,
+            creationTimestamp: Date.now(),
+            isHandshake:       true
+        };
+
+        reportDebug('sending handshake', message);
+
+        this.ws.send(JSON.stringify(message));
+    },
+
     handleAttachment: function (attachmentDataUrl) {
         let bot = this.props.bot;
 
@@ -123,7 +140,8 @@ let Chat = React.createClass({
 
         websocket.onopen = () => {
             reportDebug('Websocket connected');
-            
+            this.handshake();
+
             let initialMessageNotEmpty = this.props.initialMessage ? this.props.initialMessage : 'Hello'  ;
 
             if (!this.initialMessageHandled) {

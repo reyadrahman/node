@@ -21,6 +21,11 @@ async function handleWebsocketMessage(messageReceived: WebchannelMessage, ws: We
 
     conversationIdToWebsocket[messageReceived.conversationId] = ws;
 
+    if (messageReceived.isHandshake) {
+        reportDebug('handshake successful, conversationId = ' + messageReceived.conversationId);
+        return;
+    }
+
     const message: WebhookMessage = {
         publisherId_conversationId: composeKeys(botParams.publisherId, messageReceived.conversationId),
         creationTimestamp:          +messageReceived.creationTimestamp,
