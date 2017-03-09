@@ -53,7 +53,7 @@ export default {
         [S.FORCE_SEND_FEEDS]: `FR Feeds successfully sent`,
     },
     app: {
-        pageTitle: 'Deepiks: plateforme de chatbots avancée',
+        pageTitle: 'Deepiks: plateforme de chatbots open source',
     },
     header: {
     },
@@ -84,8 +84,8 @@ export default {
         settings:"Paramètres",
   },
     home: {
-    	hello: 'Bonjour.',
-    	baseline: 'Nous sommes une plateforme de chatbots avancée.',
+    	hello: 'plateforme de chatbots open source',
+    	baseline: '',
     	services_h: 'Plateforme de chatbots avancée',
         services_t : 'Notre plateforme offre un large éventail de fonctionnalités, simples à mettre en oeuvre',
     	universal_h: 'Universalité',
@@ -94,8 +94,10 @@ export default {
 		notifications_t : 'Envoyez des notifications automatiques ou manuelles à vos utilisateurs.',
 		tracking_h : 'Statistiques',
 		tracking_t : 'Mesurez l\'utilisation de votre bot, et les résultats de vos sondages.',
-        ai_h : 'Intelligence artificielle',
-        ai_t : 'Votre bot s\'améliore au fil du temps. Vous pouvez l\'entraîner en permanence, ou le laisser apprendre des données qu\'il collecte.',
+    markdown_h : 'Markdown',
+		markdown_t : 'Utilisez le markdown pour rendre votre bot plus attractif et interactif',
+        ai_h : 'Human In The Loop',
+        ai_t : 'Mettez un humain dans la boucle pour que votre bot puisse lui demander de l\'aide en temps réel',
         pricing: 'Tarif',
         price_1: 'GRATUIT',
         price_2: '',

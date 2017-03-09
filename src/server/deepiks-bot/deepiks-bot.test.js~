@@ -36,8 +36,8 @@ describe('Deepiks Bot', function() {
         AWS_REGION: 'us-east-1',
         CONSTANTS.DB_TABLE_NAME: 'deepiksbot',
         S3_BUCKET_NAME: 'deepiksbot',
-        GOOGLE_CLOUD_VISION_API_KEY: 'AIzaSyDMwWSd6AEe73JogpLilkCp2PoY3xd8nfI',
-        MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: '29b97b4ae9824e5897000afa292306e5',
+        GOOGLE_CLOUD_VISION_API_KEY: 'zzzzzz',
+        MICROSOFT_OCP_APIM_SUBSCRIPTION_KEY: 'zzzzzz',
     });
 
     describe('main', function() {
