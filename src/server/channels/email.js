@@ -102,9 +102,9 @@ async function receivedMessage(email, botParams: BotParams) {
 
     // search for mention in the rest of the email's body if it does not start with mention
     if (text[0] !== '@') {
-        const regex = '\\*\\*(@.+):\\*\\*';
+        const regex = '((.|\\n)*)\\*\\*(@.+):\\*\\*';
 
-        let mention = (`${text}\n\n${strippedHtml}`.match(new RegExp(regex, 'gm')) || [])
+        let mention = (`${text}\n\n${strippedHtml}`.match(new RegExp(regex, 'g')) || [])
             .map(match => match.match(new RegExp(regex)))
             .map(match => match && match[1] || null).pop();
 
