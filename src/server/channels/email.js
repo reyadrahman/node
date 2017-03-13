@@ -11,6 +11,8 @@ import * as aws from '../../aws/aws.js';
 import type {Request, Response} from 'express';
 import uuid from 'node-uuid';
 
+import marked from 'marked';
+
 const snsValidator = new MessageValidator();
 
 const reportDebug = require('debug')('deepiks:email');
@@ -158,11 +160,17 @@ export async function send(botParams: BotParams, conversationId: string, message
         quote.html = `<br><br><div>${quoteTitle}<blockquote>${email.html}</blockquote></div>`;
     }
 
+    if (message.actions) {
+        message.text += '\n\n' + message.actions.map(a => '- ' + a.text).join('\n');
+    }
+
+    let htmlText = message.text ? marked(message.text) : null;
+
     if (message.cards) {
         let html = [];
 
-        if (message.text) {
-            html.push(`<div>${message.text}</div>`);
+        if (htmlText) {
+            html.push(`<div>${htmlText}</div>`);
         }
 
         message.cards.forEach(card => {
@@ -186,10 +194,11 @@ export async function send(botParams: BotParams, conversationId: string, message
             Data:    html.join('<hr>'),
             Charset: 'utf8'
         }
-    }
-
-    if(message.actions) {
-        message.text += '\n\n' + message.actions.map(a => '- ' + a.text).join('\n');
+    } else if (htmlText) {
+        body['Html'] = {
+            Data:    htmlText,
+            Charset: 'utf8'
+        }
     }
 
     body['Text'] = {
