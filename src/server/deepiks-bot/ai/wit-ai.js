@@ -223,10 +223,9 @@ export async function ai(
         return CONVERSE_STATUS_STOP;
     }
 
-
     const client = mkClient(botParams.settings.witAccessToken, respondFn);
     const { witData: newWitData, userPrefs: newUserPrefs } =
-        await runActions(client, text, message, witData, userPrefs, botParams);
+        await runActions(client, text.substr(0, 150), message, witData, userPrefs, botParams);
 
     await Promise.all([
         aws.dynamoUpdate({

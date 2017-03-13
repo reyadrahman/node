@@ -194,7 +194,7 @@ export async function conversationIsStuck(
         const transToUser = await aws.getUserByUserId(
             publisherId, botId, humanTransferDest.channel, humanTransferDest.userId
         );
-        reportDebug('transToUser humann:', transToUser);
+        reportDebug('transToUser human:', transToUser);
 
         if (!transToUser ||  transToUser.userRole !== 'admin') {
             // send message to user
@@ -335,9 +335,8 @@ async function createHistory(conversation: Conversation, strings: Object): Promi
 function messageToText(message: DBMessage, strings: Object) {
     const senderName = (message.senderName || '').trim().toLowerCase().replace(/\s+/g, '-');
     const timestamp = moment(message.creationTimestamp).format('hh:mm A');
-    const direction = message.senderIsBot ? '<' : '>';
-    let starAndSenderName = message.senderIsBot ? `*@${senderName}:*` : `**@${senderName}:**`;
-    let text = `${direction} [${timestamp}] ${starAndSenderName} `;
+    const direction = message.senderIsBot ? '←' : '→';
+    let text = `> ${direction} [${timestamp}] **@${senderName}:** `;
     text += (message.text || '').replace(/\n\n/g, '\n\n> ');
     if (!_.isEmpty(message.cards)) {
         text += `\n\n> ${strings.imagePlaceholder}`
