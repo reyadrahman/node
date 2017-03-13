@@ -104,7 +104,7 @@ async function receivedMessage(email, botParams: BotParams) {
     if (text[0] !== '@') {
         const regex = '\\*\\*(@.+):\\*\\*';
 
-        let mention = (`${text}\n\n${strippedHtml}`.match(new RegExp(regex, 'g')) || [])
+        let mention = (`${text}\n\n${strippedHtml}`.match(new RegExp(regex, 'gm')) || [])
             .map(match => match.match(new RegExp(regex)))
             .map(match => match && match[1] || null).pop();
 
