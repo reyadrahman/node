@@ -194,12 +194,12 @@ export async function conversationIsStuck(
         const transToUser = await aws.getUserByUserId(
             publisherId, botId, humanTransferDest.channel, humanTransferDest.userId
         );
-        reportDebug('transToUser:', transToUser);
+        reportDebug('transToUser humann:', transToUser);
 
-        if (!transToUser || !transToUser.isVerified || transToUser.userRole !== 'admin') {
+        if (!transToUser ||  transToUser.userRole !== 'admin') {
             // send message to user
             await respondFn({
-                text: strings.didNotUnderstand,
+                text: "Not allowed",
                 creationTimestamp: Date.now(),
             });
             return;
@@ -219,7 +219,7 @@ export async function conversationIsStuck(
 
     if (!transToConversation) {
         await respondFn({
-            text: strings.didNotUnderstand,
+            text: 'A problem occured when transfering',
             creationTimestamp: Date.now(),
         });
 
