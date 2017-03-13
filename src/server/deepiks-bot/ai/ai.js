@@ -336,7 +336,8 @@ function messageToText(message: DBMessage, strings: Object) {
     const senderName = (message.senderName || '').trim().toLowerCase().replace(/\s+/g, '-');
     const timestamp = moment(message.creationTimestamp).format('hh:mm A');
     const direction = message.senderIsBot ? '<' : '>';
-    let text = `${direction} [${timestamp}] **@${senderName}:** `;
+    let starAndSenderName = message.senderIsBot ? '*@${senderName}:*' : '**@${senderName}:**';
+    let text = `${direction} [${timestamp}] ${starAndSenderName} `;
     text += (message.text || '').replace(/\n\n/g, '\n\n> ');
     if (!_.isEmpty(message.cards)) {
         text += `\n\n> ${strings.imagePlaceholder}`
