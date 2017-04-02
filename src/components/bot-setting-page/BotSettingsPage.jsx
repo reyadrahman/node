@@ -197,6 +197,31 @@ let BotSettingsPage = React.createClass({
                         }
                     ]
                 },
+                {
+                    name:     'WeChat',
+                    sections: [
+                        {
+                            label:     'WeChat Application ID',
+                            attribute: 'wechatAppID'
+                        },
+                        {
+                            label:     'WeChat Application Secret',
+                            attribute: 'wechatAppSecret'
+                        },
+                        {
+                            label:     'WeChat Token',
+                            attribute: 'wechatToken'
+                        },
+                        {
+                            label:     'WeChat EncodingAESKey',
+                            attribute: 'wechatEncodingAESKey'
+                        },
+                        {
+                            label: 'Webhook',
+                            value: webHookBaseUrl + 'wechat'
+                        }
+                    ]
+                },
             ];
 
 

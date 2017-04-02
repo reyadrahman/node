@@ -78,6 +78,7 @@ export type HumanTransferDest = {
 export type ChannelData = {
     address: Object, // microsoft bot framework specific,
     phone: string, // tropo channel specific,
+    openid: string, // wechat channel specific
     email: Object
 };
 

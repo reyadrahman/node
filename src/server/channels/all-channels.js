@@ -5,6 +5,7 @@ import * as messenger from './messenger.js';
 import * as ms from './ms.js';
 import * as email from './email.js';
 import * as tropo from './tropo.js';
+import * as wechat from './wechat.js';
 import * as web from './web.js';
 import * as aws from '../../aws/aws.js';
 import { waitForAll } from '../../misc/utils.js';
@@ -22,6 +23,17 @@ export const webhooks = {
     ms:        ms.webhook,
     email:     email.webhook,
     tropo:     tropo.webhook,
+    wechat:    wechat.webhook,
+    // web.webhook not here, handled with websocket
+};
+
+const allChannels = {
+    messenger: messenger,
+    spark:     spark,
+    ms:        ms,
+    email:     email,
+    tropo:     tropo,
+    wechat:    wechat,
     // web.webhook not here, handled with websocket
 };
 
@@ -33,10 +45,8 @@ export async function send(botParams: BotParams, conversation: Conversation,
     let sendFn;
     if (channel === 'messenger') {
         sendFn = m => messenger.send(botParams, conversationId, m);
-    } else if (channel === 'tropo') {
-        sendFn = m => tropo.send(botParams, conversationId, m, channelData);
-    } else if (channel === 'email') {
-        sendFn = m => email.send(botParams, conversationId, m, channelData);
+    } else if (['tropo', 'email', 'wechat'].includes(channel)) {
+        sendFn = m => allChannels[channel].send(botParams, conversationId, m, channelData);
     } else if (channel === 'ciscospark') {
         sendFn = m => spark.send(botParams, conversationId, m);
     } else if (['skype', 'slack', 'telegram', 'webchat', 'msteams'].includes(channel)) {
