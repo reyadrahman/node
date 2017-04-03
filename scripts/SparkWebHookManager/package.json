@@ -1,0 +1,16 @@
+{
+  "name": "spark-web-hook-manager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sean Shirazi <sean@plumcake.engineer>",
+  "license": "ISC",
+  "dependencies": {
+    "ciscospark": "^0.6.3",
+    "dotenv": "^2.0.0",
+    "node-uuid": "^1.4.7"
+  }
+}
