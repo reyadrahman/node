@@ -19,7 +19,7 @@ In this project, we use the following terms
 - `agent`represents a set of stories, intents, entities used by one or more `bots`. In wit.ai, an `agent`is called an "app".
 
 ## Installation
-The platform needs to be installed on AWS. See instructions [here](installation/AWS/README.md)
+The platform needs to be installed on AWS. See instructions [here](INSTALLATION.md)
 
 ## Contributing
 If you would like to contribute to this project, please read our [contributing instructions](CONTRIBUTING.md).

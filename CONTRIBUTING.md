@@ -37,7 +37,7 @@ By participating, you are expected to uphold this code.
 Please report unacceptable behavior to [legal@deepiks.io](mailto:legal@deepiks.io).
 
 ### Installation of the platform
-In order to run the platform locally, you can either [configure your own AWS environment](installation/AWS/README.md), or [request an access](mailto:contact@deepiks.io) to the Deepiks AWS environment.
+In order to run the platform locally, you can either [configure your own AWS environment](INSTALLATION.md), or [request an access](mailto:contact@deepiks.io) to the Deepiks AWS environment.
 
 1- Clone this repository
 
@@ -64,7 +64,7 @@ Where `DEEPIKS_ROOT` is the root directory of this repository.
 
 For more information see [aws-sdk-js's docs](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/browser-building.html).
 
-3- Add a `.env`file in the root directory, as described the AWS [installation instructions](installation/AWS/README.md).
+3- Add a `.env`file in the root directory, as described the AWS [installation instructions](INSTALLATION.md).
 
 4- Open 3 terminals and run the following commands in each:
 
