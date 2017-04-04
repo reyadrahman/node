@@ -218,7 +218,14 @@ let BotSettingsPage = React.createClass({
                         },
                         {
                             label: 'Webhook',
-                            value: webHookBaseUrl + 'wechat'
+                            value: (url => {
+                                let parts = url.split('/');
+                                for (let i = parts.indexOf('webhooks') + 1; i < parts.length; i += 1) {
+                                    parts[i] = encodeURIComponent(parts[i]);
+                                }
+
+                                return parts.join('/');
+                            })(webHookBaseUrl + 'wechat')
                         }
                     ]
                 },
