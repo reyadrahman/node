@@ -67,6 +67,7 @@ export async function webhook(req: Request, res: Response) {
             } else if (weixin.MsgType === 'image') {
                 cards = [{imageUrl: weixin.PicUrl}]
             } else {
+                res.reply("Sorry, I can't handle this message.");
                 throw new Error(`WeChat: unsupported message type: ${weixin.MsgType}`);
             }
 
