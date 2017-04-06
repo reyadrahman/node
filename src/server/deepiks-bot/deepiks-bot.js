@@ -409,7 +409,7 @@ function respondFnPreprocessorActionsMiddleware(
                 botParams.publisherId, botParams.botId, conversationId
             );
 
-            const humanTransferDest =
+            let humanTransferDest =
                 transferAction ? {
                     channel: transferAction.args[0].toLowerCase(),
                     userId: transferAction.args[1],
@@ -863,7 +863,7 @@ async function handleWebhookMessage(
     ]);
     if (alreadyInDB) {
         reportDebug(`Message is already in the db. It won't be processed.`);
-        return;
+        return 'already-processed';
     }
     if (!botParams.onlyAllowedUsersCanChat || user && user.userRole !== 'none' && user.isVerified) {
         // Process message, will connect to wit etc.
@@ -887,6 +887,8 @@ async function handleWebhookMessage(
             logMessage(responsesAsDBMessages),
             updateConversationTable(_.last(responsesAsDBMessages), botParams, channelData),
         ]);
+
+        return responses;
     }
 }
 
@@ -913,7 +915,7 @@ export async function deepiksBot(message: WebhookMessage,
 {
     reportDebug('deepiksBot');
     try {
-        await handleWebhookMessage(message, botParams, respondFn, channelData);
+        return await handleWebhookMessage(message, botParams, respondFn, channelData);
     } catch(error) {
         const [, conversationId] = decomposeKeys(message.publisherId_conversationId);
 
