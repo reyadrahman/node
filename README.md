@@ -25,4 +25,4 @@ The platform needs to be installed on AWS. See instructions [here](INSTALLATION.
 If you would like to contribute to this project, please read our [contributing instructions](CONTRIBUTING.md).
 
 ## Bot buidling
-See instructions [here](bot_building/en/README.md).
+See instructions [here](BOT_BUIDING.md).
