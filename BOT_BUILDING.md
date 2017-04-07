@@ -46,6 +46,7 @@ Stories are the top level element of the conversation. Dozens of stories are req
 - "How are you ?"
 - "Tell me a joke"
 - ...
+
 In case you are using written sources or documents, we recommend tracking the source of each story for easy maintenance. For example, you can give a title to the story starting with the document code and a page number.
 
 ### Using quick replies
