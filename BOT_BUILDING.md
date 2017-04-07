@@ -54,7 +54,7 @@ Quick replies are a good way to help the `user`, although they are not supported
 
 
 ### Styling answers
-It is possible to use standard markdown syntax to style answers, especially long ones.
+It is possible to use standard [markdown syntax](https://daringfireball.net/projects/markdown/basics) to style answers, especially long ones.
 
 We recommend defining one single answer instead of splitting answers, as splitting answers will not be appropriate on certain `channels`, for example the e-mail `channel`. In order to keep the answer readable, you can use paragraphs (separated by a blank line). Certain `channels`do not support long answers, notably Messenger, but then long answers are split automatically by the platform.
 
@@ -89,7 +89,7 @@ Entities starting with a `_`sign can be stored in the `user`profile. In order to
 Custom actions can be defined [using AWS Lambda](CUSTOMIZING.md#creating_custom_actions_in_aws_lambda).
 
 ### Using Deepiks tags
-In addition to using functions, it is possible to include tags specific to Deepiks in order to trigger some actions which require variable inputs. This was implemented in #145(https://github.com/deepiksdev/node/issues/145) and later, and called "internal function".
+In addition to using functions, it is possible to include tags specific to Deepiks in order to trigger some actions which require variable inputs. This was implemented in [#145](https://github.com/deepiksdev/node/issues/145) and later, and called "internal function".
 
 Deepiks tags are always under the form `<[function_name : variable_value]>`
 
