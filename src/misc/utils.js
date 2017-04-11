@@ -124,6 +124,10 @@ export function destructureS3Url(url: string): ?{ bucket: string, key: string} {
     // https://s3.amazonaws.com/BUCKET/KEY
     // https://BUCKET.s3-eu-west-1.amazonaws.com/KEY
     // https://BUCKET.s3.amazonaws.com/KEY
+
+    // in case of signed url we want to remove signature query params first
+    url = url.split('?')[0];
+
     let res = url.match(/https:\/\/s3\.amazonaws\.com\/(.+?)\/(.+)/i) ||
               url.match(/https:\/\/(.+?)\.s3.*?\.amazonaws\.com\/(.+)/i);
     if (!res) return null;

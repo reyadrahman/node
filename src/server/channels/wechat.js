@@ -2,7 +2,7 @@
 import {CONSTANTS} from '../server-utils.js';
 import {callbackToPromise, decomposeKeys, composeKeys, timeout} from '../../misc/utils.js';
 import type {WebhookMessage, ResponseMessage, BotParams, ChannelData} from '../../misc/types.js';
-import {deepiksBot} from '../deepiks-bot/deepiks-bot.js';
+import {deepiksBot, signS3Urls} from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
 import type {Request, Response} from 'express';
 import moment from 'moment';
@@ -31,8 +31,6 @@ export async function webhook(req: Request, res: Response) {
         encodingAESKey: botParams.settings.wechatEncodingAESKey,
         checkSignature: true
     };
-
-    console.log('wechatConfig', wechatConfig);
 
     return new Promise((resolve, reject) => {
         wechat(wechatConfig, async function (req, res) {
@@ -118,6 +116,8 @@ export async function send(botParams: BotParams, conversationId: string,
                            channelData: ChannelData, res: Request = null) {
     let messages = _.isArray(message) ? message : [message];
 
+    messages = await Promise.all(messages.map(m => signS3Urls(m)));
+
     let reply = [];
 
     messages.forEach(message => {
@@ -166,31 +166,21 @@ export async function send(botParams: BotParams, conversationId: string,
         res.closed = true;
     }
 
-    // return;
-    //
-    // if (res && !res.closed) {
-    //     try {
-    //         res.reply(reply);
-    //         res.closed = true;
-    //         return;
-    //     } catch (e) {}
-    // } else {
-    //     return;
-    //     throw new Error('WeChat channel: response connection closed');
-    // }
-    //
-    // if (!botParams.settings.wechatAppID || !botParams.settings.wechatAppSecret) {
-    //     throw new Error(`WeChat channel: missing AppID/AppSecret for bot ${botParams.botId}:${botParams.botName}`);
-    // }
-    //
-    // const api = new WechatAPI(botParams.settings.wechatAppID, botParams.settings.wechatAppSecret);
-    //
-    // return callbackToPromise(api.sendText, api)(channelData.openid, text)
-    //     .then(response => reportDebug(response))
-    //     .catch(response => {
-    //         reportError(response);
-    //         return Promise.reject(response);
-    //     });
+    // this is for cold sending messages. Requires send message api access, so will fail for unverified WeChat account
+    if (!res) {
+        if (!botParams.settings.wechatAppID || !botParams.settings.wechatAppSecret) {
+            throw new Error(`WeChat channel: missing AppID/AppSecret for bot ${botParams.botId}:${botParams.botName}`);
+        }
+
+        const api = new WechatAPI(botParams.settings.wechatAppID, botParams.settings.wechatAppSecret);
+
+        return callbackToPromise(_.isArray(reply) ? api.sendNews : api.sendText, api)(channelData.openid, reply)
+            .then(response => reportDebug(response))
+            .catch(response => {
+                reportError(response);
+                return Promise.reject(response);
+            });
+    }
 }
 
 

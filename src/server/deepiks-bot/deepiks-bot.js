@@ -527,7 +527,7 @@ function respondFnSignS3UrlsMiddleware(next: RespondFn): RespondFn {
     }
 }
 
-async function signS3Urls(response: ResponseMessage): Promise<ResponseMessage> {
+export async function signS3Urls(response: ResponseMessage): Promise<ResponseMessage> {
     const clone = { ...response };
     let cardsP;
     if (clone.cards) {
