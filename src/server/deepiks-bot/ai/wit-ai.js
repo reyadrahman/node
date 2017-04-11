@@ -211,7 +211,7 @@ export async function ai(
 
 
     const userPrefs = user && user.prefs || {};
-    reportDebug('ai userPrefs: ', userPrefs);
+    reportDebug('ai userPrefs : ', userPrefs);
 
 
     let text = message.text;
@@ -225,7 +225,7 @@ export async function ai(
 
     const client = mkClient(botParams.settings.witAccessToken, respondFn);
     const { witData: newWitData, userPrefs: newUserPrefs } =
-        await runActions(client, text.substr(0, 150), message, witData, userPrefs, botParams);
+        await runActions(client, text, message, witData, userPrefs, botParams);
 
     await Promise.all([
         aws.dynamoUpdate({
@@ -256,4 +256,3 @@ export async function ai(
 }
 
 export default ai;
-
