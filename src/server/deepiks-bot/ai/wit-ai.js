@@ -214,7 +214,7 @@ export async function ai(
     reportDebug('ai userPrefs : ', userPrefs);
 
 
-    let text = message.text;
+    let text = (message.text || '').substr(0, 150);
     if (message.cards && message.cards.length) {
         const imageUrl = _.last(message.cards).imageUrl;
         text = `${text || ''} ${imageUrl || ''}`.trim();
