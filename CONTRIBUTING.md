@@ -142,8 +142,8 @@ Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com
 
 Unsure where to begin contributing to Deepiks? You can start by looking at issues labeled as  `beginner` and `help-wanted` issues:
 
-* Beginner issues - issues which should only require a few lines of code, and a test or two.
-* Help wanted issues - issues which should be a bit more involved than `beginner` issues.
+* [Beginner issues]((https://github.com/deepiksdev/node/issues?q=is%3Aopen+is%3Aissue+label%3beginner) - issues which should only require a few lines of code, and a test or two.
+* [Help wanted issues](https://github.com/deepiksdev/node/issues?q=is%3Aopen+is%3Aissue+label%3Ahelp-wanted) - issues which should be a bit more involved than `beginner` issues.
 
 
 ### Pull Requests
