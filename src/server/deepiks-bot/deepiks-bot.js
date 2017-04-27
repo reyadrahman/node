@@ -819,6 +819,83 @@ async function updateUsersTable(
     });
 }
 
+async function mapActionNumber(rawMessage: WebhookMessage) {
+    if (rawMessage.text && rawMessage.text.trim().match(/^\d+$/)) {
+        let actionIndex = rawMessage.text.trim();
+
+        reportDebug(`Trying to map action to index ${actionIndex}`);
+
+        let conversationMessages = await fetchConversationMessages(rawMessage.publisherId_conversationId);
+
+        let previousBotActionMessage;
+
+        for (let i = conversationMessages.length - 1; i >= 0; i -= 1) {
+            if (conversationMessages[i].senderIsBot &&
+                (conversationMessages[i].actions && conversationMessages[i].actions.length ||
+                    conversationMessages[i].cards &&
+                    conversationMessages[i].cards.filter(c => c.actions && c.actions.length > 0).length > 0
+                )
+            ) {
+                previousBotActionMessage = conversationMessages[i];
+                break;
+            }
+        }
+
+        if (previousBotActionMessage) {
+            reportDebug(`Found previous bot message with actions: ${previousBotActionMessage.publisherId_conversationId} - ${previousBotActionMessage.id}`);
+
+            let numberifiedActions = numberifyActions(previousBotActionMessage);
+
+            if (numberifiedActions[actionIndex]) {
+                let action      = numberifiedActions[actionIndex];
+                rawMessage.text = action.postback || action.fallback || action.url || action.text;
+
+                reportDebug(`Mapped actions index ${actionIndex} -> ${rawMessage.text}`);
+            } else {
+                reportDebug(`Action index ${actionIndex} does not map to any action`);
+            }
+        } else {
+            reportDebug("Haven't found actionable bot message in this conversation");
+        }
+    }
+}
+
+export function numberifyActions(message: ResponseMessage) {
+    let globalActionIndex = 1;
+    let allActions        = {};
+
+    Array.prototype.concat.apply(
+        message.actions || [],
+        (message.cards || [])
+            .map(card => card.actions || [])
+    ).forEach(action => {
+        action.index                  = globalActionIndex;
+        allActions[globalActionIndex] = action;
+        globalActionIndex += 1;
+    });
+
+    return allActions;
+}
+
+export async function fetchConversationMessages(publisherId_conversationId: string, since: number = null) {
+    reportDebug('fetchMessages: ', publisherId_conversationId, 'conversationId:', 'since=', since);
+    let query = {
+        TableName:                 CONSTANTS.DB_TABLE_MESSAGES,
+        KeyConditionExpression:    'publisherId_conversationId = :pc',
+        ExpressionAttributeValues: {
+            ':pc': publisherId_conversationId,
+        },
+    };
+
+    if (since) {
+        query.KeyConditionExpression += ' AND creationTimestamp >= :since';
+        query.ExpressionAttributeValues[':since'] = since;
+    }
+
+    const qres = await aws.dynamoQuery(query);
+    return qres.Items || [];
+}
+
 async function handleWebhookMessage(
     rawMessage: WebhookMessage,
     botParams: BotParams,
@@ -826,6 +903,9 @@ async function handleWebhookMessage(
     channelData?: ChannelData
 ) {
     reportDebug('handleWebhookMessage');
+
+    // preprocess numeric message as it is possible action shortcut
+    await mapActionNumber(rawMessage);
 
     // create DBMessage from WebhookMessage
     const attachments = await processAttachments(rawMessage, botParams);

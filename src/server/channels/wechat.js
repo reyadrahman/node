@@ -2,7 +2,7 @@
 import {CONSTANTS} from '../server-utils.js';
 import {callbackToPromise, decomposeKeys, composeKeys, timeout} from '../../misc/utils.js';
 import type {WebhookMessage, ResponseMessage, BotParams, ChannelData} from '../../misc/types.js';
-import {deepiksBot, signS3Urls} from '../deepiks-bot/deepiks-bot.js';
+import {deepiksBot, signS3Urls, fetchConversationMessages, numberifyActions} from '../deepiks-bot/deepiks-bot.js';
 import * as aws from '../../aws/aws.js';
 import type {Request, Response} from 'express';
 import moment from 'moment';
@@ -122,8 +122,11 @@ export async function send(botParams: BotParams, conversationId: string,
 
     messages.forEach(message => {
         let text = message.text;
+
+        numberifyActions(message);
+
         if (message.actions) {
-            text = text + "\n" + message.actions.map(a => '- ' + a.text).join("\n");
+            text = text + "\n" + message.actions.map(a => `${a.index}. ${a.text}`).join("\n");
         }
 
         if (text) {
@@ -140,10 +143,10 @@ export async function send(botParams: BotParams, conversationId: string,
 
                 let description = card.actions && card.actions.map(action => {
                         if (action.url) {
-                            return `${action.text}: ${action.url}`;
+                            return `${action.index}. ${action.text}: ${action.url}`;
                         }
 
-                        return `Reply "${action.postback || action.fallback}" to ${action.text}`
+                        return `${action.index}. ${action.text}`
                     }).join('\n');
 
                 media.title += description ? '\n' + description : '';
@@ -215,21 +218,3 @@ async function findPreviousConversation(botParams: BotParams, fromUserName: stri
     return null;
 }
 
-async function fetchConversationMessages(botId_conversationId: string, since: number = null) {
-    reportDebug('fetchMessages: ', botId_conversationId, 'conversationId:', 'since=', since);
-    let query = {
-        TableName:                 CONSTANTS.DB_TABLE_MESSAGES,
-        KeyConditionExpression:    'publisherId_conversationId = :pc',
-        ExpressionAttributeValues: {
-            ':pc': botId_conversationId,
-        },
-    };
-
-    if (since) {
-        query.KeyConditionExpression += ' AND creationTimestamp >= :since';
-        query.ExpressionAttributeValues[':since'] = since;
-    }
-
-    const qres = await aws.dynamoQuery(query);
-    return qres.Items || [];
-}
