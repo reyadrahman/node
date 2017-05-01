@@ -160,7 +160,7 @@ export async function send(botParams: BotParams, conversationId: string, message
     }
 
     if (message.actions) {
-        message.text += '\n\n' + message.actions.map(a => '- ' + a.text).join('\n');
+        message.text += '\n\n' + message.actions.map(a => `- ${a.index}\\. ${a.text}`).join('\n');
     }
 
     let htmlText = message.text ? marked(message.text) : null;
@@ -180,7 +180,7 @@ export async function send(botParams: BotParams, conversationId: string, message
 
             card.actions && card.actions.forEach(action => {
                 content += `
-                    <div>Reply "${action.postback}" to ${action.text}</div>
+                    <div>${action.index}. Reply "${action.postback}" to ${action.text}</div>
                 `
             });
 

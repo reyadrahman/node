@@ -157,7 +157,12 @@ export async function send(botParams: BotParams, conversationId: string,
 
     reportDebug('send sending message: ', message);
     const actionsToStr = xs => {
-        const postbacks = (xs || []).filter(x => x.fallback).map(x => x.fallback).join(', ').trim();
+        const postbacks = (xs || [])
+            .filter(x => x.fallback)
+            .map(x => `${x.index}\\. ${x.fallback}`)
+            .join(', ')
+            .trim();
+
         const urls = (xs || []).filter(x => x.url).map(
             x => `${x.text}: ${x.url || ''}`
         ).join('\n\n').trim();
@@ -200,7 +205,7 @@ export async function send(botParams: BotParams, conversationId: string,
 
     if (text || actions) {
         let actionsText = actionsToStr(actions);
-        const textToSend = ((text || '') + '\n\n' + actionsText).trim()
+        const textToSend = ((text || '') + '\n\n' + actionsText).trim();
         await client.messages.create({
             markdown: textToSend,
             roomId: conversationId,

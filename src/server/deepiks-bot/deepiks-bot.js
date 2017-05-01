@@ -527,6 +527,13 @@ function respondFnSignS3UrlsMiddleware(next: RespondFn): RespondFn {
     }
 }
 
+function respondFnNumberifyActionsMiddleware(next: RespondFn): RespondFn {
+    return function(response) {
+        numberifyActions(response);
+        return next(response);
+    }
+}
+
 export async function signS3Urls(response: ResponseMessage): Promise<ResponseMessage> {
     const clone = { ...response };
     let cardsP;
@@ -929,6 +936,7 @@ async function handleWebhookMessage(
     newRespondFn = respondFn;
     newRespondFn = respondFnSignS3UrlsMiddleware(newRespondFn);
     newRespondFn = respondFnCollectorMiddleware(newRespondFn, responses);
+    newRespondFn = respondFnNumberifyActionsMiddleware(newRespondFn);
     newRespondFn = respondFnPreprocessorActionsMiddleware(
         newRespondFn, botParams, conversationId,
         dbMessage.channel, sendAsUser, dbMessage
